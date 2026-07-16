@@ -1,0 +1,1456 @@
+<!DOCTYPE html>
+<html><head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="_assets/react.js"></script>
+<script src="_assets/react-dom.js"></script>
+<script src="_assets/dc-runtime.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="">
+<style>/* latin-ext */
+@font-face {
+  font-family: 'DM Sans';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("_assets/font_01.woff2") format('woff2');
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+/* latin */
+@font-face {
+  font-family: 'DM Sans';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("_assets/font_02.woff2") format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+/* latin-ext */
+@font-face {
+  font-family: 'DM Sans';
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src: url("_assets/font_01.woff2") format('woff2');
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+/* latin */
+@font-face {
+  font-family: 'DM Sans';
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src: url("_assets/font_02.woff2") format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+/* latin-ext */
+@font-face {
+  font-family: 'DM Sans';
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  src: url("_assets/font_01.woff2") format('woff2');
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+/* latin */
+@font-face {
+  font-family: 'DM Sans';
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  src: url("_assets/font_02.woff2") format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+/* latin-ext */
+@font-face {
+  font-family: 'DM Sans';
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url("_assets/font_01.woff2") format('woff2');
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+/* latin */
+@font-face {
+  font-family: 'DM Sans';
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url("_assets/font_02.woff2") format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+/* cyrillic-ext */
+@font-face {
+  font-family: 'JetBrains Mono';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("_assets/font_03.woff2") format('woff2');
+  unicode-range: U+0460-052F, U+1C80-1C8A, U+20B4, U+2DE0-2DFF, U+A640-A69F, U+FE2E-FE2F;
+}
+/* cyrillic */
+@font-face {
+  font-family: 'JetBrains Mono';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("_assets/font_04.woff2") format('woff2');
+  unicode-range: U+0301, U+0400-045F, U+0490-0491, U+04B0-04B1, U+2116;
+}
+/* greek */
+@font-face {
+  font-family: 'JetBrains Mono';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("_assets/font_05.woff2") format('woff2');
+  unicode-range: U+0370-0377, U+037A-037F, U+0384-038A, U+038C, U+038E-03A1, U+03A3-03FF;
+}
+/* vietnamese */
+@font-face {
+  font-family: 'JetBrains Mono';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("_assets/font_06.woff2") format('woff2');
+  unicode-range: U+0102-0103, U+0110-0111, U+0128-0129, U+0168-0169, U+01A0-01A1, U+01AF-01B0, U+0300-0301, U+0303-0304, U+0308-0309, U+0323, U+0329, U+1EA0-1EF9, U+20AB;
+}
+/* latin-ext */
+@font-face {
+  font-family: 'JetBrains Mono';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("_assets/font_07.woff2") format('woff2');
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+/* latin */
+@font-face {
+  font-family: 'JetBrains Mono';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("_assets/font_08.woff2") format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+/* cyrillic-ext */
+@font-face {
+  font-family: 'JetBrains Mono';
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src: url("_assets/font_03.woff2") format('woff2');
+  unicode-range: U+0460-052F, U+1C80-1C8A, U+20B4, U+2DE0-2DFF, U+A640-A69F, U+FE2E-FE2F;
+}
+/* cyrillic */
+@font-face {
+  font-family: 'JetBrains Mono';
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src: url("_assets/font_04.woff2") format('woff2');
+  unicode-range: U+0301, U+0400-045F, U+0490-0491, U+04B0-04B1, U+2116;
+}
+/* greek */
+@font-face {
+  font-family: 'JetBrains Mono';
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src: url("_assets/font_05.woff2") format('woff2');
+  unicode-range: U+0370-0377, U+037A-037F, U+0384-038A, U+038C, U+038E-03A1, U+03A3-03FF;
+}
+/* vietnamese */
+@font-face {
+  font-family: 'JetBrains Mono';
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src: url("_assets/font_06.woff2") format('woff2');
+  unicode-range: U+0102-0103, U+0110-0111, U+0128-0129, U+0168-0169, U+01A0-01A1, U+01AF-01B0, U+0300-0301, U+0303-0304, U+0308-0309, U+0323, U+0329, U+1EA0-1EF9, U+20AB;
+}
+/* latin-ext */
+@font-face {
+  font-family: 'JetBrains Mono';
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src: url("_assets/font_07.woff2") format('woff2');
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+/* latin */
+@font-face {
+  font-family: 'JetBrains Mono';
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src: url("_assets/font_08.woff2") format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+</style>
+<style>
+:root{
+  --paper:#F1EDE4; --card:#FCFAF5; --card2:#F7F3EA; --ink:#25282B; --ink2:#464546; --ink3:#9C9488;
+  --line:#E5E0D4; --line2:#EDE8DD; --accent:#FF6632; --accent-ink:#E0531F; --accent-bg:#FFF0EA;
+  --done:#3F7D62; --teams:#007FC8;
+}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%}
+body{font-family:'DM Sans',system-ui,sans-serif;background:var(--paper);color:var(--ink);-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility}
+a{color:var(--accent-ink);text-decoration:none}
+a:hover{color:var(--accent)}
+::selection{background:var(--accent);color:#fff}
+::-webkit-scrollbar{width:10px;height:10px}
+::-webkit-scrollbar-thumb{background:#d9d3c6;border:3px solid var(--paper);border-radius:20px}
+@keyframes riseIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+@keyframes toastIn{from{opacity:0;transform:translateY(14px) scale(.98)}to{opacity:1;transform:none}}
+@keyframes drawerIn{from{transform:translateX(40px);opacity:0}to{transform:none;opacity:1}}
+@keyframes modalIn{from{opacity:0;transform:translateY(14px) scale(.97)}to{opacity:1;transform:none}}
+@keyframes spin{to{transform:rotate(360deg)}}
+@keyframes pulseDot{0%,100%{opacity:1}50%{opacity:.35}}
+@keyframes popIn{0%{transform:scale(.6);opacity:0}60%{transform:scale(1.08)}100%{transform:scale(1);opacity:1}}
+</style>
+</helmet>
+
+
+
+<div style="height:100vh;width:100%;overflow:hidden;position:relative">
+
+<sc-if value="{{ isLogin }}" hint-placeholder-val="{{ true }}">
+<div style="height:100vh;display:grid;grid-template-columns:1.05fr .95fr;background:var(--paper)">
+  <div style="position:relative;overflow:hidden;padding:56px 64px;display:flex;flex-direction:column;justify-content:center;gap:40px;background:radial-gradient(120% 90% at 15% 10%, #24201A 0%, #17140F 55%, #100D09 100%);color:#F1EDE4">
+    <div style="position: absolute; inset: 0; background-image: radial-gradient(circle at 1px 1px, rgba(255,102,50,.14) 1px, transparent 0); background-size: 26px 26px; opacity: .55; left: -12px; top: -32px"></div>
+    <div style="position:absolute;top:40px;left:64px;display:flex;align-items:center;gap:11px;z-index:2">
+      <div style="width:34px;height:34px;border-radius:9px;background:var(--accent);display:flex;align-items:center;justify-content:center;box-shadow:0 4px 16px rgba(255,102,50,.4)">
+        <div style="width:13px;height:13px;border:2.5px solid #fff;border-radius:50%;border-right-color:transparent;transform:rotate(-45deg)"></div>
+      </div>
+      <span style="font-family:'DM Sans';font-weight:700;font-size:20px;letter-spacing:-.02em">Eric</span>
+    </div>
+    <div style="position:relative;max-width:470px">
+      
+      
+      <h1 style="font-family:'DM Sans';font-weight:700;font-size:46px;line-height:1.06;letter-spacing:-.025em;margin:0 0 22px">Getting things<br><span style="color:var(--accent)">done</span> has never<br>been <span style="color:#3B9BE0">easier.</span></h1><p style="font-size:16px;line-height:1.6;color:#B8B0A2;margin:0">The team tags <b style="color:#E8E2D5">@Eric</b> in Teams. The bot reads the request, sorts it by urgency, and drops it here — one clean list so nothing you're asked for ever slips through the chat again.</p>
+    </div>
+    
+  </div>
+  <div style="display:flex;align-items:center;justify-content:center;padding:40px">
+    <div style="width:100%;max-width:320px;animation:riseIn .6s both;text-align:center">
+      <div style="width:60px;height:60px;border-radius:16px;background:var(--accent);color:#fff;display:flex;align-items:center;justify-content:center;font-size:23px;font-weight:700;font-family:'DM Sans';margin:0 auto 20px">GM</div>
+      <h2 style="font-family:'DM Sans';font-weight:700;font-size:29px;letter-spacing:-.02em;margin:0 0 6px">Welcome, George</h2>
+      <p style="color:var(--ink2);margin:0 0 26px;font-size:14.5px">Enter your PIN to open the board.</p>
+      <label style="display:block;cursor:text">
+        <div style="display:flex;justify-content:center;gap:16px;margin-bottom:10px;height:22px">
+          <sc-for list="{{ pinDots }}" as="d" hint-placeholder-count="4">
+            <span style="width:16px;height:16px;border-radius:50%;background:{{ d.bg }};border:1.5px solid {{ d.border }};transition:.15s"></span>
+          </sc-for>
+        </div>
+        <input value="{{ pin }}" sc-camel-on-input="{{ onPinInput }}" sc-camel-on-key-down="{{ onPinKey }}" autofocus="true" inputmode="numeric" maxlength="4" style="position:absolute;opacity:0;width:1px;height:1px;pointer-events:none">
+      </label>
+      <p style="color:var(--ink3);font-size:12.5px;margin:22px 0 0">Type your 4-digit PIN to continue</p>
+      <p style="color:var(--ink3);font-size:11.5px;margin:6px 0 0;font-family:'JetBrains Mono'">Private to George · any 4 digits</p>
+    </div>
+  </div>
+</div>
+</sc-if>
+
+<sc-if value="{{ isApp }}" hint-placeholder-val="{{ true }}">
+<div style="height:100vh;display:grid;grid-template-columns:var(--sidebar-w, 384px) 1fr;grid-template-rows:minmax(0,1fr);overflow:hidden;background:var(--paper)">
+
+  <!-- SIDEBAR -->
+  <aside style="position:relative;border-right:1px solid var(--line);display:flex;flex-direction:column;padding:20px 16px;background:var(--card2);min-width:0">
+    <div id="sbResize" title="Drag to resize" style="position:absolute;top:0;right:-3px;width:7px;height:100%;cursor:col-resize;z-index:60"></div>
+    <div style="display:flex;align-items:center;gap:10px;padding:4px 8px 22px">
+      <div style="width:30px;height:30px;border-radius:8px;background:var(--accent);display:flex;align-items:center;justify-content:center">
+        <div style="width:11px;height:11px;border:2.5px solid #fff;border-radius:50%;border-right-color:transparent;transform:rotate(-45deg)"></div>
+      </div>
+      <span style="font-family:'DM Sans';font-weight:700;font-size:18px;letter-spacing:-.02em">Eric</span>
+    </div>
+
+    <div style="flex:1;display:flex;flex-direction:column;min-height:0;margin:0 -4px;padding:0 4px">
+      <div style="display:flex;align-items:center;gap:8px;padding:2px 8px 12px">
+        <span style="width:24px;height:24px;border-radius:50%;background:var(--teams);color:#fff;display:flex;align-items:center;justify-content:center;flex:none"><svg width="14" height="14" sc-camel-view-box="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 8V4M8 12H4M12 16v4M16 12h4"></path><circle cx="12" cy="12" r="4"></circle></svg></span>
+        <div style="min-width:0">
+          <div style="font-size:13px;font-weight:700;color:var(--ink);line-height:1.1">Eric's brief</div>
+          <div style="font-size:10.5px;color:var(--ink3);font-family:'JetBrains Mono'">{{ briefTime }}</div>
+        </div>
+      </div>
+
+      <div style="background:var(--card);border:1px solid var(--line);border-radius:12px;padding:13px 14px;margin-bottom:10px">
+        <p style="font-size:12.5px;line-height:1.55;color:var(--ink);margin:0">{{ briefIntro }}</p>
+      </div>
+
+      <div style="border-top:1px solid var(--line);margin:12px -4px 0;padding:13px 4px 0;display:flex;flex-direction:column;min-height:0;flex:{{ talkFlex }}">
+      <div sc-camel-on-click="{{ onToggleTalk }}" title="Show / hide chat" style="display:flex;align-items:center;gap:8px;margin-bottom:10px;flex:none;cursor:pointer;user-select:none">
+        <span style="width:26px;height:26px;border-radius:7px;background:var(--teams);color:#fff;display:flex;align-items:center;justify-content:center;flex:none"><svg width="14" height="14" sc-camel-view-box="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 8V4M8 12H4M12 16v4M16 12h4"></path><circle cx="12" cy="12" r="4"></circle></svg></span>
+        <div style="min-width:0;flex:1"><div style="font-size:13px;font-weight:600;color:var(--ink);line-height:1.15">Talk to Eric</div><div style="font-size:11px;color:var(--ink3);line-height:1.25">He proposes, you approve</div></div>
+        <span style="flex:none;color:var(--ink3);display:flex;align-items:center;justify-content:center;transform:{{ talkChevron }};transition:transform .15s"><svg width="15" height="15" sc-camel-view-box="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="m6 9 6 6 6-6"></path></svg></span>
+      </div>
+
+      <div id="ericThread" style="flex:1;min-height:0;overflow-y:auto;display:{{ talkDisplay }};flex-direction:column;gap:9px;padding-right:2px">
+        <sc-if value="{{ chatEmpty }}" hint-placeholder-val="{{ true }}">
+          <div style="font-size:12px;color:var(--ink3);line-height:1.5">Ask me to reprioritise, chase people, or move a due date — I&#39;ll draft the step and wait for your go-ahead.</div>
+        </sc-if>
+        <sc-for list="{{ chat }}" as="c" hint-placeholder-count="0">
+          <div style="display:flex;justify-content:{{ c.justify }}">
+            <sc-if value="{{ c.isEric }}" hint-placeholder-val="{{ false }}">
+              <div style="display:flex;gap:8px;max-width:90%">
+                <span style="width:24px;height:24px;border-radius:50%;background:var(--teams);color:#fff;display:flex;align-items:center;justify-content:center;flex:none;margin-top:2px"><svg width="14" height="14" sc-camel-view-box="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 8V4M8 12H4M12 16v4M16 12h4"></path><circle cx="12" cy="12" r="4"></circle></svg></span>
+                <div style="min-width:0">
+                  <div style="background:var(--card);border:1px solid var(--line);border-radius:13px;border-top-left-radius:5px;padding:9px 12px;font-size:12.5px;line-height:1.5;color:var(--ink)">{{ c.text }}</div>
+                  <sc-if value="{{ c.pendingOpen }}" hint-placeholder-val="{{ false }}">
+                    <div style="margin-top:7px;background:var(--card);border:1px solid var(--accent);border-radius:11px;padding:10px 12px">
+                      <div style="font-family:'JetBrains Mono';font-size:9.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--accent-ink);background:var(--accent-bg);padding:2px 6px;border-radius:6px;width:fit-content;margin-bottom:6px">Awaiting your approval</div>
+                      <div style="font-size:12.5px;font-weight:600;color:var(--ink)">{{ c.pendingLabel }}</div>
+                      <div style="font-size:11.5px;color:var(--ink2);line-height:1.4;margin-top:3px">{{ c.pendingDetail }}</div>
+                      <div style="display:flex;gap:7px;margin-top:9px">
+                        <button sc-camel-on-click="{{ c.onApprove }}" style="display:flex;align-items:center;gap:5px;padding:7px 12px;border:none;border-radius:8px;background:var(--accent);color:#fff;cursor:pointer;font-family:'DM Sans';font-size:12px;font-weight:600" style-hover="background:var(--accent-ink)"><svg width="13" height="13" sc-camel-view-box="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><path d="M20 6 9 17l-5-5"></path></svg>{{ c.pendingConfirm }}</button>
+                        <button sc-camel-on-click="{{ c.onDismiss }}" style="padding:7px 12px;border:1px solid var(--line);border-radius:8px;background:var(--card);color:var(--ink2);cursor:pointer;font-family:'DM Sans';font-size:12px;font-weight:600" style-hover="border-color:#c9c2b3;color:var(--ink)">Not now</button>
+                      </div>
+                    </div>
+                  </sc-if>
+                  <sc-if value="{{ c.resolvedLabel }}" hint-placeholder-val="{{ false }}">
+                    <div style="display:flex;align-items:center;gap:5px;font-size:11px;font-weight:600;color:{{ c.resolvedColor }};margin:6px 0 0 2px">{{ c.resolvedLabel }}</div>
+                  </sc-if>
+                </div>
+              </div>
+            </sc-if>
+            <sc-if value="{{ c.isMe }}" hint-placeholder-val="{{ false }}">
+              <div style="background:var(--accent);color:#fff;border-radius:13px;border-top-right-radius:5px;padding:9px 12px;font-size:12.5px;line-height:1.5;max-width:85%">{{ c.text }}</div>
+            </sc-if>
+          </div>
+        </sc-for>
+        <sc-if value="{{ chatTyping }}" hint-placeholder-val="{{ false }}">
+          <div style="display:flex;gap:8px;align-items:center;color:var(--teams)"><span style="width:24px;height:24px;border-radius:50%;background:var(--teams);color:#fff;display:flex;align-items:center;justify-content:center;flex:none"><svg width="14" height="14" sc-camel-view-box="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 8V4M8 12H4M12 16v4M16 12h4"></path><circle cx="12" cy="12" r="4"></circle></svg></span><span style="display:flex;gap:3px"><span style="width:5px;height:5px;border-radius:50%;background:var(--teams);animation:pulseDot 1s infinite"></span><span style="width:5px;height:5px;border-radius:50%;background:var(--teams);animation:pulseDot 1s infinite .2s"></span><span style="width:5px;height:5px;border-radius:50%;background:var(--teams);animation:pulseDot 1s infinite .4s"></span></span></div>
+        </sc-if>
+      </div>
+
+      <div style="flex:none;padding-top:10px;margin-top:4px;border-top:1px solid var(--line);display:{{ talkDisplayBlock }}">
+        <sc-if value="{{ chatEmpty }}" hint-placeholder-val="{{ true }}">
+          <div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:9px">
+            <sc-for list="{{ chatSuggestions }}" as="sug" hint-placeholder-count="3">
+              <button sc-camel-on-click="{{ sug.onPick }}" style="font-size:11.5px;color:var(--ink2);background:var(--card);border:1px solid var(--line);border-radius:15px;padding:5px 11px;cursor:pointer;font-family:'DM Sans'" style-hover="border-color:var(--accent);color:var(--accent-ink)">{{ sug.label }}</button>
+            </sc-for>
+          </div>
+        </sc-if>
+        <div style="display:flex;gap:7px;align-items:flex-end">
+          <textarea value="{{ chatDraft }}" sc-camel-on-input="{{ onChatDraft }}" sc-camel-on-key-down="{{ onChatKey }}" placeholder="Message Eric…" rows="1" style="flex:1;resize:none;padding:10px 12px;border:1px solid var(--line);border-radius:11px;background:var(--card);font-family:'DM Sans';font-size:12.5px;line-height:1.45;color:var(--ink);outline:none;max-height:110px" style-focus="border-color:var(--accent)"></textarea>
+          <button sc-camel-on-click="{{ onChatSend }}" title="Send" style="flex:none;width:40px;height:40px;border-radius:11px;border:none;background:var(--accent);color:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center" style-hover="background:var(--accent-ink)"><svg width="17" height="17" sc-camel-view-box="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 2 11 13M22 2l-7 20-4-9-9-4 20-7z"></path></svg></button>
+        </div>
+      </div>
+    </div>
+    </div><!-- /scroll container -->
+
+    <div style="margin-top:auto;padding-top:14px;border-top:1px solid var(--line);display:flex;align-items:center;gap:10px;flex:none">
+      <div style="width:32px;height:32px;border-radius:50%;background:var(--accent);color:#fff;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:600">GM</div>
+      <div style="min-width:0">
+        <div style="font-size:13.5px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">George</div>
+        <div style="font-size:11.5px;color:var(--ink3)">CEO · GMS</div>
+      </div>
+      <button sc-camel-on-click="{{ onLogout }}" title="Sign out" style="margin-left:auto;background:none;border:none;color:var(--ink3);cursor:pointer;padding:4px" style-hover="color:var(--ink)">
+        <svg width="16" height="16" sc-camel-view-box="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9"></path></svg>
+      </button>
+    </div>
+  </aside>
+
+  <!-- MAIN -->
+  <main style="display:flex;flex-direction:column;min-width:0;min-height:0;overflow:hidden;position:relative">
+    <!-- TOPBAR -->
+    <header style="display:flex;align-items:center;gap:16px;padding:16px 26px;border-bottom:1px solid var(--line);background:rgba(241,237,228,.85);backdrop-filter:blur(8px);z-index:5">
+      <div>
+        <h1 style="font-family:'DM Sans';font-weight:700;font-size:22px;letter-spacing:-.02em;margin:0">{{ viewTitle }}</h1>
+        <div style="font-size:12.5px;color:var(--ink2);margin-top:1px">{{ viewSubtitle }}</div>
+      </div>
+      <div style="margin-left:auto;display:flex;align-items:center;gap:12px">
+        <div style="display:flex;align-items:center;gap:8px;padding:7px 13px;background:var(--card);border:1px solid var(--line);border-radius:20px;width:210px">
+          <svg width="15" height="15" sc-camel-view-box="0 0 24 24" fill="none" stroke="var(--ink3)" stroke-width="2"><circle cx="11" cy="11" r="7"></circle><path d="m20 20-3-3"></path></svg>
+          <input value="{{ query }}" sc-camel-on-input="{{ onQuery }}" placeholder="Search tasks…" style="border:none;background:none;outline:none;font-family:'DM Sans';font-size:13.5px;color:var(--ink);width:100%">
+        </div>
+        <button sc-camel-on-click="{{ onOpenArchive }}" title="Completed tasks" style="display:flex;align-items:center;gap:7px;padding:7px 12px;background:var(--card);border:1px solid var(--line);border-radius:20px;cursor:pointer;font-family:'DM Sans';font-size:12.5px;font-weight:600;color:var(--ink2)" style-hover="border-color:#c9c2b3"><svg width="15" height="15" sc-camel-view-box="0 0 24 24" fill="none" stroke="var(--ink3)" stroke-width="2" stroke-linecap="round"><path d="M21 8v13H3V8M1 3h22v5H1zM10 12h4"></path></svg>Archive<span style="min-width:17px;height:17px;padding:0 5px;border-radius:9px;background:var(--line2);color:var(--ink2);font-family:'JetBrains Mono';font-size:10.5px;display:inline-flex;align-items:center;justify-content:center">{{ archiveCount }}</span></button>
+        <div title="Polling Google Sheets" style="display:flex;align-items:center;gap:7px;padding:7px 12px;background:var(--card);border:1px solid var(--line);border-radius:20px;font-size:12px;color:var(--ink2);font-family:'JetBrains Mono'">
+          <span style="width:7px;height:7px;border-radius:50%;background:var(--done);animation:pulseDot 1.6s infinite"></span>{{ syncLabel }}
+        </div>
+        <button sc-camel-on-click="{{ onBell }}" style="position:relative;width:40px;height:40px;border-radius:11px;border:1px solid var(--line);background:var(--card);cursor:pointer;display:flex;align-items:center;justify-content:center" style-hover="border-color:#c9c2b3">
+          <svg width="18" height="18" sc-camel-view-box="0 0 24 24" fill="none" stroke="var(--ink)" stroke-width="2" stroke-linecap="round"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9M13.7 21a2 2 0 0 1-3.4 0"></path></svg>
+          <sc-if value="{{ unreadCount }}" hint-placeholder-val="{{ true }}"><span style="position:absolute;top:6px;right:6px;min-width:16px;height:16px;padding:0 4px;background:var(--accent);color:#fff;font-size:10px;font-weight:600;border-radius:8px;display:flex;align-items:center;justify-content:center;border:2px solid var(--card);font-family:'JetBrains Mono'">{{ unreadCount }}</span></sc-if>
+        </button>
+      </div>
+    </header>
+
+    <!-- CONTENT -->
+    <div style="flex:1;overflow:auto;padding:24px 26px 40px">
+
+      <!-- FOCUS VIEW -->
+      <sc-if value="{{ isFocus }}" hint-placeholder-val="{{ true }}">
+      <div style="display:grid;grid-template-columns:{{ focusCols }};gap:22px;max-width:1320px;margin:0 auto;align-items:start">
+
+        <section>
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:16px;flex-wrap:wrap">
+            <span style="font-family:'JetBrains Mono';font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink3);margin-right:2px">Waiting on you</span>
+            <sc-for list="{{ requesters }}" as="m" hint-placeholder-count="4">
+              <div title="{{ m.name }}" style="display:flex;align-items:center;gap:7px;background:var(--card);border:1px solid var(--line);border-radius:20px;padding:3px 9px 3px 3px">
+                <span style="width:23px;height:23px;border-radius:50%;background:{{ m.color }};color:#fff;display:flex;align-items:center;justify-content:center;font-size:9.5px;font-weight:600">{{ m.initials }}</span>
+                <span style="font-size:12.5px;font-weight:500;color:var(--ink)">{{ m.first }}</span>
+                <span style="background:var(--accent-bg);color:var(--accent-ink);font-size:10.5px;font-weight:600;font-family:'JetBrains Mono';min-width:17px;height:17px;padding:0 5px;border-radius:9px;display:flex;align-items:center;justify-content:center">{{ m.openCount }}</span>
+              </div>
+            </sc-for>
+          </div>
+          <div style="display:flex;align-items:baseline;gap:10px;margin-bottom:12px">
+            <h2 style="font-family:'DM Sans';font-weight:700;font-size:16px;margin:0">Priority matrix</h2>
+            <span style="font-size:13px;color:var(--ink3)">{{ openCountTotal }} open</span>
+            <span style="margin-left:auto;display:flex;align-items:center;gap:6px;font-size:11.5px;color:var(--teams);font-family:'JetBrains Mono';background:#EAF7FD;padding:4px 9px;border-radius:20px">
+              <svg width="12" height="12" sc-camel-view-box="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M12 3v3M5 8l2 2M19 8l-2 2M12 21a5 5 0 0 0 5-5c0-3-5-8-5-8s-5 5-5 8a5 5 0 0 0 5 5Z"></path></svg>
+              Placed by Eric
+            </span>
+          </div>
+          <div style="display:grid;grid-template-columns:20px 1fr 1fr;grid-template-rows:auto 1fr 1fr;gap:10px">
+            <div></div>
+            <div style="text-align:center;font-family:'JetBrains Mono';font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink3);padding-bottom:2px">Urgent</div>
+            <div style="text-align:center;font-family:'JetBrains Mono';font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink3);padding-bottom:2px">Not urgent</div>
+
+            <div style="display:flex;align-items:center;justify-content:center;font-family:'JetBrains Mono';font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink3);writing-mode:vertical-rl;transform:rotate(180deg)">Important</div>
+            <div sc-camel-on-drag-over="{{ qUI.onDragOver }}" sc-camel-on-drag-leave="{{ qUI.onDragLeave }}" sc-camel-on-drop="{{ qUI.onDrop }}" style="background:{{ qUI.cellBg }};border:1px solid {{ qUI.cellBorder }};border-top:3px solid {{ qUI.color }};border-radius:12px;padding:11px;display:flex;flex-direction:column;gap:8px;min-height:168px;transition:background .12s,border-color .12s">
+              <div style="display:flex;align-items:center;gap:7px"><span style="font-size:12.5px;font-weight:700;color:{{ qUI.color }}">{{ qUI.action }}</span><span style="margin-left:auto;font-size:11px;color:var(--ink3);font-family:'JetBrains Mono'">{{ qUI.count }}</span></div>
+              <div style="display:flex;flex-direction:column;gap:7px;max-height:36vh;overflow:auto;padding-right:3px;margin-right:-3px">
+                <sc-for list="{{ qUI.tasks }}" as="t" hint-placeholder-count="2">
+                  <div sc-camel-on-click="{{ t.onOpen }}" draggable="true" sc-camel-on-drag-start="{{ t.onDragStart }}" sc-camel-on-drag-end="{{ onDragEnd }}" style="animation:riseIn .4s both;background:{{ t.cardBg }};border:1px solid {{ t.cardBorder }};border-radius:9px;padding:9px 10px;cursor:grab;transition:.15s;opacity:{{ t.dragOpacity }};box-shadow:{{ t.cardGlow }}" style-hover="border-color:#d5cec0;filter:brightness(.99)"><sc-if value="{{ t.expedited }}" hint-placeholder-val="{{ false }}"><div style="display:flex;align-items:center;gap:5px;margin-bottom:7px;font-family:'JetBrains Mono';font-size:9.5px;font-weight:600;letter-spacing:.05em;color:#C4361E;background:#FBEAE6;border-radius:6px;padding:3px 7px;width:fit-content"><span style="width:6px;height:6px;border-radius:50%;background:#C4361E;animation:pulseDot 1.2s infinite"></span>EXPEDITED</div></sc-if>
+                    <div style="display:flex;align-items:flex-start;gap:6px;margin-bottom:8px">
+                      <div style="font-size:12.5px;font-weight:600;line-height:1.3;flex:1">{{ t.title }}</div>
+                      <button sc-camel-on-click="{{ t.onComplete }}" title="Complete" style="flex:none;width:24px;height:24px;border-radius:7px;border:1px solid var(--line);background:var(--card);color:var(--ink3);cursor:pointer;display:flex;align-items:center;justify-content:center" style-hover="border-color:var(--done);color:var(--done)"><svg width="13" height="13" sc-camel-view-box="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><path d="M20 6 9 17l-5-5"></path></svg></button>
+                    </div>
+                    <div style="display:flex;align-items:center;gap:7px">
+                      <span title="{{ t.assignerObj.name }}" style="width:18px;height:18px;border-radius:50%;background:{{ t.assignerObj.color }};color:#fff;display:flex;align-items:center;justify-content:center;font-size:8.5px;font-weight:600">{{ t.assignerObj.initials }}</span>
+                      <sc-if value="{{ t.fromTeams }}" hint-placeholder-val="{{ true }}"><span style="font-size:9.5px;color:var(--teams);font-family:'JetBrains Mono'">via Eric</span></sc-if>
+                      <span style="display:flex;align-items:center;gap:4px;font-size:11px;color:{{ t.dueColor }};margin-left:auto"><svg width="11" height="11" sc-camel-view-box="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="5" width="18" height="16" rx="2"></rect><path d="M3 9h18M8 3v4M16 3v4"></path></svg>{{ t.due }}</span>
+                    </div>
+                  </div>
+                </sc-for>
+                <sc-if value="{{ qUI.empty }}" hint-placeholder-val="{{ false }}"><div style="padding:8px 2px;color:var(--ink3);font-size:11.5px">Clear</div></sc-if>
+              </div>
+            </div>
+            <div sc-camel-on-drag-over="{{ qImp.onDragOver }}" sc-camel-on-drag-leave="{{ qImp.onDragLeave }}" sc-camel-on-drop="{{ qImp.onDrop }}" style="background:{{ qImp.cellBg }};border:1px solid {{ qImp.cellBorder }};border-top:3px solid {{ qImp.color }};border-radius:12px;padding:11px;display:flex;flex-direction:column;gap:8px;min-height:168px;transition:background .12s,border-color .12s">
+              <div style="display:flex;align-items:center;gap:7px"><span style="font-size:12.5px;font-weight:700;color:{{ qImp.color }}">{{ qImp.action }}</span><span style="margin-left:auto;font-size:11px;color:var(--ink3);font-family:'JetBrains Mono'">{{ qImp.count }}</span></div>
+              <div style="display:flex;flex-direction:column;gap:7px;max-height:36vh;overflow:auto;padding-right:3px;margin-right:-3px">
+                <sc-for list="{{ qImp.tasks }}" as="t" hint-placeholder-count="2">
+                  <div sc-camel-on-click="{{ t.onOpen }}" draggable="true" sc-camel-on-drag-start="{{ t.onDragStart }}" sc-camel-on-drag-end="{{ onDragEnd }}" style="animation:riseIn .4s both;background:{{ t.cardBg }};border:1px solid {{ t.cardBorder }};border-radius:9px;padding:9px 10px;cursor:grab;transition:.15s;opacity:{{ t.dragOpacity }};box-shadow:{{ t.cardGlow }}" style-hover="border-color:#d5cec0;filter:brightness(.99)"><sc-if value="{{ t.expedited }}" hint-placeholder-val="{{ false }}"><div style="display:flex;align-items:center;gap:5px;margin-bottom:7px;font-family:'JetBrains Mono';font-size:9.5px;font-weight:600;letter-spacing:.05em;color:#C4361E;background:#FBEAE6;border-radius:6px;padding:3px 7px;width:fit-content"><span style="width:6px;height:6px;border-radius:50%;background:#C4361E;animation:pulseDot 1.2s infinite"></span>EXPEDITED</div></sc-if>
+                    <div style="display:flex;align-items:flex-start;gap:6px;margin-bottom:8px">
+                      <div style="font-size:12.5px;font-weight:600;line-height:1.3;flex:1">{{ t.title }}</div>
+                      <button sc-camel-on-click="{{ t.onComplete }}" title="Complete" style="flex:none;width:24px;height:24px;border-radius:7px;border:1px solid var(--line);background:var(--card);color:var(--ink3);cursor:pointer;display:flex;align-items:center;justify-content:center" style-hover="border-color:var(--done);color:var(--done)"><svg width="13" height="13" sc-camel-view-box="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><path d="M20 6 9 17l-5-5"></path></svg></button>
+                    </div>
+                    <div style="display:flex;align-items:center;gap:7px">
+                      <span title="{{ t.assignerObj.name }}" style="width:18px;height:18px;border-radius:50%;background:{{ t.assignerObj.color }};color:#fff;display:flex;align-items:center;justify-content:center;font-size:8.5px;font-weight:600">{{ t.assignerObj.initials }}</span>
+                      <sc-if value="{{ t.fromTeams }}" hint-placeholder-val="{{ true }}"><span style="font-size:9.5px;color:var(--teams);font-family:'JetBrains Mono'">via Eric</span></sc-if>
+                      <span style="display:flex;align-items:center;gap:4px;font-size:11px;color:{{ t.dueColor }};margin-left:auto"><svg width="11" height="11" sc-camel-view-box="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="5" width="18" height="16" rx="2"></rect><path d="M3 9h18M8 3v4M16 3v4"></path></svg>{{ t.due }}</span>
+                    </div>
+                  </div>
+                </sc-for>
+                <sc-if value="{{ qImp.empty }}" hint-placeholder-val="{{ false }}"><div style="padding:8px 2px;color:var(--ink3);font-size:11.5px">Clear</div></sc-if>
+              </div>
+            </div>
+
+            <div style="display:flex;align-items:center;justify-content:center;font-family:'JetBrains Mono';font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink3);writing-mode:vertical-rl;transform:rotate(180deg)">Not important</div>
+            <div sc-camel-on-drag-over="{{ qUrg.onDragOver }}" sc-camel-on-drag-leave="{{ qUrg.onDragLeave }}" sc-camel-on-drop="{{ qUrg.onDrop }}" style="background:{{ qUrg.cellBg }};border:1px solid {{ qUrg.cellBorder }};border-top:3px solid {{ qUrg.color }};border-radius:12px;padding:11px;display:flex;flex-direction:column;gap:8px;min-height:168px;transition:background .12s,border-color .12s">
+              <div style="display:flex;align-items:center;gap:7px"><span style="font-size:12.5px;font-weight:700;color:{{ qUrg.color }}">{{ qUrg.action }}</span><span style="margin-left:auto;font-size:11px;color:var(--ink3);font-family:'JetBrains Mono'">{{ qUrg.count }}</span></div>
+              <div style="display:flex;flex-direction:column;gap:7px;max-height:36vh;overflow:auto;padding-right:3px;margin-right:-3px">
+                <sc-for list="{{ qUrg.tasks }}" as="t" hint-placeholder-count="1">
+                  <div sc-camel-on-click="{{ t.onOpen }}" draggable="true" sc-camel-on-drag-start="{{ t.onDragStart }}" sc-camel-on-drag-end="{{ onDragEnd }}" style="animation:riseIn .4s both;background:{{ t.cardBg }};border:1px solid {{ t.cardBorder }};border-radius:9px;padding:9px 10px;cursor:grab;transition:.15s;opacity:{{ t.dragOpacity }};box-shadow:{{ t.cardGlow }}" style-hover="border-color:#d5cec0;filter:brightness(.99)"><sc-if value="{{ t.expedited }}" hint-placeholder-val="{{ false }}"><div style="display:flex;align-items:center;gap:5px;margin-bottom:7px;font-family:'JetBrains Mono';font-size:9.5px;font-weight:600;letter-spacing:.05em;color:#C4361E;background:#FBEAE6;border-radius:6px;padding:3px 7px;width:fit-content"><span style="width:6px;height:6px;border-radius:50%;background:#C4361E;animation:pulseDot 1.2s infinite"></span>EXPEDITED</div></sc-if>
+                    <div style="display:flex;align-items:flex-start;gap:6px;margin-bottom:8px">
+                      <div style="font-size:12.5px;font-weight:600;line-height:1.3;flex:1">{{ t.title }}</div>
+                      <button sc-camel-on-click="{{ t.onComplete }}" title="Complete" style="flex:none;width:24px;height:24px;border-radius:7px;border:1px solid var(--line);background:var(--card);color:var(--ink3);cursor:pointer;display:flex;align-items:center;justify-content:center" style-hover="border-color:var(--done);color:var(--done)"><svg width="13" height="13" sc-camel-view-box="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><path d="M20 6 9 17l-5-5"></path></svg></button>
+                    </div>
+                    <div style="display:flex;align-items:center;gap:7px">
+                      <span title="{{ t.assignerObj.name }}" style="width:18px;height:18px;border-radius:50%;background:{{ t.assignerObj.color }};color:#fff;display:flex;align-items:center;justify-content:center;font-size:8.5px;font-weight:600">{{ t.assignerObj.initials }}</span>
+                      <sc-if value="{{ t.fromTeams }}" hint-placeholder-val="{{ true }}"><span style="font-size:9.5px;color:var(--teams);font-family:'JetBrains Mono'">via Eric</span></sc-if>
+                      <span style="display:flex;align-items:center;gap:4px;font-size:11px;color:{{ t.dueColor }};margin-left:auto"><svg width="11" height="11" sc-camel-view-box="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="5" width="18" height="16" rx="2"></rect><path d="M3 9h18M8 3v4M16 3v4"></path></svg>{{ t.due }}</span>
+                    </div>
+                  </div>
+                </sc-for>
+                <sc-if value="{{ qUrg.empty }}" hint-placeholder-val="{{ false }}"><div style="padding:8px 2px;color:var(--ink3);font-size:11.5px">Clear</div></sc-if>
+              </div>
+            </div>
+            <div sc-camel-on-drag-over="{{ qNone.onDragOver }}" sc-camel-on-drag-leave="{{ qNone.onDragLeave }}" sc-camel-on-drop="{{ qNone.onDrop }}" style="background:{{ qNone.cellBg }};border:1px solid {{ qNone.cellBorder }};border-top:3px solid {{ qNone.color }};border-radius:12px;padding:11px;display:flex;flex-direction:column;gap:8px;min-height:168px;transition:background .12s,border-color .12s">
+              <div style="display:flex;align-items:center;gap:7px"><span style="font-size:12.5px;font-weight:700;color:{{ qNone.color }}">{{ qNone.action }}</span><span style="margin-left:auto;font-size:11px;color:var(--ink3);font-family:'JetBrains Mono'">{{ qNone.count }}</span></div>
+              <div style="display:flex;flex-direction:column;gap:7px;max-height:36vh;overflow:auto;padding-right:3px;margin-right:-3px">
+                <sc-for list="{{ qNone.tasks }}" as="t" hint-placeholder-count="1">
+                  <div sc-camel-on-click="{{ t.onOpen }}" draggable="true" sc-camel-on-drag-start="{{ t.onDragStart }}" sc-camel-on-drag-end="{{ onDragEnd }}" style="animation:riseIn .4s both;background:{{ t.cardBg }};border:1px solid {{ t.cardBorder }};border-radius:9px;padding:9px 10px;cursor:grab;transition:.15s;opacity:{{ t.dragOpacity }};box-shadow:{{ t.cardGlow }}" style-hover="border-color:#d5cec0;filter:brightness(.99)"><sc-if value="{{ t.expedited }}" hint-placeholder-val="{{ false }}"><div style="display:flex;align-items:center;gap:5px;margin-bottom:7px;font-family:'JetBrains Mono';font-size:9.5px;font-weight:600;letter-spacing:.05em;color:#C4361E;background:#FBEAE6;border-radius:6px;padding:3px 7px;width:fit-content"><span style="width:6px;height:6px;border-radius:50%;background:#C4361E;animation:pulseDot 1.2s infinite"></span>EXPEDITED</div></sc-if>
+                    <div style="display:flex;align-items:flex-start;gap:6px;margin-bottom:8px">
+                      <div style="font-size:12.5px;font-weight:600;line-height:1.3;flex:1">{{ t.title }}</div>
+                      <button sc-camel-on-click="{{ t.onComplete }}" title="Complete" style="flex:none;width:24px;height:24px;border-radius:7px;border:1px solid var(--line);background:var(--card);color:var(--ink3);cursor:pointer;display:flex;align-items:center;justify-content:center" style-hover="border-color:var(--done);color:var(--done)"><svg width="13" height="13" sc-camel-view-box="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><path d="M20 6 9 17l-5-5"></path></svg></button>
+                    </div>
+                    <div style="display:flex;align-items:center;gap:7px">
+                      <span title="{{ t.assignerObj.name }}" style="width:18px;height:18px;border-radius:50%;background:{{ t.assignerObj.color }};color:#fff;display:flex;align-items:center;justify-content:center;font-size:8.5px;font-weight:600">{{ t.assignerObj.initials }}</span>
+                      <sc-if value="{{ t.fromTeams }}" hint-placeholder-val="{{ true }}"><span style="font-size:9.5px;color:var(--teams);font-family:'JetBrains Mono'">via Eric</span></sc-if>
+                      <span style="display:flex;align-items:center;gap:4px;font-size:11px;color:{{ t.dueColor }};margin-left:auto"><svg width="11" height="11" sc-camel-view-box="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="5" width="18" height="16" rx="2"></rect><path d="M3 9h18M8 3v4M16 3v4"></path></svg>{{ t.due }}</span>
+                    </div>
+                  </div>
+                </sc-for>
+                <sc-if value="{{ qNone.empty }}" hint-placeholder-val="{{ false }}"><div style="padding:8px 2px;color:var(--ink3);font-size:11.5px">Clear</div></sc-if>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <sc-if value="{{ activityCollapsed }}" hint-placeholder-val="{{ false }}">
+          <button sc-camel-on-click="{{ onToggleActivity }}" title="Show activity" style="width:44px;display:flex;flex-direction:column;align-items:center;gap:12px;background:var(--card);border:1px solid var(--line);border-radius:13px;padding:14px 0;cursor:pointer;transition:.15s" style-hover="border-color:var(--accent)">
+            <span style="color:var(--ink2)"><svg width="18" height="18" sc-camel-view-box="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9M13.7 21a2 2 0 0 1-3.4 0"></path></svg></span>
+            <sc-if value="{{ unreadCount }}" hint-placeholder-val="{{ true }}"><span style="background:var(--accent);color:#fff;font-size:10px;font-weight:600;font-family:'JetBrains Mono';min-width:18px;height:18px;padding:0 5px;border-radius:9px;display:flex;align-items:center;justify-content:center">{{ unreadCount }}</span></sc-if>
+            <span style="writing-mode:vertical-rl;font-family:'JetBrains Mono';font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--ink3)">Activity</span>
+          </button>
+        </sc-if>
+        <section style="display:{{ activityDisplay }};zoom:.88;filter:saturate(.68) opacity(.93)">
+          <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px">
+            <h2 style="font-family:'DM Sans';font-weight:700;font-size:16px;margin:0">Activity</h2>
+            <button sc-camel-on-click="{{ onMarkAll }}" style="margin-left:auto;background:none;border:none;color:var(--accent-ink);cursor:pointer;font-family:'DM Sans';font-size:12.5px;font-weight:600" style-hover="text-decoration:underline">Mark all read</button>
+            <button sc-camel-on-click="{{ onToggleActivity }}" title="Collapse activity" style="width:28px;height:28px;border-radius:8px;border:1px solid var(--line);background:var(--card);cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--ink2)" style-hover="border-color:#c9c2b3;color:var(--ink)"><svg width="15" height="15" sc-camel-view-box="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="m9 18 6-6-6-6"></path></svg></button>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:10px">
+            <sc-for list="{{ feed }}" as="n" hint-placeholder-count="5">
+              <div sc-camel-on-click="{{ n.onClick }}" style="animation:riseIn .45s both;animation-delay:{{ n.delay }}s;position:relative;background:{{ n.cardBg }};border:1px solid {{ n.cardBorder }};border-radius:13px;padding:14px 15px 14px 16px;cursor:pointer;transition:.15s;overflow:hidden" style-hover="border-color:#d5cec0;transform:translateY(-1px)">
+                <sc-if value="{{ n.unread }}" hint-placeholder-val="{{ true }}"><span style="position:absolute;top:16px;right:14px;width:8px;height:8px;border-radius:50%;background:var(--accent)"></span></sc-if>
+                <div style="display:flex;align-items:center;gap:9px;margin-bottom:8px">
+                  <span style="width:26px;height:26px;border-radius:50%;background:{{ n.actorObj.color }};color:#fff;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:600;flex:none">{{ n.actorObj.initials }}</span>
+                  <span style="font-size:11px;font-weight:600;color:{{ n.accent }};background:{{ n.tagBg }};padding:3px 8px;border-radius:6px;font-family:'JetBrains Mono';letter-spacing:.02em">{{ n.tag }}</span>
+                  <span style="margin-left:auto;font-size:11px;color:var(--ink3);font-family:'JetBrains Mono';padding-right:12px">{{ n.time }}</span>
+                </div>
+                <div style="font-size:13.5px;line-height:1.45;color:var(--ink)">{{ n.line }}</div>
+                <sc-if value="{{ n.taskTitle }}" hint-placeholder-val="{{ true }}"><div style="font-size:13px;color:var(--ink2);margin-top:4px;font-weight:500">“{{ n.taskTitle }}”</div></sc-if>
+
+                <!-- TEAMS AI INTAKE -->
+                <sc-if value="{{ n.isTeams }}" hint-placeholder-val="{{ false }}">
+                  <div style="margin-top:11px;background:var(--card2);border:1px solid var(--line2);border-radius:10px;padding:11px 12px">
+                    <div style="font-size:12.5px;color:var(--ink2);font-style:italic;line-height:1.45;padding-left:9px;border-left:2px solid var(--teams)">{{ n.snippet }}</div>
+                    <sc-if value="{{ n.analyzing }}" hint-placeholder-val="{{ false }}">
+                      <div style="display:flex;align-items:center;gap:8px;margin-top:10px;font-size:12px;color:var(--teams);font-weight:500">
+                        <span style="width:14px;height:14px;border:2px solid var(--teams);border-top-color:transparent;border-radius:50%;animation:spin .7s linear infinite"></span>
+                        Eric is analyzing priority &amp; scope…
+                      </div>
+                    </sc-if>
+                    <sc-if value="{{ n.resolved }}" hint-placeholder-val="{{ false }}">
+                      <div style="display:flex;flex-direction:column;gap:8px;margin-top:10px">
+                        <div style="display:flex;align-items:center;gap:8px">
+                          <span style="font-family:'JetBrains Mono';font-size:10.5px;font-weight:500;color:{{ n.aiQuad.color }};background:{{ n.aiQuad.bg }};padding:3px 7px;border-radius:6px">{{ n.aiQuad.short }} · {{ n.aiQuad.label }}</span>
+                          <span style="animation:popIn .4s both;font-size:11px;color:var(--done);font-weight:600;display:flex;align-items:center;gap:4px"><svg width="12" height="12" sc-camel-view-box="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 6 9 17l-5-5"></path></svg>Added to your board</span>
+                        </div>
+                        <div style="font-size:12px;color:var(--ink2);line-height:1.5"><b style="color:var(--ink)">Why:</b> {{ n.aiReason }}</div>
+                        <div style="display:flex;align-items:flex-start;gap:7px;font-size:12px;color:var(--ink2);line-height:1.5;background:#EAF7FD;padding:8px 10px;border-radius:8px">
+                          <svg width="14" height="14" sc-camel-view-box="0 0 24 24" fill="none" stroke="var(--teams)" stroke-width="2" style="flex:none;margin-top:1px"><path d="M12 8V4M8 12H4M12 16v4M16 12h4"></path><circle cx="12" cy="12" r="4"></circle></svg>
+                          <span><b style="color:var(--teams)">Eric</b> {{ n.botLine }}</span>
+                        </div>
+                      </div>
+                    </sc-if>
+                  </div>
+                </sc-if>
+
+                <!-- BOT AUTO-REPLY (status ask) -->
+                <sc-if value="{{ n.isBotReply }}" hint-placeholder-val="{{ false }}">
+                  <div style="margin-top:11px;background:var(--card2);border:1px solid var(--line2);border-radius:10px;padding:11px 12px">
+                    <div style="font-size:12.5px;color:var(--ink2);font-style:italic;line-height:1.45;padding-left:9px;border-left:2px solid var(--ink3)">{{ n.askText }}</div>
+                    <div style="display:flex;align-items:flex-start;gap:7px;font-size:12px;color:var(--ink2);line-height:1.5;background:#EAF7FD;padding:8px 10px;border-radius:8px;margin-top:9px">
+                      <svg width="14" height="14" sc-camel-view-box="0 0 24 24" fill="none" stroke="var(--teams)" stroke-width="2" style="flex:none;margin-top:1px"><path d="M12 8V4M8 12H4M12 16v4M16 12h4"></path><circle cx="12" cy="12" r="4"></circle></svg>
+                      <span><b style="color:var(--teams)">Eric auto-replied:</b> {{ n.botReply }}</span>
+                    </div>
+                  </div>
+                </sc-if>
+              </div>
+            </sc-for>
+          </div>
+        </section>
+
+      </div>
+      </sc-if>
+
+    </div>
+
+    <!-- BELL DROPDOWN -->
+    <sc-if value="{{ bellOpen }}" hint-placeholder-val="{{ false }}">
+      <div sc-camel-on-click="{{ onCloseBell }}" style="position:absolute;inset:0;z-index:20"></div>
+      <div style="position:absolute;top:70px;right:26px;width:372px;max-height:70vh;overflow:auto;background:var(--card);border:1px solid var(--line);border-radius:15px;box-shadow:0 18px 50px rgba(0,0,0,.16);z-index:21;animation:riseIn .2s both">
+        <div style="display:flex;align-items:center;padding:15px 17px;border-bottom:1px solid var(--line2);position:sticky;top:0;background:var(--card)">
+          <span style="font-family:'DM Sans';font-weight:700;font-size:15px">Notifications</span>
+          <button sc-camel-on-click="{{ onMarkAll }}" style="margin-left:auto;background:none;border:none;color:var(--accent-ink);cursor:pointer;font-size:12.5px;font-weight:600;font-family:'DM Sans'">Mark all read</button>
+        </div>
+        <sc-for list="{{ feed }}" as="n" hint-placeholder-count="4">
+          <div sc-camel-on-click="{{ n.onClick }}" style="display:flex;gap:11px;padding:13px 17px;border-bottom:1px solid var(--line2);cursor:pointer;background:{{ n.dropBg }}" style-hover="background:var(--card2)">
+            <span style="width:30px;height:30px;border-radius:50%;background:{{ n.actorObj.color }};color:#fff;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:600;flex:none">{{ n.actorObj.initials }}</span>
+            <div style="min-width:0">
+              <div style="font-size:13px;line-height:1.4">{{ n.line }}</div>
+              <sc-if value="{{ n.taskTitle }}" hint-placeholder-val="{{ true }}"><div style="font-size:12px;color:var(--ink2);margin-top:2px">“{{ n.taskTitle }}”</div></sc-if>
+              <div style="font-size:11px;color:var(--ink3);font-family:'JetBrains Mono';margin-top:4px">{{ n.time }}</div>
+            </div>
+            <sc-if value="{{ n.unread }}" hint-placeholder-val="{{ true }}"><span style="width:8px;height:8px;border-radius:50%;background:var(--accent);flex:none;margin-top:6px"></span></sc-if>
+          </div>
+        </sc-for>
+      </div>
+    </sc-if>
+
+    <!-- TASK DRAWER -->
+    <sc-if value="{{ hasDrawer }}" hint-placeholder-val="{{ false }}">
+      <div sc-camel-on-click="{{ onCloseDrawer }}" style="position:absolute;inset:0;background:rgba(26,23,19,.32);z-index:30;backdrop-filter:blur(1px)"></div>
+      <div style="position:absolute;top:0;right:0;bottom:0;width:452px;background:var(--paper);border-left:1px solid var(--line);z-index:31;overflow:auto;animation:drawerIn .28s cubic-bezier(.2,.9,.3,1) both;box-shadow:-10px 0 40px rgba(0,0,0,.12)">
+        <div style="padding:22px 24px">
+          <div style="display:flex;align-items:center;gap:10px;margin-bottom:18px">
+            <span style="font-family:'JetBrains Mono';font-size:11px;font-weight:500;color:{{ drawer.quad.color }};background:{{ drawer.quad.bg }};padding:4px 8px;border-radius:6px">{{ drawer.quad.short }}</span>
+            <span style="display:flex;align-items:center;gap:6px;font-size:12px;font-weight:500;color:{{ drawer.stat.color }};background:{{ drawer.stat.bg }};padding:4px 10px;border-radius:20px"><span style="width:6px;height:6px;border-radius:50%;background:{{ drawer.stat.dot }}"></span>{{ drawer.stat.label }}</span>
+            <button sc-camel-on-click="{{ onCloseDrawer }}" style="margin-left:auto;width:32px;height:32px;border-radius:9px;border:1px solid var(--line);background:var(--card);cursor:pointer;display:flex;align-items:center;justify-content:center" style-hover="border-color:#c9c2b3"><svg width="16" height="16" sc-camel-view-box="0 0 24 24" fill="none" stroke="var(--ink)" stroke-width="2" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"></path></svg></button>
+          </div>
+
+          <h2 style="font-family:'DM Sans';font-weight:700;font-size:22px;line-height:1.2;letter-spacing:-.02em;margin:0 0 8px">{{ drawer.title }}</h2>
+          <p style="font-size:14px;line-height:1.6;color:var(--ink2);margin:0 0 18px">{{ drawer.desc }}</p>
+          <sc-if value="{{ drawer.needsInfo }}" hint-placeholder-val="{{ false }}">
+            <div style="display:flex;align-items:flex-start;gap:9px;background:#FBF1E4;border:1px solid #E9C892;border-radius:11px;padding:11px 13px;margin:0 0 18px">
+              <svg width="16" height="16" sc-camel-view-box="0 0 24 24" fill="none" stroke="#B9663F" stroke-width="2" stroke-linecap="round" style="flex:none;margin-top:1px"><circle cx="12" cy="12" r="9"></circle><path d="M12 7v5l3 2"></path></svg>
+              <div style="font-size:12.5px;line-height:1.5;color:var(--ink2)"><b style="color:#B9663F">Eric is waiting on {{ drawer.needsInfoFrom }}:</b> {{ drawer.needsInfo }}<div style="font-size:11.5px;color:var(--ink3);margin-top:4px">Set a due date or attach a link below and this clears automatically.</div></div>
+            </div>
+          </sc-if>
+
+          <sc-if value="{{ drawer.methodLabel }}" hint-placeholder-val="{{ false }}">
+            <div style="display:flex;align-items:center;gap:9px;background:#E7F0EA;border:1px solid #B9D8C6;border-radius:11px;padding:11px 13px;margin-bottom:18px">
+              <span style="width:24px;height:24px;border-radius:50%;background:var(--done);color:#fff;display:flex;align-items:center;justify-content:center;flex:none"><svg width="13" height="13" sc-camel-view-box="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6"><path d="M20 6 9 17l-5-5"></path></svg></span>
+              <div><div style="font-size:12.5px;font-weight:600;color:var(--done)">Delivered · {{ drawer.methodLabel }}</div><sc-if value="{{ drawer.methodNote }}" hint-placeholder-val="{{ true }}"><div style="font-size:12px;color:var(--ink2);margin-top:1px">{{ drawer.methodNote }}</div></sc-if></div>
+            </div>
+          </sc-if>
+
+          <sc-if value="{{ drawer.fromTeams }}" hint-placeholder-val="{{ true }}">
+          </sc-if>
+
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:20px">
+            <div style="background:var(--card);border:1px solid var(--line);border-radius:11px;padding:12px">
+              <div style="font-size:11px;color:var(--ink3);font-family:'JetBrains Mono';text-transform:uppercase;letter-spacing:.08em;margin-bottom:8px">Requested by</div>
+              <div style="display:flex;align-items:center;gap:8px"><span style="width:24px;height:24px;border-radius:50%;background:{{ drawer.assignerObj.color }};color:#fff;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:600">{{ drawer.assignerObj.initials }}</span><span style="font-size:13px;font-weight:500">{{ drawer.assignerObj.name }}</span></div>
+            </div>
+            <div style="background:var(--card);border:1px solid var(--line);border-radius:11px;padding:12px">
+              <div style="font-size:11px;color:var(--ink3);font-family:'JetBrains Mono';text-transform:uppercase;letter-spacing:.08em;margin-bottom:8px">Due</div>
+              <div style="font-size:13px;font-weight:500;color:{{ drawer.dueColor }}">{{ drawer.due }}</div>
+            </div>
+          </div>
+
+          <div style="font-size:11px;color:var(--ink3);font-family:'JetBrains Mono';text-transform:uppercase;letter-spacing:.08em;margin-bottom:9px">Priority · Eisenhower</div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:18px">
+            <sc-for list="{{ drawer.quadOptions }}" as="q" hint-placeholder-count="4">
+              <button sc-camel-on-click="{{ q.onPick }}" style="display:flex;align-items:center;gap:8px;padding:9px 11px;border-radius:9px;border:1.5px solid {{ q.border }};background:{{ q.bg }};cursor:pointer;font-family:'DM Sans';text-align:left" style-hover="border-color:{{ q.color }}">
+                <span style="width:9px;height:9px;border-radius:2px;background:{{ q.color }};flex:none"></span>
+                <span style="min-width:0"><span style="display:block;font-size:12px;font-weight:600;color:var(--ink)">{{ q.short }}</span><span style="display:block;font-size:10.5px;color:var(--ink2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ q.label }}</span></span>
+              </button>
+            </sc-for>
+          </div>
+
+          <div style="font-size:11px;color:var(--ink3);font-family:'JetBrains Mono';text-transform:uppercase;letter-spacing:.08em;margin-bottom:9px">Due date · currently {{ drawer.due }}</div>
+          <div style="display:flex;gap:7px;flex-wrap:wrap;margin-bottom:22px">
+            <sc-for list="{{ drawer.dueOptions }}" as="d" hint-placeholder-count="4">
+              <button sc-camel-on-click="{{ d.onPick }}" style="padding:7px 12px;border-radius:8px;border:1px solid {{ d.border }};background:{{ d.bg }};color:{{ d.color }};cursor:pointer;font-family:'DM Sans';font-size:12.5px;font-weight:500" style-hover="border-color:var(--accent)">{{ d.label }}</button>
+            </sc-for>
+            <input type="date" value="{{ drawer.dueValue }}" sc-camel-on-input="{{ drawer.onCustomDue }}" title="Pick a custom date" style="padding:6px 10px;border-radius:8px;border:1px solid var(--line);background:var(--card);color:var(--ink);font-family:'DM Sans';font-size:12px;cursor:pointer" style-hover="border-color:var(--accent)">
+          </div>
+
+          <div style="font-size:11px;color:var(--ink3);font-family:'JetBrains Mono';text-transform:uppercase;letter-spacing:.08em;margin-bottom:10px">Attachments &amp; links</div>
+          <div style="display:flex;flex-direction:column;gap:7px;margin-bottom:10px">
+            <sc-for list="{{ drawer.links }}" as="l" hint-placeholder-count="1">
+              <sc-if value="{{ l.clickable }}" hint-placeholder-val="{{ true }}">
+                <a href="{{ l.href }}" target="_blank" rel="noopener noreferrer" title="{{ l.href }}" style="display:flex;align-items:center;gap:9px;background:var(--card);border:1px solid var(--line);border-radius:9px;padding:9px 11px;font-size:12.5px;color:var(--ink);font-weight:500;text-decoration:none;cursor:pointer" style-hover="border-color:var(--accent);color:var(--accent-ink)">
+                  <svg width="15" height="15" sc-camel-view-box="0 0 24 24" fill="none" stroke="var(--teams)" stroke-width="2" style="flex:none"><path d="M10 13a5 5 0 0 0 7 0l3-3a5 5 0 0 0-7-7l-1 1M14 11a5 5 0 0 0-7 0l-3 3a5 5 0 0 0 7 7l1-1"></path></svg>
+                  <span style="min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ l.label }}</span>
+                  <svg width="12" height="12" sc-camel-view-box="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" style="flex:none;margin-left:auto;opacity:.55"><path d="M7 17 17 7M7 7h10v10"></path></svg>
+                </a>
+              </sc-if>
+              <sc-if value="{{ l.notClickable }}" hint-placeholder-val="{{ false }}">
+                <div style="display:flex;align-items:center;gap:9px;background:var(--card);border:1px solid var(--line);border-radius:9px;padding:9px 11px;font-size:12.5px;color:var(--ink);font-weight:500">
+                  <svg width="15" height="15" sc-camel-view-box="0 0 24 24" fill="none" stroke="var(--teams)" stroke-width="2" style="flex:none"><path d="M10 13a5 5 0 0 0 7 0l3-3a5 5 0 0 0-7-7l-1 1M14 11a5 5 0 0 0-7 0l-3 3a5 5 0 0 0 7 7l1-1"></path></svg>
+                  <span style="min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ l.label }}</span>
+                </div>
+              </sc-if>
+            </sc-for>
+          </div>
+          <div style="display:flex;gap:8px;margin-bottom:22px">
+            <input value="{{ drawer.linkDraft }}" sc-camel-on-input="{{ onLinkDraft }}" sc-camel-on-key-down="{{ onLinkKey }}" placeholder="Paste a file or doc link…" style="flex:1;padding:10px 12px;border:1px solid var(--line);border-radius:10px;background:var(--card);font-family:'DM Sans';font-size:12.5px;color:var(--ink);outline:none" style-focus="border-color:var(--accent)">
+            <button sc-camel-on-click="{{ onAddLink }}" style="padding:0 14px;border:1px solid var(--line);border-radius:10px;background:var(--card);color:var(--ink);cursor:pointer;font-family:'DM Sans';font-size:12.5px;font-weight:600" style-hover="border-color:#c9c2b3">Attach</button>
+          </div>
+
+          <div style="font-size:11px;color:var(--ink3);font-family:'JetBrains Mono';text-transform:uppercase;letter-spacing:.08em;margin-bottom:11px">Comments &amp; notes</div>
+          <div style="display:flex;flex-direction:column;gap:12px;margin-bottom:14px">
+            <sc-for list="{{ drawer.comments }}" as="c" hint-placeholder-count="1">
+              <div style="display:flex;gap:10px">
+                <span style="width:26px;height:26px;border-radius:50%;background:{{ c.authorObj.color }};color:#fff;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:600;flex:none">{{ c.authorObj.initials }}</span>
+                <div style="background:var(--card);border:1px solid var(--line);border-radius:10px;padding:9px 12px;flex:1">
+                  <div style="display:flex;align-items:baseline;gap:7px;margin-bottom:3px"><span style="font-size:12.5px;font-weight:600">{{ c.authorObj.first }}</span><span style="font-size:10.5px;color:var(--ink3);font-family:'JetBrains Mono'">{{ c.time }}</span></div>
+                  <div style="font-size:13px;line-height:1.45;color:var(--ink)">{{ c.text }}</div>
+                </div>
+              </div>
+            </sc-for>
+            <sc-if value="{{ drawer.noComments }}" hint-placeholder-val="{{ false }}"><div style="font-size:13px;color:var(--ink3);padding:2px">No notes yet.</div></sc-if>
+          </div>
+          <div style="display:flex;gap:8px;margin-bottom:8px">
+            <input value="{{ draft }}" sc-camel-on-input="{{ onDraft }}" sc-camel-on-key-down="{{ onDraftKey }}" placeholder="Add a note…" style="flex:1;padding:11px 13px;border:1px solid var(--line);border-radius:10px;background:var(--card);font-family:'DM Sans';font-size:13px;color:var(--ink);outline:none" style-focus="border-color:var(--accent)">
+            <button sc-camel-on-click="{{ onSendComment }}" style="padding:0 16px;border:none;border-radius:10px;background:var(--ink);color:#fff;cursor:pointer;font-family:'DM Sans';font-size:13px;font-weight:600" style-hover="background:var(--accent-ink)">Send</button>
+          </div>
+        </div>
+
+        <div style="position:sticky;bottom:0;background:var(--paper);border-top:1px solid var(--line);padding:14px 24px;display:flex;gap:10px">
+          <sc-if value="{{ drawer.notRejecting }}" hint-placeholder-val="{{ true }}">
+            <button sc-camel-on-click="{{ drawer.onReject }}" style="flex:none;display:flex;align-items:center;gap:6px;padding:12px 15px;border:1px solid var(--line);border-radius:11px;background:var(--card);color:var(--ink);cursor:pointer;font-family:'DM Sans';font-size:13.5px;font-weight:600" style-hover="border-color:#C4361E;color:#C4361E">
+              <svg width="15" height="15" sc-camel-view-box="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M9 14 4 9l5-5"></path><path d="M4 9h11a6 6 0 0 1 0 12h-3"></path></svg>Send back
+            </button>
+            <button sc-camel-on-click="{{ drawer.onComplete }}" style="flex:1;display:flex;align-items:center;justify-content:center;gap:8px;padding:12px;border:none;border-radius:11px;background:{{ drawer.doneBg }};color:{{ drawer.doneColor }};cursor:pointer;font-family:'DM Sans';font-size:14px;font-weight:600;box-shadow:{{ drawer.doneShadow }}" style-hover="filter:brightness(.96)">
+              <svg width="17" height="17" sc-camel-view-box="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M20 6 9 17l-5-5"></path></svg>{{ drawer.doneLabel }}
+            </button>
+          </sc-if>
+          <sc-if value="{{ drawer.rejecting }}" hint-placeholder-val="{{ false }}">
+            <input value="{{ rejectNote }}" sc-camel-on-input="{{ onRejectNote }}" placeholder="Why is it going back? Eric passes this note to the requester…" style="flex:1;padding:12px 13px;border:1px solid #C4361E;border-radius:11px;background:var(--card);font-family:'DM Sans';font-size:12.5px;color:var(--ink);outline:none">
+            <button sc-camel-on-click="{{ confirmReject }}" style="flex:none;padding:12px 15px;border:none;border-radius:11px;background:#C4361E;color:#fff;cursor:pointer;font-family:'DM Sans';font-size:13px;font-weight:600" style-hover="filter:brightness(.92)">Send back</button>
+            <button sc-camel-on-click="{{ cancelReject }}" style="flex:none;padding:12px 13px;border:1px solid var(--line);border-radius:11px;background:var(--card);color:var(--ink2);cursor:pointer;font-family:'DM Sans';font-size:13px;font-weight:600" style-hover="border-color:#c9c2b3">Cancel</button>
+          </sc-if>
+        </div>
+      </div>
+    </sc-if>
+
+    <!-- ARCHIVE MODAL -->
+    <sc-if value="{{ archiveOpen }}" hint-placeholder-val="{{ false }}">
+      <div sc-camel-on-click="{{ onCloseArchive }}" style="position:absolute;inset:0;background:rgba(26,23,19,.42);z-index:40;backdrop-filter:blur(2px);display:flex;align-items:flex-start;justify-content:center;padding:24px;overflow-y:auto">
+        <div sc-camel-on-click="{{ noop }}" style="width:100%;max-width:560px;margin:auto;background:var(--paper);border:1px solid var(--line);border-radius:18px;box-shadow:0 24px 70px rgba(0,0,0,.28);animation:modalIn .26s cubic-bezier(.2,.9,.3,1) both;overflow:hidden;display:flex;flex-direction:column;max-height:82vh">
+          <div style="padding:20px 24px 14px;border-bottom:1px solid var(--line);display:flex;align-items:flex-start;gap:12px">
+            <div style="flex:1">
+              <div style="font-family:'JetBrains Mono';font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--done);margin-bottom:7px">Archive &middot; Completed</div>
+              <h2 style="font-family:'DM Sans';font-weight:700;font-size:20px;letter-spacing:-.02em;margin:0">{{ archiveCount }} cleared</h2>
+              <div style="font-size:12.5px;color:var(--ink2);margin-top:3px">Hidden from your board &middot; auto-deletes {{ archiveTtlDays }} days after completion.</div>
+            </div>
+            <button sc-camel-on-click="{{ onCloseArchive }}" style="width:32px;height:32px;border-radius:9px;border:1px solid var(--line);background:var(--card);cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--ink2)"><svg width="16" height="16" sc-camel-view-box="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"></path></svg></button>
+          </div>
+          <div style="padding:14px 18px;overflow-y:auto;display:flex;flex-direction:column;gap:9px">
+            <sc-if value="{{ archiveEmpty }}" hint-placeholder-val="{{ false }}">
+              <div style="text-align:center;padding:40px 20px;color:var(--ink3);font-size:13.5px">Nothing completed yet. Finished tasks land here.</div>
+            </sc-if>
+            <sc-for list="{{ archived }}" as="t" hint-placeholder-count="3">
+              <div sc-camel-on-click="{{ t.onOpen }}" style="background:var(--card);border:1px solid var(--line);border-radius:12px;padding:12px 14px;cursor:pointer" style-hover="border-color:#c9c2b3">
+                <div style="display:flex;align-items:center;gap:9px">
+                  <span style="width:16px;height:16px;border-radius:50%;background:var(--done);display:inline-flex;align-items:center;justify-content:center;flex-shrink:0"><svg width="10" height="10" sc-camel-view-box="0 0 24 24" fill="none" stroke="#fff" stroke-width="3.2" stroke-linecap="round"><path d="M20 6 9 17l-5-5"></path></svg></span>
+                  <div style="flex:1;font-family:'DM Sans';font-weight:600;font-size:14px;color:var(--ink)">{{ t.title }}</div>
+                  <div style="font-family:'JetBrains Mono';font-size:10.5px;color:var(--ink3)">{{ t.whenLabel }}</div>
+                </div>
+                <div style="display:flex;align-items:center;gap:8px;margin-top:7px;padding-left:25px">
+                  <span style="font-size:11.5px;color:var(--ink2)">For {{ t.requesterName }}</span>
+                  <sc-if value="{{ t.methodShort }}" hint-placeholder-val="{{ true }}"><span style="font-size:11.5px;color:var(--ink3)">&middot; delivered {{ t.methodShort }}</span></sc-if>
+                  <span style="margin-left:auto;font-family:'JetBrains Mono';font-size:10px;color:#B9663F;background:#FBEDE6;padding:2px 7px;border-radius:8px">{{ t.ttlLabel }}</span>
+                </div>
+              </div>
+            </sc-for>
+          </div>
+        </div>
+      </div>
+    </sc-if>
+
+    <!-- COMPLETION MODAL -->
+    <sc-if value="{{ completing }}" hint-placeholder-val="{{ false }}">
+      <div sc-camel-on-click="{{ onCancelComplete }}" style="position:absolute;inset:0;background:rgba(26,23,19,.42);z-index:40;backdrop-filter:blur(2px);display:flex;align-items:flex-start;justify-content:center;padding:24px;overflow-y:auto">
+        <div sc-camel-on-click="{{ noop }}" style="width:100%;max-width:480px;margin:auto;background:var(--paper);border:1px solid var(--line);border-radius:18px;box-shadow:0 24px 70px rgba(0,0,0,.28);animation:modalIn .26s cubic-bezier(.2,.9,.3,1) both;overflow:hidden">
+          <div style="padding:22px 24px 4px">
+            <div style="font-family:'JetBrains Mono';font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--done);margin-bottom:8px">Closing the loop</div>
+            <h2 style="font-family:'DM Sans';font-weight:700;font-size:21px;letter-spacing:-.02em;margin:0 0 6px">How was this delivered?</h2>
+            <p style="font-size:13.5px;color:var(--ink2);line-height:1.5;margin:0 0 4px">Log how you handled <b style="color:var(--ink)">“{{ completeTitle }}”</b> so Eric can tell {{ completeRequester }} exactly what happened.</p>
+          </div>
+          <div style="padding:16px 24px;display:grid;grid-template-columns:1fr 1fr;gap:10px">
+            <sc-for list="{{ methods }}" as="m" hint-placeholder-count="4">
+              <button sc-camel-on-click="{{ m.onPick }}" style="display:flex;flex-direction:column;gap:7px;padding:13px;border-radius:12px;border:1.5px solid {{ m.border }};background:{{ m.bg }};cursor:pointer;font-family:'DM Sans';text-align:left;transition:.12s" style-hover="border-color:{{ m.color }}">
+                <span style="width:30px;height:30px;border-radius:9px;background:{{ m.iconBg }};color:{{ m.color }};display:flex;align-items:center;justify-content:center">
+                  <sc-if value="{{ m.isEmail }}" hint-placeholder-val="{{ false }}"><svg width="16" height="16" sc-camel-view-box="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="5" width="18" height="14" rx="2"></rect><path d="m3 7 9 6 9-6"></path></svg></sc-if>
+                  <sc-if value="{{ m.isFile }}" hint-placeholder-val="{{ false }}"><svg width="16" height="16" sc-camel-view-box="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 3v5h5M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path></svg></sc-if>
+                  <sc-if value="{{ m.isVerbal }}" hint-placeholder-val="{{ false }}"><svg width="16" height="16" sc-camel-view-box="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg></sc-if>
+                  <sc-if value="{{ m.isTeams }}" hint-placeholder-val="{{ false }}"><svg width="16" height="16" sc-camel-view-box="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 12h8M8 8h8M8 16h5M4 4h16v13a2 2 0 0 1-2 2H9l-5 4z"></path></svg></sc-if>
+                  <sc-if value="{{ m.isOther }}" hint-placeholder-val="{{ false }}"><svg width="16" height="16" sc-camel-view-box="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"></circle><path d="M12 8v4M12 16h.01"></path></svg></sc-if>
+                </span>
+                <span style="font-size:13px;font-weight:600;color:var(--ink);line-height:1.2">{{ m.label }}</span>
+                <span style="font-size:11.5px;color:var(--ink2);line-height:1.35">{{ m.desc }}</span>
+              </button>
+            </sc-for>
+          </div>
+          <div style="padding:0 24px 4px">
+            <input value="{{ completeNote }}" sc-camel-on-input="{{ onCompleteNote }}" placeholder="Add a detail (optional) — e.g. link, who was on the call…" style="width:100%;padding:11px 13px;border:1px solid var(--line);border-radius:10px;background:var(--card);font-family:'DM Sans';font-size:13px;color:var(--ink);outline:none" style-focus="border-color:var(--accent)">
+          </div>
+          <div style="padding:16px 24px;display:flex;gap:10px;justify-content:flex-end">
+            <button sc-camel-on-click="{{ onCancelComplete }}" style="padding:11px 18px;border:1px solid var(--line);border-radius:10px;background:var(--card);color:var(--ink);cursor:pointer;font-family:'DM Sans';font-size:13.5px;font-weight:600" style-hover="border-color:#c9c2b3">Cancel</button>
+            <button sc-camel-on-click="{{ onConfirmComplete }}" style="display:flex;align-items:center;gap:8px;padding:11px 20px;border:none;border-radius:10px;background:{{ confirmBg }};color:#fff;cursor:{{ confirmCursor }};font-family:'DM Sans';font-size:13.5px;font-weight:600;opacity:{{ confirmOpacity }}"><svg width="16" height="16" sc-camel-view-box="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M20 6 9 17l-5-5"></path></svg>Complete &amp; notify</button>
+          </div>
+        </div>
+      </div>
+    </sc-if>
+
+<!-- TOASTS -->
+    <div style="position:absolute;bottom:22px;right:22px;z-index:60;display:flex;flex-direction:column;gap:10px;align-items:flex-end">
+      <sc-for list="{{ toasts }}" as="t" hint-placeholder-count="0">
+        <div style="animation:toastIn .3s cubic-bezier(.2,.9,.3,1) both;display:flex;align-items:flex-start;gap:11px;background:var(--ink);color:#F1EDE4;padding:13px 16px;border-radius:12px;box-shadow:0 12px 34px rgba(0,0,0,.25);max-width:340px">
+          <span style="width:22px;height:22px;border-radius:50%;background:{{ t.accent }};display:flex;align-items:center;justify-content:center;flex:none;margin-top:1px">
+            <svg width="13" height="13" sc-camel-view-box="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.6" stroke-linecap="round"><path d="M20 6 9 17l-5-5"></path></svg>
+          </span>
+          <div><div style="font-size:13.5px;font-weight:600;line-height:1.35">{{ t.text }}</div><sc-if value="{{ t.sub }}" hint-placeholder-val="{{ true }}"><div style="font-size:12px;color:#B8B0A2;margin-top:2px;line-height:1.4">{{ t.sub }}</div></sc-if></div>
+        </div>
+      </sc-for>
+    </div>
+
+  </main>
+</div>
+</sc-if>
+
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script="">
+// ---- LIVE WIRING (Google Sheet via Apps Script /exec) ----
+const EXEC_URL = "https://script.google.com/macros/s/AKfycbxa9K75i3nYzCdnyOf2gXa3ikjBUJsa_L5E_wTGJZ-4q6iXeiSrZkF2oZX3AU3Y6xN8Qw/exec";
+const POLL_MS = 30000;              // dashboard re-pulls the Sheet every 30s
+const SHOW_DEV_INTAKE = false;      // floating "Simulate @Eric intake" button for testing without Teams
+
+// ---- Resizable sidebar: drag the divider between the sidebar and the board ----
+// Delegated on document so DC re-renders can't detach it; width persists per browser.
+(function () {
+  var saved = parseInt(localStorage.getItem('eric_sidebar_w') || '', 10);
+  if (saved) document.documentElement.style.setProperty('--sidebar-w', saved + 'px');
+  var dragging = false;
+  document.addEventListener('mousedown', function (e) {
+    if (e.target && e.target.id === 'sbResize') {
+      dragging = true; e.preventDefault();
+      document.body.style.cursor = 'col-resize'; document.body.style.userSelect = 'none';
+    }
+  });
+  document.addEventListener('mousemove', function (e) {
+    if (!dragging) return;
+    var w = Math.min(640, Math.max(280, e.clientX));
+    document.documentElement.style.setProperty('--sidebar-w', w + 'px');
+  });
+  document.addEventListener('mouseup', function () {
+    if (!dragging) return;
+    dragging = false; document.body.style.cursor = ''; document.body.style.userSelect = '';
+    var v = parseInt(getComputedStyle(document.documentElement).getPropertyValue('--sidebar-w'), 10);
+    if (v) localStorage.setItem('eric_sidebar_w', v);
+  });
+})();
+const TOKEN = "UyWvdJaLl6xMwim5lFXO0umQHT8gBtRqhNL3qdWdiYQ"; // must match the Apps Script ERIC_TOKEN property
+const toBool = v => v === true || v === 1 || v === 'TRUE' || v === 'true' || v === 'Yes';
+
+class Component extends DCLogic {
+  users = {
+    u1:{id:'u1',name:'George Mensah',first:'George',initials:'GM',color:'#FF6632'},
+    u2:{id:'u2',name:'Priya Nair',first:'Priya',initials:'PN',color:'#3F6D8F'},
+    u3:{id:'u3',name:'Marcus Webb',first:'Marcus',initials:'MW',color:'#3F7D62'},
+    u4:{id:'u4',name:'Lena Ortiz',first:'Lena',initials:'LO',color:'#8B5C9E'},
+    u5:{id:'u5',name:'Tomás Rivera',first:'Tomás',initials:'TR',color:'#C77D2A'},
+    u6:{id:'u6',name:'Dana Kim',first:'Dana',initials:'DK',color:'#2A8FA8'},
+  };
+  me = 'u1';
+  quads = {
+    q1:{key:'q1',short:'P1',label:'Urgent · Important',color:'#C4361E',bg:'#FBEAE6',rank:1},
+    q2:{key:'q2',short:'P2',label:'Important · Not urgent',color:'#3F6D8F',bg:'#E9F0F6',rank:2},
+    q3:{key:'q3',short:'P3',label:'Urgent · Not important',color:'#C77D2A',bg:'#F9F0E4',rank:3},
+    q4:{key:'q4',short:'P4',label:'Neither',color:'#8A857C',bg:'#EFEDE9',rank:4},
+  };
+  statuses = {
+    todo:{key:'todo',label:'To do',color:'#8A857C',bg:'#EFEDE9',dot:'#B8B2A6'},
+    doing:{key:'doing',label:'In progress',color:'#C77D2A',bg:'#F9F0E4',dot:'#D8842A'},
+    done:{key:'done',label:'Done',color:'#3F7D62',bg:'#E7F0EA',dot:'#3F7D62'},
+  };
+  notifTypes = {
+    teams:{tag:'VIA ERIC',accent:'#5257C9',tagBg:'#EAF7FD'},
+    progress:{tag:'STATUS ASK',accent:'#C77D2A',tagBg:'#F9F0E4'},
+    delivered:{tag:'CLOSED LOOP',accent:'#3F7D62',tagBg:'#E7F0EA'},
+    attached:{tag:'FILE ADDED',accent:'#3F6D8F',tagBg:'#E9F0F6'},
+    due:{tag:'DUE UPDATED',accent:'#8A857C',tagBg:'#EFEDE9'},
+    declined:{tag:'OUT OF SCOPE',accent:'#8A857C',tagBg:'#EFEDE9'},
+  };
+  methodDefs = [
+    {key:'email',label:'Replied by email',short:'by email',desc:'A written reply is in their inbox.',color:'#3F6D8F',iconBg:'#E9F0F6'},
+    {key:'file',label:'Updated shared file',short:'in shared file',desc:'Changes are live in the doc / sheet.',color:'#3F7D62',iconBg:'#E7F0EA'},
+    {key:'verbal',label:'Confirmed in person',short:'verbally',desc:'Agreed face-to-face or on a call.',color:'#C77D2A',iconBg:'#F9F0E4'},
+    {key:'teams',label:'Replied in Teams',short:'in Teams',desc:'Answered in the Teams thread.',color:'#5257C9',iconBg:'#EAF7FD'},
+    {key:'other',label:'Something else',short:'other',desc:'Add a quick note on how.',color:'#8A857C',iconBg:'#EFEDE9'},
+  ];
+
+  state = {
+    screen:'login', view:'focus', bellOpen:false, query:'', draft:'', linkDraft:'', selectedId:null, synced:3,
+    dragId:null, dragOverQuad:null,
+    chatDraft:'', chat:[], chatTyping:false, chatOpen:false, memory:[], proposalState:{}, activityCollapsed:false, talkOpen:true, pin:'',
+    archiveOpen:false,
+    completing:null, completeMethod:null, completeNote:'',
+    rejecting:null, rejectNote:'',
+    toasts:[],
+    tasks:[
+      {id:'t1',title:'Finalize Q3 GMS pricing deck',desc:'Pull the latest margin numbers, align the tiers with the new packaging, and sign off before the Thursday leadership review.',assignee:'u1',assigner:'u2',due:'Jul 17',dueFlag:'soon',status:'doing',quad:'q1',fromTeams:true,method:null,links:[{label:'Q3-pricing-v4.pptx'}],comments:[{author:'u2',text:'Slide 6 needs the enterprise tier — raw figures are in the linked deck.',time:'1h ago'}]},
+      {id:'t2',title:'Approve vendor contract redlines',desc:'Legal returned three redlines on the data-processing addendum. Confirm the SLA clause and give the go-ahead.',assignee:'u1',assigner:'u3',due:'Jul 16',dueFlag:'overdue',status:'todo',quad:'q3',fromTeams:true,method:null,links:[],comments:[]},
+      {id:'t3',title:'Sign off on onboarding checklist',desc:'Approve the new SSO step and removal of the deprecated CSV import flow.',assignee:'u1',assigner:'u4',due:'Jul 22',dueFlag:null,status:'todo',quad:'q2',fromTeams:false,method:null,links:[],comments:[]},
+      {id:'t4',title:'Review weekly GMS status note',desc:'Approve the wins / blockers / metrics summary before it goes to the board.',assignee:'u1',assigner:'u6',due:'Jul 21',dueFlag:null,status:'todo',quad:'q4',fromTeams:false,method:null,links:[],comments:[]},
+      {id:'t5',title:'Approve dashboard empty-state designs',desc:'Give a yes/no on the zero-task, all-done and first-run states for the new board.',assignee:'u1',assigner:'u6',due:'Jul 18',dueFlag:'soon',status:'doing',quad:'q2',fromTeams:false,method:null,links:[{label:'Figma — empty states'}],comments:[{author:'u6',text:'Should the all-done state show team stats or stay minimal?',time:'1h ago'}]},
+      {id:'t6',title:'Sign off on customer feedback summary',desc:'Approve the top-five themes clustered from last month of support tickets.',assignee:'u1',assigner:'u5',due:'Jul 15',dueFlag:null,status:'done',quad:'q3',fromTeams:false,method:{key:'email',label:'Replied by email',short:'by email',note:'Sent notes back to Tomás with two edits.'},links:[],comments:[]},
+      {id:'t7',title:'Approve Google Sheets schema',desc:'Confirm the tasks / users / activity tab structure and the polling script.',assignee:'u1',assigner:'u3',due:'Jul 20',dueFlag:'soon',status:'doing',quad:'q1',fromTeams:false,method:null,links:[],comments:[],expedited:true},
+      {id:'t8',title:'Review audit evidence pack',desc:'Check the access logs and policy docs before the SOC2 pre-review.',assignee:'u1',assigner:'u2',due:'Jul 24',dueFlag:null,status:'todo',quad:'q2',fromTeams:false,method:null,links:[],comments:[]},
+    ],
+    notifications:[
+      {id:'n1',type:'teams',actor:'u2',line:'Priya Nair tagged @Eric in #gms-pricing',taskId:'t1',time:'2m ago',unread:true,isTeams:true,analyzing:false,resolved:true,snippet:'\u201c@Eric can George own the Q3 pricing deck? Leadership wants it Thursday and the enterprise tier still isn\u2019t in there.\u201d',aiQuad:'q1',aiReason:'Leadership deadline in 2 days + directly blocks the review \u2192 Urgent & Important.',botLine:'confirmed the Thursday due date and enterprise-tier scope with Priya, then acknowledged her so she knows it\u2019s in George\u2019s queue.'},
+      {id:'n2',type:'progress',actor:'u3',line:'Marcus Webb asked Eric for a status update',taskId:'t7',time:'22m ago',unread:true,isBotReply:true,askText:'\u201c@Eric any word on the Sheets schema approval?\u201d',botReply:'\u201cIt\u2019s in progress \u2014 George is reviewing it now, due Jul 20. I\u2019ll ping you the moment he signs off.\u201d'},
+      {id:'n3',type:'attached',actor:'u6',line:'Dana Kim added a file to her request via Eric',taskId:'t5',time:'1h ago',unread:true},
+      {id:'n4',type:'teams',actor:'u3',line:'Marcus Webb tagged @Eric in #legal',taskId:'t2',time:'3h ago',unread:false,isTeams:true,analyzing:false,resolved:true,snippet:'\u201c@Eric the vendor redlines are back, need George\u2019s approval.\u201d',aiQuad:'q3',aiReason:'Time-sensitive but a delegatable review \u2192 Urgent, lower importance.',botLine:'asked Marcus for the deadline and set it to Jul 16.'},
+      {id:'n5',type:'delivered',actor:'u5',line:'Eric told Tomás his feedback summary is done',taskId:'t6',time:'5h ago',unread:false},
+      {id:'n6',type:'due',actor:'u4',line:'Eric moved a due date after following up',taskId:'t3',time:'Yesterday',unread:false},
+    ],
+  };
+
+  componentDidMount(){
+    this.timer = setInterval(()=>this.setState(s=>({synced:Math.min((s.synced||0)+1,99)})),1000);
+    this.pullState(true);
+    this.poller = setInterval(()=>this.pullState(),POLL_MS);
+    if(SHOW_DEV_INTAKE) setTimeout(()=>this.mountDevIntake(),0);
+  }
+  componentWillUnmount(){ clearInterval(this.timer); clearInterval(this.poller); }
+
+  /* ---------- LIVE: read the Sheet ---------- */
+  post(action, payload){
+    return fetch(EXEC_URL, {
+      method:'post',
+      headers:{'Content-Type':'text/plain;charset=utf-8'}, // text/plain -> no CORS preflight
+      body: JSON.stringify(Object.assign({action, token:TOKEN}, payload||{}))
+    }).then(r=>r.json()).catch(err=>{ console.warn('[eric] POST '+action+' failed', err); return {ok:false}; });
+  }
+  mapUsers(rows){
+    const m={};
+    (rows||[]).forEach(u=>{ if(!u.id) return;
+      m[u.id]={id:u.id,name:u.name||u.id,first:u.first||String(u.name||u.id).split(/\s+/)[0],
+        initials:u.initials||String(u.name||'?').slice(0,2).toUpperCase(),color:u.color||'#8A857C'}; });
+    return m;
+  }
+  fmtDate(v){
+    if(v==null||v==='') return '';
+    const s=String(v), m=s.match(/^(\d{4})-(\d{2})-(\d{2})/);
+    if(m){ const mon=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec']; return mon[(+m[2])-1]+' '+(+m[3]); }
+    return s; // already like "Jul 18"
+  }
+  // Derive overdue/soon live from a real ISO date, so the matrix never goes stale as days pass.
+  // Falls back to the stored flag for freeform/legacy tasks that have no dueDate.
+  computeDueFlag(dueDate, stored){
+    const m=String(dueDate||'').match(/^(\d{4})-(\d{2})-(\d{2})/); if(!m) return stored||null;
+    const d=new Date(+m[1],(+m[2])-1,+m[3]), today=new Date(); today.setHours(0,0,0,0);
+    const diff=Math.round((d-today)/86400000);
+    return diff<0?'overdue':(diff<=2?'soon':null);
+  }
+  labelToISO(label){
+    const t=new Date(); t.setHours(0,0,0,0);
+    const iso=(dt)=>dt.getFullYear()+'-'+('0'+(dt.getMonth()+1)).slice(-2)+'-'+('0'+dt.getDate()).slice(-2);
+    if(label==='Today') return iso(t);
+    if(label==='Tomorrow'){ const d=new Date(t); d.setDate(d.getDate()+1); return iso(d); }
+    if(label==='Next week'){ const d=new Date(t); d.setDate(d.getDate()+7); return iso(d); }
+    const parsed=new Date(label+' '+t.getFullYear());
+    return isNaN(parsed)?'':iso(parsed);
+  }
+  mapTasks(rows){
+    return (rows||[]).filter(r=>String(r.id||'').length).map(r=>{
+      const def=this.methodDefs.find(m=>m.key===r.method);
+      const method=def?{key:def.key,label:def.label,short:def.short,note:r.methodNote||''}:null;
+      const links=String(r.links||'').split(/[|,]/).map(s=>s.trim()).filter(Boolean).map(l=>({label:l}));
+      return {id:String(r.id),title:r.title||'',desc:r.desc||'',
+        assignee:r.assignee||'u1',assigner:r.assigner||'',
+        due:this.fmtDate(r.due),dueDate:r.dueDate||'',dueFlag:this.computeDueFlag(r.dueDate,r.dueFlag),status:r.status||'todo',quad:r.quad||'q2',
+        fromTeams:toBool(r.fromTeams),expedited:toBool(r.expedited),method,links,comments:[],
+        completedAt:r.completedAt||'',createdAt:r.createdAt||'',needsInfo:r.needsInfo||''};
+    });
+  }
+  mapNotifs(rows){
+    return (rows||[]).filter(r=>String(r.id||'').length).slice().reverse().map(r=>{
+      const type=r.type||'teams';
+      const ts=r.createdAt?new Date(r.createdAt).getTime():NaN;             // real timestamp from the Sheet
+      const timeLabel=!isNaN(ts)?this.relLabel(r.createdAt):(r.time||'');    // compute "5 min ago" client-side
+      const n={id:String(r.id),type,actor:r.actor||'',line:r.line||'',taskId:r.taskId?String(r.taskId):null,
+        time:timeLabel,_ts:isNaN(ts)?0:ts,unread:toBool(r.unread),snippet:r.snippet||'',aiQuad:r.aiQuad||'',aiReason:r.aiReason||'',botLine:r.botLine||''};
+      if(type==='teams'){ n.isTeams=true; n.analyzing=false; n.resolved=true; }
+      if(type==='progress'){ n.isBotReply=true; n.askText=r.snippet||''; n.botReply=r.botLine||''; }
+      if(type==='declined'){ n.isBotReply=true; n.askText=r.snippet||''; n.botReply=r.botLine||''; }
+      return n;
+    });
+  }
+  pullState(firstLoad){
+    return fetch(EXEC_URL, {method:'post', headers:{'Content-Type':'text/plain;charset=utf-8'}, body: JSON.stringify({action:'state', token:TOKEN})})
+      .then(r=>r.json())
+      .then(db=>{ // older backend without POST-state support -> fall back to GET so nothing breaks mid-deploy
+        if(db && db.error==='unknown action'){ return fetch(EXEC_URL+'?action=state'+(TOKEN?('&token='+encodeURIComponent(TOKEN)):''),{cache:'no-store'}).then(r=>r.json()); }
+        return db;
+      })
+      .then(db=>{
+        this.outboundReady = !!db.outboundReady;   // whether Teams outbound is wired (for honest wording)
+        if(!this._seedUsers) this._seedUsers=this.users;           // keep built-in demo people as a baseline
+        const users=Object.assign({}, this._seedUsers, this.mapUsers(db.users)); // Sheet users override seed
+        const prev={}; (this.state.tasks||[]).forEach(t=>prev[t.id]=t);
+        const tasks=this.mapTasks(db.tasks).map(t=> (prev[t.id]&&prev[t.id].comments&&prev[t.id].comments.length)?Object.assign({},t,{comments:prev[t.id].comments}):t);
+        // make sure every referenced user exists so this.users[...] never crashes
+        tasks.forEach(t=>[t.assigner,t.assignee].forEach(uid=>{ if(uid&&!users[uid]) users[uid]={id:uid,name:String(uid),first:String(uid),initials:String(uid).toUpperCase().slice(0,2),color:'#8A857C'}; }));
+        if(!users[this.me]) users[this.me]=(this.users&&this.users[this.me])||{id:this.me,name:'George Mensah',first:'George',initials:'GM',color:'#FF6632'};
+        this.users=users;
+        // Pop a notification only for genuinely NEW incoming tasks — not on first load,
+        // and never for completed / closed-loop items.
+        if(!firstLoad && this._knownIds){
+          tasks.forEach(t=>{
+            if(!this._knownIds.has(t.id) && t.status!=='done'){
+              const who=(users[t.assigner]&&users[t.assigner].first)||'a teammate';
+              const qm=this.quads[t.quad]||this.quads.q2;
+              this.toast('New task from '+who, '“'+t.title+'” · '+qm.short+(t.due?(' · due '+t.due):''), qm.color);
+            }
+          });
+        }
+        this._knownIds=new Set(tasks.map(t=>t.id));
+        this.setState({tasks,notifications:this.mapNotifs(db.activity),memory:(db.memory||[]).map(m=>m.fact).filter(Boolean),synced:0});
+      })
+      .catch(err=>{ console.warn('[eric] state fetch failed',err); if(firstLoad) this.toast('Can’t reach the Sheet','Showing last data · will retry','#C4361E'); });
+  }
+  mountDevIntake(){
+    if(!SHOW_DEV_INTAKE || document.getElementById('__ericDev')) return;
+    const wrap=document.createElement('div');
+    wrap.id='__ericDev';
+    wrap.style.cssText="position:fixed;right:18px;bottom:18px;z-index:99999;font-family:'DM Sans',sans-serif";
+    const trigger=document.createElement('button');
+    trigger.textContent='+ Simulate @Eric intake';
+    trigger.style.cssText="background:#FF6632;color:#fff;border:none;border-radius:10px;padding:11px 15px;font:600 13px/1 'DM Sans',sans-serif;box-shadow:0 6px 18px rgba(0,0,0,.22);cursor:pointer";
+    const panel=document.createElement('div');
+    panel.style.cssText="display:none;width:300px;background:#fff;border:1px solid #E0D9C9;border-radius:14px;box-shadow:0 14px 40px rgba(0,0,0,.24);padding:14px;color:#25282B";
+    panel.innerHTML=
+      "<div style=\"font:600 13px/1.2 'DM Sans';margin-bottom:2px\">Simulate a Teams @Eric mention</div>"+
+      "<div style=\"font-size:11px;color:#8A857C;margin-bottom:10px\">Runs Eric&#39;s real triage &mdash; no Teams needed.</div>"+
+      "<label style=\"font-size:11px;color:#8A857C\">From (colleague)</label>"+
+      "<input id=\"__ericFrom\" value=\"Priya Nair\" style=\"width:100%;box-sizing:border-box;margin:3px 0 9px;padding:8px 10px;border:1px solid #E0D9C9;border-radius:8px;font:400 13px 'DM Sans';outline:none\">"+
+      "<label style=\"font-size:11px;color:#8A857C\">Their message</label>"+
+      "<textarea id=\"__ericMsg\" rows=\"3\" style=\"width:100%;box-sizing:border-box;margin:3px 0 10px;padding:8px 10px;border:1px solid #E0D9C9;border-radius:8px;font:400 13px 'DM Sans';outline:none;resize:vertical\">@Eric can George approve the new brand guidelines by Wednesday? It&#39;s blocking the launch.</textarea>"+
+      "<div style=\"display:flex;gap:8px\">"+
+        "<button id=\"__ericSend\" style=\"flex:1;background:#FF6632;color:#fff;border:none;border-radius:8px;padding:9px;font:600 13px 'DM Sans';cursor:pointer\">Send to Eric</button>"+
+        "<button id=\"__ericCancel\" style=\"background:#F1EDE4;color:#25282B;border:1px solid #E0D9C9;border-radius:8px;padding:9px 12px;font:600 13px 'DM Sans';cursor:pointer\">Close</button>"+
+      "</div>";
+    wrap.appendChild(trigger); wrap.appendChild(panel);
+    document.body.appendChild(wrap);
+    const open=(v)=>{ panel.style.display=v?'block':'none'; trigger.style.display=v?'none':'inline-block'; };
+    trigger.onclick=()=>open(true);
+    panel.querySelector('#__ericCancel').onclick=()=>open(false);
+    const send=panel.querySelector('#__ericSend');
+    send.onclick=()=>{
+      const from=(panel.querySelector('#__ericFrom').value||'').trim()||'Teammate';
+      const text=(panel.querySelector('#__ericMsg').value||'').trim(); if(!text) return;
+      send.disabled=true; send.textContent='Eric is triaging…';
+      this.post('intake',{fromName:from,fromUserId:'dev-'+from.replace(/\s+/g,'').toLowerCase(),text,channel:'dev'})
+        .then(res=>{ this.toast('New intake from '+from, (res&&res.triage)?('Triaged '+res.triage.quad+' · due '+res.triage.due):'Logged for George','#5257C9'); return this.pullState(true); })
+        .then(()=>{ send.disabled=false; send.textContent='Send to Eric'; open(false); })
+        .catch(()=>{ send.disabled=false; send.textContent='Send to Eric'; });
+    };
+  }
+
+
+  toast(text,sub,accent){
+    const id='ts'+Date.now()+Math.random();
+    this.setState(s=>({toasts:[...s.toasts,{id,text,sub,accent:accent||'#3F7D62'}]}));
+    setTimeout(()=>this.setState(s=>({toasts:s.toasts.filter(t=>t.id!==id)})),4200);
+  }
+
+  doLogin=()=>{ const st=this.loadStore(); this.setState({screen:'app',pin:'',chat:st.chat,proposalState:st.proposalState}); this.pullState(true); };
+  onLogin=()=>this.doLogin();
+  onPinInput=(e)=>{
+    const next=(e.target.value||'').replace(/\D/g,'').slice(0,4);
+    this.setState({pin:next}, ()=>{ if(next.length===4) setTimeout(this.doLogin,180); });
+  };
+  onPinKey=(e)=>{ if(e.key==='Enter' && (this.state.pin||'').length===4) this.doLogin(); };
+  onLogout=()=>this.setState({screen:'login',bellOpen:false,selectedId:null,completing:null});
+  onFocus=()=>this.setState({view:'focus'});
+  onBoard=()=>this.setState({view:'board'});
+  onBell=()=>this.setState(s=>({bellOpen:!s.bellOpen}));
+  onCloseBell=()=>this.setState({bellOpen:false});
+  onQuery=(e)=>this.setState({query:e.target.value});
+  onMarkAll=()=>this.setState(s=>({notifications:s.notifications.map(n=>({...n,unread:false}))}));
+  onCloseDrawer=()=>this.setState({selectedId:null,draft:'',linkDraft:''});
+  onDraft=(e)=>this.setState({draft:e.target.value});
+  onDraftKey=(e)=>{ if(e.key==='Enter') this.sendComment(); };
+  onSendComment=()=>this.sendComment();
+  onLinkDraft=(e)=>this.setState({linkDraft:e.target.value});
+  onLinkKey=(e)=>{ if(e.key==='Enter') this.addLink(); };
+  onAddLink=()=>this.addLink();
+  onCompleteNote=(e)=>this.setState({completeNote:e.target.value});
+  noop=(e)=>{ if(e&&e.stopPropagation)e.stopPropagation(); if(e&&e.preventDefault)e.preventDefault(); };
+
+  openTask=(id)=>{
+    this.setState(s=>({selectedId:id,bellOpen:false,linkDraft:'',notifications:s.notifications.map(n=>n.taskId===id?{...n,unread:false}:n)}));
+  };
+  openNotif=(n)=>{
+    if(n.taskId) this.openTask(n.taskId);
+    else this.setState(s=>({notifications:s.notifications.map(x=>x.id===n.id?{...x,unread:false}:x)}));
+  };
+
+  // completion flow
+  startComplete=(id,e)=>{ if(e)e.stopPropagation(); this.setState({completing:id,completeMethod:null,completeNote:''}); };
+  pickMethod=(key)=>this.setState({completeMethod:key});
+  onCancelComplete=()=>this.setState({completing:null,completeMethod:null,completeNote:''});
+  onConfirmComplete=()=>{
+    const id=this.state.completing, key=this.state.completeMethod;
+    if(!id||!key) return;
+    const def=this.methodDefs.find(m=>m.key===key);
+    const t=this.state.tasks.find(x=>x.id===id);
+    const note=(this.state.completeNote||'').trim();
+    this.setState(s=>({
+      tasks:s.tasks.map(x=>x.id===id?{...x,status:'done',method:{key,label:def.label,short:def.short,note}}:x),
+      completing:null,completeMethod:null,completeNote:'',selectedId:null,draft:'',linkDraft:''
+    }));
+    this.post('completeTask',{id,method:key,methodNote:note});
+    const who=(this.users[t.assigner]&&this.users[t.assigner].first)||'the requester';
+    this.toast(this.outboundReady?(who+' notified via Eric'):('Reply drafted for '+who),
+      'Delivered '+def.short+(this.outboundReady?'.':' · Eric sends it once Teams is connected.'),'#3F7D62');
+  };
+
+  reopenTask=(id)=>{ this.setState(s=>({tasks:s.tasks.map(x=>x.id===id?{...x,status:'doing',method:null}:x)})); this.post('updateTask',{id,patch:{status:'doing',method:'',methodNote:''}}); };
+  rejectTask=(id)=>{ this.setState({rejecting:id, rejectNote:''}); };            // opens the note row
+  onRejectNote=(e)=>this.setState({rejectNote:e.target.value});
+  cancelReject=()=>this.setState({rejecting:null, rejectNote:''});
+  confirmReject=()=>{
+    const id=this.state.rejecting; if(!id) return;
+    const note=(this.state.rejectNote||'').trim();
+    const t=this.state.tasks.find(x=>x.id===id); if(!t){ this.setState({rejecting:null}); return; }
+    this.setState(s=>({tasks:s.tasks.map(x=>x.id===id?{...x,status:'todo',needsInfo:note}:x),selectedId:null,rejecting:null,rejectNote:'',draft:''}));
+    this.post('sendBack',{id,note});
+    const who=(this.users[t.assigner]&&this.users[t.assigner].first)||'the requester';
+    this.toast('Sent back to '+who, note?'Eric passes your note along.':'Eric will ask them to clarify.','#C4361E');
+  };
+  setQuad=(id,q)=>{ this.setState(s=>({tasks:s.tasks.map(x=>x.id===id?{...x,quad:q}:x)})); this.post('updateTask',{id,patch:{quad:q}}); };
+  // ---- Eric memory + conversation persistence (stand-in for Google Sheet) ----
+  STORE_KEY='relay_eric_v1';
+  defaultMemory=[
+    'Prefers email over calls with Priya',
+    'Keep Fridays light — board prep',
+    'Only escalate legal items same-day',
+  ];
+  loadStore(){
+    try{ const raw=localStorage.getItem(this.STORE_KEY); if(raw){ const d=JSON.parse(raw); return {chat:d.chat||[], memory:d.memory||this.defaultMemory, proposalState:d.proposalState||{}}; } }catch(_){}
+    return {chat:[], memory:this.defaultMemory.slice(), proposalState:{}};
+  }
+  persist(){
+    try{ localStorage.setItem(this.STORE_KEY, JSON.stringify({chat:this.state.chat, memory:this.state.memory, proposalState:this.state.proposalState})); }catch(_){}
+  }
+  remember(fact){
+    if(this.state.memory.includes(fact)) return;
+    this.setState(s=>({memory:[fact, ...s.memory].slice(0,6)}), ()=>this.persist());
+    this.post('addMemory',{fact});
+  }
+
+  // Suggestion chips are built from the live board, so they always reference real tasks.
+  shortTitle(t){ t=String(t||''); return t.length>30 ? t.slice(0,28)+'\u2026' : t; }
+  buildChatSuggest(s){
+    const open=s.tasks.filter(t=>t.status!=='done');
+    const chips=['What needs me today?'];
+    const pressing=open.filter(t=>t.quad==='q1'||t.dueFlag==='overdue'||t.dueFlag==='soon');
+    const pick=pressing[0]||open[0];
+    if(pick){
+      const who=(this.users[pick.assigner]&&this.users[pick.assigner].first)||'them';
+      chips.push('Tell '+who+' I\u2019m on \u201c'+this.shortTitle(pick.title)+'\u201d');
+      chips.push('Move \u201c'+this.shortTitle(pick.title)+'\u201d to next week & tell '+who);
+    }
+    if(open.length>1) chips.push('Chase everyone waiting on me');
+    return chips;
+  }
+  onToggleActivity=()=>this.setState(s=>({activityCollapsed:!s.activityCollapsed}));
+  onToggleTalk=()=>this.setState(s=>({talkOpen:!s.talkOpen}));
+  // ---- Archive (completed tasks) ----
+  ARCHIVE_TTL_DAYS=14;
+  onOpenArchive=()=>this.setState({archiveOpen:true,bellOpen:false,selectedId:null,chatOpen:false});
+  onCloseArchive=()=>this.setState({archiveOpen:false});
+  relLabel(v){ if(!v) return ''; const t=new Date(v).getTime(); if(isNaN(t)) return ''; const mins=Math.round((Date.now()-t)/60000); if(mins<1) return 'just now'; if(mins<60) return mins+' min ago'; const h=Math.round(mins/60); if(h<24) return h+'h ago'; const d=Math.round(h/24); if(d===1) return 'yesterday'; if(d<7) return d+' days ago'; return new Date(v).toLocaleDateString('en-US',{month:'short',day:'numeric'}); }
+  ttlLabel(v){ if(!v) return ''; const t=new Date(v).getTime(); if(isNaN(t)) return ''; const left=Math.ceil(this.ARCHIVE_TTL_DAYS-(Date.now()-t)/86400000); if(left<=0) return 'deleting soon'; if(left===1) return 'auto-deletes tomorrow'; return 'auto-deletes in '+left+' days'; }
+
+  onChatDraft=(e)=>this.setState({chatDraft:e.target.value});
+  onChatKey=(e)=>{ if(e.key==='Enter' && !e.shiftKey){ e.preventDefault(); this.chatSend(); } };
+  onChatSend=()=>this.chatSend();
+  pickSuggestion=(txt)=>this.chatSend(txt);
+  scrollThread=()=>{ requestAnimationFrame(()=>{ const el=document.getElementById('ericThread'); if(el) el.scrollTop=el.scrollHeight; }); };
+  chatSend=(preset)=>{
+    const text=(preset ?? this.state.chatDraft ?? '').trim();
+    if(!text) return;
+    this.setState(s=>({chat:[...s.chat,{id:'m'+Date.now(),from:'me',text}],chatDraft:'',chatTyping:true}), ()=>{this.persist();this.scrollThread();});
+    this.post('saveChat',{from:'me',text,pending:''});
+    this.ericRespond(text);
+  };
+  // Real chat brain: ask the backend LLM to interpret George's command and propose a targeted step.
+  ericRespond(text){
+    this.post('ericChat',{text}).then(res=>{
+      if(!res || !res.ok){ this.chatFallback(); return; }   // graceful fallback if backend not redeployed yet
+      const p=res.proposal||{};
+      const hasProp=!!p.proposalLabel;
+      const msg={id:'e'+Date.now(),from:'eric',text:res.reply||'On it.',
+        pending: hasProp?{status:'open', kind:p.action||'message', targetUserId:p.targetUserId||'', targetName:p.targetName||'',
+          taskId:p.taskId||'', message:p.message||'', due:p.due||'', label:p.proposalLabel, detail:p.proposalDetail||'', confirm:p.proposalConfirm||'Approve & send'}:null};
+      this.setState(s=>({chatTyping:false, chat:[...s.chat,msg]}), ()=>{this.persist();this.scrollThread();});
+      this.post('saveChat',{from:'eric',text:msg.text,pending:hasProp?'open':''});
+    }).catch(()=>this.chatFallback());
+  }
+
+  chatFallback(){ this.setState(s=>({chatTyping:false, chat:[...s.chat,{id:'e'+Date.now(),from:'eric',text:'I couldn\u2019t reach my brain just now \u2014 mind trying that again in a moment?'}]}), ()=>this.scrollThread()); }
+  // George approves a chat proposal → deliver
+  approveChat=(msgId)=>{
+    const msg=this.state.chat.find(m=>m.id===msgId); if(!msg||!msg.pending) return;
+    const p=msg.pending;
+    // Deliver to the ONE named person only — backend sends the DM + logs a closed-loop record.
+    this.post('ericDeliver',{targetUserId:p.targetUserId||'',targetName:p.targetName||'',message:p.message||'',taskId:p.taskId||'',kind:p.kind||''});
+    if(p.kind==='setDue' && p.taskId) this.setDueSilent(p.taskId, p.due||'soon');
+    const ready=this.outboundReady;
+    const confirmText = p.targetName
+      ? (ready ? ('Sent to '+p.targetName+' \u2014 just them. I\u2019ll let you know if they reply.')
+               : ('Drafted for '+p.targetName+' only \u2014 I\u2019ll send it the moment Teams outbound is connected.'))
+      : 'Done \u2014 handled and logged.';
+    this.setState(s=>({chat:s.chat.map(m=>m.id===msgId?{...m,pending:{...m.pending,status:'approved'}}:m).concat([{id:'e'+Date.now(),from:'eric',text:confirmText}])}), ()=>{this.persist();this.scrollThread();});
+    this.toast(ready?'Eric delivered':'Eric drafted', p.targetName?((ready?'Sent to ':'Queued for ')+p.targetName+' only'):'Handled on your behalf','#FF6632');
+  };
+  dismissChat=(msgId)=>{
+    this.setState(s=>({chat:s.chat.map(m=>m.id===msgId?{...m,pending:{...m.pending,status:'dismissed'}}:m).concat([{id:'e'+Date.now(),from:'eric',text:'Understood \u2014 I\u2019ll hold off.'}])}), ()=>{this.persist();this.scrollThread();});
+  };
+
+  setDueSilent=(id,label)=>this.setState(s=>({tasks:s.tasks.map(x=>x.id===id?{...x,due:label,dueFlag:'soon'}:x)}));
+  focusSubtitle=(cleared,open)=>{
+    const done = cleared===1 ? '1 cleared today' : cleared+' cleared today';
+    let quote;
+    if(open===0) quote='inbox zero — that\u2019s a rare and beautiful thing. \uD83C\uDF89';
+    else if(open<=2) quote='just '+open+' to go. Almost there \u2014 finish strong.';
+    else if(open<=4) quote=open+' left. Steady pace, one at a time.';
+    else if(open<=6) quote=open+' on your plate \u2014 knock out the top two and the rest gets lighter.';
+    else quote=open+' waiting, but you\u2019ve got Eric. Pick the top one and go.';
+    return (cleared>0? done+' \u00b7 ' : '')+quote;
+  };
+
+  onDragStart=(id,e)=>{ if(e&&e.dataTransfer){e.dataTransfer.effectAllowed='move';try{e.dataTransfer.setData('text/plain',id);}catch(_){}} this.setState({dragId:id}); };
+  onDragEnd=()=>this.setState({dragId:null,dragOverQuad:null});
+  onDragOverQuad=(qk,e)=>{ if(e){e.preventDefault(); if(e.dataTransfer)e.dataTransfer.dropEffect='move';} if(this.state.dragOverQuad!==qk) this.setState({dragOverQuad:qk}); };
+  onDragLeaveQuad=(qk)=>{ if(this.state.dragOverQuad===qk) this.setState({dragOverQuad:null}); };
+  onDropQuad=(qk,e)=>{
+    if(e)e.preventDefault();
+    const id=this.state.dragId; this.setState({dragId:null,dragOverQuad:null});
+    if(!id) return;
+    const t=this.state.tasks.find(x=>x.id===id);
+    if(!t||t.quad===qk) return;
+    this.setState(s=>({tasks:s.tasks.map(x=>x.id===id?{...x,quad:qk}:x)}));
+    this.post('updateTask',{id,patch:{quad:qk}});
+    this.toast('Moved to '+this.quads[qk].label, 'Eric logged the re-prioritization.', '#FF6632');
+  };
+  setDue=(id,label)=>{
+    const dd=this.labelToISO(label);
+    const flag=this.computeDueFlag(dd,null);
+    this.setState(s=>({tasks:s.tasks.map(x=>x.id===id?{...x,due:label,dueDate:dd,dueFlag:flag,needsInfo:''}:x)}));
+    this.post('updateTask',{id,patch:{due:label,dueDate:dd,dueFlag:flag||'',needsInfo:''}});
+    this.toast('Due date updated','Now due '+label,'#C77D2A');
+  };
+  setDueISO=(id,iso)=>{
+    const d=new Date(iso+'T00:00:00'); if(isNaN(d)) return;
+    const label=d.toLocaleDateString('en-US',{month:'short',day:'numeric'});
+    const flag=this.computeDueFlag(iso,null);
+    this.setState(s=>({tasks:s.tasks.map(x=>x.id===id?{...x,due:label,dueDate:iso,dueFlag:flag,needsInfo:''}:x)}));
+    this.post('updateTask',{id,patch:{due:label,dueDate:iso,dueFlag:flag||'',needsInfo:''}});
+    this.toast('Due date updated','Now due '+label,'#C77D2A');
+  };
+  addLink=()=>{
+    const url=(this.state.linkDraft||'').trim(); const id=this.state.selectedId;
+    if(!url||!id) return;
+    const t=this.state.tasks.find(x=>x.id===id);
+    const linkStr=[...((t&&t.links)?t.links.map(l=>l.label):[]),url].join(' | ');
+    this.setState(s=>({tasks:s.tasks.map(x=>x.id===id?{...x,links:[...x.links,{label:url}],needsInfo:''}:x),linkDraft:''}));
+    this.post('updateTask',{id,patch:{links:linkStr,needsInfo:''}});
+    this.toast('Link attached',null,'#3F6D8F');
+  };
+  sendComment=()=>{
+    const txt=(this.state.draft||'').trim(); const id=this.state.selectedId;
+    if(!txt||!id) return;
+    const t=this.state.tasks.find(x=>x.id===id);
+    this.setState(s=>({tasks:s.tasks.map(x=>x.id===id?{...x,comments:[...x.comments,{author:this.me,text:txt,time:'just now'}]}:x),draft:''}));
+    this.toast('Note added',(t?this.users[t.assigner].first+' notified via Eric':null),'#3F6D8F');
+  };
+
+  decorateTask(t){
+    const quad=this.quads[t.quad], stat=this.statuses[t.status];
+    const dueColor = t.status==='done' ? 'var(--ink3)' : t.dueFlag==='overdue' ? '#C4361E' : t.dueFlag==='soon' ? '#C77D2A' : 'var(--ink2)';
+    const done = t.status==='done';
+    return {...t, quad, stat,
+      assignerObj:this.users[t.assigner], assigneeObj:this.users[t.assignee],
+      dueColor, linkCount:t.links.length,
+      methodLabel: t.method?t.method.label:'', methodShort:t.method?t.method.short:'', methodNote:t.method?t.method.note:'',
+      showDue: !done,
+      expedited: !!t.expedited,
+      cardBg: t.expedited?'#FDF3F0':'var(--paper)',
+      cardBorder: t.expedited?'#E9A896':'var(--line2)',
+      cardGlow: t.expedited?'0 0 0 1px rgba(196,54,30,.16)':'none',
+      dragOpacity: this.state.dragId===t.id ? '.4' : '1',
+      onDragStart:(e)=>this.onDragStart(t.id,e),
+      onOpen:()=>this.openTask(t.id),
+      onComplete:(e)=>{ this.startComplete(t.id,e); },
+    };
+  }
+
+  decorateNotif(n){
+    const ty=this.notifTypes[n.type]||this.notifTypes.teams;
+    const task=n.taskId?this.state.tasks.find(x=>x.id===n.taskId):null;
+    return {...n, actorObj:this.users[n.actor], accent:ty.accent, tag:ty.tag, tagBg:ty.tagBg,
+      taskTitle: task?task.title:'',
+      aiQuad: n.aiQuad?this.quads[n.aiQuad]:this.quads.q1,
+      cardBg: n.unread?'var(--card)':'#F6F2E9',
+      cardBorder: n.unread?'#E0D9C9':'var(--line2)',
+      dropBg: n.unread?'#FBF6EC':'transparent',
+      delay: 0,
+      onClick:()=>this.openNotif(n),
+    };
+  }
+
+  renderVals(){
+    const s=this.state, q=(s.query||'').toLowerCase();
+    const match=(t)=>{ if(!q) return true; const u=this.users[t.assigner]; return ((t.title||'')+' '+(t.desc||'')+' '+((u&&u.name)||'')).toLowerCase().includes(q); };
+    const myTasksRaw=s.tasks.filter(t=>t.status!=='done' && match(t))
+      .sort((a,b)=>this.quads[a.quad].rank-this.quads[b.quad].rank);
+    const myTasks=myTasksRaw.map((t,i)=>{const d=this.decorateTask(t); d.delay=(i*0.05).toFixed(2); return d;});
+
+    const feed=s.notifications.map((n,i)=>{const d=this.decorateNotif(n); d.delay=(i*0.04).toFixed(2); return d;});
+    const unreadCount=s.notifications.filter(n=>n.unread).length;
+
+    const openTasks=s.tasks.filter(t=>t.status!=='done' && match(t));
+    const dueRank={overdue:0,soon:1};
+    const cellFor=(qk,action)=>{
+      const meta=this.quads[qk];
+      const tasks=openTasks.filter(t=>t.quad===qk)
+        .sort((a,b)=>((b.expedited?1:0)-(a.expedited?1:0)) || ((dueRank[a.dueFlag]??2)-(dueRank[b.dueFlag]??2)))
+        .map(t=>this.decorateTask(t));
+      const over=s.dragOverQuad===qk;
+      return {color:meta.color,bg:meta.bg,label:meta.label,action,count:tasks.length,tasks,empty:tasks.length===0,
+        cellBg: over?meta.bg:'var(--card)', cellBorder: over?meta.color:'var(--line)',
+        onDragOver:(e)=>this.onDragOverQuad(qk,e), onDragLeave:()=>this.onDragLeaveQuad(qk), onDrop:(e)=>this.onDropQuad(qk,e)};
+    };
+    const qUI=cellFor('q1','Do now');
+    const qImp=cellFor('q2','Schedule');
+    const qUrg=cellFor('q3','Quick wins');
+    const qNone=cellFor('q4','Later');
+    const deliveredCount=s.tasks.filter(t=>t.status==='done').length;
+    const openCountTotal=openTasks.length;
+
+    // Eric's daily brief — executive-PA voice
+    const overdue=openTasks.filter(t=>t.dueFlag==='overdue');
+    const nowMs=Date.now(), HOUR=3600000, DAY=86400000;
+    const newToday=s.notifications.filter(n=>n.isTeams && n._ts && (nowMs-n._ts)<DAY);
+    const p1=qUI.tasks;
+    // newest task Eric just intook from Teams (within the last hour)
+    const freshNotif=s.notifications.find(n=>n.isTeams&&n.resolved&&n.taskId&&n._ts&&(nowMs-n._ts)<HOUR);
+    const freshTask=freshNotif?s.tasks.find(t=>t.id===freshNotif.taskId):null;
+    // Eric's read on the state — concise, no time-of-day greeting
+    const parts=[];
+    if(freshTask){ const qm=this.quads[freshTask.quad]; parts.push('New in from '+this.users[freshTask.assigner].first+': \u201c'+freshTask.title+'\u201d \u2014 triaged '+qm.short+' and slotted into your matrix.'); }
+    if(p1.length && overdue.length) parts.push('Here\u2019s the shape of it: '+p1.length+' can\u2019t wait and '+overdue.length+' slipped overdue. I\u2019d clear those first and I\u2019ll close the loops for you.');
+    else if(p1.length) parts.push('Nicely manageable \u2014 '+p1.length+' urgent item'+(p1.length>1?'s':'')+' to land, and I\u2019m happy to hold or chase the rest.');
+    else if(!freshTask) parts.push('You\u2019re clear on urgent-important today \u2014 a good window to nudge a Schedule item along before it turns hot.');
+    let briefIntro=parts.join(' ');
+    if(newToday.length) briefIntro+=' '+newToday.length+' new via Teams \u2014 I\u2019ve acknowledged the senders, so no one\u2019s left waiting.';
+    else if(overdue.length) briefIntro+=' Just say the word and I\u2019ll nudge the overdue ones.';
+    if(deliveredCount) briefIntro+=' And '+deliveredCount+' already cleared \u2014 loops closed. Nice work.';
+    const now=new Date();
+    const briefTime='Updated '+now.toLocaleTimeString([], {hour:'numeric',minute:'2-digit'});
+
+    const requesters=Object.values(this.users).filter(u=>u.id!==this.me).map(u=>({...u,
+      openCount: s.tasks.filter(t=>t.assigner===u.id && t.status!=='done').length
+    })).filter(u=>u.openCount>0).sort((a,b)=>b.openCount-a.openCount);
+
+    // drawer
+    let drawer=null; const hasDrawer=!!s.selectedId;
+    if(hasDrawer){
+      const t=s.tasks.find(x=>x.id===s.selectedId);
+      if(t){
+        drawer=this.decorateTask(t);
+        drawer.desc=t.desc;
+        drawer.linkDraft=s.linkDraft;
+        // Links become real anchors when the label looks like a URL (bare domains get https://).
+        drawer.links=t.links.map(l=>{
+          const lab=String(l.label||'');
+          const hasProto=/^https?:\/\//i.test(lab);
+          const urlish=hasProto||(!/\s/.test(lab)&&/^[\w.-]+\.[a-z]{2,}(\/\S*)?$/i.test(lab));
+          return {...l, clickable:urlish, notClickable:!urlish, href:urlish?(hasProto?lab:'https://'+lab):'#'};
+        });
+        drawer.needsInfoFrom=(this.users[t.assigner]&&this.users[t.assigner].first)||'them';
+        drawer.comments=t.comments.map(c=>({...c,authorObj:this.users[c.author]}));
+        drawer.noComments=t.comments.length===0;
+        const done=t.status==='done';
+        drawer.doneLabel=done?'Reopen task':'Complete';
+        drawer.doneBg=done?'var(--card)':'var(--done)';
+        drawer.doneColor=done?'var(--ink)':'#fff';
+        drawer.doneShadow=done?'none':'0 4px 14px rgba(63,125,98,.3)';
+        drawer.onComplete=(e)=>{ if(done) this.reopenTask(t.id); else this.startComplete(t.id,e); };
+        drawer.onReject=()=>this.rejectTask(t.id);
+        drawer.rejecting = s.rejecting===t.id;
+        drawer.notRejecting = s.rejecting!==t.id;
+        drawer.dueValue = t.dueDate ? String(t.dueDate).slice(0,10) : '';
+        drawer.onCustomDue = (e)=>{ if(e&&e.target&&e.target.value) this.setDueISO(t.id, e.target.value); };
+        drawer.quadOptions=Object.values(this.quads).map(qq=>{
+          const active=qq.key===t.quad;
+          return {...qq, border:active?qq.color:'var(--line)', bg:active?qq.bg:'var(--card)', onPick:()=>this.setQuad(t.id,qq.key)};
+        });
+        drawer.dueOptions=['Today','Tomorrow','Jul 21','Next week'].map(label=>{
+          const active=label===t.due;
+          return {label, border:active?'var(--accent)':'var(--line)', bg:active?'var(--accent-bg)':'var(--card)', color:active?'var(--accent-ink)':'var(--ink)', onPick:()=>this.setDue(t.id,label)};
+        });
+      }
+    }
+
+    // completion modal
+    const completing=!!s.completing;
+    let completeTitle='',completeRequester='';
+    const methods=this.methodDefs.map(m=>{
+      const active=m.key===s.completeMethod;
+      return {...m, isEmail:m.key==='email', isFile:m.key==='file', isVerbal:m.key==='verbal', isTeams:m.key==='teams', isOther:m.key==='other',
+        border:active?m.color:'var(--line)', bg:active?m.iconBg:'var(--card)', onPick:()=>this.pickMethod(m.key)};
+    });
+    if(completing){
+      const t=s.tasks.find(x=>x.id===s.completing);
+      if(t){ completeTitle=t.title; completeRequester=this.users[t.assigner].first; }
+    }
+    const canConfirm=!!s.completeMethod;
+
+    // archive — completed tasks, hidden by default, hard-purged after 14 days server-side
+    const archived=s.tasks.filter(t=>t.status==='done').map(t=>{
+      const ref=t.completedAt||t.createdAt; const d=this.decorateTask(t);
+      return {...d, requesterName:(this.users[t.assigner]&&this.users[t.assigner].first)||String(t.assigner||'—'),
+        whenLabel:this.relLabel(ref), ttlLabel:this.ttlLabel(ref), _ref:(new Date(ref||0).getTime()||0)};
+    }).sort((a,b)=>b._ref-a._ref);
+    const archiveCount=archived.length;
+
+    const navBase="width:100%;display:flex;align-items:center;gap:11px;padding:10px 12px;margin-bottom:3px;border-radius:10px;border:none;cursor:pointer;font-family:'DM Sans';font-size:14px;font-weight:600;text-align:left;white-space:nowrap;transition:.15s;";
+    const navOn=navBase+"background:var(--ink);color:#F1EDE4;";
+    const navOff=navBase+"background:transparent;color:var(--ink2);";
+    const syncLabel = s.synced<2 ? 'Synced now' : 'Synced '+s.synced+'s ago';
+
+    return {
+      isLogin:s.screen==='login', isApp:s.screen==='app', isFocus:true,
+      pin:s.pin,
+      pinDots: [0,1,2,3].map(i=>({ bg: i<(s.pin||'').length?'var(--accent)':'transparent', border: i<(s.pin||'').length?'var(--accent)':'var(--line)' })),
+      onPinInput:this.onPinInput, onPinKey:this.onPinKey,
+      viewTitle:'My Focus',
+      viewSubtitle: this.focusSubtitle(deliveredCount, openCountTotal),
+      requesters, qUI, qImp, qUrg, qNone, openCountTotal, deliveredCount,
+      briefIntro, briefTime, onDragEnd:this.onDragEnd,
+      chat: s.chat.map(m=>({...m, isEric:m.from==='eric', isMe:m.from==='me', justify:m.from==='me'?'flex-end':'flex-start',
+        pendingOpen: m.pending&&m.pending.status==='open',
+        pendingLabel: m.pending?m.pending.label:'', pendingDetail: m.pending?m.pending.detail:'', pendingConfirm: m.pending?m.pending.confirm:'',
+        resolvedLabel: m.pending&&m.pending.status==='approved'?'\u2713 Approved \u2014 delivered':(m.pending&&m.pending.status==='dismissed'?'Set aside':''),
+        resolvedColor: m.pending&&m.pending.status==='approved'?'var(--done)':'var(--ink3)',
+        onApprove:()=>this.approveChat(m.id), onDismiss:()=>this.dismissChat(m.id)})),
+      chatHasMsgs: s.chat.length>0, chatEmpty: s.chat.length===0, chatTyping:s.chatTyping, chatDraft:s.chatDraft,
+      chatOpen:s.chatOpen, memory:s.memory,
+      talkOpen:s.talkOpen, talkDisplay:s.talkOpen?'flex':'none', talkDisplayBlock:s.talkOpen?'block':'none',
+      talkFlex:s.talkOpen?'1':'none', talkChevron:s.talkOpen?'rotate(180deg)':'rotate(0deg)', onToggleTalk:this.onToggleTalk,
+      chatSuggestions: this.buildChatSuggest(s).map(t=>({label:t, onPick:()=>this.pickSuggestion(t)})),
+      onChatDraft:this.onChatDraft, onChatKey:this.onChatKey, onChatSend:this.onChatSend,
+      feed, unreadCount,
+      activityCollapsed:s.activityCollapsed, activityDisplay:s.activityCollapsed?'none':'block',
+      focusCols: s.activityCollapsed?'1fr 44px':'1.6fr 1fr', onToggleActivity:this.onToggleActivity,
+      bellOpen:s.bellOpen, hasDrawer, drawer,
+      archiveOpen:s.archiveOpen, archived, archiveCount, archiveEmpty:archived.length===0, archiveTtlDays:this.ARCHIVE_TTL_DAYS,
+      onOpenArchive:this.onOpenArchive, onCloseArchive:this.onCloseArchive,
+      completing, methods, completeTitle, completeRequester, completeNote:s.completeNote,
+      confirmBg: canConfirm?'var(--done)':'#B9C9BF', confirmCursor: canConfirm?'pointer':'not-allowed', confirmOpacity: canConfirm?'1':'.65',
+      query:s.query, draft:s.draft, toasts:s.toasts, syncLabel,
+      onLogin:this.onLogin, onLogout:this.onLogout, onFocus:this.onFocus, onBoard:this.onBoard,
+      onBell:this.onBell, onCloseBell:this.onCloseBell, onQuery:this.onQuery, onMarkAll:this.onMarkAll,
+      onCloseDrawer:this.onCloseDrawer, onDraft:this.onDraft, onDraftKey:this.onDraftKey, onSendComment:this.onSendComment,
+      onLinkDraft:this.onLinkDraft, onLinkKey:this.onLinkKey, onAddLink:this.onAddLink,
+      onCancelComplete:this.onCancelComplete, onConfirmComplete:this.onConfirmComplete, onCompleteNote:this.onCompleteNote,
+      rejectNote:s.rejectNote, onRejectNote:this.onRejectNote, confirmReject:this.confirmReject, cancelReject:this.cancelReject,
+      noop:this.noop,
+    };
+  }
+}
+
+</script>
+
+
+</body></html>
