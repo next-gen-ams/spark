@@ -420,6 +420,7 @@
         <select id="afType" class="af-in" aria-label="Filter by paid ads type"><option value="">All ad types</option><option>Ad Unit (Dark Post)</option><option>Boosting</option></select>
         <select id="afLanding" class="af-in" aria-label="Filter by landing page"><option value="">All landing pages</option><option>H5 LeadGen form</option><option>RED DM</option><option>WeChat Article</option></select>
         <select id="afStatus" class="af-in" aria-label="Filter by status"><option value="">All status</option><option value="scheduled">Scheduled</option><option value="live">Live</option><option value="finished">Finished</option><option value="paused">Paused</option><option value="proposed">Proposed</option></select>
+        <select id="afCity" class="af-in" aria-label="Filter by event city"><option value="">All cities</option><option value="Shenzhen">Shenzhen 深圳</option><option value="Guangzhou">Guangzhou 广州</option><option value="Chengdu">Chengdu 成都</option><option value="Chongqing">Chongqing 重庆</option><option value="Shanghai">Shanghai 上海</option><option value="Beijing">Beijing 北京</option><option value="National">National</option></select>
         <button id="afClear" class="af-clear" type="button">Clear</button>
       </div>
     </div>
@@ -1161,10 +1162,11 @@ function assetRowHtml(a){
   }
   return '<div class="ad-block">'+'<div class="ar arow'+(ed?" editing":"")+'" data-id="'+a.id+'">'+main+'</div>'+(notes?'<div class="ar-notes">'+notes+'</div>':"")+'</div>';
 }
-function assetFilterActive(){ var f=st.filters.assetF||{}; return !!(f.q||f.type||f.landing||f.status); }
+function assetFilterActive(){ var f=st.filters.assetF||{}; return !!(f.q||f.type||f.landing||f.status||f.city); }
 function filterAsset(a){
   var f=st.filters.assetF||{};
   if(f.q){ var hay=((a.campaign||"")+" "+(a.adName||"")+" "+(a.assetName||"")).toLowerCase(); if(hay.indexOf(f.q.toLowerCase())<0) return false; }
+  if(f.city){ var want=(f.city==="National")?CAMPAIGNS[0]:campaignForCity(f.city); if(a.campaign!==want) return false; }
   if(f.type && a.adType!==f.type) return false;
   if(f.landing && a.landing!==f.landing) return false;
   if(f.status && assetStatus(a)!==f.status) return false;
@@ -1413,13 +1415,13 @@ function setView(v){ st.view=v; $("tabCal").setAttribute("aria-selected",v==="ca
 $("tabCal").onclick=function(){ setView("cal"); }; $("tabAssets").onclick=function(){ setView("assets"); };
 
 /* asset filter bar */
-function readAssetFilters(){ st.filters.assetF={q:$("afQ").value,type:$("afType").value,landing:$("afLanding").value,status:$("afStatus").value}; }
+function readAssetFilters(){ st.filters.assetF={q:$("afQ").value,type:$("afType").value,landing:$("afLanding").value,status:$("afStatus").value,city:$("afCity").value}; }
 function wireAssetFilterBar(){
-  ["afQ","afType","afLanding","afStatus"].forEach(function(id){ var el=$(id); if(!el) return;
+  ["afQ","afType","afLanding","afStatus","afCity"].forEach(function(id){ var el=$(id); if(!el) return;
     el.addEventListener("input",function(){ readAssetFilters(); renderAssets(); });
     el.addEventListener("change",function(){ readAssetFilters(); renderAssets(); });
   });
-  var c=$("afClear"); if(c) c.onclick=function(){ $("afQ").value="";$("afType").value="";$("afLanding").value="";$("afStatus").value=""; readAssetFilters(); renderAssets(); };
+  var c=$("afClear"); if(c) c.onclick=function(){ $("afQ").value="";$("afType").value="";$("afLanding").value="";$("afStatus").value="";$("afCity").value=""; readAssetFilters(); renderAssets(); };
 }
 
 /* ---------- init ---------- */
