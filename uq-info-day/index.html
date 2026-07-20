@@ -443,7 +443,7 @@
 
   <div class="foot">
     <span id="footNote">Only KOL/Ambassador Slyvia is boosted; the 5 KOCs are organic and direct audiences to UQ's official RED / WeChat accounts. Unlock edit with the PIN — changes sync to the shared Google Sheet; viewers always see the latest. Export Excel/JSON any time.</span>
-    <button class="btn ghost" id="resetBtn" type="button">↺ Reset to default</button>
+    <button class="btn ghost" id="resetBtn" type="button">↻ Reload from cloud</button>
   </div>
 </div>
 
@@ -1441,7 +1441,10 @@ $("editToggle").onclick=function(){
   st.editing=!st.editing; applyEditState(btn);
 };
 $("themeBtn").onclick=function(){ var root=document.documentElement; var cur=root.getAttribute("data-theme"); if(!cur){ cur=matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light"; } root.setAttribute("data-theme",cur==="dark"?"light":"dark"); };
-$("resetBtn").onclick=function(){ if(confirm("Reset all edits and restore the default plan? Your local changes will be lost.")){ localStorage.removeItem(LSKEY); st=freshState(); initFilters(); render(); toast("Reset to default"); } };
+$("resetBtn").onclick=function(){
+  if(API_URL){ if(confirm("Reload the shared plan from the cloud? This discards any unsaved local changes on this device.")){ remoteLoad(); toast("Reloading from cloud…"); } }
+  else { if(confirm("Reset to the default plan? Your local changes will be lost.")){ localStorage.removeItem(LSKEY); st=freshState(); initFilters(); render(); toast("Reset to default"); } }
+};
 document.addEventListener("keydown",function(e){ if(e.key==="Escape"){ closeDrawer(); if(modal.classList.contains("open")){ modal.classList.remove("open"); restoreSaveBtn(); } } });
 
 /* view tabs */
