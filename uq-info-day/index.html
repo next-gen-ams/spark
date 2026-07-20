@@ -1098,7 +1098,7 @@ var defaultSaveHandler=$("mSave").onclick;
 /* ---------- assets view (channel-grouped module rows) ---------- */
 function assetById(id){ for(var i=0;i<st.assets.length;i++) if(st.assets[i].id===id) return st.assets[i]; return null; }
 function organicOptions(chFilter){
-  return st.items.filter(function(it){ return it.type==="organic" && (!chFilter||it.ch===chFilter); })
+  return st.items.filter(function(it){ return it.type==="organic" && (!chFilter||(it.ch||"").indexOf(chFilter)>=0); })
     .map(function(it){ return (it.m?mdName(it.m,it.d):"undated")+" · "+(it.ch||"—")+" · "+(it.content||it.obj||"post"); });
 }
 function selHtml(f,id,options,val){
@@ -1148,7 +1148,7 @@ function assetRowHtml(a){
   var notes="";
   if(showBoost){
     notes+='<div class="ar-note ar-note-boost"><span class="ar-note-ic">↳</span><span class="ar-note-lb">Boosting which post?</span>'
-      +(ed?'<input class="ar-in ar-note-in" data-id="'+a.id+'" data-f="boostedPost" list="dl-organic" value="'+esc(a.boostedPost||"")+'" placeholder="pick or type the organic post">'
+      +(ed?'<input class="ar-in ar-note-in" data-id="'+a.id+'" data-f="boostedPost" list="dl-organic-'+a.channel+'" value="'+esc(a.boostedPost||"")+'" placeholder="pick or type the '+a.channel+' post">'
           :'<span class="ar-note-val">'+esc(a.boostedPost||"— not set —")+'</span>')+'</div>';
   }
   if(showArticle){
@@ -1187,7 +1187,8 @@ function renderAssets(){
     assetsEl.appendChild(g);
   });
   assetsEl.insertAdjacentHTML("beforeend",
-    '<datalist id="dl-organic">'+organicOptions().map(function(v){return '<option value="'+esc(v)+'">';}).join("")+'</datalist>'
+    '<datalist id="dl-organic-WeChat">'+organicOptions("WeChat").map(function(v){return '<option value="'+esc(v)+'">';}).join("")+'</datalist>'
+    +'<datalist id="dl-organic-RED">'+organicOptions("RED").map(function(v){return '<option value="'+esc(v)+'">';}).join("")+'</datalist>'
     +'<datalist id="dl-wxarticle">'+organicOptions("WeChat").map(function(v){return '<option value="'+esc(v)+'">';}).join("")+'</datalist>');
   wireAssets();
 }
