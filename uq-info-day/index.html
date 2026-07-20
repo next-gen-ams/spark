@@ -416,7 +416,7 @@
       </div>
       <div class="ctl-row asset-filters">
         <span class="ctl-label">Filter</span>
-        <input id="afQ" class="af-in" type="search" placeholder="Ad name…" aria-label="Filter by ad name">
+        <input id="afQ" class="af-in" type="search" placeholder="Search campaign / ad / asset…" aria-label="Filter by campaign, ad name, or asset name">
         <select id="afType" class="af-in" aria-label="Filter by paid ads type"><option value="">All ad types</option><option>Ad Unit (Dark Post)</option><option>Boosting</option></select>
         <select id="afLanding" class="af-in" aria-label="Filter by landing page"><option value="">All landing pages</option><option>H5 LeadGen form</option><option>RED DM</option><option>WeChat Article</option></select>
         <select id="afStatus" class="af-in" aria-label="Filter by status"><option value="">All status</option><option value="scheduled">Scheduled</option><option value="live">Live</option><option value="finished">Finished</option><option value="paused">Paused</option><option value="proposed">Proposed</option></select>
@@ -489,6 +489,7 @@ function adoptState(s){
   s.tags=s.tags||BASE_TAGS.slice(); s.assets=normalizeAssets(s.assets,s.assetBaseVer); s.assetBaseVer=ASSET_BASE_VER; s.editing=false; s.view=(st&&st.view)?st.view:"cal";
   s.items=s.items.filter(function(it){return it.type!=="adunit";});
   s.items.forEach(function(it){ it.id=it.id||uid(); it.tags=it.tags||[]; it.city=it.city||null; });
+  if(s.itemsStatusVer!==ITEMS_STATUS_VER){ forceProposed(s.items); s.itemsStatusVer=ITEMS_STATUS_VER; }
   s.assets.forEach(function(a){ a.id=a.id||uid(); });
   s._seq=s._seq||0; s.version=2;
   return s;
@@ -665,17 +666,19 @@ var BASE_TAGS=["boost","no-boost","dark-post","rsvp-h5","yun-zeng","last-call","
 
 /* ---------- state / persistence ---------- */
 var st;
+var ITEMS_STATUS_VER=1; /* one-time: set organic/KOC/KOL items to "proposed"; bump to re-run */
+function forceProposed(items){ (items||[]).forEach(function(it){ if(it.type==="organic"||it.type==="koc"||it.type==="kol") it.status="proposed"; }); return items; }
 function freshState(){
-  var items=baselineItems().filter(function(o){return o.type!=="adunit";}).map(function(o){o.id=uid(); o.tags=o.tags||[]; return o;});
-  return {version:2, assetBaseVer:ASSET_BASE_VER, editing:false, view:"cal", tags:BASE_TAGS.slice(), items:items, assets:baselineAssets().map(function(o){o.id=uid();return o;}),
+  var items=forceProposed(baselineItems().filter(function(o){return o.type!=="adunit";}).map(function(o){o.id=uid(); o.tags=o.tags||[]; return o;}));
+  return {version:2, assetBaseVer:ASSET_BASE_VER, itemsStatusVer:ITEMS_STATUS_VER, editing:false, view:"cal", tags:BASE_TAGS.slice(), items:items, assets:baselineAssets().map(function(o){o.id=uid();return o;}),
     filters:{types:{event:1,organic:1,adunit:1,koc:1,kol:1}, status:{}, tags:{}, focus:"all", assetPhase:{}}, _seq:0};
 }
 function load(){
-  try{ var raw=localStorage.getItem(LSKEY); if(raw){ var s=JSON.parse(raw); if(s&&s.version===2&&s.items){ var ff=freshState().filters; s.filters=Object.assign({},ff,s.filters||{}); s.filters.types=Object.assign({},ff.types,(s.filters&&s.filters.types)||{}); s.filters.status=s.filters.status||{}; s.filters.tags=s.filters.tags||{}; s.filters.assetPhase=s.filters.assetPhase||{}; if(!s.filters.focus)s.filters.focus="all"; s.tags=s.tags||BASE_TAGS.slice(); s.assets=normalizeAssets(s.assets,s.assetBaseVer); s.assetBaseVer=ASSET_BASE_VER; s.editing=false; s.items=s.items.filter(function(it){return it.type!=="adunit";}); s.items.forEach(function(it){it.tags=it.tags||[]; it.city=it.city||null;}); return s; } } }catch(e){}
+  try{ var raw=localStorage.getItem(LSKEY); if(raw){ var s=JSON.parse(raw); if(s&&s.version===2&&s.items){ var ff=freshState().filters; s.filters=Object.assign({},ff,s.filters||{}); s.filters.types=Object.assign({},ff.types,(s.filters&&s.filters.types)||{}); s.filters.status=s.filters.status||{}; s.filters.tags=s.filters.tags||{}; s.filters.assetPhase=s.filters.assetPhase||{}; if(!s.filters.focus)s.filters.focus="all"; s.tags=s.tags||BASE_TAGS.slice(); s.assets=normalizeAssets(s.assets,s.assetBaseVer); s.assetBaseVer=ASSET_BASE_VER; s.editing=false; s.items=s.items.filter(function(it){return it.type!=="adunit";}); s.items.forEach(function(it){it.tags=it.tags||[]; it.city=it.city||null;}); if(s.itemsStatusVer!==ITEMS_STATUS_VER){ forceProposed(s.items); s.itemsStatusVer=ITEMS_STATUS_VER; } return s; } } }catch(e){}
   return freshState();
 }
 function save(){ try{ localStorage.setItem(LSKEY, JSON.stringify(stripState())); }catch(e){} scheduleRemoteSave(); }
-function stripState(){ return {version:2, assetBaseVer:st.assetBaseVer||ASSET_BASE_VER, tags:st.tags, items:st.items, assets:st.assets, filters:st.filters, _seq:st._seq}; }
+function stripState(){ return {version:2, assetBaseVer:st.assetBaseVer||ASSET_BASE_VER, itemsStatusVer:st.itemsStatusVer||ITEMS_STATUS_VER, tags:st.tags, items:st.items, assets:st.assets, filters:st.filters, _seq:st._seq}; }
 
 /* ---------- status engine ---------- */
 function effStatus(it){
@@ -1161,7 +1164,7 @@ function assetRowHtml(a){
 function assetFilterActive(){ var f=st.filters.assetF||{}; return !!(f.q||f.type||f.landing||f.status); }
 function filterAsset(a){
   var f=st.filters.assetF||{};
-  if(f.q && (a.adName||"").toLowerCase().indexOf(f.q.toLowerCase())<0) return false;
+  if(f.q){ var hay=((a.campaign||"")+" "+(a.adName||"")+" "+(a.assetName||"")).toLowerCase(); if(hay.indexOf(f.q.toLowerCase())<0) return false; }
   if(f.type && a.adType!==f.type) return false;
   if(f.landing && a.landing!==f.landing) return false;
   if(f.status && assetStatus(a)!==f.status) return false;
