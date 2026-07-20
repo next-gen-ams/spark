@@ -224,16 +224,18 @@
   .asset-ch .pill{font-size:.62rem; font-weight:700; color:var(--blue); background:var(--blue-bg); padding:2px 8px; border-radius:20px}
   .asset-ch .pill-boost{color:var(--accent-ink); background:var(--adu-bg)}
   .ar-scroll{overflow-x:auto; border:1px solid var(--line-2); border-radius:var(--radius); box-shadow:var(--shadow); background:var(--surface)}
-  .ar-table{min-width:1000px}
-  .ar{display:grid; grid-template-columns:18px minmax(140px,1.3fr) 116px minmax(150px,1.4fr) minmax(160px,1.5fr) 120px 74px 74px 66px 22px; gap:6px; align-items:center; padding:7px 10px}
-  .ar-head{background:var(--ink); color:#fff; font-size:.62rem; font-weight:700; text-transform:uppercase; letter-spacing:.04em}
+  .ar-table{min-width:900px}
+  .ar{display:grid; grid-template-columns:20px minmax(120px,1.15fr) 108px minmax(130px,1.35fr) minmax(150px,1.5fr) 112px 72px 72px 68px 24px; gap:8px; align-items:start; padding:11px 12px}
+  .ad-block{border-bottom:1px solid var(--line)}
+  .ar-table .ad-block:nth-child(even){background:var(--surface-2)}
+  .ar-head{background:var(--ink); color:#fff; font-size:.62rem; font-weight:700; text-transform:uppercase; letter-spacing:.04em; align-items:center; padding:9px 12px}
   .ar-head span{white-space:nowrap; overflow:hidden; text-overflow:ellipsis}
-  .arow{border-top:1px solid var(--line); font-size:.76rem; transition:background .12s}
+  .arow{font-size:.78rem; transition:background .12s}
   body.editing .arow:hover{background:color-mix(in srgb, var(--accent) 5%, var(--surface))}
   .arow.dragging{opacity:.45}
   .arow.ar-over{box-shadow:inset 0 2px 0 0 var(--accent)}
-  .ar-txt{font-size:.74rem; color:var(--ink); overflow:hidden; text-overflow:ellipsis; white-space:nowrap}
-  .ar-txt.ar-mono{font-family:ui-monospace,"SF Mono",Menlo,Consolas,monospace; font-size:.67rem; color:var(--muted)}
+  .ar-txt{font-size:.76rem; color:var(--ink); white-space:normal; overflow-wrap:anywhere; line-height:1.4}
+  .ar-txt.ar-mono{font-family:ui-monospace,"SF Mono",Menlo,Consolas,monospace; font-size:.68rem; color:var(--muted); white-space:normal; overflow-wrap:anywhere; line-height:1.4}
   .ar-dt{font-variant-numeric:tabular-nums; color:var(--muted); white-space:nowrap}
   .ar-drag{cursor:grab; color:var(--faint); text-align:center; font-size:.82rem; user-select:none; line-height:1}
   .ar-drag:active{cursor:grabbing}
@@ -248,7 +250,7 @@
   .tp-dark{color:var(--adu-fg); background:var(--adu-bg)}
   .tp-boost{color:#fff; background:var(--accent)}
   .ar-empty{padding:16px; color:var(--muted); font-size:.76rem; text-align:center}
-  .ar-notes{padding:0 10px 6px 34px; background:var(--surface)}
+  .ar-notes{padding:0 12px 10px 36px; background:transparent}
   .ar-note{display:flex; align-items:center; gap:8px; margin-top:6px; padding:7px 10px; border-radius:8px; font-size:.72rem}
   .ar-note-boost{background:var(--adu-bg); border:1px solid var(--adu-bd)}
   .ar-note-article{background:var(--blue-bg); border:1px solid var(--koc-bd)}
@@ -1083,7 +1085,7 @@ function assetRowHtml(a){
       +(ed?'<input class="ar-in ar-note-in" data-id="'+a.id+'" data-f="articlePost" list="dl-wxarticle" value="'+esc(a.articlePost||"")+'" placeholder="pick or type the WeChat article">'
           :'<span class="ar-note-val">'+esc(a.articlePost||"— not set —")+'</span>')+'</div>';
   }
-  return '<div class="ar arow'+(ed?" editing":"")+'" data-id="'+a.id+'">'+main+'</div>'+(notes?'<div class="ar-notes">'+notes+'</div>':"");
+  return '<div class="ad-block">'+'<div class="ar arow'+(ed?" editing":"")+'" data-id="'+a.id+'">'+main+'</div>'+(notes?'<div class="ar-notes">'+notes+'</div>':"")+'</div>';
 }
 function assetFilterActive(){ var f=st.filters.assetF||{}; return !!(f.q||f.type||f.landing||f.status); }
 function filterAsset(a){
