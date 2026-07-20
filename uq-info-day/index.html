@@ -156,6 +156,8 @@
   .chip{display:flex; align-items:center; gap:5px; border-radius:6px; padding:2px 5px; font-size:.65rem; font-weight:600; line-height:1.3;
     text-align:left; border:1px solid transparent; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; position:relative}
   body.editing .chip{cursor:grab}
+  body.editing .chip.chip-derived{cursor:default}
+  .chip.chip-derived{box-shadow:inset 0 0 0 1px var(--adu-bd)}
   .chip.dragging{opacity:.4}
   .chip .dot{width:6px;height:6px;border-radius:50%;flex:none}
   .chip .lbl{overflow:hidden; text-overflow:ellipsis}
@@ -479,6 +481,7 @@ function adoptState(s){
   s.filters=Object.assign({},ff,s.filters||{}); s.filters.types=Object.assign({},ff.types,(s.filters&&s.filters.types)||{});
   s.filters.status=s.filters.status||{}; s.filters.tags=s.filters.tags||{}; s.filters.assetPhase=s.filters.assetPhase||{}; if(!s.filters.focus)s.filters.focus="all";
   s.tags=s.tags||BASE_TAGS.slice(); s.assets=normalizeAssets(s.assets,s.assetBaseVer); s.assetBaseVer=ASSET_BASE_VER; s.editing=false; s.view=(st&&st.view)?st.view:"cal";
+  s.items=s.items.filter(function(it){return it.type!=="adunit";});
   s.items.forEach(function(it){ it.id=it.id||uid(); it.tags=it.tags||[]; it.city=it.city||null; });
   s.assets.forEach(function(a){ a.id=a.id||uid(); });
   s._seq=s._seq||0; s.version=2;
@@ -657,12 +660,12 @@ var BASE_TAGS=["boost","no-boost","dark-post","rsvp-h5","yun-zeng","last-call","
 /* ---------- state / persistence ---------- */
 var st;
 function freshState(){
-  var items=baselineItems().map(function(o){o.id=uid(); o.tags=o.tags||[]; return o;});
+  var items=baselineItems().filter(function(o){return o.type!=="adunit";}).map(function(o){o.id=uid(); o.tags=o.tags||[]; return o;});
   return {version:2, assetBaseVer:ASSET_BASE_VER, editing:false, view:"cal", tags:BASE_TAGS.slice(), items:items, assets:baselineAssets().map(function(o){o.id=uid();return o;}),
     filters:{types:{event:1,organic:1,adunit:1,koc:1,kol:1}, status:{}, tags:{}, focus:"all", assetPhase:{}}, _seq:0};
 }
 function load(){
-  try{ var raw=localStorage.getItem(LSKEY); if(raw){ var s=JSON.parse(raw); if(s&&s.version===2&&s.items){ var ff=freshState().filters; s.filters=Object.assign({},ff,s.filters||{}); s.filters.types=Object.assign({},ff.types,(s.filters&&s.filters.types)||{}); s.filters.status=s.filters.status||{}; s.filters.tags=s.filters.tags||{}; s.filters.assetPhase=s.filters.assetPhase||{}; if(!s.filters.focus)s.filters.focus="all"; s.tags=s.tags||BASE_TAGS.slice(); s.assets=normalizeAssets(s.assets,s.assetBaseVer); s.assetBaseVer=ASSET_BASE_VER; s.editing=false; s.items.forEach(function(it){it.tags=it.tags||[]; it.city=it.city||null;}); return s; } } }catch(e){}
+  try{ var raw=localStorage.getItem(LSKEY); if(raw){ var s=JSON.parse(raw); if(s&&s.version===2&&s.items){ var ff=freshState().filters; s.filters=Object.assign({},ff,s.filters||{}); s.filters.types=Object.assign({},ff.types,(s.filters&&s.filters.types)||{}); s.filters.status=s.filters.status||{}; s.filters.tags=s.filters.tags||{}; s.filters.assetPhase=s.filters.assetPhase||{}; if(!s.filters.focus)s.filters.focus="all"; s.tags=s.tags||BASE_TAGS.slice(); s.assets=normalizeAssets(s.assets,s.assetBaseVer); s.assetBaseVer=ASSET_BASE_VER; s.editing=false; s.items=s.items.filter(function(it){return it.type!=="adunit";}); s.items.forEach(function(it){it.tags=it.tags||[]; it.city=it.city||null;}); return s; } } }catch(e){}
   return freshState();
 }
 function save(){ try{ localStorage.setItem(LSKEY, JSON.stringify(stripState())); }catch(e){} scheduleRemoteSave(); }
@@ -753,7 +756,23 @@ function passFilter(it){
 }
 
 /* ---------- render calendar ---------- */
-function itemsOn(m,d){ return st.items.filter(function(it){return it.m===m&&it.d===d;}); }
+/* Paid appears on the day grid as one derived "campaign launch" chip per campaign,
+   placed on its earliest ad flight-start — computed live from Paid Assets, not stored. */
+function paidMilestones(){
+  if(!st||!st.assets||!st.assets.length) return [];
+  return campaignLaneData().map(function(f){
+    return {id:"pm-"+f.camp, type:"adunit", _derived:true, m:f.s[0], d:f.s[1],
+      obj:"Paid campaign live", ch:(f.channels.length>1?"RED + WeChat":(f.channels[0]||"")),
+      targeting:campShort(f.camp)+" campaign",
+      content:campShort(f.camp)+" paid · "+f.count+" ads",
+      note:"Paid flight "+mdName(f.s[0],f.s[1])+" → "+mdName(f.e[0],f.e[1])+". Managed in the Paid Assets tab.",
+      status:"", flightStart:f.s, flightEnd:f.e, tags:[]};
+  });
+}
+function itemsOn(m,d){
+  var base=st.items.filter(function(it){return it.m===m&&it.d===d;});
+  return base.concat(paidMilestones().filter(function(it){return it.m===m&&it.d===d;}));
+}
 function render(){ if(st.view==="cal"){ renderCal(); } else { renderAssets(); } }
 function renderCal(){
   monthsEl.innerHTML="";
@@ -816,8 +835,13 @@ function buildCell(m,d,wd){
 }
 function buildChip(it){
   var c=document.createElement("div"); var es=effStatus(it);
-  c.className="chip "+TYPES[it.type].cls+(es==="paused"?" paused":"");
+  c.className="chip "+TYPES[it.type].cls+(es==="paused"?" paused":"")+(it._derived?" chip-derived":"");
   c.innerHTML=(it.type==="event"?"":chDot(it.ch))+'<span class="lbl">'+esc(shortLabel(it))+'</span><span class="stdot" style="background:'+stColor(es)+'" title="'+es+'"></span>';
+  if(it._derived){
+    c.title="Paid — managed in the Paid Assets tab";
+    if(st.editing){ c.style.cursor="default"; c.onclick=function(e){ e.stopPropagation(); toast("Paid ads are managed in the Paid Assets tab"); }; }
+    return c;
+  }
   if(st.editing){
     c.draggable=true;
     c.ondragstart=function(e){ dragId=it.id; c.classList.add("dragging"); try{e.dataTransfer.setData("text/plain",it.id); e.dataTransfer.effectAllowed="move";}catch(x){} };
@@ -964,7 +988,7 @@ function openEditor(id,preset){
   editId=it.id; if(!id){ st._pendingNew=it; } else { st._pendingNew=null; }
   mTitle.textContent=id?"Edit item":"New item";
   mSub.textContent="Type & tags stay within the existing system. Live / finished update automatically from dates.";
-  var typeSel='<select id="f_type">'+TYPE_ORDER.map(function(k){return opt(k,it.type,TYPES[k].label);}).join("")+'</select>';
+  var typeSel='<select id="f_type">'+TYPE_ORDER.filter(function(k){return k!=="adunit"||it.type==="adunit";}).map(function(k){return opt(k,it.type,TYPES[k].label);}).join("")+'</select>';
   var chSel='<select id="f_ch">'+CHANNELS.map(function(c){return opt(c,it.ch||"",c===""?"— none —":c);}).join("")+'</select>';
   var citySel='<select id="f_city"><option value="">— none / national —</option>'+CITIES.map(function(c){return opt(c,it.city||"",c+" "+CN[c]);}).join("")+'</select>';
   var stSel='<select id="f_status">'+["scheduled","proposed","paused"].map(function(s){return opt(s,it.status,s.charAt(0).toUpperCase()+s.slice(1));}).join("")+'</select>';
