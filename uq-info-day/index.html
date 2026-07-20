@@ -190,7 +190,10 @@
   .tick::after{content:""; position:absolute; left:50%; top:15px; width:1px; height:900px; background:var(--line); opacity:.5; z-index:0}
   .axis .nowline{position:absolute; top:14px; width:2px; height:900px; background:var(--accent); opacity:.5; z-index:0}
   .lane{display:flex; align-items:center; height:30px; position:relative; z-index:1}
-  .lane .name{width:var(--ll,158px); flex:none; font-size:.74rem; font-weight:600; padding-right:10px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; cursor:default; color:var(--ink)}
+  .lane .name{width:var(--ll,158px); flex:none; font-size:.74rem; font-weight:600; padding-right:10px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; cursor:default; color:var(--ink); display:flex; align-items:center; gap:5px}
+  .lane .name .lane-ct{font-size:.64rem; font-weight:700; color:var(--blue); background:var(--blue-bg); padding:1px 6px; border-radius:20px}
+  .lane .name .dot{flex:none}
+  .lane-empty{font-size:.78rem; color:var(--muted); padding:14px 4px}
   .track{position:relative; flex:1; height:100%}
   .bar{position:absolute; top:50%; transform:translateY(-50%); height:11px; border-radius:6px; background:var(--accent); opacity:.9; cursor:default}
   .bar.nat{background:var(--blue); opacity:.55; height:8px}
@@ -384,7 +387,7 @@
 
     <div class="section-t">
       <h2>Paid Flight Lanes &amp; RSVP Lead Handover</h2>
-      <p>Hover any bar for its campaign flight window. Each city pauses 3 days before its event (◆ T-3) to hand RSVP leads to UQ.</p>
+      <p>Live from the <b>Paid Assets</b> tab — one bar per campaign, spanning its ads' earliest→latest flight. Edit an ad's dates and this updates. Each city pauses 3 days before its event (◆ T-3) to hand RSVP leads to UQ.</p>
     </div>
     <div class="lanes-wrap"><div class="lanes" id="lanes"></div>
       <div class="lane-legend">
@@ -853,32 +856,46 @@ function moveItem(id,m,d){ var it=findItem(id); if(!it) return; it.m=m; it.d=d; 
 function findItem(id){ for(var i=0;i<st.items.length;i++) if(st.items[i].id===id) return st.items[i]; return null; }
 
 /* ---------- lanes ---------- */
+function campShort(camp){ return String(camp||"").replace(/^UQ Info Day - /,"").replace(/ and surrounding$/,"").replace(/ Targeting$/,""); }
+function campaignCities(ci){ var out=[]; for(var c in CITY_CAMPAIGN){ if(CITY_CAMPAIGN[c]===ci) out.push(c); } return out; }
+function campaignLaneData(){
+  return CAMPAIGNS.map(function(camp,ci){
+    var rows=st.assets.filter(function(a){return a.campaign===camp;});
+    var starts=rows.map(function(a){return a.s;}).filter(Boolean);
+    var ends=rows.map(function(a){return a.e;}).filter(Boolean);
+    if(!starts.length||!ends.length) return null;
+    var s=starts.reduce(function(m,x){return idx(x[0],x[1])<idx(m[0],m[1])?x:m;});
+    var e=ends.reduce(function(m,x){return idx(x[0],x[1])>idx(m[0],m[1])?x:m;});
+    var ch={}; rows.forEach(function(a){ ch[a.channel]=1; });
+    return {camp:camp, nat:ci===0, s:s, e:e, count:rows.length, channels:Object.keys(ch), cities:campaignCities(ci)};
+  }).filter(Boolean);
+}
 function renderLanes(){
   lanesEl.innerHTML="";
   var axis=document.createElement("div"); axis.className="axis";
   [[8,4],[8,11],[8,18],[8,25],[9,1],[9,8],[9,15],[9,21]].forEach(function(t){ var el=document.createElement("div"); el.className="tick"; el.style.left=xpc(t[0],t[1])+"%"; el.textContent=t[1]+" "+(t[0]===8?"Aug":"Sep"); axis.appendChild(el); });
   if(TODAY_IDX>=AX_S&&TODAY_IDX<=AX_E){ var nl=document.createElement("div"); nl.className="nowline"; nl.style.left=(((TODAY_IDX-AX_S)/AX_W)*100)+"%"; axis.appendChild(nl); }
   lanesEl.appendChild(axis);
-  var lanes=[{nat:1,city:"National",label:"National — Prospecting · Boosting · Retargeting",s:[8,18],e:[9,17]}];
-  CITIES.forEach(function(c){ var f=CITYFLIGHTS[c]; lanes.push({city:c,s:f.s,e:f.e,ev:f.ev,t3:f.e}); });
+  var lanes=campaignLaneData();
+  if(!lanes.length){ var em=document.createElement("div"); em.className="lane-empty"; em.textContent="No paid assets with flight dates yet — add dates in the Paid Assets tab."; lanesEl.appendChild(em); return; }
   lanes.forEach(function(f){
     var lane=document.createElement("div"); lane.className="lane";
-    var dimmed=(st.filters.focus!=="all"&&!f.nat&&f.city!==st.filters.focus);
-    var name=document.createElement("div"); name.className="name"; name.textContent=f.nat?f.label:(f.city+" "+CN[f.city]);
+    var dimmed=(st.filters.focus!=="all"&&!f.nat&&f.cities.indexOf(st.filters.focus)<0);
+    var name=document.createElement("div"); name.className="name";
+    name.innerHTML=esc(campShort(f.camp))+' <span class="lane-ct">'+f.count+' ads</span>';
     lane.appendChild(name);
     var track=document.createElement("div"); track.className="track";
     var left=xpc(f.s[0],f.s[1]), right=xpc(f.e[0],f.e[1]);
     var bar=document.createElement("div"); bar.className="bar"+(f.nat?" nat":"")+(dimmed?" dim":"");
-    bar.style.left=left+"%"; bar.style.width=(right-left)+"%";
-    var tipHtml=f.nat
-      ? '<b>National paid</b><br>Prospecting · Boosting · Retargeting<br><span class="k">Flight</span> '+mdName(f.s[0],f.s[1])+' → '+mdName(f.e[0],f.e[1])
-      : '<b>'+f.city+' '+CN[f.city]+' — city dark posts</b><br><span class="k">Flight</span> '+mdName(f.s[0],f.s[1])+' → '+mdName(f.e[0],f.e[1])+' (T-3)<br><span class="k">Event</span> '+mdName(f.ev[0],f.ev[1])+'  ·  RED + WeChat';
-    attachTip(bar,tipHtml);
+    bar.style.left=left+"%"; bar.style.width=Math.max(right-left,0.7)+"%";
+    attachTip(bar,'<b>'+esc(f.camp)+'</b><br><span class="k">Ads</span> '+f.count+'  ·  '+f.channels.join(" + ")+'<br><span class="k">Flight</span> '+mdName(f.s[0],f.s[1])+' → '+mdName(f.e[0],f.e[1])+(f.nat?"":" (earliest→latest across the campaign)"));
     track.appendChild(bar);
-    if(f.t3){ var t3=document.createElement("div"); t3.className="mk t3"+(dimmed?" dim":""); t3.style.left=xpc(f.t3[0],f.t3[1])+"%";
-      attachTip(t3,'<b>'+f.city+' T-3 handover</b><br>Paid pauses '+mdName(f.t3[0],f.t3[1])+' — hand RSVP leads to UQ'); track.appendChild(t3); }
-    if(f.ev){ var ev=document.createElement("div"); ev.className="mk evt"+(dimmed?" dim":""); ev.style.left=xpc(f.ev[0],f.ev[1])+"%";
-      attachTip(ev,'<b>'+f.city+' Info Day</b><br>'+mdName(f.ev[0],f.ev[1])+' 2026'); track.appendChild(ev); }
+    f.cities.forEach(function(c){ var cf=CITYFLIGHTS[c];
+      var t3=document.createElement("div"); t3.className="mk t3"+(dimmed?" dim":""); t3.style.left=xpc(cf.e[0],cf.e[1])+"%";
+      attachTip(t3,'<b>'+c+' T-3 handover</b><br>Paid pauses '+mdName(cf.e[0],cf.e[1])+' — hand RSVP leads to UQ'); track.appendChild(t3);
+      var ev=document.createElement("div"); ev.className="mk evt"+(dimmed?" dim":""); ev.style.left=xpc(cf.ev[0],cf.ev[1])+"%";
+      attachTip(ev,'<b>'+c+' Info Day</b><br>'+mdName(cf.ev[0],cf.ev[1])+' 2026'); track.appendChild(ev);
+    });
     lane.appendChild(track); lanesEl.appendChild(lane);
   });
 }
