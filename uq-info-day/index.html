@@ -260,6 +260,13 @@
   .ar-note-val{color:var(--ink)}
   .add-ad{margin-top:10px; border:1px dashed var(--line-2); background:transparent; color:var(--accent-ink); cursor:pointer; border-radius:8px; padding:8px 12px; font:inherit; font-size:.76rem; font-weight:600; width:100%}
   .add-ad:hover{border-color:var(--accent); background:var(--adu-bg)}
+  .asset-filters{display:flex; flex-wrap:wrap; align-items:center; gap:7px}
+  .af-in{font:inherit; font-size:.76rem; padding:6px 9px; border:1px solid var(--line-2); border-radius:8px; background:var(--surface); color:var(--ink)}
+  input.af-in{min-width:170px}
+  select.af-in{cursor:pointer}
+  .af-in:focus{outline:2px solid var(--accent); outline-offset:1px; border-color:var(--accent)}
+  .af-clear{font:inherit; font-size:.74rem; font-weight:600; color:var(--muted); background:transparent; border:1px solid var(--line-2); border-radius:8px; padding:6px 11px; cursor:pointer}
+  .af-clear:hover{color:var(--ink); border-color:var(--accent)}
 
   .stpill{font-size:.6rem; font-weight:700; text-transform:uppercase; letter-spacing:.03em; padding:2px 7px; border-radius:11px; white-space:nowrap}
   .st-scheduled{color:var(--st-scheduled); background:var(--st-scheduled-bg)}
@@ -394,6 +401,14 @@
         <span class="ctl-label">Info</span>
         <span style="font-size:.78rem;color:var(--muted)">Grouped by channel. In <b>Edit mode</b> every field is a dropdown; drag the ⠿ handle to reorder a row or move it between WeChat and RED. Status auto-updates from today's date (China time). Boosting an organic post, or a WeChat-Article landing, reveals a linked-post note.</span>
       </div>
+      <div class="ctl-row asset-filters">
+        <span class="ctl-label">Filter</span>
+        <input id="afQ" class="af-in" type="search" placeholder="Ad name…" aria-label="Filter by ad name">
+        <select id="afType" class="af-in" aria-label="Filter by paid ads type"><option value="">All ad types</option><option>Ad Unit (Dark Post)</option><option>Boosting</option></select>
+        <select id="afLanding" class="af-in" aria-label="Filter by landing page"><option value="">All landing pages</option><option>H5 LeadGen form</option><option>RED DM</option><option>WeChat Article</option></select>
+        <select id="afStatus" class="af-in" aria-label="Filter by status"><option value="">All status</option><option value="scheduled">Scheduled</option><option value="live">Live</option><option value="finished">Finished</option><option value="paused">Paused</option><option value="proposed">Proposed</option></select>
+        <button id="afClear" class="af-clear" type="button">Clear</button>
+      </div>
     </div>
     <div class="assets" id="assets"></div>
   </section>
@@ -458,7 +473,7 @@ function adoptState(s){
   var ff=freshState().filters;
   s.filters=Object.assign({},ff,s.filters||{}); s.filters.types=Object.assign({},ff.types,(s.filters&&s.filters.types)||{});
   s.filters.status=s.filters.status||{}; s.filters.tags=s.filters.tags||{}; s.filters.assetPhase=s.filters.assetPhase||{}; if(!s.filters.focus)s.filters.focus="all";
-  s.tags=s.tags||BASE_TAGS.slice(); s.assets=normalizeAssets(s.assets); s.editing=false; s.view=(st&&st.view)?st.view:"cal";
+  s.tags=s.tags||BASE_TAGS.slice(); s.assets=normalizeAssets(s.assets,s.assetBaseVer); s.assetBaseVer=ASSET_BASE_VER; s.editing=false; s.view=(st&&st.view)?st.view:"cal";
   s.items.forEach(function(it){ it.id=it.id||uid(); it.tags=it.tags||[]; it.city=it.city||null; });
   s.assets.forEach(function(a){ a.id=a.id||uid(); });
   s._seq=s._seq||0; s.version=2;
@@ -577,52 +592,58 @@ var CAMPAIGNS=["UQ Info Day - National Targeting","UQ Info Day - Guangdong and s
 var AD_TYPES=["Ad Unit (Dark Post)","Boosting"];
 var LANDINGS=["H5 LeadGen form","RED DM","WeChat Article"];
 var ASSET_CHANNELS=["WeChat","RED"];
+var ASSET_BASE_VER=2; /* bump to force the seeded baseline to refresh (regenerates asset rows once) */
+var WX_ARTICLE_AUG4="4 Aug · WeChat · Info Day Launch article — all 6 cities + RSVP H5";
+var VIDEO_15S_HV="chn-info-day-2026-1080x1920-15s.mp4 + chn-info-day-2026-1280x720-15s.mp4";
 var CITY_CAMPAIGN={Shenzhen:1,Guangzhou:1,Chengdu:2,Chongqing:2,Shanghai:3,Beijing:4};
 function campaignForCity(c){ return CAMPAIGNS[CITY_CAMPAIGN[c]!=null?CITY_CAMPAIGN[c]:0]; }
 function slug(c){ return String(c).toLowerCase(); }
 function isOrganicAsset(name){ return name==="WeChat Organic Post"||name==="RED Organic Post"; }
 function adNameOptions(ch){
   var out=[];
-  if(ch==="WeChat"){ CITIES.forEach(function(c){ out.push(c+" Info Day - Video 1 - 15s", c+" Info Day - Forgan", c+" Info Day - Student"); }); out.push("WeChat Boost - Info Day (National)"); }
-  else { out.push("Info Day - Forgan (Image)","Info Day - Student (Image)","Info Day - Bag (Video)");
-    CITIES.forEach(function(c){ out.push(c+" Info Day - Forgan (Image)", c+" Info Day - Student (Image)", c+" Info Day (Video)", c+" Info Day - Notes (Video)"); });
+  if(ch==="WeChat"){ CITIES.forEach(function(c){ out.push(c+" Info Day - Video 1 - 15s", c+" Info Day - Forgan Static", c+" Info Day - Student Static"); }); out.push("WeChat Boost - Info Day National"); }
+  else { out.push("Info Day - Forgan Static","Info Day - Student Static","Info Day - Video 1 - 15s","Info Day - Bag Video","Info Day - Notes Video");
+    CITIES.forEach(function(c){ out.push(c+" Info Day - Forgan Static", c+" Info Day - Student Static", c+" Info Day - Video 1 - 15s", c+" Info Day - Notes Video"); });
     out.push("Slyvia (KOL) - Info Day Ambassador"); }
   return out;
 }
 function assetNameOptions(ch){
   var out=[];
-  if(ch==="WeChat"){ out.push("chn-info-day-2026-1280x720-15s.mp4");
-    CITIES.forEach(function(c){ out.push("chn-info-day-2026-"+slug(c)+"-forgan-1280x720.jpg","chn-info-day-2026-"+slug(c)+"-student-1280x720.jpg"); });
-    out.push("WeChat Organic Post"); }
-  else { out.push("chn-info-day-2026-forgan-900x1200.jpg","chn-info-day-2026-student-900x1200.jpg","chn-info-day-2026-tiktok-bag-1080x1920-10s.mp4","chn-info-day-2026-1080x1920-15s.mp4","chn-info-day-2026-tiktok-notes-1080x1920-19s.mp4");
+  if(ch==="WeChat"){ out.push("chn-info-day-2026-1280x720-15s.mp4","chn-info-day-2026-forgan-1280x720.jpg","chn-info-day-2026-student-1280x720.jpg","WeChat Organic Post"); }
+  else { out.push("chn-info-day-2026-forgan-900x1200.jpg","chn-info-day-2026-student-900x1200.jpg",VIDEO_15S_HV,"chn-info-day-2026-1080x1920-15s.mp4","chn-info-day-2026-tiktok-bag-1080x1920-10s.mp4","chn-info-day-2026-tiktok-notes-1080x1920-19s.mp4");
     CITIES.forEach(function(c){ out.push("chn-info-day-2026-"+slug(c)+"-forgan-900x1200.jpg","chn-info-day-2026-"+slug(c)+"-student-900x1200.jpg"); });
     out.push("RED Organic Post"); }
   return out;
 }
 function baselineAssets(){
-  var a=[], NAT=CAMPAIGNS[0], H5="H5 LeadGen form";
+  var a=[], NAT=CAMPAIGNS[0], H5="H5 LeadGen form", WXA="WeChat Article", ART=WX_ARTICLE_AUG4;
   function mk(o){ o.boostedPost=o.boostedPost||""; o.articlePost=o.articlePost||""; o.status=o.status||""; return o; }
+  /* WeChat — per city: video + 2 statics. Default landing = WeChat Article (Aug 4 launch article) */
   CITIES.forEach(function(c){ var f=CITYFLIGHTS[c], cam=campaignForCity(c);
-    a.push(mk({channel:"WeChat",campaign:cam,adType:"Ad Unit (Dark Post)",adName:c+" Info Day - Video 1 - 15s",assetName:"chn-info-day-2026-1280x720-15s.mp4",landing:H5,s:f.s,e:f.e}));
-    a.push(mk({channel:"WeChat",campaign:cam,adType:"Ad Unit (Dark Post)",adName:c+" Info Day - Forgan",assetName:"chn-info-day-2026-"+slug(c)+"-forgan-1280x720.jpg",landing:H5,s:f.s,e:f.e}));
-    a.push(mk({channel:"WeChat",campaign:cam,adType:"Ad Unit (Dark Post)",adName:c+" Info Day - Student",assetName:"chn-info-day-2026-"+slug(c)+"-student-1280x720.jpg",landing:H5,s:f.s,e:f.e}));
+    a.push(mk({channel:"WeChat",campaign:cam,adType:"Ad Unit (Dark Post)",adName:c+" Info Day - Video 1 - 15s",assetName:"chn-info-day-2026-1280x720-15s.mp4",landing:WXA,articlePost:ART,s:f.s,e:f.e}));
+    a.push(mk({channel:"WeChat",campaign:cam,adType:"Ad Unit (Dark Post)",adName:c+" Info Day - Forgan Static",assetName:"chn-info-day-2026-forgan-1280x720.jpg",landing:WXA,articlePost:ART,s:f.s,e:f.e}));
+    a.push(mk({channel:"WeChat",campaign:cam,adType:"Ad Unit (Dark Post)",adName:c+" Info Day - Student Static",assetName:"chn-info-day-2026-student-1280x720.jpg",landing:WXA,articlePost:ART,s:f.s,e:f.e}));
   });
-  a.push(mk({channel:"WeChat",campaign:NAT,adType:"Boosting",adName:"WeChat Boost - Info Day (National)",assetName:"WeChat Organic Post",boostedPost:"",landing:H5,s:[8,18],e:[9,17]}));
-  a.push(mk({channel:"RED",campaign:NAT,adType:"Ad Unit (Dark Post)",adName:"Info Day - Forgan (Image)",assetName:"chn-info-day-2026-forgan-900x1200.jpg",landing:H5,s:[8,19],e:[9,17]}));
-  a.push(mk({channel:"RED",campaign:NAT,adType:"Ad Unit (Dark Post)",adName:"Info Day - Student (Image)",assetName:"chn-info-day-2026-student-900x1200.jpg",landing:H5,s:[8,19],e:[9,17]}));
-  a.push(mk({channel:"RED",campaign:NAT,adType:"Ad Unit (Dark Post)",adName:"Info Day - Bag (Video)",assetName:"chn-info-day-2026-tiktok-bag-1080x1920-10s.mp4",landing:H5,s:[8,19],e:[9,17]}));
+  a.push(mk({channel:"WeChat",campaign:NAT,adType:"Boosting",adName:"WeChat Boost - Info Day National",assetName:"WeChat Organic Post",boostedPost:ART,landing:WXA,articlePost:ART,s:[8,18],e:[9,17]}));
+  /* RED — national: 2 statics + 3 videos (15s carries horizontal + vertical in one asset cell) */
+  a.push(mk({channel:"RED",campaign:NAT,adType:"Ad Unit (Dark Post)",adName:"Info Day - Forgan Static",assetName:"chn-info-day-2026-forgan-900x1200.jpg",landing:H5,s:[8,19],e:[9,17]}));
+  a.push(mk({channel:"RED",campaign:NAT,adType:"Ad Unit (Dark Post)",adName:"Info Day - Student Static",assetName:"chn-info-day-2026-student-900x1200.jpg",landing:H5,s:[8,19],e:[9,17]}));
+  a.push(mk({channel:"RED",campaign:NAT,adType:"Ad Unit (Dark Post)",adName:"Info Day - Video 1 - 15s",assetName:VIDEO_15S_HV,landing:H5,s:[8,19],e:[9,17]}));
+  a.push(mk({channel:"RED",campaign:NAT,adType:"Ad Unit (Dark Post)",adName:"Info Day - Bag Video",assetName:"chn-info-day-2026-tiktok-bag-1080x1920-10s.mp4",landing:H5,s:[8,19],e:[9,17]}));
+  a.push(mk({channel:"RED",campaign:NAT,adType:"Ad Unit (Dark Post)",adName:"Info Day - Notes Video",assetName:"chn-info-day-2026-tiktok-notes-1080x1920-19s.mp4",landing:H5,s:[8,19],e:[9,17]}));
+  /* RED — per city: 2 statics + 2 videos */
   CITIES.forEach(function(c){ var f=CITYFLIGHTS[c], cam=campaignForCity(c);
-    a.push(mk({channel:"RED",campaign:cam,adType:"Ad Unit (Dark Post)",adName:c+" Info Day - Forgan (Image)",assetName:"chn-info-day-2026-"+slug(c)+"-forgan-900x1200.jpg",landing:H5,s:f.s,e:f.e}));
-    a.push(mk({channel:"RED",campaign:cam,adType:"Ad Unit (Dark Post)",adName:c+" Info Day - Student (Image)",assetName:"chn-info-day-2026-"+slug(c)+"-student-900x1200.jpg",landing:H5,s:f.s,e:f.e}));
-    a.push(mk({channel:"RED",campaign:cam,adType:"Ad Unit (Dark Post)",adName:c+" Info Day (Video)",assetName:"chn-info-day-2026-1080x1920-15s.mp4",landing:H5,s:f.s,e:f.e}));
-    a.push(mk({channel:"RED",campaign:cam,adType:"Ad Unit (Dark Post)",adName:c+" Info Day - Notes (Video)",assetName:"chn-info-day-2026-tiktok-notes-1080x1920-19s.mp4",landing:H5,s:f.s,e:f.e}));
+    a.push(mk({channel:"RED",campaign:cam,adType:"Ad Unit (Dark Post)",adName:c+" Info Day - Forgan Static",assetName:"chn-info-day-2026-"+slug(c)+"-forgan-900x1200.jpg",landing:H5,s:f.s,e:f.e}));
+    a.push(mk({channel:"RED",campaign:cam,adType:"Ad Unit (Dark Post)",adName:c+" Info Day - Student Static",assetName:"chn-info-day-2026-"+slug(c)+"-student-900x1200.jpg",landing:H5,s:f.s,e:f.e}));
+    a.push(mk({channel:"RED",campaign:cam,adType:"Ad Unit (Dark Post)",adName:c+" Info Day - Video 1 - 15s",assetName:"chn-info-day-2026-1080x1920-15s.mp4",landing:H5,s:f.s,e:f.e}));
+    a.push(mk({channel:"RED",campaign:cam,adType:"Ad Unit (Dark Post)",adName:c+" Info Day - Notes Video",assetName:"chn-info-day-2026-tiktok-notes-1080x1920-19s.mp4",landing:H5,s:f.s,e:f.e}));
   });
   a.push(mk({channel:"RED",campaign:NAT,adType:"Boosting",adName:"Slyvia (KOL) - Info Day Ambassador",assetName:"RED Organic Post",boostedPost:"Slyvia ambassador Info Day post",landing:H5,s:[8,12],e:[9,20]}));
   return a;
 }
 function isNewAsset(a){ return a && a.adType!=null && a.campaign!=null; }
-function normalizeAssets(arr){
-  if(!arr||!arr.length||!isNewAsset(arr[0])) return baselineAssets().map(function(o){o.id=uid();return o;});
+function normalizeAssets(arr,ver){
+  if(ver!==ASSET_BASE_VER||!arr||!arr.length||!isNewAsset(arr[0])) return baselineAssets().map(function(o){o.id=uid();return o;});
   return arr.map(function(a){ a.id=a.id||uid(); a.boostedPost=a.boostedPost||""; a.articlePost=a.articlePost||""; a.status=a.status||""; return a; });
 }
 function assetStatus(a){ return effStatus({status:a.status,flightStart:a.s,flightEnd:a.e}); }
@@ -632,15 +653,15 @@ var BASE_TAGS=["boost","no-boost","dark-post","rsvp-h5","yun-zeng","last-call","
 var st;
 function freshState(){
   var items=baselineItems().map(function(o){o.id=uid(); o.tags=o.tags||[]; return o;});
-  return {version:2, editing:false, view:"cal", tags:BASE_TAGS.slice(), items:items, assets:baselineAssets().map(function(o){o.id=uid();return o;}),
+  return {version:2, assetBaseVer:ASSET_BASE_VER, editing:false, view:"cal", tags:BASE_TAGS.slice(), items:items, assets:baselineAssets().map(function(o){o.id=uid();return o;}),
     filters:{types:{event:1,organic:1,adunit:1,koc:1,kol:1}, status:{}, tags:{}, focus:"all", assetPhase:{}}, _seq:0};
 }
 function load(){
-  try{ var raw=localStorage.getItem(LSKEY); if(raw){ var s=JSON.parse(raw); if(s&&s.version===2&&s.items){ var ff=freshState().filters; s.filters=Object.assign({},ff,s.filters||{}); s.filters.types=Object.assign({},ff.types,(s.filters&&s.filters.types)||{}); s.filters.status=s.filters.status||{}; s.filters.tags=s.filters.tags||{}; s.filters.assetPhase=s.filters.assetPhase||{}; if(!s.filters.focus)s.filters.focus="all"; s.tags=s.tags||BASE_TAGS.slice(); s.assets=normalizeAssets(s.assets); s.editing=false; s.items.forEach(function(it){it.tags=it.tags||[]; it.city=it.city||null;}); return s; } } }catch(e){}
+  try{ var raw=localStorage.getItem(LSKEY); if(raw){ var s=JSON.parse(raw); if(s&&s.version===2&&s.items){ var ff=freshState().filters; s.filters=Object.assign({},ff,s.filters||{}); s.filters.types=Object.assign({},ff.types,(s.filters&&s.filters.types)||{}); s.filters.status=s.filters.status||{}; s.filters.tags=s.filters.tags||{}; s.filters.assetPhase=s.filters.assetPhase||{}; if(!s.filters.focus)s.filters.focus="all"; s.tags=s.tags||BASE_TAGS.slice(); s.assets=normalizeAssets(s.assets,s.assetBaseVer); s.assetBaseVer=ASSET_BASE_VER; s.editing=false; s.items.forEach(function(it){it.tags=it.tags||[]; it.city=it.city||null;}); return s; } } }catch(e){}
   return freshState();
 }
 function save(){ try{ localStorage.setItem(LSKEY, JSON.stringify(stripState())); }catch(e){} scheduleRemoteSave(); }
-function stripState(){ return {version:2, tags:st.tags, items:st.items, assets:st.assets, filters:st.filters, _seq:st._seq}; }
+function stripState(){ return {version:2, assetBaseVer:st.assetBaseVer||ASSET_BASE_VER, tags:st.tags, items:st.items, assets:st.assets, filters:st.filters, _seq:st._seq}; }
 
 /* ---------- status engine ---------- */
 function effStatus(it){
@@ -1064,19 +1085,30 @@ function assetRowHtml(a){
   }
   return '<div class="ar arow'+(ed?" editing":"")+'" data-id="'+a.id+'">'+main+'</div>'+(notes?'<div class="ar-notes">'+notes+'</div>':"");
 }
+function assetFilterActive(){ var f=st.filters.assetF||{}; return !!(f.q||f.type||f.landing||f.status); }
+function filterAsset(a){
+  var f=st.filters.assetF||{};
+  if(f.q && (a.adName||"").toLowerCase().indexOf(f.q.toLowerCase())<0) return false;
+  if(f.type && a.adType!==f.type) return false;
+  if(f.landing && a.landing!==f.landing) return false;
+  if(f.status && assetStatus(a)!==f.status) return false;
+  return true;
+}
 function renderAssets(){
   assetsEl.innerHTML="";
+  var filtered=assetFilterActive();
   ASSET_CHANNELS.forEach(function(ch){
-    var rows=st.assets.filter(function(a){return a.channel===ch;});
+    var all=st.assets.filter(function(a){return a.channel===ch;});
+    var rows=all.filter(filterAsset);
     var liveN=rows.filter(function(a){return assetStatus(a)==="live";}).length;
     var boostN=rows.filter(function(a){return a.adType==="Boosting";}).length;
     var g=document.createElement("section"); g.className="asset-ch";
     var head='<div class="asset-ch-head"><span class="ch-badge ch-'+(ch==="WeChat"?"wc":"rd")+'">'+chDot(ch)+' '+ch+'</span>'
-      +'<span class="pill">'+rows.length+' ads</span>'
+      +'<span class="pill">'+(filtered?rows.length+" of "+all.length:all.length)+' ads</span>'
       +(boostN?'<span class="pill pill-boost">'+boostN+' boosting</span>':"")
       +(liveN?'<span class="stpill st-live">'+liveN+' live</span>':"")+'</div>';
     var colhead='<div class="ar ar-head"><span class="ar-drag-off"></span><span>Campaign</span><span>Paid ads type</span><span>Ad name</span><span>Asset name</span><span>Landing page</span><span>Start</span><span>End</span><span>Status</span><span class="ar-drag-off"></span></div>';
-    var body=rows.length?rows.map(assetRowHtml).join(""):'<div class="ar-empty">No ads yet in '+ch+'.</div>';
+    var body=rows.length?rows.map(assetRowHtml).join(""):'<div class="ar-empty">'+(filtered?"No ads match the filter in "+ch+".":"No ads yet in "+ch+".")+'</div>';
     var addBtn=st.editing?'<button class="add-ad" type="button" data-addch="'+ch+'">＋ Add ad to '+ch+'</button>':'';
     g.innerHTML=head+'<div class="ar-scroll"><div class="ar-table" data-ch="'+ch+'">'+colhead+body+'</div></div>'+addBtn;
     assetsEl.appendChild(g);
@@ -1266,7 +1298,7 @@ $("importFile").onchange=function(e){ var f=e.target.files[0]; if(!f) return; va
   r.onload=function(){ try{ var s=JSON.parse(r.result); if(!s.items) throw 0;
       st.tags=s.tags||st.tags;
       st.items=s.items.map(function(o){o.id=uid(); o.tags=o.tags||[]; o.city=o.city||null; o.flightStart=o.flightStart||null; o.flightEnd=o.flightEnd||null; return o;});
-      if(s.assets) st.assets=normalizeAssets(s.assets.map(function(o){return {id:uid(),channel:o.channel,campaign:o.campaign,adType:o.adType,adName:o.adName,assetName:o.assetName,landing:o.landing,boostedPost:o.boostedPost||"",articlePost:o.articlePost||"",status:o.status==="paused"||o.status==="proposed"?o.status:"",s:o.flightStart||o.s||null,e:o.flightEnd||o.e||null};}));
+      if(s.assets) st.assets=normalizeAssets(s.assets.map(function(o){return {id:uid(),channel:o.channel,campaign:o.campaign,adType:o.adType,adName:o.adName,assetName:o.assetName,landing:o.landing,boostedPost:o.boostedPost||"",articlePost:o.articlePost||"",status:o.status==="paused"||o.status==="proposed"?o.status:"",s:o.flightStart||o.s||null,e:o.flightEnd||o.e||null};}),ASSET_BASE_VER);
       save(); initFilters(); render(); toast("Imported "+st.items.length+" items");
     }catch(x){ toast("Import failed — not a valid plan JSON"); } };
   r.readAsText(f); e.target.value="";
@@ -1301,11 +1333,22 @@ function setView(v){ st.view=v; $("tabCal").setAttribute("aria-selected",v==="ca
   $("viewCal").classList.toggle("hidden",v!=="cal"); $("viewAssets").classList.toggle("hidden",v!=="assets"); render(); }
 $("tabCal").onclick=function(){ setView("cal"); }; $("tabAssets").onclick=function(){ setView("assets"); };
 
+/* asset filter bar */
+function readAssetFilters(){ st.filters.assetF={q:$("afQ").value,type:$("afType").value,landing:$("afLanding").value,status:$("afStatus").value}; }
+function wireAssetFilterBar(){
+  ["afQ","afType","afLanding","afStatus"].forEach(function(id){ var el=$(id); if(!el) return;
+    el.addEventListener("input",function(){ readAssetFilters(); renderAssets(); });
+    el.addEventListener("change",function(){ readAssetFilters(); renderAssets(); });
+  });
+  var c=$("afClear"); if(c) c.onclick=function(){ $("afQ").value="";$("afType").value="";$("afLanding").value="";$("afStatus").value=""; readAssetFilters(); renderAssets(); };
+}
+
 /* ---------- init ---------- */
 function initFilters(){ buildLayerFilters(); buildStatusFilters(); buildTagFilters(); buildCityFilters(); }
 st=load();
 defaultSaveHandler=$("mSave").onclick;
 initFilters();
+wireAssetFilterBar();
 setView("cal");
 setSyncBadge(API_URL?"synced":"off");
 remoteLoad();
