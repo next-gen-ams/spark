@@ -129,7 +129,7 @@
   .dow{display:grid; grid-template-columns:repeat(7,1fr); gap:4px; margin-bottom:4px}
   .dow span{font-size:.6rem; text-transform:uppercase; letter-spacing:.05em; color:var(--faint); font-weight:700; text-align:center}
   .grid{display:grid; grid-template-columns:repeat(7,1fr); gap:4px}
-  .cell{background:var(--surface); border:1px solid var(--line); border-radius:9px; min-height:84px; padding:5px; display:flex;
+  .cell{background:var(--surface); border:1px solid var(--line); border-radius:9px; min-height:104px; padding:6px; display:flex;
     flex-direction:column; gap:3px; position:relative; overflow:hidden; transition:border-color .14s, box-shadow .14s, transform .1s}
   .cell.pad{background:transparent; border-color:transparent; min-height:0}
   .cell.has{cursor:pointer}
@@ -153,21 +153,21 @@
   body.editing .cell.has:hover .add, body.editing .cell:hover .add{display:flex}
   .cell .add:hover{border-color:var(--accent); color:var(--accent)}
   .chips{display:flex; flex-direction:column; gap:3px; margin-top:auto}
-  .chip{display:flex; align-items:center; gap:5px; border-radius:6px; padding:2px 5px; font-size:.65rem; font-weight:600; line-height:1.3;
-    text-align:left; border:1px solid transparent; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; position:relative}
+  .chip{display:flex; align-items:flex-start; gap:5px; border-radius:6px; padding:3px 6px; font-size:.66rem; font-weight:600; line-height:1.25;
+    text-align:left; border:1px solid transparent; position:relative}
   body.editing .chip{cursor:grab}
   body.editing .chip.chip-derived{cursor:default}
   .chip.chip-derived{box-shadow:inset 0 0 0 1px var(--adu-bd)}
   .chip.dragging{opacity:.4}
-  .chip .dot{width:6px;height:6px;border-radius:50%;flex:none}
-  .chip .lbl{overflow:hidden; text-overflow:ellipsis}
+  .chip .dot{width:6px;height:6px;border-radius:50%;flex:none;margin-top:3px}
+  .chip .lbl{flex:1; overflow:hidden; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; word-break:break-word}
   .chip.t-organic{background:var(--org-bg); color:var(--org-fg); border-color:var(--org-bd)}
   .chip.t-adunit{background:var(--adu-bg); color:var(--adu-fg); border-color:var(--adu-bd)}
   .chip.t-koc{background:var(--koc-bg); color:var(--koc-fg); border-color:var(--koc-bd)}
   .chip.t-kol{background:var(--kol-bg); color:var(--kol-fg); border-color:var(--kol-bd)}
   .chip.t-event{background:var(--evt-bg); color:var(--evt-fg); border-color:var(--evt-bd); font-weight:700}
   .chip.paused{opacity:.55; text-decoration:line-through}
-  .chip .stdot{width:6px;height:6px;border-radius:50%;flex:none;margin-left:auto}
+  .chip .stdot{width:6px;height:6px;border-radius:50%;flex:none;margin-left:auto;margin-top:3px}
 
   /* backlog tray */
   .backlog{margin-top:16px; border:1px dashed var(--line-2); border-radius:var(--radius); background:var(--surface-2); padding:12px 14px}
@@ -701,11 +701,11 @@ function chDot(ch){
 }
 function stColor(s){return "var(--st-"+s+")";}
 function shortLabel(it){
-  var c=it.content||""; if(c.length<=26) return c;
-  return c.replace(/\s*\(.*?\)\s*$/,"").slice(0,26).trim()+"…";
+  return (it.content||"").replace(/\s*\(.*?\)\s*$/,"").trim();
 }
 function mdName(m,d){return d+" "+(m===8?"Aug":"Sep");}
 function coversCity(it,city){
+  if(it.cities && it.cities.indexOf(city)>=0) return true; /* derived campaign chips carry their cities */
   if(it.city===city) return true;
   if(it.city) return false;
   var t=(it.targeting||"")+" "+(it.content||"");
@@ -771,11 +771,13 @@ function passFilter(it){
 function paidMilestones(){
   if(!st||!st.assets||!st.assets.length) return [];
   return campaignLaneData().map(function(f){
-    return {id:"pm-"+f.camp, type:"adunit", _derived:true, m:f.s[0], d:f.s[1],
+    var cities=f.cities||[];
+    var evNote=cities.length?("For the "+cities.join(" & ")+" Info Day"+(cities.length>1?"s":"")+". "):"";
+    return {id:"pm-"+f.camp, type:"adunit", _derived:true, m:f.s[0], d:f.s[1], cities:cities,
       obj:"Paid campaign live", ch:(f.channels.length>1?"RED + WeChat":(f.channels[0]||"")),
-      targeting:campShort(f.camp)+" campaign",
+      targeting:campShort(f.camp)+" campaign"+(cities.length>1?(" — "+cities.join(" & ")):""),
       content:campShort(f.camp)+" paid · "+f.count+" ads",
-      note:"Paid flight "+mdName(f.s[0],f.s[1])+" → "+mdName(f.e[0],f.e[1])+". Managed in the Paid Assets tab.",
+      note:evNote+"Paid flight "+mdName(f.s[0],f.s[1])+" → "+mdName(f.e[0],f.e[1])+". Managed in the Paid Assets tab.",
       status:"", flightStart:f.s, flightEnd:f.e, tags:[]};
   });
 }
@@ -942,7 +944,7 @@ function renderLanes(){
     bar.style.left=left+"%"; bar.style.width=Math.max(right-left,0.7)+"%";
     attachTip(bar, f.kol
       ? '<b>Slyvia (KOL) boost</b><br><span class="k">Boost</span> '+mdName(f.s[0],f.s[1])+' → '+mdName(f.e[0],f.e[1])+(f.postDate?'<br><span class="k">Timing</span> starts 3 days after her post ('+mdName(f.postDate[0],f.postDate[1])+')':'')
-      : '<b>'+esc(f.camp)+'</b><br><span class="k">Ads</span> '+f.count+'  ·  '+f.channels.join(" + ")+'<br><span class="k">Flight</span> '+mdName(f.s[0],f.s[1])+' → '+mdName(f.e[0],f.e[1])+(f.nat?"":" (earliest→latest across the campaign)"));
+      : '<b>'+esc(f.camp)+'</b>'+((f.cities&&f.cities.length>1)?('<br><span class="k">For</span> '+f.cities.join(" & ")+' Info Days'):"")+'<br><span class="k">Ads</span> '+f.count+'  ·  '+f.channels.join(" + ")+'<br><span class="k">Flight</span> '+mdName(f.s[0],f.s[1])+' → '+mdName(f.e[0],f.e[1])+(f.nat?"":" (earliest→latest across the campaign)"));
     track.appendChild(bar);
     f.cities.forEach(function(c){ var cf=CITYFLIGHTS[c];
       var t3=document.createElement("div"); t3.className="mk t3"+(dimmed?" dim":""); t3.style.left=xpc(cf.e[0],cf.e[1])+"%";
