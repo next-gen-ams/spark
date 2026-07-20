@@ -67,7 +67,7 @@
   body{margin:0}
   .app{font-family:var(--font); background:var(--ground); color:var(--ink); min-height:100vh;
     -webkit-font-smoothing:antialiased; line-height:1.45; font-feature-settings:"ss01"}
-  .wrap{max-width:1200px; margin:0 auto; padding:20px 20px 70px}
+  .wrap{max-width:1560px; margin:0 auto; padding:20px 24px 70px}
 
   .head{display:flex; flex-wrap:wrap; align-items:center; gap:12px 20px}
   .brandmark{display:flex; align-items:center; gap:11px}
@@ -333,6 +333,15 @@
   /* modal */
   .modal{position:fixed; inset:0; z-index:50; display:none; align-items:center; justify-content:center; padding:18px; background:rgba(20,22,24,.5); backdrop-filter:blur(2px)}
   .modal.open{display:flex}
+  .pin-scrim{position:fixed; inset:0; z-index:60; display:none; align-items:center; justify-content:center; padding:18px; background:rgba(20,22,24,.5); backdrop-filter:blur(2px)}
+  .pin-scrim.open{display:flex}
+  .pin-box{background:var(--surface); border:1px solid var(--line); border-radius:14px; box-shadow:0 24px 60px rgba(0,0,0,.3); width:min(340px,94vw); padding:22px}
+  .pin-title{font-size:1.02rem; font-weight:700; color:var(--ink)}
+  .pin-sub{font-size:.76rem; color:var(--muted); margin:3px 0 14px}
+  #pinInput{width:100%; font:inherit; font-size:1.4rem; letter-spacing:.4em; text-align:center; padding:10px 12px; border:1px solid var(--line-2); border-radius:10px; background:var(--surface); color:var(--ink)}
+  #pinInput:focus{outline:2px solid var(--accent); outline-offset:1px; border-color:var(--accent)}
+  .pin-err{min-height:1.1em; font-size:.76rem; font-weight:600; color:var(--st-paused); margin-top:8px}
+  .pin-actions{display:flex; justify-content:flex-end; gap:8px; margin-top:6px}
   .mcard{background:var(--surface); border:1px solid var(--line); border-radius:14px; box-shadow:0 24px 60px rgba(0,0,0,.3); width:min(540px,96vw);
     max-height:92vh; overflow-y:auto; padding:20px 22px 22px}
   .mcard h2{margin:0 0 3px; font-size:1.05rem}
@@ -393,7 +402,7 @@
       <div class="ctl-row"><span class="ctl-label">Layers</span><div id="layers" style="display:flex;flex-wrap:wrap;gap:7px"></div></div>
       <div class="ctl-row"><span class="ctl-label">Status</span><div id="statusF" style="display:flex;flex-wrap:wrap;gap:7px"></div></div>
       <div class="ctl-row"><span class="ctl-label">Tags</span><div id="tagF" style="display:flex;flex-wrap:wrap;gap:6px;align-items:center"></div></div>
-      <div class="ctl-row"><span class="ctl-label">Focus city</span><div id="cities" style="display:flex;flex-wrap:wrap;gap:6px"></div></div>
+      <div class="ctl-row"><span class="ctl-label">Highlight city</span><div id="cities" style="display:flex;flex-wrap:wrap;gap:6px"></div></div>
     </div>
 
     <div class="months" id="months"></div>
@@ -442,7 +451,7 @@
   </section>
 
   <div class="foot">
-    <span id="footNote">Only KOL/Ambassador Slyvia is boosted; the 5 KOCs are organic and direct audiences to UQ's official RED / WeChat accounts. Unlock edit with the PIN — changes sync to the shared Google Sheet; viewers always see the latest. Export Excel/JSON any time.</span>
+    <span id="footNote">Only KOL/Ambassador Slyvia is boosted; the 5 KOCs are organic and direct audiences to UQ's official RED / WeChat accounts. Unlock edit with the PIN — changes sync to the shared Google Sheet; viewers always see the latest. If two people edit at once, the last save wins — coordinate, or hit “Reload from cloud” before editing. Export Excel/JSON any time.</span>
     <button class="btn ghost" id="resetBtn" type="button">↻ Reload from cloud</button>
   </div>
 </div>
@@ -455,6 +464,20 @@
 
 <div class="tip" id="tip"></div>
 <div class="toast" id="toast"></div>
+
+<!-- PIN dialog -->
+<div class="pin-scrim" id="pinScrim" aria-hidden="true">
+  <div class="pin-box" role="dialog" aria-modal="true" aria-label="Enter edit PIN">
+    <div class="pin-title">Enter edit PIN</div>
+    <div class="pin-sub">Editing is PIN-protected. Viewers can browse without it.</div>
+    <input type="password" id="pinInput" inputmode="numeric" autocomplete="off" placeholder="••••" aria-label="Edit PIN">
+    <div class="pin-err" id="pinErr"></div>
+    <div class="pin-actions">
+      <button class="btn ghost" id="pinCancel" type="button">Cancel</button>
+      <button class="btn primary" id="pinOk" type="button">Unlock</button>
+    </div>
+  </div>
+</div>
 
 <!-- editor modal -->
 <div class="modal" id="modal">
@@ -876,9 +899,11 @@ function buildChip(it){
     return c;
   }
   if(st.editing){
-    c.draggable=true;
-    c.ondragstart=function(e){ dragId=it.id; c.classList.add("dragging"); try{e.dataTransfer.setData("text/plain",it.id); e.dataTransfer.effectAllowed="move";}catch(x){} };
-    c.ondragend=function(){ dragId=null; c.classList.remove("dragging"); document.querySelectorAll(".dragover").forEach(function(el){el.classList.remove("dragover");}); };
+    if(it.type!=="event"){ /* Info Day events are fixed dates — click to edit, but not draggable */
+      c.draggable=true;
+      c.ondragstart=function(e){ dragId=it.id; c.classList.add("dragging"); try{e.dataTransfer.setData("text/plain",it.id); e.dataTransfer.effectAllowed="move";}catch(x){} };
+      c.ondragend=function(){ dragId=null; c.classList.remove("dragging"); document.querySelectorAll(".dragover").forEach(function(el){el.classList.remove("dragover");}); };
+    } else { c.style.cursor="pointer"; c.title="Info Day event (fixed date) — click to edit"; }
     c.onclick=function(e){ e.stopPropagation(); openEditor(it.id); };
   }
   return c;
@@ -1426,13 +1451,22 @@ function toast(msg){ toastEl.textContent=msg; toastEl.classList.add("show"); cle
 function applyEditState(btn){ btn.setAttribute("aria-pressed",st.editing?"true":"false"); btn.classList.toggle("on",st.editing);
   btn.innerHTML=st.editing?"✓ Editing (syncs to cloud)":"✎ Edit mode"; document.body.classList.toggle("editing",st.editing);
   render(); }
+function openPinDialog(onOk){
+  var scrim=$("pinScrim"), inp=$("pinInput"), err=$("pinErr");
+  err.textContent=""; inp.value=""; scrim.classList.add("open"); scrim.setAttribute("aria-hidden","false");
+  setTimeout(function(){ try{inp.focus();}catch(e){} },30);
+  function close(){ scrim.classList.remove("open"); scrim.setAttribute("aria-hidden","true"); inp.value=""; document.removeEventListener("keydown",onKey); }
+  function submit(){ sha256Hex(String(inp.value).trim()).then(function(h){
+    if(h===EDIT_PIN_HASH){ close(); onOk(); } else { err.textContent="Wrong PIN — try again."; try{inp.select();}catch(e){} } }); }
+  function onKey(e){ if(e.key==="Escape"){ close(); } else if(e.key==="Enter"){ e.preventDefault(); submit(); } }
+  $("pinOk").onclick=submit; $("pinCancel").onclick=close;
+  $("pinScrim").onclick=function(e){ if(e.target===scrim) close(); };
+  document.addEventListener("keydown",onKey);
+}
 $("editToggle").onclick=function(){
   var btn=this;
   if(!st.editing && !editUnlocked){
-    var pin=prompt("Enter edit PIN to unlock editing (view-only without it):");
-    if(pin==null) return; /* cancelled */
-    sha256Hex(String(pin).trim()).then(function(h){
-      if(h!==EDIT_PIN_HASH){ toast("Wrong PIN — still view-only"); return; }
+    openPinDialog(function(){
       editUnlocked=true; try{ localStorage.setItem(EDIT_UNLOCK_KEY,"1"); }catch(e){}
       st.editing=true; applyEditState(btn); toast("Editing unlocked on this device");
     });
@@ -1471,5 +1505,7 @@ wireAssetFilterBar();
 setView("cal");
 setSyncBadge(API_URL?"synced":"off");
 remoteLoad();
+/* keep in sync with other editors: pull the shared plan when returning to the tab (unless mid-edit) */
+document.addEventListener("visibilitychange",function(){ if(!document.hidden && API_URL && !st.editing){ remoteLoad(); } });
 })();
 </script>
