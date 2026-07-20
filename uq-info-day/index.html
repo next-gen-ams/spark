@@ -1117,6 +1117,8 @@ function dateSel(f,id,val){
 function assetRowHtml(a){
   var es=assetStatus(a), ed=st.editing;
   var showBoost=isOrganicAsset(a.assetName), showArticle=(a.landing==="WeChat Article");
+  /* In WeChat, the boosted organic post IS the landing article — collapse the two prompts into the WeChat one. */
+  if(a.channel==="WeChat" && showBoost && showArticle) showBoost=false;
   var main;
   if(ed){
     var typeCtrl=showBoost
@@ -1197,6 +1199,8 @@ function wireAssets(){
       var f=el.getAttribute("data-f"), v=el.value;
       if(f==="s"||f==="e") a[f]=parseDate(v); else a[f]=v;
       var relayout=false;
+      /* WeChat: the single "Which WeChat article?" box also feeds the (hidden) boosted-post field */
+      if(f==="articlePost" && a.channel==="WeChat" && isOrganicAsset(a.assetName)) a.boostedPost=v;
       if(f==="assetName"){ if(isOrganicAsset(v)) a.adType="Boosting"; relayout=true; }
       if(f==="landing"||f==="adType"||f==="s"||f==="e") relayout=true;
       save(); if(relayout) renderAssets();
