@@ -199,12 +199,14 @@
   .track{position:relative; flex:1; height:100%}
   .bar{position:absolute; top:50%; transform:translateY(-50%); height:11px; border-radius:6px; background:var(--accent); opacity:.9; cursor:default}
   .bar.nat{background:var(--blue); opacity:.55; height:8px}
+  .bar.kol{background:var(--ch-rd); opacity:.85}
   .bar.dim{opacity:.16}
   .bar:hover{opacity:1; box-shadow:0 0 0 2px color-mix(in srgb, var(--accent) 40%, transparent)}
   .bar.nat:hover{box-shadow:0 0 0 2px color-mix(in srgb, var(--blue) 40%, transparent)}
   .mk{position:absolute; top:50%; z-index:3}
   .mk.evt{width:13px;height:13px;border-radius:50%;background:var(--evt-bg);border:2px solid var(--surface);box-shadow:0 0 0 1px var(--evt-bd);transform:translate(-50%,-50%)}
   .mk.t3{width:12px;height:12px;background:var(--accent);border:2px solid var(--surface);transform:translate(-50%,-50%) rotate(45deg);box-shadow:0 0 0 1px var(--accent-ink)}
+  .mk.post{width:11px;height:11px;border-radius:50%;background:var(--ch-rd);border:2px solid var(--surface);transform:translate(-50%,-50%);box-shadow:0 0 0 1px var(--ch-rd)}
   .mk.dim{opacity:.2}
   .lane-legend{display:flex; flex-wrap:wrap; gap:14px; margin-top:10px; padding-top:9px; border-top:1px solid var(--line); font-size:.7rem; color:var(--muted)}
   .lane-legend span{display:inline-flex; align-items:center; gap:6px}
@@ -212,6 +214,8 @@
   .li-t3{width:10px;height:10px;background:var(--accent);transform:rotate(45deg)}
   .li-bar{width:20px;height:8px;border-radius:5px;background:var(--accent)}
   .li-nat{width:20px;height:7px;border-radius:5px;background:var(--blue);opacity:.6}
+  .li-kol{width:20px;height:8px;border-radius:5px;background:var(--ch-rd);opacity:.85}
+  .li-post{width:10px;height:10px;border-radius:50%;background:var(--ch-rd)}
 
   /* tooltip */
   .tip{position:fixed; z-index:60; background:var(--evt-bg); color:var(--evt-fg); border-radius:8px; padding:8px 11px; font-size:.72rem;
@@ -395,6 +399,8 @@
       <div class="lane-legend">
         <span><i class="li-bar"></i> City paid flight</span>
         <span><i class="li-nat"></i> National (prospecting · boosting · retargeting)</span>
+        <span><i class="li-kol"></i> Slyvia (KOL) boost</span>
+        <span><i class="li-post"></i> Slyvia posts (boost +3 days)</span>
         <span><i class="li-t3"></i> T-3 lead handover</span>
         <span><i class="li-evt"></i> Info Day event</span>
       </div>
@@ -600,7 +606,7 @@ var CAMPAIGNS=["UQ Info Day - National Targeting","UQ Info Day - Guangdong and s
 var AD_TYPES=["Ad Unit (Dark Post)","Boosting"];
 var LANDINGS=["H5 LeadGen form","RED DM","WeChat Article"];
 var ASSET_CHANNELS=["WeChat","RED"];
-var ASSET_BASE_VER=2; /* bump to force the seeded baseline to refresh (regenerates asset rows once) */
+var ASSET_BASE_VER=3; /* bump to force the seeded baseline to refresh (regenerates asset rows once) */
 var WX_ARTICLE_AUG4="4 Aug · WeChat · Info Day Launch article — all 6 cities + RSVP H5";
 var VIDEO_15S_HV="chn-info-day-2026-1080x1920-15s.mp4 + chn-info-day-2026-1280x720-15s.mp4";
 var CITY_CAMPAIGN={Shenzhen:1,Guangzhou:1,Chengdu:2,Chongqing:2,Shanghai:3,Beijing:4};
@@ -646,7 +652,7 @@ function baselineAssets(){
     a.push(mk({channel:"RED",campaign:cam,adType:"Ad Unit (Dark Post)",adName:c+" Info Day - Video 1 - 15s",assetName:"chn-info-day-2026-1080x1920-15s.mp4",landing:H5,s:f.s,e:f.e}));
     a.push(mk({channel:"RED",campaign:cam,adType:"Ad Unit (Dark Post)",adName:c+" Info Day - Notes Video",assetName:"chn-info-day-2026-tiktok-notes-1080x1920-19s.mp4",landing:H5,s:f.s,e:f.e}));
   });
-  a.push(mk({channel:"RED",campaign:NAT,adType:"Boosting",adName:"Slyvia (KOL) - Info Day Ambassador",assetName:"RED Organic Post",boostedPost:"Slyvia ambassador Info Day post",landing:H5,s:[8,12],e:[9,20]}));
+  a.push(mk({channel:"RED",campaign:NAT,adType:"Boosting",kol:true,adName:"Slyvia (KOL) - Info Day Ambassador",assetName:"RED Organic Post",boostedPost:"Slyvia ambassador Info Day post",landing:H5,s:[8,13],e:[9,20]}));
   return a;
 }
 function isNewAsset(a){ return a && a.adType!=null && a.campaign!=null; }
@@ -654,7 +660,7 @@ function normalizeAssets(arr,ver){
   if(ver!==ASSET_BASE_VER||!arr||!arr.length||!isNewAsset(arr[0])) return baselineAssets().map(function(o){o.id=uid();return o;});
   return arr.map(function(a){ a.id=a.id||uid(); a.boostedPost=a.boostedPost||""; a.articlePost=a.articlePost||""; a.status=a.status||""; return a; });
 }
-function assetStatus(a){ return effStatus({status:a.status,flightStart:a.s,flightEnd:a.e}); }
+function assetStatus(a){ return effStatus({status:a.status,flightStart:assetStart(a),flightEnd:a.e}); }
 var BASE_TAGS=["boost","no-boost","dark-post","rsvp-h5","yun-zeng","last-call","wave-1","wave-2"];
 
 /* ---------- state / persistence ---------- */
@@ -882,17 +888,35 @@ function findItem(id){ for(var i=0;i<st.items.length;i++) if(st.items[i].id===id
 /* ---------- lanes ---------- */
 function campShort(camp){ return String(camp||"").replace(/^UQ Info Day - /,"").replace(/ and surrounding$/,"").replace(/ Targeting$/,""); }
 function campaignCities(ci){ var out=[]; for(var c in CITY_CAMPAIGN){ if(CITY_CAMPAIGN[c]===ci) out.push(c); } return out; }
+function minMaxDates(rows){
+  var starts=rows.map(function(a){return a.s;}).filter(Boolean), ends=rows.map(function(a){return a.e;}).filter(Boolean);
+  if(!starts.length||!ends.length) return null;
+  return {s:starts.reduce(function(m,x){return idx(x[0],x[1])<idx(m[0],m[1])?x:m;}),
+          e:ends.reduce(function(m,x){return idx(x[0],x[1])>idx(m[0],m[1])?x:m;})};
+}
+function slyviaPostDate(){
+  var hero=st.items.filter(function(it){return it.type==="kol" && it.m && (it.tags||[]).indexOf("boost")>=0;});
+  if(!hero.length) return null;
+  hero.sort(function(a,b){return idx(a.m,a.d)-idx(b.m,b.d);});
+  return [hero[0].m,hero[0].d];
+}
+function addDays(md,n){ var m=md[0], d=md[1]+n; while(MONTHS[m]&&d>MONTHS[m].days){ d-=MONTHS[m].days; m++; } return [m,d]; }
+function slyviaBoostStart(){ var p=slyviaPostDate(); return p?addDays(p,3):null; }
+/* KOL boost start is linked to Slyvia's post (+3 days); everyone else uses the stored flight start. */
+function assetStart(a){ return (a&&a.kol&&slyviaBoostStart())||(a?a.s:null); }
 function campaignLaneData(){
-  return CAMPAIGNS.map(function(camp,ci){
-    var rows=st.assets.filter(function(a){return a.campaign===camp;});
-    var starts=rows.map(function(a){return a.s;}).filter(Boolean);
-    var ends=rows.map(function(a){return a.e;}).filter(Boolean);
-    if(!starts.length||!ends.length) return null;
-    var s=starts.reduce(function(m,x){return idx(x[0],x[1])<idx(m[0],m[1])?x:m;});
-    var e=ends.reduce(function(m,x){return idx(x[0],x[1])>idx(m[0],m[1])?x:m;});
+  var lanes=CAMPAIGNS.map(function(camp,ci){
+    var rows=st.assets.filter(function(a){return a.campaign===camp && !a.kol;});
+    var mm=minMaxDates(rows); if(!mm) return null;
     var ch={}; rows.forEach(function(a){ ch[a.channel]=1; });
-    return {camp:camp, nat:ci===0, s:s, e:e, count:rows.length, channels:Object.keys(ch), cities:campaignCities(ci)};
+    return {camp:camp, nat:ci===0, s:mm.s, e:mm.e, count:rows.length, channels:Object.keys(ch), cities:campaignCities(ci)};
   }).filter(Boolean);
+  var kolRows=st.assets.filter(function(a){return a.kol;});
+  var kmm=minMaxDates(kolRows);
+  if(kmm){ var kch={}; kolRows.forEach(function(a){ kch[a.channel]=1; });
+    lanes.push({camp:"Slyvia (KOL)", kol:true, nat:false, s:(slyviaBoostStart()||kmm.s), e:kmm.e, count:kolRows.length,
+      channels:Object.keys(kch), cities:[], postDate:slyviaPostDate()}); }
+  return lanes;
 }
 function renderLanes(){
   lanesEl.innerHTML="";
@@ -904,15 +928,17 @@ function renderLanes(){
   if(!lanes.length){ var em=document.createElement("div"); em.className="lane-empty"; em.textContent="No paid assets with flight dates yet — add dates in the Paid Assets tab."; lanesEl.appendChild(em); return; }
   lanes.forEach(function(f){
     var lane=document.createElement("div"); lane.className="lane";
-    var dimmed=(st.filters.focus!=="all"&&!f.nat&&f.cities.indexOf(st.filters.focus)<0);
+    var dimmed=(st.filters.focus!=="all"&&!f.nat&&!f.kol&&f.cities.indexOf(st.filters.focus)<0);
     var name=document.createElement("div"); name.className="name";
-    name.innerHTML=esc(campShort(f.camp))+' <span class="lane-ct">'+f.count+' ads</span>';
+    name.innerHTML=esc(campShort(f.camp))+' <span class="lane-ct'+(f.kol?" kol":"")+'">'+f.count+(f.kol?' boost':' ads')+'</span>';
     lane.appendChild(name);
     var track=document.createElement("div"); track.className="track";
     var left=xpc(f.s[0],f.s[1]), right=xpc(f.e[0],f.e[1]);
-    var bar=document.createElement("div"); bar.className="bar"+(f.nat?" nat":"")+(dimmed?" dim":"");
+    var bar=document.createElement("div"); bar.className="bar"+(f.nat?" nat":"")+(f.kol?" kol":"")+(dimmed?" dim":"");
     bar.style.left=left+"%"; bar.style.width=Math.max(right-left,0.7)+"%";
-    attachTip(bar,'<b>'+esc(f.camp)+'</b><br><span class="k">Ads</span> '+f.count+'  ·  '+f.channels.join(" + ")+'<br><span class="k">Flight</span> '+mdName(f.s[0],f.s[1])+' → '+mdName(f.e[0],f.e[1])+(f.nat?"":" (earliest→latest across the campaign)"));
+    attachTip(bar, f.kol
+      ? '<b>Slyvia (KOL) boost</b><br><span class="k">Boost</span> '+mdName(f.s[0],f.s[1])+' → '+mdName(f.e[0],f.e[1])+(f.postDate?'<br><span class="k">Timing</span> starts 3 days after her post ('+mdName(f.postDate[0],f.postDate[1])+')':'')
+      : '<b>'+esc(f.camp)+'</b><br><span class="k">Ads</span> '+f.count+'  ·  '+f.channels.join(" + ")+'<br><span class="k">Flight</span> '+mdName(f.s[0],f.s[1])+' → '+mdName(f.e[0],f.e[1])+(f.nat?"":" (earliest→latest across the campaign)"));
     track.appendChild(bar);
     f.cities.forEach(function(c){ var cf=CITYFLIGHTS[c];
       var t3=document.createElement("div"); t3.className="mk t3"+(dimmed?" dim":""); t3.style.left=xpc(cf.e[0],cf.e[1])+"%";
@@ -920,6 +946,8 @@ function renderLanes(){
       var ev=document.createElement("div"); ev.className="mk evt"+(dimmed?" dim":""); ev.style.left=xpc(cf.ev[0],cf.ev[1])+"%";
       attachTip(ev,'<b>'+c+' Info Day</b><br>'+mdName(cf.ev[0],cf.ev[1])+' 2026'); track.appendChild(ev);
     });
+    if(f.kol && f.postDate){ var pm=document.createElement("div"); pm.className="mk post"; pm.style.left=xpc(f.postDate[0],f.postDate[1])+"%";
+      attachTip(pm,'<b>Slyvia posts</b><br>'+mdName(f.postDate[0],f.postDate[1])+' — boost begins 3 days later'); track.appendChild(pm); }
     lane.appendChild(track); lanesEl.appendChild(lane);
   });
 }
@@ -1100,7 +1128,7 @@ function assetRowHtml(a){
       +comboHtml("adName",a.id,adNameOptions(a.channel),a.adName)
       +comboHtml("assetName",a.id,assetNameOptions(a.channel),a.assetName)
       +selHtml("landing",a.id,LANDINGS,a.landing)
-      +dateSel("s",a.id,a.s)+dateSel("e",a.id,a.e)
+      +(a.kol?'<span class="ar-in ar-locked" title="Auto — 3 days after Slyvia\'s post">'+(assetStart(a)?mdName(assetStart(a)[0],assetStart(a)[1]):"—")+'</span>':dateSel("s",a.id,a.s))+dateSel("e",a.id,a.e)
       +'<span class="ar-st"><span class="stpill st-'+es+'">'+es+'</span></span>'
       +'<button class="ar-del" type="button" data-del="'+a.id+'" aria-label="Delete ad">✕</button>';
   } else {
@@ -1110,7 +1138,7 @@ function assetRowHtml(a){
       +'<span class="ar-txt">'+esc(a.adName||"—")+'</span>'
       +'<span class="ar-txt ar-mono">'+esc(a.assetName||"—")+'</span>'
       +'<span class="ar-txt">'+esc(a.landing||"—")+'</span>'
-      +'<span class="ar-txt ar-dt">'+(a.s?mdName(a.s[0],a.s[1]):"—")+'</span>'
+      +'<span class="ar-txt ar-dt">'+(assetStart(a)?mdName(assetStart(a)[0],assetStart(a)[1]):"—")+'</span>'
       +'<span class="ar-txt ar-dt">'+(a.e?mdName(a.e[0],a.e[1]):"—")+'</span>'
       +'<span class="ar-st"><span class="stpill st-'+es+'">'+es+'</span></span>'
       +'<span class="ar-drag-off"></span>';
@@ -1223,7 +1251,7 @@ function exportData(){
 }
 function safeNow(){ try{return new Date().toISOString();}catch(e){return "";} }
 function cleanItem(it){ return {type:it.type,m:it.m,d:it.d,obj:it.obj,ch:it.ch,city:it.city||null,targeting:it.targeting,content:it.content,note:it.note||"",status:it.status,effectiveStatus:effStatus(it),flightStart:it.flightStart||null,flightEnd:it.flightEnd||null,creative:it.creative||null,tags:it.tags||[]}; }
-function cleanAsset(a){ return {channel:a.channel,campaign:a.campaign,adType:a.adType,adName:a.adName,assetName:a.assetName,landing:a.landing,boostedPost:a.boostedPost||"",articlePost:a.articlePost||"",flightStart:a.s||null,flightEnd:a.e||null,status:assetStatus(a)}; }
+function cleanAsset(a){ return {channel:a.channel,campaign:a.campaign,adType:a.adType,adName:a.adName,assetName:a.assetName,landing:a.landing,boostedPost:a.boostedPost||"",articlePost:a.articlePost||"",flightStart:assetStart(a)||null,flightEnd:a.e||null,status:assetStatus(a)}; }
 function exportMarkdown(){
   var lines=["# UQ China Info Day 2026 — Master Plan","","_Exported from the Campaign Planner. Organic × Paid, 4 Aug – 20 Sep 2026._","","## Scheduled items","","| Date | Objective | Type | Channel | Targeting | Status | Boost/Tags |","|---|---|---|---|---|---|---|"];
   var sorted=st.items.filter(function(i){return i.m;}).slice().sort(function(a,b){return idx(a.m,a.d)-idx(b.m,b.d);});
@@ -1234,7 +1262,7 @@ function exportMarkdown(){
     lines.push("","## Paid assets — "+ch,"","| Campaign | Paid ads type | Ad name | Asset name | Landing | Note | Start | End | Status |","|---|---|---|---|---|---|---|---|---|");
     st.assets.filter(function(a){return a.channel===ch;}).forEach(function(a){
       var note=a.boostedPost?("boost: "+a.boostedPost):(a.articlePost?("article: "+a.articlePost):"");
-      lines.push("| "+(a.campaign||"")+" | "+(a.adType||"")+" | "+(a.adName||"")+" | "+(a.assetName||"")+" | "+(a.landing||"")+" | "+note+" | "+(a.s?mdName(a.s[0],a.s[1]):"—")+" | "+(a.e?mdName(a.e[0],a.e[1]):"—")+" | "+assetStatus(a)+" |"); });
+      lines.push("| "+(a.campaign||"")+" | "+(a.adType||"")+" | "+(a.adName||"")+" | "+(a.assetName||"")+" | "+(a.landing||"")+" | "+note+" | "+(assetStart(a)?mdName(assetStart(a)[0],assetStart(a)[1]):"—")+" | "+(a.e?mdName(a.e[0],a.e[1]):"—")+" | "+assetStatus(a)+" |"); });
   });
   offerDownload("uq-infoday-master-plan.md", lines.join("\n"), "Markdown master plan");
 }
@@ -1305,7 +1333,7 @@ function buildAssetsSheet(wb){
     st.assets.filter(function(a){return a.channel===ch;}).forEach(function(a){
       var note=a.boostedPost?("Boost: "+a.boostedPost):(a.articlePost?("Article: "+a.articlePost):"");
       var r=ws.addRow({ch:a.channel,campaign:a.campaign,type:a.adType,adName:a.adName,assetName:a.assetName,
-        landing:a.landing,note:note,s:a.s?mdName(a.s[0],a.s[1]):"—",e:a.e?mdName(a.e[0],a.e[1]):"—",status:assetStatus(a)});
+        landing:a.landing,note:note,s:assetStart(a)?mdName(assetStart(a)[0],assetStart(a)[1]):"—",e:a.e?mdName(a.e[0],a.e[1]):"—",status:assetStatus(a)});
       xlBody(r,i++); xlStatus(r.getCell("status"),assetStatus(a));
     });
   });
