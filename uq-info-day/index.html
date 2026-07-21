@@ -542,6 +542,7 @@ function remoteLoad(){
   if(!API_URL){ setSyncBadge("off"); return; }
   fetch(API_URL+"?action=get",{method:"GET"}).then(function(r){return r.json();}).then(function(res){
     remoteReady=true;
+    if(st&&st.editing){ setSyncBadge("synced"); return; } /* never clobber an active edit session */
     if(res&&res.ok&&res.state&&res.state.items&&res.state.items.length){
       st=adoptState(res.state); lastSyncedJSON=JSON.stringify(stripState());
       try{ localStorage.setItem(LSKEY,lastSyncedJSON); }catch(e){}
