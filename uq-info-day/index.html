@@ -415,12 +415,6 @@
 
     <div class="months" id="months"></div>
 
-    <div class="backlog" id="backlog">
-      <h3>Unscheduled / backlog <span class="cnt" id="blCount"></span></h3>
-      <p>Ideas not yet dated (e.g. extra Slyvia posts). In Edit mode, drag one onto a day to schedule it — or drag a dated item here to un-schedule.</p>
-      <div class="bl-items" id="blItems"></div>
-      <button class="bl-add" id="blAdd" type="button">＋ New item (Organic / KOC / KOL / Event)</button>
-    </div>
 
     <div class="section-t">
       <h2>Paid Flight Lanes &amp; RSVP Lead Handover</h2>
@@ -796,7 +790,7 @@ function chipFocus(it){
 /* ---------- DOM refs ---------- */
 var $=function(id){return document.getElementById(id);};
 var monthsEl=$("months"), lanesEl=$("lanes"), layersEl=$("layers"), statusFEl=$("statusF"), tagFEl=$("tagF"), citiesEl=$("cities"),
-    blItemsEl=$("blItems"), blCountEl=$("blCount"), assetsEl=$("assets"), assetPhaseFEl=$("assetPhaseF");
+    assetsEl=$("assets"), assetPhaseFEl=$("assetPhaseF");
 
 /* ---------- filter builders ---------- */
 function buildLayerFilters(){
@@ -841,7 +835,7 @@ function buildCityFilters(){
 function passFilter(it){
   if(!st.filters.types[it.type]) return false;
   var sk=Object.keys(st.filters.status); if(sk.length && !st.filters.status[effStatus(it)]) return false;
-  var tk=Object.keys(st.filters.tags); if(tk.length && !it._derived && it.type!=="event"){ var hit=(it.tags||[]).some(function(t){return st.filters.tags[t];}); if(!hit) return false; }
+  var tk=Object.keys(st.filters.tags); if(tk.length && tk.length<st.tags.length && !it._derived && it.type!=="event" && (it.tags||[]).length){ var hit=(it.tags||[]).some(function(t){return st.filters.tags[t];}); if(!hit) return false; }
   return true;
 }
 
@@ -907,7 +901,7 @@ function renderCal(){
     for(var d=1;d<=mo.days;d++){ grid.appendChild(buildCell(m,d,(mo.off+d-1)%7)); }
     wrap.appendChild(grid); monthsEl.appendChild(wrap);
   });
-  renderBacklog(); renderLanes();
+  renderLanes();
 }
 function buildCell(m,d,wd){
   var cell=document.createElement("div");
@@ -970,33 +964,9 @@ function buildChip(it){
   return c;
 }
 
-/* ---------- backlog ---------- */
-var backlogEl=$("backlog");
-function renderBacklog(){
-  var bl=st.items.filter(function(it){return it.m==null||it.d==null;});
-  blCountEl.textContent="("+bl.length+")";
-  blItemsEl.innerHTML="";
-  if(!bl.length){ var e=document.createElement("div"); e.className="bl-empty"; e.textContent="Nothing unscheduled."; blItemsEl.appendChild(e); }
-  bl.forEach(function(it){
-    var el=document.createElement("div"); el.className="bl-item";
-    var es=effStatus(it);
-    el.innerHTML='<span class="sw" style="background:'+TYPES[it.type].sw+'"></span><span class="lbl">'+esc(it.content)+'</span><span class="stpill st-'+es+'">'+es+'</span>';
-    if(st.editing){ el.draggable=true;
-      el.ondragstart=function(e){ dragId=it.id; try{e.dataTransfer.setData("text/plain",it.id);e.dataTransfer.effectAllowed="move";}catch(x){} };
-      el.ondragend=function(){ dragId=null; };
-      el.style.cursor="grab";
-      el.onclick=function(){ openEditor(it.id); };
-    } else { el.onclick=function(){ openEditorReadOnly(it.id); }; el.style.cursor="pointer"; }
-    blItemsEl.appendChild(el);
-  });
-}
-backlogEl.ondragover=function(e){ if(st.editing&&dragId){ e.preventDefault(); backlogEl.classList.add("dragover"); } };
-backlogEl.ondragleave=function(){ backlogEl.classList.remove("dragover"); };
-backlogEl.ondrop=function(e){ e.preventDefault(); backlogEl.classList.remove("dragover"); if(dragId){ moveItem(dragId,null,null); } };
-$("blAdd").onclick=function(){ openEditor(null); };
-
+/* ---------- item drag helpers (backlog removed — items are created via the calendar-cell + button) ---------- */
 var dragId=null;
-function moveItem(id,m,d){ var it=findItem(id); if(!it) return; it.m=m; it.d=d; save(); renderCal(); toast(m==null?"Moved to backlog":"Moved to "+mdName(m,d)); }
+function moveItem(id,m,d){ var it=findItem(id); if(!it) return; it.m=m; it.d=d; save(); renderCal(); toast("Moved to "+mdName(m,d)); }
 function findItem(id){ for(var i=0;i<st.items.length;i++) if(st.items[i].id===id) return st.items[i]; return null; }
 
 /* ---------- lanes ---------- */
