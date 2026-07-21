@@ -193,7 +193,7 @@
   .section-t p{margin:0; font-size:.74rem; color:var(--muted)}
   .lanes-wrap{margin-top:12px; background:var(--surface); border:1px solid var(--line); border-radius:var(--radius); box-shadow:var(--shadow); padding:14px 16px 10px; overflow-x:auto}
   .lanes{min-width:0}
-  .axis{display:flex; margin-left:var(--ll,158px); position:relative; height:16px; margin-bottom:4px}
+  .axis{display:flex; margin-left:var(--ll,220px); position:relative; height:16px; margin-bottom:4px}
   .tick{position:absolute; transform:translateX(-50%); font-size:.6rem; color:var(--faint); font-weight:600; font-variant-numeric:tabular-nums; white-space:nowrap}
   .tick::after{content:""; position:absolute; left:50%; top:15px; width:1px; height:900px; background:var(--line); opacity:.5; z-index:0}
   .axis .nowline{position:absolute; top:14px; width:2px; height:900px; background:var(--accent); opacity:.5; z-index:0}
@@ -201,7 +201,9 @@
     margin:10px 0 4px; padding-bottom:3px; border-bottom:1px dashed var(--line)}
   .lane-section:first-child{margin-top:0}
   .lane{display:flex; align-items:center; height:30px; position:relative; z-index:1}
-  .lane .name{width:var(--ll,158px); flex:none; font-size:.74rem; font-weight:600; padding-right:10px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; cursor:default; color:var(--ink); display:flex; align-items:center; gap:5px}
+  .lane .name{width:var(--ll,220px); flex:none; font-size:.74rem; font-weight:600; padding-right:10px; white-space:nowrap; overflow:hidden; cursor:default; color:var(--ink); display:flex; align-items:center; gap:5px}
+  .lane .name .lane-nm{overflow:hidden; text-overflow:ellipsis; white-space:nowrap; min-width:0}
+  .lane .name .lane-ct{flex:none}
   .lane .name .lane-ct{font-size:.64rem; font-weight:700; color:var(--blue); background:var(--blue-bg); padding:1px 6px; border-radius:20px}
   .lane .name .lane-ct.boost{color:#fff; background:var(--accent)}
   .lane .name .lane-ct.boost.kol{background:var(--ch-rd)}
@@ -420,7 +422,7 @@
     </div>
     <div class="lanes-wrap"><div class="lanes" id="lanes"></div>
       <div class="lane-legend">
-        <span><i class="li-campaign"></i> Campaign dark posts</span>
+        <span><i class="li-campaign"></i> Ad Units</span>
         <span><i class="li-boost"></i> Boosting ad (one lane each)</span>
         <span><i class="li-kol"></i> Slyvia (KOL) boost</span>
         <span><i class="li-post"></i> Slyvia posts → boost +3 days</span>
@@ -993,8 +995,8 @@ function renderLanes(){
     var dimmed=(st.filters.focus!=="all"&&!f.nat&&(f.cities||[]).indexOf(st.filters.focus)<0);
     var name=document.createElement("div"); name.className="name";
     name.innerHTML=isBoost
-      ? esc(boostShort(f.camp))+' <span class="lane-ct boost'+(f.kol?" kol":"")+'">boost</span>'
-      : esc(campShort(f.camp))+' <span class="lane-ct">'+f.count+' ads</span>';
+      ? '<span class="lane-nm">'+esc(boostShort(f.camp))+'</span><span class="lane-ct boost'+(f.kol?" kol":"")+'">boost</span>'
+      : '<span class="lane-nm">'+esc(campShort(f.camp))+'</span><span class="lane-ct">'+f.count+' ads</span>';
     lane.appendChild(name);
     var track=document.createElement("div"); track.className="track";
     var left=xpc(f.s[0],f.s[1]), right=xpc(f.e[0],f.e[1]);
