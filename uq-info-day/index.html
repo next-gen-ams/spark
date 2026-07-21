@@ -1223,6 +1223,14 @@ function comboHtml(f,id,options,val){
   return '<input class="ar-in" list="'+listId+'" data-id="'+id+'" data-f="'+f+'" value="'+esc(val||"")+'" spellcheck="false">'
     +'<datalist id="'+listId+'">'+options.map(function(v){return '<option value="'+esc(v)+'">';}).join("")+'</datalist>';
 }
+/* linked-post picker: a real <select> so all options always show (a datalist filters by the typed value). Keeps any custom value. */
+function noteSelect(f,a,options){
+  var cur=a[f]||"", found=false;
+  var opts='<option value=""'+(cur?"":" selected")+'>— pick a post —</option>';
+  options.forEach(function(v){ if(v===cur) found=true; opts+='<option'+(v===cur?" selected":"")+'>'+esc(v)+'</option>'; });
+  if(cur && !found) opts+='<option selected>'+esc(cur)+'</option>';
+  return '<select class="ar-in ar-note-in" data-id="'+a.id+'" data-f="'+f+'">'+opts+'</select>';
+}
 function dateSel(f,id,val){
   var opts='<option value="">—</option>';
   [8,9].forEach(function(m){ var mo=MONTHS[m]; for(var d=1;d<=mo.days;d++){ var v=m+"-"+d; opts+='<option value="'+v+'"'+(val&&val[0]===m&&val[1]===d?" selected":"")+'>'+mdName(m,d)+'</option>'; } });
@@ -1262,12 +1270,12 @@ function assetRowHtml(a){
   var notes="";
   if(showBoost){
     notes+='<div class="ar-note ar-note-boost"><span class="ar-note-ic">↳</span><span class="ar-note-lb">Boosting which post?</span>'
-      +(ed?'<input class="ar-in ar-note-in" data-id="'+a.id+'" data-f="boostedPost" list="dl-organic-'+a.channel+'" value="'+esc(a.boostedPost||"")+'" placeholder="pick or type the '+a.channel+' post">'
+      +(ed?noteSelect("boostedPost",a,organicOptions(a.channel))
           :'<span class="ar-note-val">'+esc(a.boostedPost||"— not set —")+'</span>')+'</div>';
   }
   if(showArticle){
     notes+='<div class="ar-note ar-note-article"><span class="ar-note-ic">▤</span><span class="ar-note-lb">Which WeChat article?</span>'
-      +(ed?'<input class="ar-in ar-note-in" data-id="'+a.id+'" data-f="articlePost" list="dl-wxarticle" value="'+esc(a.articlePost||"")+'" placeholder="pick or type the WeChat article">'
+      +(ed?noteSelect("articlePost",a,organicOptions("WeChat"))
           :'<span class="ar-note-val">'+esc(a.articlePost||"— not set —")+'</span>')+'</div>';
   }
   return '<div class="ad-block">'+'<div class="ar arow'+(ed?" editing":"")+'" data-id="'+a.id+'">'+main+'</div>'+(notes?'<div class="ar-notes">'+notes+'</div>':"")+'</div>';
@@ -1302,10 +1310,6 @@ function renderAssets(){
     g.innerHTML=head+'<div class="ar-scroll"><div class="ar-table" data-ch="'+ch+'">'+colhead+body+'</div></div>'+addBtn;
     assetsEl.appendChild(g);
   });
-  assetsEl.insertAdjacentHTML("beforeend",
-    '<datalist id="dl-organic-WeChat">'+organicOptions("WeChat").map(function(v){return '<option value="'+esc(v)+'">';}).join("")+'</datalist>'
-    +'<datalist id="dl-organic-RED">'+organicOptions("RED").map(function(v){return '<option value="'+esc(v)+'">';}).join("")+'</datalist>'
-    +'<datalist id="dl-wxarticle">'+organicOptions("WeChat").map(function(v){return '<option value="'+esc(v)+'">';}).join("")+'</datalist>');
   wireAssets();
 }
 function wireAssets(){
