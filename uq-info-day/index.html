@@ -192,7 +192,7 @@
   .section-t h2{font-size:1rem; margin:0; letter-spacing:-.01em}
   .section-t p{margin:0; font-size:.74rem; color:var(--muted)}
   .lanes-wrap{margin-top:12px; background:var(--surface); border:1px solid var(--line); border-radius:var(--radius); box-shadow:var(--shadow); padding:14px 16px 10px; overflow-x:auto}
-  .lanes{min-width:660px}
+  .lanes{min-width:0}
   .axis{display:flex; margin-left:var(--ll,158px); position:relative; height:16px; margin-bottom:4px}
   .tick{position:absolute; transform:translateX(-50%); font-size:.6rem; color:var(--faint); font-weight:600; font-variant-numeric:tabular-nums; white-space:nowrap}
   .tick::after{content:""; position:absolute; left:50%; top:15px; width:1px; height:900px; background:var(--line); opacity:.5; z-index:0}
@@ -1226,7 +1226,8 @@ function assetFilterActive(){ var f=st.filters.assetF||{}; return !!(f.q||f.type
 function filterAsset(a){
   var f=st.filters.assetF||{};
   if(f.q){ var hay=((a.campaign||"")+" "+(a.adName||"")+" "+(a.assetName||"")).toLowerCase(); if(hay.indexOf(f.q.toLowerCase())<0) return false; }
-  if(f.city){ var want=(f.city==="National")?CAMPAIGNS[0]:campaignForCity(f.city); if(a.campaign!==want) return false; }
+  if(f.city){ if(f.city==="National"){ if(a.campaign!==CAMPAIGNS[0]) return false; }
+    else if((a.adName||"").toLowerCase().indexOf(f.city.toLowerCase())<0) return false; }
   if(f.type && a.adType!==f.type) return false;
   if(f.landing && a.landing!==f.landing) return false;
   if(f.status && assetStatus(a)!==f.status) return false;
