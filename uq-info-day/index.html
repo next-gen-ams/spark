@@ -825,7 +825,7 @@ function buildCityFilters(){
 function passFilter(it){
   if(!st.filters.types[it.type]) return false;
   var sk=Object.keys(st.filters.status); if(sk.length && !st.filters.status[effStatus(it)]) return false;
-  var tk=Object.keys(st.filters.tags); if(tk.length && !it._derived){ var hit=(it.tags||[]).some(function(t){return st.filters.tags[t];}); if(!hit) return false; }
+  var tk=Object.keys(st.filters.tags); if(tk.length && !it._derived && it.type!=="event"){ var hit=(it.tags||[]).some(function(t){return st.filters.tags[t];}); if(!hit) return false; }
   return true;
 }
 
