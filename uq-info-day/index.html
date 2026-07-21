@@ -527,7 +527,7 @@ function adoptState(s){
   s.filters=Object.assign({},ff,s.filters||{}); s.filters.types=Object.assign({},ff.types,(s.filters&&s.filters.types)||{});
   s.filters.status=s.filters.status||{}; s.filters.tags=s.filters.tags||{}; s.filters.assetPhase=s.filters.assetPhase||{}; if(!s.filters.focus)s.filters.focus="all";
   s.tags=s.tags||BASE_TAGS.slice(); s.assets=normalizeAssets(s.assets,s.assetBaseVer); s.assetBaseVer=ASSET_BASE_VER; s.editing=false; s.view=(st&&st.view)?st.view:"cal";
-  s.items=s.items.filter(function(it){return it.type!=="adunit";});
+  if(s.adunitRestoreVer!==ADUNIT_RESTORE_VER){ restoreAdUnits(s.items); if(s.filters) s.filters.tags={}; s.adunitRestoreVer=ADUNIT_RESTORE_VER; }
   s.items.forEach(function(it){ it.id=it.id||uid(); it.tags=it.tags||[]; it.city=it.city||null; });
   if(s.itemsStatusVer!==ITEMS_STATUS_VER){ forceProposed(s.items); s.itemsStatusVer=ITEMS_STATUS_VER; }
   s.assets.forEach(function(a){ a.id=a.id||uid(); });
@@ -703,22 +703,42 @@ function normalizeAssets(arr,ver){
 }
 function assetStatus(a){ return effStatus({status:a.status,flightStart:assetStart(a),flightEnd:a.e}); }
 var BASE_TAGS=["boost","no-boost","dark-post","rsvp-h5","yun-zeng","last-call","wave-1","wave-2"];
+var ADUNIT_RESTORE_VER=1; /* one-time: re-inject the original Ad Unit calendar entries removed by the earlier aggregation refactor */
+function baselineAdUnits(){ return [
+ {type:"adunit",m:8,d:12,obj:"Boosting",ch:"RED",targeting:"National + lookalike",content:"KOL / Ambassador (Slyvia) post boosting — RED ($13.5k)",note:"Amplifies Slyvia's ambassador posts only. The 5 KOCs are not boosted.",status:"scheduled",flightStart:[8,12],flightEnd:[9,20],tags:["boost","dark-post"]},
+ {type:"adunit",m:8,d:18,obj:"Prospecting",ch:"WeChat",targeting:"National",content:"Dynamic Banner — national awareness",note:"$20k awareness phase.",status:"scheduled",flightStart:[8,18],flightEnd:[9,15],creative:"chn-info-day-2026 WeChat banner set",tags:["dark-post"]},
+ {type:"adunit",m:8,d:18,obj:"Prospecting",ch:"RED",targeting:"National",content:"Newsfeed & Search — national awareness",note:"$30k keyword + newsfeed awareness.",status:"scheduled",flightStart:[8,18],flightEnd:[9,15],tags:["dark-post"]},
+ {type:"adunit",m:8,d:18,obj:"Boosting",ch:"RED + WeChat",targeting:"National + lookalike",content:"Organic Post Boosting begins (amplify 4 Aug posts)",note:"$54.5k pool. Best-performing organic boosted as dark posts.",status:"scheduled",flightStart:[8,18],flightEnd:[9,20],tags:["boost","dark-post"]},
+ {type:"adunit",m:8,d:19,obj:"Retargeting (National)",ch:"RED",targeting:"National RSVP",content:"National Info Day dark posts (Forgan / Student image + Bag video)",note:"Always-on national retargeting → H5 / lead form.",status:"scheduled",flightStart:[8,19],flightEnd:[9,17],tags:["dark-post","rsvp-h5"]},
+ {type:"adunit",m:8,d:20,obj:"Retargeting (City)",ch:"WeChat",city:"Shenzhen",targeting:"City Targeting (Shenzhen & Surrounding)",content:"Shenzhen dark posts (video + Forgan + Student)",note:"Moment/Banner → H5 → Microsite. Pauses 3 days pre-event (T-3, 9 Sep) for RSVP lead handover.",status:"scheduled",flightStart:[8,20],flightEnd:[9,9],tags:["dark-post","rsvp-h5"]},
+ {type:"adunit",m:8,d:20,obj:"Retargeting (City)",ch:"RED",city:"Shenzhen",targeting:"City Targeting (Shenzhen & Surrounding)",content:"Shenzhen dark posts (image + TikTok video + Notes)",note:"'我们深圳见！' → H5. T-3 pause 9 Sep.",status:"scheduled",flightStart:[8,20],flightEnd:[9,9],tags:["dark-post","rsvp-h5"]},
+ {type:"adunit",m:8,d:20,obj:"Retargeting (City)",ch:"RED + WeChat",city:"Guangzhou",targeting:"City Targeting (Guangzhou & Surrounding)",content:"Guangzhou dark posts",note:"'我们广州见！' → H5. T-3 pause 10 Sep.",status:"scheduled",flightStart:[8,20],flightEnd:[9,10],tags:["dark-post","rsvp-h5"]},
+ {type:"adunit",m:8,d:25,obj:"Retargeting (City)",ch:"RED + WeChat",city:"Chengdu",targeting:"City Targeting (Chengdu & Surrounding)",content:"Chengdu dark posts",note:"'我们成都见！' Yun Zeng city → H5. T-3 pause 12 Sep.",status:"scheduled",flightStart:[8,25],flightEnd:[9,12],tags:["dark-post","rsvp-h5","yun-zeng"]},
+ {type:"adunit",m:8,d:25,obj:"Retargeting (City)",ch:"RED + WeChat",city:"Chongqing",targeting:"City Targeting (Chongqing & Surrounding)",content:"Chongqing dark posts",note:"'我们重庆见！' Yun Zeng city → H5. T-3 pause 14 Sep.",status:"scheduled",flightStart:[8,25],flightEnd:[9,14],tags:["dark-post","rsvp-h5","yun-zeng"]},
+ {type:"adunit",m:8,d:29,obj:"Retargeting (City)",ch:"RED + WeChat",city:"Shanghai",targeting:"City Targeting (Shanghai & Surrounding)",content:"Shanghai dark posts",note:"'我们上海见！' PG + UG sessions → H5. T-3 pause 16 Sep.",status:"scheduled",flightStart:[8,29],flightEnd:[9,16],tags:["dark-post","rsvp-h5"]},
+ {type:"adunit",m:8,d:29,obj:"Retargeting (City)",ch:"RED + WeChat",city:"Beijing",targeting:"City Targeting (Beijing & Surrounding)",content:"Beijing dark posts",note:"'我们北京见！' Campaign finale city → H5. T-3 pause 17 Sep.",status:"scheduled",flightStart:[8,29],flightEnd:[9,17],tags:["dark-post","rsvp-h5"]}
+];}
+function restoreAdUnits(items){
+  var seen={}; items.forEach(function(it){ if(it.type==="adunit") seen[it.m+"|"+it.d+"|"+it.content]=1; });
+  baselineAdUnits().forEach(function(o){ var k=o.m+"|"+o.d+"|"+o.content; if(!seen[k]){ var c=Object.assign({},o); c.id=uid(); c.tags=(o.tags||[]).slice(); items.push(c); } });
+  return items;
+}
 
 /* ---------- state / persistence ---------- */
 var st;
 var ITEMS_STATUS_VER=1; /* one-time: set organic/KOC/KOL items to "proposed"; bump to re-run */
 function forceProposed(items){ (items||[]).forEach(function(it){ if(it.type==="organic"||it.type==="koc"||it.type==="kol") it.status="proposed"; }); return items; }
 function freshState(){
-  var items=forceProposed(baselineItems().filter(function(o){return o.type!=="adunit";}).map(function(o){o.id=uid(); o.tags=o.tags||[]; return o;}));
-  return {version:2, assetBaseVer:ASSET_BASE_VER, itemsStatusVer:ITEMS_STATUS_VER, editing:false, view:"cal", tags:BASE_TAGS.slice(), items:items, assets:baselineAssets().map(function(o){o.id=uid();return o;}),
+  var items=forceProposed(baselineItems().concat(baselineAdUnits()).map(function(o){o.id=uid(); o.tags=o.tags||[]; return o;}));
+  return {version:2, assetBaseVer:ASSET_BASE_VER, itemsStatusVer:ITEMS_STATUS_VER, adunitRestoreVer:ADUNIT_RESTORE_VER, editing:false, view:"cal", tags:BASE_TAGS.slice(), items:items, assets:baselineAssets().map(function(o){o.id=uid();return o;}),
     filters:{types:{event:1,organic:1,adunit:1,koc:1,kol:1}, status:{}, tags:{}, focus:"all", assetPhase:{}}, _seq:0};
 }
 function load(){
-  try{ var raw=localStorage.getItem(LSKEY); if(raw){ var s=JSON.parse(raw); if(s&&s.version===2&&s.items){ var ff=freshState().filters; s.filters=Object.assign({},ff,s.filters||{}); s.filters.types=Object.assign({},ff.types,(s.filters&&s.filters.types)||{}); s.filters.status=s.filters.status||{}; s.filters.tags=s.filters.tags||{}; s.filters.assetPhase=s.filters.assetPhase||{}; if(!s.filters.focus)s.filters.focus="all"; s.tags=s.tags||BASE_TAGS.slice(); s.assets=normalizeAssets(s.assets,s.assetBaseVer); s.assetBaseVer=ASSET_BASE_VER; s.editing=false; s.items=s.items.filter(function(it){return it.type!=="adunit";}); s.items.forEach(function(it){it.tags=it.tags||[]; it.city=it.city||null;}); if(s.itemsStatusVer!==ITEMS_STATUS_VER){ forceProposed(s.items); s.itemsStatusVer=ITEMS_STATUS_VER; } return s; } } }catch(e){}
+  try{ var raw=localStorage.getItem(LSKEY); if(raw){ var s=JSON.parse(raw); if(s&&s.version===2&&s.items){ var ff=freshState().filters; s.filters=Object.assign({},ff,s.filters||{}); s.filters.types=Object.assign({},ff.types,(s.filters&&s.filters.types)||{}); s.filters.status=s.filters.status||{}; s.filters.tags=s.filters.tags||{}; s.filters.assetPhase=s.filters.assetPhase||{}; if(!s.filters.focus)s.filters.focus="all"; s.tags=s.tags||BASE_TAGS.slice(); s.assets=normalizeAssets(s.assets,s.assetBaseVer); s.assetBaseVer=ASSET_BASE_VER; s.editing=false; if(s.adunitRestoreVer!==ADUNIT_RESTORE_VER){ restoreAdUnits(s.items); if(s.filters) s.filters.tags={}; s.adunitRestoreVer=ADUNIT_RESTORE_VER; } s.items.forEach(function(it){it.tags=it.tags||[]; it.city=it.city||null;}); if(s.itemsStatusVer!==ITEMS_STATUS_VER){ forceProposed(s.items); s.itemsStatusVer=ITEMS_STATUS_VER; } return s; } } }catch(e){}
   return freshState();
 }
 function save(){ try{ localStorage.setItem(LSKEY, JSON.stringify(stripState())); }catch(e){} scheduleRemoteSave(); }
-function stripState(){ return {version:2, assetBaseVer:st.assetBaseVer||ASSET_BASE_VER, itemsStatusVer:st.itemsStatusVer||ITEMS_STATUS_VER, tags:st.tags, items:st.items, assets:st.assets, filters:st.filters, _seq:st._seq}; }
+function stripState(){ return {version:2, assetBaseVer:st.assetBaseVer||ASSET_BASE_VER, itemsStatusVer:st.itemsStatusVer||ITEMS_STATUS_VER, adunitRestoreVer:st.adunitRestoreVer||ADUNIT_RESTORE_VER, tags:st.tags, items:st.items, assets:st.assets, filters:st.filters, _seq:st._seq}; }
 
 /* ---------- status engine ---------- */
 function effStatus(it){
@@ -800,7 +820,7 @@ function buildCityFilters(){
 function passFilter(it){
   if(!st.filters.types[it.type]) return false;
   var sk=Object.keys(st.filters.status); if(sk.length && !st.filters.status[effStatus(it)]) return false;
-  var tk=Object.keys(st.filters.tags); if(tk.length){ var hit=(it.tags||[]).some(function(t){return st.filters.tags[t];}); if(!hit) return false; }
+  var tk=Object.keys(st.filters.tags); if(tk.length && !it._derived){ var hit=(it.tags||[]).some(function(t){return st.filters.tags[t];}); if(!hit) return false; }
   return true;
 }
 
@@ -809,21 +829,12 @@ function passFilter(it){
    placed on its earliest ad flight-start — computed live from Paid Assets, not stored. */
 function paidMilestones(){
   if(!st||!st.assets||!st.assets.length) return [];
-  return campaignLaneData().map(function(f){
-    if(f.kind==="boost"){
-      return {id:"pm-b-"+(f.assetId||f.camp), type:"adunit", _derived:true, _boost:true, m:f.s[0], d:f.s[1], cities:f.cities,
-        obj:"Boosted ad", ch:(f.channels[0]||""), targeting:"Boosting — "+f.camp,
-        content:"Boost: "+boostShort(f.camp),
-        note:"Boosting ad. Flight "+mdName(f.s[0],f.s[1])+" → "+mdName(f.e[0],f.e[1])+(f.kol&&f.postDate?" — starts 3 days after Slyvia's post ("+mdName(f.postDate[0],f.postDate[1])+")":"")+". Managed in the Paid Assets tab.",
-        status:"", flightStart:f.s, flightEnd:f.e, tags:[]};
-    }
-    var cities=f.cities||[];
-    var evNote=cities.length?("For the "+cities.join(" & ")+" Info Day"+(cities.length>1?"s":"")+". "):"";
-    return {id:"pm-"+f.camp, type:"adunit", _derived:true, m:f.s[0], d:f.s[1], cities:cities,
-      obj:"Paid campaign live", ch:(f.channels.length>1?"RED + WeChat":(f.channels[0]||"")),
-      targeting:campShort(f.camp)+" campaign"+(cities.length>1?(" — "+cities.join(" & ")):""),
-      content:campShort(f.camp)+" dark posts · "+f.count,
-      note:evNote+"Dark-post flight "+mdName(f.s[0],f.s[1])+" → "+mdName(f.e[0],f.e[1])+". Boosting ads show as their own chips. Managed in the Paid Assets tab.",
+  /* Dark posts are shown by the restored Ad Unit calendar entries; here we only surface each Boosting ad. */
+  return campaignLaneData().filter(function(f){return f.kind==="boost";}).map(function(f){
+    return {id:"pm-b-"+(f.assetId||f.camp), type:"adunit", _derived:true, _boost:true, m:f.s[0], d:f.s[1], cities:f.cities,
+      obj:"Boosted ad", ch:(f.channels[0]||""), targeting:"Boosting — "+f.camp,
+      content:"Boost: "+boostShort(f.camp),
+      note:"Boosting ad. Flight "+mdName(f.s[0],f.s[1])+" → "+mdName(f.e[0],f.e[1])+(f.kol&&f.postDate?" — starts 3 days after Slyvia's post ("+mdName(f.postDate[0],f.postDate[1])+")":"")+". Managed in the Paid Assets tab.",
       status:"", flightStart:f.s, flightEnd:f.e, tags:[]};
   });
 }
@@ -1082,7 +1093,7 @@ function openEditor(id,preset){
   editId=it.id; if(!id){ st._pendingNew=it; } else { st._pendingNew=null; }
   mTitle.textContent=id?"Edit item":"New item";
   mSub.textContent="Type & tags stay within the existing system. Live / finished update automatically from dates.";
-  var typeSel='<select id="f_type">'+TYPE_ORDER.filter(function(k){return k!=="adunit"||it.type==="adunit";}).map(function(k){return opt(k,it.type,TYPES[k].label);}).join("")+'</select>';
+  var typeSel='<select id="f_type">'+TYPE_ORDER.map(function(k){return opt(k,it.type,TYPES[k].label);}).join("")+'</select>';
   var chSel='<select id="f_ch">'+CHANNELS.map(function(c){return opt(c,it.ch||"",c===""?"— none —":c);}).join("")+'</select>';
   var citySel='<select id="f_city"><option value="">— none / national —</option>'+CITIES.map(function(c){return opt(c,it.city||"",c+" "+CN[c]);}).join("")+'</select>';
   var stSel='<select id="f_status">'+["scheduled","proposed","paused"].map(function(s){return opt(s,it.status,s.charAt(0).toUpperCase()+s.slice(1));}).join("")+'</select>';
