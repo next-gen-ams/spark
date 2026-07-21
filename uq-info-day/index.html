@@ -10,7 +10,7 @@
     --adu-bg:#FFE7DA; --adu-fg:#BC4517; --adu-bd:#F8C4A6;
     --koc-bg:#E4F3FC; --koc-fg:#0A6FAE; --koc-bd:#BBE0F4;
     --kol-bg:#DBEDFA; --kol-fg:#0A5688; --kol-bd:#AAD4EE;
-    --ch-wc:#1E9E5A; --ch-rd:#E1274A;
+    --ch-wc:#1E9E5A; --ch-rd:#E1274A; --ch-weibo:#E5A600;
     --st-scheduled:#6C6F71; --st-proposed:#8A6D1F; --st-live:#1E9E5A; --st-finished:#8C9296; --st-paused:#C0481B;
     --st-scheduled-bg:#EEEEEA; --st-proposed-bg:#FBF3D8; --st-live-bg:#E4F5EA; --st-finished-bg:#EDEFF0; --st-paused-bg:#FFE7DA;
     --shadow:0 1px 2px rgba(37,40,43,.06), 0 8px 24px rgba(37,40,43,.08);
@@ -28,7 +28,7 @@
       --adu-bg:rgba(255,122,72,.18); --adu-fg:#FFB08A; --adu-bd:rgba(255,122,72,.46);
       --koc-bg:rgba(59,169,230,.16); --koc-fg:#82CDF3; --koc-bd:rgba(59,169,230,.44);
       --kol-bg:rgba(70,150,215,.18); --kol-fg:#88BCEA; --kol-bd:rgba(70,150,215,.46);
-      --ch-wc:#3FBF7C; --ch-rd:#F0567A;
+      --ch-wc:#3FBF7C; --ch-rd:#F0567A; --ch-weibo:#FFD24D;
       --st-scheduled:#A2A7AB; --st-proposed:#D8B85A; --st-live:#5CD08C; --st-finished:#7C8286; --st-paused:#FFB08A;
       --st-scheduled-bg:#2E3235; --st-proposed-bg:#39331E; --st-live-bg:#1B3527; --st-finished-bg:#2C3033; --st-paused-bg:#3A2A22;
       --shadow:0 1px 2px rgba(0,0,0,.3), 0 10px 30px rgba(0,0,0,.4);
@@ -43,7 +43,7 @@
     --adu-bg:#FFE7DA; --adu-fg:#BC4517; --adu-bd:#F8C4A6;
     --koc-bg:#E4F3FC; --koc-fg:#0A6FAE; --koc-bd:#BBE0F4;
     --kol-bg:#DBEDFA; --kol-fg:#0A5688; --kol-bd:#AAD4EE;
-    --ch-wc:#1E9E5A; --ch-rd:#E1274A;
+    --ch-wc:#1E9E5A; --ch-rd:#E1274A; --ch-weibo:#E5A600;
     --st-scheduled:#6C6F71; --st-proposed:#8A6D1F; --st-live:#1E9E5A; --st-finished:#8C9296; --st-paused:#C0481B;
     --st-scheduled-bg:#EEEEEA; --st-proposed-bg:#FBF3D8; --st-live-bg:#E4F5EA; --st-finished-bg:#EDEFF0; --st-paused-bg:#FFE7DA;
     --shadow:0 1px 2px rgba(37,40,43,.06), 0 8px 24px rgba(37,40,43,.08);
@@ -57,7 +57,7 @@
     --adu-bg:rgba(255,122,72,.18); --adu-fg:#FFB08A; --adu-bd:rgba(255,122,72,.46);
     --koc-bg:rgba(59,169,230,.16); --koc-fg:#82CDF3; --koc-bd:rgba(59,169,230,.44);
     --kol-bg:rgba(70,150,215,.18); --kol-fg:#88BCEA; --kol-bd:rgba(70,150,215,.46);
-    --ch-wc:#3FBF7C; --ch-rd:#F0567A;
+    --ch-wc:#3FBF7C; --ch-rd:#F0567A; --ch-weibo:#FFD24D;
     --st-scheduled:#A2A7AB; --st-proposed:#D8B85A; --st-live:#5CD08C; --st-finished:#7C8286; --st-paused:#FFB08A;
     --st-scheduled-bg:#2E3235; --st-proposed-bg:#39331E; --st-live-bg:#1B3527; --st-finished-bg:#2C3033; --st-paused-bg:#3A2A22;
     --shadow:0 1px 2px rgba(0,0,0,.3), 0 10px 30px rgba(0,0,0,.4);
@@ -576,7 +576,7 @@ var TYPE_ORDER=["event","organic","adunit","koc","kol"];
 var STATUSES=["scheduled","proposed","live","finished","paused"];
 var CITIES=["Shenzhen","Guangzhou","Chengdu","Chongqing","Shanghai","Beijing"];
 var CN={Shenzhen:"深圳",Guangzhou:"广州",Chengdu:"成都",Chongqing:"重庆",Shanghai:"上海",Beijing:"北京"};
-var CHANNELS=["WeChat","RED","RED + WeChat",""];
+var CHANNELS=["WeChat","RED","RED + WeChat","Weibo",""];
 var MONTHS={8:{name:"August",off:5,days:31},9:{name:"September",off:1,days:30}};
 var DOW=["Mon","Tue","Wed","Thu","Fri","Sat","Sun"];
 var CITYFLIGHTS={Shenzhen:{s:[8,20],e:[9,9],ev:[9,12]},Guangzhou:{s:[8,20],e:[9,10],ev:[9,13]},
@@ -761,6 +761,7 @@ function chDot(ch){
   if(ch==="WeChat") return '<span class="dot" style="background:var(--ch-wc)"></span>';
   if(ch==="RED") return '<span class="dot" style="background:var(--ch-rd)"></span>';
   if(ch==="RED + WeChat") return '<span class="dot" style="background:linear-gradient(90deg,var(--ch-rd) 50%,var(--ch-wc) 50%)"></span>';
+  if(ch==="Weibo") return '<span class="dot" style="background:var(--ch-weibo)"></span>';
   return '<span class="dot" style="background:var(--faint)"></span>';
 }
 function stColor(s){return "var(--st-"+s+")";}
