@@ -160,6 +160,10 @@
   .chip.chip-derived{box-shadow:inset 0 0 0 1px var(--adu-bd)}
   .chip.chip-boost{background:var(--adu-bg); box-shadow:inset 0 0 0 1.5px var(--accent)}
   .chip.chip-boost .lbl{color:var(--accent-ink)}
+  .chip.chip-on{background:var(--org-bg); box-shadow:inset 0 0 0 1px var(--org-bd)}
+  .chip.chip-on .lbl{color:var(--org-fg)}
+  .chip.chip-off{background:var(--st-paused-bg); box-shadow:inset 0 0 0 1px var(--adu-bd)}
+  .chip.chip-off .lbl{color:var(--st-paused)}
   .chip.dragging{opacity:.4}
   .chip .dot{width:6px;height:6px;border-radius:50%;flex:none;margin-top:3px}
   .chip .lbl{flex:1; overflow:hidden; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow-wrap:break-word; word-break:normal; hyphens:none}
@@ -527,7 +531,7 @@ function adoptState(s){
   s.filters=Object.assign({},ff,s.filters||{}); s.filters.types=Object.assign({},ff.types,(s.filters&&s.filters.types)||{});
   s.filters.status=s.filters.status||{}; s.filters.tags=s.filters.tags||{}; s.filters.assetPhase=s.filters.assetPhase||{}; if(!s.filters.focus)s.filters.focus="all";
   s.tags=s.tags||BASE_TAGS.slice(); s.assets=normalizeAssets(s.assets,s.assetBaseVer); s.assetBaseVer=ASSET_BASE_VER; s.editing=false; s.view=(st&&st.view)?st.view:"cal";
-  if(s.adunitRestoreVer!==ADUNIT_RESTORE_VER){ restoreAdUnits(s.items); if(s.filters) s.filters.tags={}; s.adunitRestoreVer=ADUNIT_RESTORE_VER; }
+  s.items=s.items.filter(function(it){return it.type!=="adunit";});
   s.items.forEach(function(it){ it.id=it.id||uid(); it.tags=it.tags||[]; it.city=it.city||null; });
   if(s.itemsStatusVer!==ITEMS_STATUS_VER){ forceProposed(s.items); s.itemsStatusVer=ITEMS_STATUS_VER; }
   s.assets.forEach(function(a){ a.id=a.id||uid(); });
@@ -729,12 +733,12 @@ var st;
 var ITEMS_STATUS_VER=1; /* one-time: set organic/KOC/KOL items to "proposed"; bump to re-run */
 function forceProposed(items){ (items||[]).forEach(function(it){ if(it.type==="organic"||it.type==="koc"||it.type==="kol") it.status="proposed"; }); return items; }
 function freshState(){
-  var items=forceProposed(baselineItems().concat(baselineAdUnits()).map(function(o){o.id=uid(); o.tags=o.tags||[]; return o;}));
+  var items=forceProposed(baselineItems().map(function(o){o.id=uid(); o.tags=o.tags||[]; return o;}));
   return {version:2, assetBaseVer:ASSET_BASE_VER, itemsStatusVer:ITEMS_STATUS_VER, adunitRestoreVer:ADUNIT_RESTORE_VER, editing:false, view:"cal", tags:BASE_TAGS.slice(), items:items, assets:baselineAssets().map(function(o){o.id=uid();return o;}),
     filters:{types:{event:1,organic:1,adunit:1,koc:1,kol:1}, status:{}, tags:{}, focus:"all", assetPhase:{}}, _seq:0};
 }
 function load(){
-  try{ var raw=localStorage.getItem(LSKEY); if(raw){ var s=JSON.parse(raw); if(s&&s.version===2&&s.items){ var ff=freshState().filters; s.filters=Object.assign({},ff,s.filters||{}); s.filters.types=Object.assign({},ff.types,(s.filters&&s.filters.types)||{}); s.filters.status=s.filters.status||{}; s.filters.tags=s.filters.tags||{}; s.filters.assetPhase=s.filters.assetPhase||{}; if(!s.filters.focus)s.filters.focus="all"; s.tags=s.tags||BASE_TAGS.slice(); s.assets=normalizeAssets(s.assets,s.assetBaseVer); s.assetBaseVer=ASSET_BASE_VER; s.editing=false; if(s.adunitRestoreVer!==ADUNIT_RESTORE_VER){ restoreAdUnits(s.items); if(s.filters) s.filters.tags={}; s.adunitRestoreVer=ADUNIT_RESTORE_VER; } s.items.forEach(function(it){it.tags=it.tags||[]; it.city=it.city||null;}); if(s.itemsStatusVer!==ITEMS_STATUS_VER){ forceProposed(s.items); s.itemsStatusVer=ITEMS_STATUS_VER; } return s; } } }catch(e){}
+  try{ var raw=localStorage.getItem(LSKEY); if(raw){ var s=JSON.parse(raw); if(s&&s.version===2&&s.items){ var ff=freshState().filters; s.filters=Object.assign({},ff,s.filters||{}); s.filters.types=Object.assign({},ff.types,(s.filters&&s.filters.types)||{}); s.filters.status=s.filters.status||{}; s.filters.tags=s.filters.tags||{}; s.filters.assetPhase=s.filters.assetPhase||{}; if(!s.filters.focus)s.filters.focus="all"; s.tags=s.tags||BASE_TAGS.slice(); s.assets=normalizeAssets(s.assets,s.assetBaseVer); s.assetBaseVer=ASSET_BASE_VER; s.editing=false; s.items=s.items.filter(function(it){return it.type!=="adunit";}); s.items.forEach(function(it){it.tags=it.tags||[]; it.city=it.city||null;}); if(s.itemsStatusVer!==ITEMS_STATUS_VER){ forceProposed(s.items); s.itemsStatusVer=ITEMS_STATUS_VER; } return s; } } }catch(e){}
   return freshState();
 }
 function save(){ try{ localStorage.setItem(LSKEY, JSON.stringify(stripState())); }catch(e){} scheduleRemoteSave(); }
@@ -825,18 +829,50 @@ function passFilter(it){
 }
 
 /* ---------- render calendar ---------- */
-/* Paid appears on the day grid as one derived "campaign launch" chip per campaign,
-   placed on its earliest ad flight-start — computed live from Paid Assets, not stored. */
+/* Paid on the day grid is derived live from Paid Assets (not stored):
+   per city (from the ad name) an ON-AIR chip on its flight start and an OFF-AIR chip on its
+   flight end / T-3 — so paired-campaign cities (SZ/GZ, CD/CQ) show their different on/off dates.
+   Each Boosting ad also gets its own chip. */
+function cityOf(adName){ for(var i=0;i<CITIES.length;i++){ if((adName||"").indexOf(CITIES[i])>=0) return CITIES[i]; } return null; }
+function paidCityGroups(){
+  var g={};
+  st.assets.filter(function(a){return a.adType==="Ad Unit (Dark Post)" && a.s && a.e;}).forEach(function(a){
+    var city=cityOf(a.adName)||"National";
+    var e=g[city]||(g[city]={s:a.s,e:a.e,count:0,ch:{}});
+    if(idx(a.s[0],a.s[1])<idx(e.s[0],e.s[1])) e.s=a.s;
+    if(idx(a.e[0],a.e[1])>idx(e.e[0],e.e[1])) e.e=a.e;
+    e.count++; e.ch[a.channel]=1;
+  });
+  return g;
+}
 function paidMilestones(){
   if(!st||!st.assets||!st.assets.length) return [];
-  /* Dark posts are shown by the restored Ad Unit calendar entries; here we only surface each Boosting ad. */
-  return campaignLaneData().filter(function(f){return f.kind==="boost";}).map(function(f){
-    return {id:"pm-b-"+(f.assetId||f.camp), type:"adunit", _derived:true, _boost:true, m:f.s[0], d:f.s[1], cities:f.cities,
+  var out=[], g=paidCityGroups();
+  ["National"].concat(CITIES).forEach(function(city){
+    var e=g[city]; if(!e) return;
+    var chs=Object.keys(e.ch).length>1?"RED + WeChat":(Object.keys(e.ch)[0]||"");
+    var cn=(city==="National")?"National":(city+" "+CN[city]);
+    var cities=(city==="National")?[]:[city];
+    var t3=(city==="National")?"":" (T-3)";
+    out.push({id:"pm-on-"+city, type:"adunit", _derived:true, _phase:"on", m:e.s[0], d:e.s[1], cities:cities,
+      obj:"Ad Units on-air", ch:chs, targeting:cn+" — Ad Units",
+      content:cn+" · Ad Units on-air",
+      note:cn+" dark posts go live "+mdName(e.s[0],e.s[1])+" ("+e.count+" ads · "+chs+"). Off-air "+mdName(e.e[0],e.e[1])+". Managed in the Paid Assets tab.",
+      status:"", flightStart:e.s, flightEnd:e.e, tags:[]});
+    out.push({id:"pm-off-"+city, type:"adunit", _derived:true, _phase:"off", m:e.e[0], d:e.e[1], cities:cities,
+      obj:"Ad Units off-air", ch:chs, targeting:cn+" — Ad Units",
+      content:cn+" · Ad Units off-air"+t3,
+      note:cn+" dark posts pause "+mdName(e.e[0],e.e[1])+(city==="National"?"":" — T-3, hand RSVP leads to UQ")+". On-air "+mdName(e.s[0],e.s[1])+". Managed in the Paid Assets tab.",
+      status:"", flightStart:e.s, flightEnd:e.e, tags:[]});
+  });
+  campaignLaneData().filter(function(f){return f.kind==="boost";}).forEach(function(f){
+    out.push({id:"pm-b-"+(f.assetId||f.camp), type:"adunit", _derived:true, _boost:true, m:f.s[0], d:f.s[1], cities:f.cities,
       obj:"Boosted ad", ch:(f.channels[0]||""), targeting:"Boosting — "+f.camp,
       content:"Boost: "+boostShort(f.camp),
       note:"Boosting ad. Flight "+mdName(f.s[0],f.s[1])+" → "+mdName(f.e[0],f.e[1])+(f.kol&&f.postDate?" — starts 3 days after Slyvia's post ("+mdName(f.postDate[0],f.postDate[1])+")":"")+". Managed in the Paid Assets tab.",
-      status:"", flightStart:f.s, flightEnd:f.e, tags:[]};
+      status:"", flightStart:f.s, flightEnd:f.e, tags:[]});
   });
+  return out;
 }
 function itemsOn(m,d){
   var base=st.items.filter(function(it){return it.m===m&&it.d===d;});
@@ -904,7 +940,7 @@ function buildCell(m,d,wd){
 }
 function buildChip(it){
   var c=document.createElement("div"); var es=effStatus(it);
-  c.className="chip "+TYPES[it.type].cls+(es==="paused"?" paused":"")+(it._derived?" chip-derived":"")+(it._boost?" chip-boost":"");
+  c.className="chip "+TYPES[it.type].cls+(es==="paused"?" paused":"")+(it._derived?" chip-derived":"")+(it._boost?" chip-boost":"")+(it._phase==="on"?" chip-on":"")+(it._phase==="off"?" chip-off":"");
   c.innerHTML=(it.type==="event"?"":chDot(it.ch))+'<span class="lbl">'+esc(shortLabel(it))+'</span><span class="stdot" style="background:'+stColor(es)+'" title="'+es+'"></span>';
   if(it._derived){
     c.title="Paid — managed in the Paid Assets tab";
@@ -1093,7 +1129,7 @@ function openEditor(id,preset){
   editId=it.id; if(!id){ st._pendingNew=it; } else { st._pendingNew=null; }
   mTitle.textContent=id?"Edit item":"New item";
   mSub.textContent="Type & tags stay within the existing system. Live / finished update automatically from dates.";
-  var typeSel='<select id="f_type">'+TYPE_ORDER.map(function(k){return opt(k,it.type,TYPES[k].label);}).join("")+'</select>';
+  var typeSel='<select id="f_type">'+TYPE_ORDER.filter(function(k){return k!=="adunit";}).map(function(k){return opt(k,it.type,TYPES[k].label);}).join("")+'</select>';
   var chSel='<select id="f_ch">'+CHANNELS.map(function(c){return opt(c,it.ch||"",c===""?"— none —":c);}).join("")+'</select>';
   var citySel='<select id="f_city"><option value="">— none / national —</option>'+CITIES.map(function(c){return opt(c,it.city||"",c+" "+CN[c]);}).join("")+'</select>';
   var stSel='<select id="f_status">'+["scheduled","proposed","paused"].map(function(s){return opt(s,it.status,s.charAt(0).toUpperCase()+s.slice(1));}).join("")+'</select>';
