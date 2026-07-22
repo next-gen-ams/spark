@@ -379,8 +379,54 @@
   .hidden{display:none !important}
   @media (prefers-reduced-motion: reduce){*{transition:none !important; animation:none !important}}
   @media(max-width:560px){.wrap{padding:14px 12px 60px} .cell{min-height:72px} .chip{font-size:.6rem} .drawer{width:100vw} .frow{flex-direction:column}}
+  /* access gate (soft view password) */
+  .access-gate{position:fixed; inset:0; z-index:99999; background:var(--ground); display:flex; align-items:center; justify-content:center; padding:24px; font-family:var(--font,"DM Sans",system-ui,sans-serif)}
+  .ag-card{background:var(--surface); border:1px solid var(--line); border-radius:16px; box-shadow:0 20px 60px rgba(0,0,0,.18); padding:34px 30px 26px; width:min(380px,94vw); text-align:center}
+  .ag-logo{width:46px;height:46px;border-radius:11px;background:var(--accent); color:#fff; font-weight:700; font-size:18px; display:flex; align-items:center; justify-content:center; margin:0 auto 16px; box-shadow:0 4px 14px rgba(255,102,50,.4)}
+  .ag-title{font-size:1.12rem; font-weight:700; color:var(--ink); letter-spacing:-.01em}
+  .ag-sub{font-size:.82rem; color:var(--muted); margin:6px 0 18px; line-height:1.5}
+  .ag-card input{width:100%; font:inherit; font-size:.95rem; text-align:center; letter-spacing:.05em; color:var(--ink); background:var(--surface-2); border:1px solid var(--line-2); border-radius:10px; padding:11px 12px}
+  .ag-card input:focus{outline:2px solid var(--accent); outline-offset:0; border-color:var(--accent)}
+  .ag-btn{margin-top:12px; width:100%; font:inherit; font-size:.9rem; font-weight:600; color:#fff; background:var(--accent); border:none; border-radius:10px; padding:11px 12px; cursor:pointer; box-shadow:0 4px 12px rgba(255,102,50,.3)}
+  .ag-btn:hover{filter:brightness(1.05)}
+  .ag-btn:focus-visible{outline:2px solid var(--ink); outline-offset:2px}
+  .ag-err{min-height:18px; margin-top:10px; font-size:.78rem; color:var(--accent-ink); font-weight:600}
 </style>
 
+<div class="access-gate" id="accessGate">
+  <div class="ag-card" role="dialog" aria-modal="true" aria-label="Enter access password">
+    <div class="ag-logo">GMS</div>
+    <div class="ag-title">UQ China Info Day 2026</div>
+    <div class="ag-sub">Enter the access password to view the campaign planner.</div>
+    <input type="password" id="agInput" autocomplete="off" placeholder="Password" aria-label="Access password">
+    <button type="button" id="agOk" class="ag-btn">Enter</button>
+    <div class="ag-err" id="agErr" aria-live="polite"></div>
+  </div>
+</div>
+<script>
+(function(){
+  var HASH="c6af48c44da1dcbcfd22d42fc126e49a7679eb23d9cec7fddf78a727dfba262f"; /* SHA-256 of the access password */
+  var KEY="uq-infoday-access";
+  var gate=document.getElementById("accessGate");
+  if(!gate) return;
+  function isLocked(){ try{ return localStorage.getItem(KEY)!=="1"; }catch(e){ return true; } }
+  function reveal(){ if(gate.parentNode) gate.parentNode.removeChild(gate); document.documentElement.style.overflow=""; }
+  if(!isLocked()){ reveal(); return; }
+  document.documentElement.style.overflow="hidden";
+  var inp=document.getElementById("agInput"), btn=document.getElementById("agOk"), err=document.getElementById("agErr");
+  setTimeout(function(){ try{ inp.focus(); }catch(e){} },50);
+  function sha(s){ if(!(window.crypto&&crypto.subtle)) return Promise.resolve(null);
+    return crypto.subtle.digest("SHA-256", new TextEncoder().encode(s)).then(function(b){
+      return Array.prototype.map.call(new Uint8Array(b),function(x){return x.toString(16).padStart(2,"0");}).join(""); }); }
+  function submit(){ var v=String(inp.value).trim(); if(!v) return;
+    sha(v).then(function(h){
+      if(h===HASH){ try{ localStorage.setItem(KEY,"1"); }catch(e){} reveal(); }
+      else { err.textContent="Incorrect password. Please try again."; try{ inp.select(); }catch(e){} }
+    }); }
+  if(btn) btn.onclick=submit;
+  if(inp) inp.addEventListener("keydown",function(e){ if(e.key==="Enter"){ e.preventDefault(); submit(); } });
+})();
+</script>
 <div class="app">
 <div class="wrap">
   <header class="head">
