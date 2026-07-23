@@ -406,12 +406,10 @@
 <script>
 (function(){
   var HASH="c6af48c44da1dcbcfd22d42fc126e49a7679eb23d9cec7fddf78a727dfba262f"; /* SHA-256 of the access password */
-  var KEY="uq-infoday-access";
   var gate=document.getElementById("accessGate");
   if(!gate) return;
-  function isLocked(){ try{ return localStorage.getItem(KEY)!=="1"; }catch(e){ return true; } }
   function reveal(){ if(gate.parentNode) gate.parentNode.removeChild(gate); document.documentElement.style.overflow=""; }
-  if(!isLocked()){ reveal(); return; }
+  /* No persistence: the password is required on every page load / refresh. */
   document.documentElement.style.overflow="hidden";
   var inp=document.getElementById("agInput"), btn=document.getElementById("agOk"), err=document.getElementById("agErr");
   setTimeout(function(){ try{ inp.focus(); }catch(e){} },50);
@@ -420,7 +418,7 @@
       return Array.prototype.map.call(new Uint8Array(b),function(x){return x.toString(16).padStart(2,"0");}).join(""); }); }
   function submit(){ var v=String(inp.value).trim(); if(!v) return;
     sha(v).then(function(h){
-      if(h===HASH){ try{ localStorage.setItem(KEY,"1"); }catch(e){} reveal(); }
+      if(h===HASH){ reveal(); }
       else { err.textContent="Incorrect password. Please try again."; try{ inp.select(); }catch(e){} }
     }); }
   if(btn) btn.onclick=submit;
