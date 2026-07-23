@@ -221,6 +221,24 @@
   table.boost td .winedit span { color:var(--ink-3); font-size:11px; flex:none; }
   .tooltip { position:fixed; z-index:90; background:var(--ink); color:var(--bg); font-size:11.5px; font-weight:600; padding:6px 9px; border-radius:7px; box-shadow:var(--shadow-lg); pointer-events:none; opacity:0; transition:opacity .12s; max-width:280px; white-space:pre-line; }
   .tooltip.show { opacity:1; }
+  /* login gate */
+  .gate { position:fixed; inset:0; z-index:100; background:var(--bg); display:none; align-items:center; justify-content:center; padding:24px; }
+  .gate.show { display:flex; }
+  .gatecard { width:100%; max-width:400px; background:var(--surface); border:1px solid var(--line); border-radius:14px; box-shadow:var(--shadow-lg); padding:28px 26px; text-align:center; }
+  .gatecard .gmark { background:#fff; border:1px solid var(--line); border-radius:9px; padding:6px 10px; display:inline-flex; margin-bottom:16px; }
+  .gatecard .gmark img { height:26px; display:block; }
+  .gatecard h2 { margin:0 0 6px; font-size:18px; font-weight:750; letter-spacing:-.3px; }
+  .gatecard p { margin:0 0 18px; font-size:12.5px; color:var(--ink-3); line-height:1.5; }
+  .gatecard input { width:100%; border:1px solid var(--line-2); border-radius:9px; padding:11px 12px; font-size:13.5px; font-family:inherit; background:var(--surface); color:var(--ink); outline:none; }
+  .gatecard input:focus { border-color:var(--orange); box-shadow:0 0 0 3px var(--orange-soft); }
+  .gatecard button { width:100%; margin-top:10px; border:none; border-radius:9px; padding:11px; font-size:13.5px; font-weight:700; background:var(--orange); color:#fff; }
+  .gatecard button:hover { background:var(--orange-deep); }
+  .gatecard button:disabled { opacity:.55; }
+  .gatemsg { margin-top:14px; font-size:12.5px; line-height:1.5; min-height:18px; }
+  .gatemsg.ok { color:var(--good); } .gatemsg.err { color:var(--crit); }
+  .gatedom { margin-top:16px; padding-top:14px; border-top:1px solid var(--line); font-size:11px; color:var(--ink-3); }
+  .signout { border:1px solid var(--line); background:var(--surface); height:34px; padding:0 12px; border-radius:8px; color:var(--ink-2); font-size:12.5px; font-weight:600; }
+  .signout:hover { border-color:var(--line-2); color:var(--ink); }
   /* log header + editable cells */
   .loghead { display:flex; align-items:center; justify-content:space-between; padding:16px 18px 12px; gap:12px; }
   .logfilter { display:flex; align-items:center; gap:8px; }
@@ -321,6 +339,7 @@
   <div class="spacer"></div>
   <div class="synced" id="synced" title="Click to reload from the database" style="cursor:pointer"><span class="gdot"></span><span id="syncTxt">Connecting…</span></div>
   <button class="icon-btn" id="export">Export</button>
+  <button class="signout" id="signout" style="display:none">Sign out</button>
   <button class="icon-btn sq" id="theme" title="Toggle theme">◐</button>
 </div>
 <div class="tabbar">
@@ -412,6 +431,18 @@
 
 <div class="scrim" id="scrim"></div>
 <aside class="drawer" id="drawer"></aside>
+<div class="gate" id="gate">
+  <div class="gatecard">
+    <div class="gmark"><img id="gateLogo" alt="GMS"></div>
+    <h2>UQ China Social WIP</h2>
+    <p>Sign in with your work email — we'll send a one-time link, no password.</p>
+    <input id="gateEmail" type="email" placeholder="you@gms.global" autocomplete="email">
+    <button id="gateBtn">Send me a sign-in link</button>
+    <div class="gatemsg" id="gateMsg"></div>
+    <div class="gatedom">Access is limited to <b>@gms.global</b> · <b>@grg.co</b> · <b>@uq.edu.au</b><br>Need someone else added? Ask the GMS team.</div>
+  </div>
+</div>
+
 <div class="tooltip" id="tooltip"></div>
 <div class="toast" id="toast"><span class="dot"></span><span id="toastMsg">Saved</span></div>
 
@@ -1011,16 +1042,56 @@ function scheduleReload(){ if(editingNow()){ _pendingReload=true; return; } clea
 function subscribeRealtime(){ ["content","boosting","pool","wip","keydates"].forEach(function(t){
   SB.channel("rt-"+t).on("postgres_changes",{event:"*",schema:"public",table:t},scheduleReload).subscribe(); }); }
 
-async function connect(){
+/* ---------- auth gate (magic link, team domains only) ---------- */
+function showGate(msg,cls){
+  $("#gate").classList.add("show");
+  $("#signout").style.display="none";
+  if(msg!==undefined){ var m=$("#gateMsg"); m.textContent=msg||""; m.className="gatemsg"+(cls?" "+cls:""); }
+}
+function hideGate(){ $("#gate").classList.remove("show"); $("#signout").style.display=""; }
+
+async function startSession(){
+  // signed in — check they're on the allowed list, then load
+  var who=await SB.rpc("is_team");
+  if(who.error){ console.warn(who.error); }
+  if(who.data===false){
+    var em=(await SB.auth.getUser()).data.user;
+    showGate("“"+((em&&em.email)||"That account")+"” isn’t on the access list. Use your @gms.global, @grg.co or @uq.edu.au address, or ask the GMS team to add you.","err");
+    return;
+  }
+  hideGate();
   try{
-    setConn("connecting");
-    SB=window.supabase.createClient(SUPA_URL,SUPA_KEY);
     await loadAll();
     ONLINE=true; setConn("synced");
     renderChips(); renderPool(); renderAll();
     subscribeRealtime();
-  }catch(e){ console.warn("connect failed → offline mode",e); ONLINE=false; setConn("offline"); }
+  }catch(e){ console.warn("load failed",e); ONLINE=false; setConn("offline"); }
 }
+
+async function connect(){
+  setConn("connecting");
+  SB=window.supabase.createClient(SUPA_URL,SUPA_KEY);
+  var logo=document.querySelector(".brandmark img"); if(logo) $("#gateLogo").src=logo.src;
+  var s=await SB.auth.getSession();
+  if(s.data && s.data.session){ await startSession(); }
+  else { setConn("offline"); showGate(""); }
+  SB.auth.onAuthStateChange(function(evt,sess){
+    if(evt==="SIGNED_IN" && sess) startSession();
+    if(evt==="SIGNED_OUT"){ ONLINE=false; setConn("offline"); showGate(""); }
+  });
+}
+
+$("#gateBtn").onclick=async function(){
+  var email=$("#gateEmail").value.trim();
+  if(!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)){ showGate("Enter a valid email address.","err"); return; }
+  this.disabled=true; showGate("Sending…");
+  var r=await SB.auth.signInWithOtp({email:email,options:{emailRedirectTo:location.href.split("#")[0]}});
+  this.disabled=false;
+  if(r.error) showGate(r.error.message||"Couldn’t send the link. Try again in a minute.","err");
+  else showGate("Link sent to "+email+". Open it on this device to sign in.","ok");
+};
+$("#gateEmail").onkeydown=function(e){ if(e.key==="Enter") $("#gateBtn").click(); };
+$("#signout").onclick=async function(){ await SB.auth.signOut(); location.reload(); };
 
 renderChips(); renderPool(); renderAll();
 $("#synced").onclick=function(){ if(ONLINE) reloadRender(); };
