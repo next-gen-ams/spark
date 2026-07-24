@@ -1,3 +1,5 @@
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
 <title>UQ China Social WIP</title>
 <style>
   :root {
@@ -169,6 +171,44 @@
   .action .ai { font-size:12px; font-weight:600; line-height:1.3; }
   .action .as { font-size:10.5px; color:var(--ink-3); margin-top:2px; }
   .mini-av { border-radius:5px; padding:1px 5px; display:inline-block; color:#fff; font-size:8.5px; font-weight:800; letter-spacing:.3px; }
+  .action.clk { cursor:pointer; transition:background .12s; }
+  .action.clk:hover { background:var(--surface-2); }
+  .actempty { padding:13px 12px; font-size:12px; font-weight:600; color:var(--ink-2); }
+  .actempty span { display:block; margin-top:4px; font-size:11px; font-weight:500; color:var(--ink-3); line-height:1.45; }
+
+  /* ---- Year view ---- */
+  .yr { padding:4px 0 40px; display:none; }
+  .yr.show { display:block; }
+  .yrhead { display:flex; align-items:center; gap:16px; margin:0 0 18px; }
+  .yrhead h2 { margin:0; font-size:clamp(28px,3.2vw,42px); font-weight:800; letter-spacing:-.025em; line-height:1; }
+  .yrhead h2 span { color:var(--orange); }
+  .yrhead .ysub { font-size:12.5px; color:var(--ink-3); max-width:420px; line-height:1.45; }
+  .yrgrid { display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-top:16px; }
+  @media (max-width:1120px){ .yrgrid{grid-template-columns:1fr;} }
+  .ycol { width:30px; border-radius:4px 4px 0 0; overflow:hidden; display:flex; flex-direction:column; transition:height .4s cubic-bezier(.16,1,.3,1); }
+  .ycol .yseg { width:100%; }
+  .ycount { font-size:11px; font-weight:800; color:var(--ink-2); }
+  .ytable { width:100%; border-collapse:collapse; font-size:12.5px; }
+  .ytable th { text-align:left; padding:9px 10px; background:var(--header); color:var(--header-tx); font-size:10.5px; text-transform:uppercase; letter-spacing:.4px; font-weight:600; white-space:nowrap; }
+  .ytable td { padding:8px 10px; border-bottom:1px solid var(--line); }
+  .ytable th.n, .ytable td.n { text-align:right; }
+  .ytable tfoot td { font-weight:800; border-top:1.5px solid var(--line-2); border-bottom:none; }
+  .ytable tbody tr:hover td { background:var(--surface-2); }
+
+  /* ---- Export popover ---- */
+  .xpop { position:fixed; z-index:70; width:290px; background:var(--surface); border:1px solid var(--line-2); border-radius:11px; box-shadow:0 18px 44px rgba(0,0,0,.19); padding:14px; }
+  .xpop h4 { margin:0 0 3px; font-size:13px; font-weight:700; }
+  .xpop .xs { font-size:11px; color:var(--ink-3); margin-bottom:12px; line-height:1.45; }
+  .xpop label { display:block; font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:.4px; color:var(--ink-3); margin-bottom:4px; }
+  .xrow { display:flex; gap:9px; margin-bottom:12px; }
+  .xrow > div { flex:1; }
+  .xpop select { width:100%; padding:6px 7px; border:1px solid var(--line-2); border-radius:7px; background:var(--surface); color:var(--ink); font:inherit; font-size:12px; }
+  .xchk { display:flex; align-items:center; gap:7px; font-size:12px; font-weight:600; padding:5px 0; cursor:pointer; }
+  .xchk input { accent-color:var(--orange); width:14px; height:14px; }
+  .xpop .xgo { width:100%; margin-top:11px; padding:9px; border:none; border-radius:8px; background:var(--orange); color:#fff; font:inherit; font-size:12.5px; font-weight:700; cursor:pointer; }
+  .xpop .xgo:hover { filter:brightness(1.06); }
+  .xpop .xgo:disabled { opacity:.6; cursor:default; }
+  .xpop .xfn { margin-top:9px; font-size:10px; color:var(--ink-3); word-break:break-all; line-height:1.4; }
 
   .paid { padding:4px 0 40px; display:none; }
   .paid.show { display:block; }
@@ -355,6 +395,7 @@
   <div class="tabs" id="tabs">
     <button class="active" data-view="cal">Calendar</button>
     <button data-view="paid">Paid &amp; Boosting</button>
+    <button data-view="year">Year view</button>
     <button data-view="wip">WIP &amp; Admin</button>
   </div>
   <div class="spacer"></div>
@@ -421,6 +462,39 @@
         <select id="statusFilter"><option value="all">All status</option><option>Proposed</option><option>Scheduled</option><option>Live</option><option>Boosted</option><option>Finished</option><option>Paused</option></select></div>
     </div>
     <div style="overflow-x:auto"><table class="boost" id="boostTable"></table></div>
+  </div>
+</div>
+
+<div class="yr" id="yearView">
+  <div class="yrhead">
+    <h2 id="yTitle">2026 <span>at a glance</span></h2>
+    <div class="ysub" id="ySub"></div>
+    <div class="month-nav" style="margin-left:auto"><button id="prevY">‹</button><div class="mlabel" id="ylabel">2026</div><button id="nextY">›</button></div>
+  </div>
+  <div class="kpis" id="yKpis"></div>
+  <div class="yrgrid">
+    <div class="chartcard">
+      <h3>Content by month</h3>
+      <div class="csub">Every post in the plan — published vs. still to come.</div>
+      <div class="chart" id="yContent"></div>
+      <div class="legend"><span><i style="background:var(--st-posted)"></i>Posted</span><span><i style="background:var(--st-sched)"></i>Scheduled</span><span><i style="background:var(--st-prop)"></i>Proposed / draft</span></div>
+    </div>
+    <div class="chartcard">
+      <h3>Boosting: planned vs. spent by month</h3>
+      <div class="csub">Grouped by the month each boost <b>runs</b>, matching how the media plan reports spend.</div>
+      <div class="chart" id="ySpend"></div>
+      <div class="legend"><span><i style="background:var(--surface-2);border:1px solid var(--line-2)"></i>Planned budget</span><span><i style="background:var(--orange)"></i>Actual spend</span></div>
+    </div>
+  </div>
+  <div class="chartcard" style="margin-top:16px; padding:0; overflow:hidden;">
+    <div style="padding:16px 18px 10px"><h3 style="margin:0 0 3px;font-size:14px;font-weight:700">Channel performance · full year</h3>
+      <div class="csub" style="margin:0">Organic reach feeds paid — this is what each channel returned for the money put behind it.</div></div>
+    <div style="overflow-x:auto"><table class="ytable" id="yChannels"></table></div>
+  </div>
+  <div class="chartcard" style="margin-top:16px; padding:0; overflow:hidden;">
+    <div style="padding:16px 18px 10px"><h3 style="margin:0 0 3px;font-size:14px;font-weight:700">Month by month</h3>
+      <div class="csub" style="margin:0">The whole year in one table — the same numbers the Excel export carries.</div></div>
+    <div style="overflow-x:auto"><table class="ytable" id="yMonths"></table></div>
   </div>
 </div>
 
@@ -513,11 +587,14 @@ const POOL = [
 ];
 POOL.forEach((p,i)=>p.id="p"+i);
 
-const ACTIONS = [
-  {item:"Approve RED Info Day – Taiwan copy",by:"UQ",sev:"crit"},
-  {item:"Review Alumni exercise-myths article (proposed as Sub article)",by:"UQ",sev:"crit"},
-  {item:"Confirm how to manage alumni content",by:"GMS",sev:"warn"},
-];
+// "What we need from UQ" is derived, not maintained by hand: it is exactly the posts
+// whose UQ approval is still Pending this month, so it fills and empties itself.
+function actionItems(){
+  return monthItems().filter(d=>d.appr==="Pending")
+    .sort((a,b)=>a.date.localeCompare(b.date))
+    .map(d=>({id:d.id, item:d.note, date:d.date, by:"UQ",
+              sev:(d.date<=TODAY || d.del==="Scheduled") ? "crit" : "warn"}));
+}
 
 const PMONTHS=["Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
 const BUDGET=[5000,5000,5000,6000,7000,7000,5500,0,6000,6000,7500];
@@ -526,8 +603,8 @@ const SPEND ={Feb:5021.89,Mar:4815.52,Apr:3639.07,May:6042.97,Jun:6837.39,Jul:11
 const LABELS=["Inform","Educate","Entertain","UGC","KOL"];
 const STATUSES=["Proposed","Scheduled","Live","Boosted","Finished","Paused"];
 const STATUS_C={Proposed:"var(--st-prop)",Scheduled:"var(--st-sched)",Live:"var(--orange)",Boosted:"var(--st-sched)",Finished:"var(--st-posted)",Paused:"var(--ink-3)"};
-// Demo "today" — in production this is isoLocal(new Date())
-const TODAY="2026-03-18";
+// Real today — drives "Auto" boost status and which approvals are overdue
+const TODAY=isoLocal(new Date());
 function deriveStatus(b){ if(!b.start||!b.end) return "Proposed"; if(TODAY<b.start) return "Scheduled"; if(TODAY>b.end) return "Finished"; return "Live"; }
 function effStatus(b){ return (!b.status||b.status==="Auto") ? deriveStatus(b) : b.status; }
 function cpX(spend,n){ const s=parseFloat(spend), d=parseFloat(n); return (s>0&&d>0)? "$"+(s/d).toFixed(2) : "—"; }
@@ -719,10 +796,15 @@ function renderPool(){
     return `<div class="pool-item" draggable="true" data-id="${p.id}"><div class="pt">${esc(p.note)}</div>
     <div class="pm"><span>${FMT_ICON[p.fmt]||'—'}</span><span class="mini-av" style="background:${w.c}">${w.t}</span><span>${p.sug}</span></div></div>`;}).join("");
   $$(".pool-item").forEach(el=>el.ondragstart=e=>e.dataTransfer.setData("pid",el.dataset.id));
-  $("#actCount").textContent=ACTIONS.length;
-  $("#actBody").innerHTML=ACTIONS.map(a=>{const w=WHO[a.by]||WHO.GMS;
-    return `<div class="action"><span class="idot" style="background:var(--${a.sev})"></span>
-    <div><div class="ai">${esc(a.item)}</div><div class="as"><span class="mini-av" style="background:${w.c}">${w.t}</span> pending review</div></div></div>`;}).join("");
+}
+function renderActions(){
+  const acts=actionItems(), M=MONTHS[mi];
+  $("#actCount").textContent=acts.length;
+  $("#actBody").innerHTML = acts.length ? acts.map(a=>{const w=WHO[a.by]||WHO.GMS;
+      return `<div class="action clk" data-cid="${a.id}"><span class="idot" style="background:var(--${a.sev})"></span>
+      <div><div class="ai">${esc(a.item)}</div><div class="as"><span class="mini-av" style="background:${w.c}">${w.t}</span> approval needed · ${fmtDay(a.date)}${a.sev==="crit"?" · overdue":""}</div></div></div>`;}).join("")
+    : `<div class="actempty">Nothing outstanding for ${M.key} ✓<span>Set a post’s UQ approval to “Pending” in its drawer and it appears here automatically.</span></div>`;
+  $$("#actBody .action[data-cid]").forEach(el=>el.onclick=()=>{const d=SEED.find(x=>x.id===el.dataset.cid); if(d) openDrawer(d);});
 }
 function dropPool(pid,iso){
   const p=POOL.find(x=>x.id===pid); if(!p)return;
@@ -958,16 +1040,291 @@ function wireBoostEdits(){
   $$("#boostTable .enote").forEach(t=>{const grow=()=>{t.style.height="auto"; t.style.height=Math.max(30,t.scrollHeight)+"px";}; grow(); t.addEventListener("input",grow); t.addEventListener("focus",grow); });
 }
 
-function exportExcel(){
-  const items=[...SEED].sort((a,b)=>a.date.localeCompare(b.date));
-  const head=["Date","Channel","Account","WeChat slot","Type","Format","Content","UQ approval","GMS status","Boost","Post link","Added by"];
-  const rows=items.map(d=>[d.date,d.ch,CH[d.ch].acct||"—",d.wslot||"—",d.label,d.fmt,d.note.replace(/\n/g,' '),d.appr,d.del,d.boost?"Boost":"—",d.url||"",d.by]);
-  const csv=[head,...rows].map(r=>r.map(c=>`"${String(c).replace(/"/g,'""')}"`).join(",")).join("\n");
-  const blob=new Blob(["﻿"+csv],{type:"text/csv;charset=utf-8;"});
-  const a=document.createElement("a"); a.href=URL.createObjectURL(blob);
-  a.download="UQ China Social — Content Plan (GMS Export).csv"; a.click();
-  toast("Exported — branded .xlsx generated server-side ✓");
+/* ===================== Excel export =====================
+   Branded multi-sheet .xlsx: Summary + Social calendar + Paid campaign, over a month
+   range you pick, filename stamped with the day it was exported.                      */
+const XLSX_SRC=["exceljs.min.js","https://cdn.jsdelivr.net/npm/exceljs@4.4.0/dist/exceljs.min.js"];
+let _xlsxP=null;
+function loadExcelJS(){
+  if(window.ExcelJS) return Promise.resolve(window.ExcelJS);
+  if(_xlsxP) return _xlsxP;
+  _xlsxP=new Promise((resolve,reject)=>{
+    let i=0;
+    (function next(){
+      if(i>=XLSX_SRC.length){ _xlsxP=null; reject(new Error("ExcelJS unavailable")); return; }
+      const s=document.createElement("script"); s.src=XLSX_SRC[i++];
+      s.onload=()=>window.ExcelJS?resolve(window.ExcelJS):next();
+      s.onerror=next; document.head.appendChild(s);
+    })();
+  });
+  return _xlsxP;
 }
+const HEX={header:"FF211F1C", orange:"FFE8590C", line:"FFE4DFD8", zebra:"FFFAF8F5", ink:"FF211F1C", mute:"FF7A7268"};
+function monthKeys(){ return MONTHS.map(M=>M.y+"-"+String(M.m+1).padStart(2,"0")); }
+function rangeLabel(a,b){
+  const f=k=>MO[+k.slice(5,7)-1]+" "+k.slice(0,4);
+  return a===b ? f(a) : (a.slice(0,4)===b.slice(0,4) ? MO[+a.slice(5,7)-1]+"–"+f(b) : f(a)+" – "+f(b));
+}
+function exportFilename(a,b){ return `UQ China Social & Boosting — ${rangeLabel(a,b)} — exported ${TODAY}.xlsx`; }
+
+function closeXPop(){ const p=$("#xpop"); if(p)p.remove(); document.removeEventListener("mousedown",outsideX); }
+function outsideX(e){ if(!e.target.closest("#xpop") && e.target.id!=="export") closeXPop(); }
+function openExportPop(btn){
+  closeXPop();
+  const keys=monthKeys(); if(!keys.length){ toast("Nothing to export yet"); return; }
+  const pop=document.createElement("div"); pop.className="xpop"; pop.id="xpop"; document.body.appendChild(pop);
+  const opts=sel=>keys.map(k=>`<option value="${k}" ${k===sel?"selected":""}>${MO[+k.slice(5,7)-1]} ${k.slice(0,4)}</option>`).join("");
+  pop.innerHTML=`<h4>Export to Excel</h4>
+    <div class="xs">Pick the months to include — the file is stamped with today’s date so versions never overwrite each other.</div>
+    <div class="xrow"><div><label>From</label><select id="xFrom">${opts(keys[0])}</select></div>
+      <div><label>To</label><select id="xTo">${opts(keys[keys.length-1])}</select></div></div>
+    <label style="margin-bottom:2px">Sheets</label>
+    <label class="xchk"><input type="checkbox" id="xSum" checked> Summary by month</label>
+    <label class="xchk"><input type="checkbox" id="xCal" checked> Social calendar</label>
+    <label class="xchk"><input type="checkbox" id="xPaid" checked> Paid campaign</label>
+    <button class="xgo" id="xGo">Download .xlsx</button>
+    <div class="xfn" id="xFn"></div>`;
+  const r=btn.getBoundingClientRect(), w=290, h=pop.offsetHeight||380;
+  pop.style.left=Math.max(8,Math.min(r.left, innerWidth-w-10))+"px";
+  pop.style.top=Math.max(8,Math.min(Math.max(r.bottom,0)+8, innerHeight-h-10))+"px";
+  const sync=()=>{ const a=$("#xFrom").value, b=$("#xTo").value;
+    if(a>b){ $("#xTo").value=a; }
+    $("#xFn").textContent=exportFilename($("#xFrom").value,$("#xTo").value); };
+  $("#xFrom").onchange=sync; $("#xTo").onchange=sync; sync();
+  $("#xGo").onclick=async function(){
+    const a=$("#xFrom").value, b=$("#xTo").value;
+    const want={sum:$("#xSum").checked, cal:$("#xCal").checked, paid:$("#xPaid").checked};
+    if(!want.sum&&!want.cal&&!want.paid){ toast("Pick at least one sheet"); return; }
+    this.disabled=true; this.textContent="Building…";
+    try{ await buildWorkbook(a,b,want); closeXPop(); toast("Exported ✓"); }
+    catch(e){ console.warn(e); this.disabled=false; this.textContent="Download .xlsx";
+      toast("Excel builder didn’t load — check your connection"); }
+  };
+  setTimeout(()=>document.addEventListener("mousedown",outsideX),0);
+}
+
+async function buildWorkbook(from,to,want){
+  const ExcelJS=await loadExcelJS();
+  const inRange=k=>k>=from&&k<=to;
+  const content=SEED.filter(d=>d.date&&inRange(d.date.slice(0,7))).sort((a,b)=>a.date.localeCompare(b.date));
+  const boosts=SEED.filter(d=>d.boost&&d.boostData).filter(d=>inRange(String(d.boostData.start||d.date).slice(0,7)))
+    .sort((a,b)=>String(a.boostData.start||a.date).localeCompare(String(b.boostData.start||b.date)));
+  const wb=new ExcelJS.Workbook();
+  wb.creator="GMS · UQ China Social WIP"; wb.created=new Date();
+
+  // Branded title block. (The GMS mark is set typographically rather than as an embedded
+  //  image: ExcelJS's browser build stalls in writeBuffer() as soon as a workbook carries
+  //  media, so a raster logo would hang the download.)
+  const title=(ws,name,sub,cols)=>{
+    ws.getRow(1).height=32; ws.getRow(2).height=17; ws.getRow(3).height=7;
+    ws.mergeCells(1,1,1,cols); ws.mergeCells(2,1,2,cols);
+    const t=ws.getCell(1,1);
+    t.value={richText:[{font:{name:"Calibri",size:16,bold:true,color:{argb:HEX.orange}},text:"GMS"},
+                       {font:{name:"Calibri",size:15,bold:true,color:{argb:HEX.ink}},text:name}]};
+    t.alignment={vertical:"middle"};
+    const s=ws.getCell(2,1); s.value=sub;
+    s.font={name:"Calibri",size:9.5,color:{argb:HEX.mute}}; s.alignment={vertical:"middle"};
+    for(let c=1;c<=cols;c++) ws.getCell(3,c).border={bottom:{style:"medium",color:{argb:HEX.orange}}};
+  };
+  const signoff=(ws,row,cols)=>{
+    const c=ws.getCell(row+2,1); c.value="Design & delivery by Kaleidoscope Management Technology · kmt.global";
+    c.font={name:"Calibri",size:8.5,italic:true,color:{argb:HEX.mute}};
+    ws.mergeCells(row+2,1,row+2,Math.min(cols,6));
+  };
+  const header=(ws,row,heads)=>{
+    const r=ws.getRow(row); r.values=heads; r.height=22;
+    r.eachCell(c=>{ c.fill={type:"pattern",pattern:"solid",fgColor:{argb:HEX.header}};
+      c.font={name:"Calibri",size:9.5,bold:true,color:{argb:"FFFFFFFF"}};
+      c.alignment={vertical:"middle",horizontal:"left",wrapText:true}; });
+    ws.views=[{state:"frozen",ySplit:row}];
+  };
+  const body=(ws,row,rows,cols)=>{
+    rows.forEach((vals,i)=>{ const r=ws.getRow(row+1+i); r.values=vals; r.alignment={vertical:"top"};
+      r.eachCell({includeEmpty:true},(c,ci)=>{
+        c.font={name:"Calibri",size:10,color:{argb:HEX.ink}};
+        c.border={bottom:{style:"thin",color:{argb:HEX.line}}};
+        if(i%2) c.fill={type:"pattern",pattern:"solid",fgColor:{argb:HEX.zebra}};
+        const f=(cols[ci-1]||{}).fmt; if(f) c.numFmt=f;
+        if((cols[ci-1]||{}).wrap) c.alignment={vertical:"top",wrapText:true};
+      });
+    });
+    (ws.columns||[]).forEach((c,i)=>{ c.width=(cols[i]||{}).w||14; });
+    if(rows.length) ws.autoFilter={from:{row:row,column:1},to:{row:row+rows.length,column:cols.length}};
+  };
+  const sub=`${rangeLabel(from,to)} · exported ${TODAY} · GMS × UQ × GRG`;
+  const $$$=v=>(v==null||v===""?null:parseFloat(v));
+  const r2=v=>(v==null?null:Math.round(v*100)/100);   // keep money free of float dust
+
+  if(want.sum){
+    const cols=[{w:14},{w:9,fmt:"0"},{w:9,fmt:"0"},{w:10,fmt:"0"},{w:15,fmt:"0"},{w:9,fmt:"0"},
+                {w:13,fmt:'"$"#,##0.00'},{w:13,fmt:'"$"#,##0.00'},{w:10,fmt:"0%"},{w:14,fmt:"#,##0"},{w:13,fmt:"#,##0"}];
+    const heads=["Month","Posts","Posted","To come","WeChat pushes","Boosts","Planned budget","Actual spend","% used","Engagements","Followers +"];
+    const keys=[...new Set([...content.map(d=>d.date.slice(0,7)),
+      ...boosts.map(d=>String(d.boostData.start||d.date).slice(0,7))])].sort();
+    const rows=keys.map(k=>{
+      const c=content.filter(d=>d.date.slice(0,7)===k), b=boosts.filter(d=>String(d.boostData.start||d.date).slice(0,7)===k);
+      const posted=c.filter(d=>d.del==="Posted").length;
+      const push=new Set(c.filter(d=>isWeChat(d.ch)&&!d.mergedInto).map(d=>d.date)).size;
+      const bud=b.reduce((a,d)=>a+budgetOf(d),0), spd=b.reduce((a,d)=>a+nInt(d.boostData.spend),0);
+      return [MO[+k.slice(5,7)-1]+" "+k.slice(0,4), c.length, posted, c.length-posted, push, b.length,
+        r2(bud)||null, r2(spd)||null, bud?spd/bud:null,
+        b.reduce((a,d)=>a+nInt(d.boostData.eng),0)||null, b.reduce((a,d)=>a+nInt(d.boostData.flw),0)||null];
+    });
+    const tb=boosts.reduce((a,d)=>a+budgetOf(d),0), ts=boosts.reduce((a,d)=>a+nInt(d.boostData.spend),0);
+    rows.push(["TOTAL", content.length, content.filter(d=>d.del==="Posted").length,
+      content.filter(d=>d.del!=="Posted").length,
+      new Set(content.filter(d=>isWeChat(d.ch)&&!d.mergedInto).map(d=>d.date)).size, boosts.length,
+      r2(tb)||null, r2(ts)||null, tb?ts/tb:null,
+      boosts.reduce((a,d)=>a+nInt(d.boostData.eng),0)||null, boosts.reduce((a,d)=>a+nInt(d.boostData.flw),0)||null]);
+    const ws=wb.addWorksheet("Summary",{properties:{tabColor:{argb:HEX.orange}}});
+    title(ws," · UQ China Social & Boosting — Summary",sub,heads.length);
+    header(ws,5,heads); body(ws,5,rows,cols);
+    ws.getRow(5+rows.length).eachCell(c=>{ c.font={name:"Calibri",size:10,bold:true,color:{argb:HEX.ink}};
+      c.fill={type:"pattern",pattern:"solid",fgColor:{argb:"FFF3EFE9"}}; });
+    signoff(ws,5+rows.length,heads.length);
+  }
+
+  if(want.cal){
+    const cols=[{w:11},{w:14},{w:12},{w:12},{w:11},{w:10},{w:52,wrap:true},{w:11},{w:12},{w:13},{w:9},{w:34,wrap:true},{w:30,wrap:true}];
+    const heads=["Date","Channel","Account","WeChat slot","Content type","Format","Subject line","Added by","UQ approval","GMS status","Boosted","Post link","Note"];
+    const rows=content.map(d=>[d.date,(CH[d.ch]||{}).label||d.ch,(CH[d.ch]||{}).acct||"—",d.wslot||"—",
+      d.label||"—",d.fmt||"—",(d.note||"").replace(/\n/g," "),d.by||"",d.appr||"",d.del||"",
+      d.boost?"Yes":"—",d.url||"",(d.note2||"").replace(/\n/g," ")]);
+    const ws=wb.addWorksheet("Social calendar");
+    title(ws," · UQ China Social & Boosting — Social calendar",sub,heads.length);
+    header(ws,5,heads); body(ws,5,rows,cols); signoff(ws,5+rows.length,heads.length);
+  }
+
+  if(want.paid){
+    const cols=[{w:11},{w:14},{w:46,wrap:true},{w:11},{w:11},{w:7,fmt:"0"},{w:12,fmt:'"$"#,##0.00'},{w:12,fmt:'"$"#,##0.00'},
+                {w:9,fmt:"0%"},{w:9},{w:13,fmt:"#,##0"},{w:10,fmt:'"$"#,##0.00'},{w:12,fmt:"#,##0"},{w:12,fmt:'"$"#,##0.00'},{w:11},{w:34,wrap:true}];
+    const heads=["Boost month","Channel","Organic post boosted (linked)","Window start","Window end","Days",
+      "Budget","Spend","% used","CTR","Engagements","CPE","Followers +","Cost / follower","Status","Performance note"];
+    const rows=boosts.map(d=>{ const b=d.boostData, bud=budgetOf(d), sp=$$$(b.spend), en=$$$(b.eng), fl=$$$(b.flw);
+      const days=(b.start&&b.end)?Math.round((new Date(b.end+"T00:00")-new Date(b.start+"T00:00"))/864e5)+1:null;
+      return [MO[+String(b.start||d.date).slice(5,7)-1]+" "+String(b.start||d.date).slice(0,4),
+        (CH[d.ch]||{}).label||d.ch,(d.note||"").replace(/\n/g," "),b.start||"",b.end||"",days,
+        r2(bud),r2(sp),(bud&&sp!=null)?sp/bud:null,b.ctr||"",en,(sp&&en)?r2(sp/en):null,fl,(sp&&fl)?r2(sp/fl):null,
+        effStatus(b),(b.note||"").replace(/\n/g," ")];
+    });
+    const ws=wb.addWorksheet("Paid campaign");
+    title(ws," · UQ China Social & Boosting — Paid campaign",sub,heads.length);
+    header(ws,5,heads); body(ws,5,rows,cols); signoff(ws,5+rows.length,heads.length);
+  }
+
+  const buf=await wb.xlsx.writeBuffer();
+  const a=document.createElement("a");
+  a.href=URL.createObjectURL(new Blob([buf],{type:"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"}));
+  a.download=exportFilename(from,to); a.click();
+  setTimeout(()=>URL.revokeObjectURL(a.href),4000);
+}
+
+/* ===================== Year view — the whole year in one screen =====================
+   Everything here is derived from the same rows the calendar and boosting log use,
+   so the year can never drift from the months that make it up.                        */
+let yearY=null;                                  // null until first render → follows the data
+function yearsInData(){
+  const s={}; SEED.forEach(d=>{ if(/^\d{4}-/.test(d.date)) s[d.date.slice(0,4)]=1;
+    if(d.boostData&&/^\d{4}-/.test(d.boostData.start||"")) s[d.boostData.start.slice(0,4)]=1; });
+  return Object.keys(s).sort();
+}
+function yearContent(y){ return SEED.filter(d=>d.date && +d.date.slice(0,4)===y); }
+function yearBoosts(y){ return SEED.filter(d=>d.boost && d.boostData)
+  .filter(d=> +String(d.boostData.start||d.date).slice(0,4)===y ); }
+function bMonth(d){ return +String(d.boostData.start||d.date).slice(5,7)-1; }
+function budgetOf(d){ const b=d.boostData||{}; return (b.budget!=null&&b.budget!=="")?parseFloat(b.budget):(d.ch==="WeChat"?1575:925); }
+const nInt=v=>parseFloat(v)||0;
+const money=v=>"$"+Math.round(v).toLocaleString();
+
+function renderYear(){
+  const years=yearsInData();
+  if(yearY===null) yearY = years.includes(String(MONTHS[mi].y)) ? MONTHS[mi].y : +(years[years.length-1]||new Date().getFullYear());
+  const y=yearY, C=yearContent(y), B=yearBoosts(y);
+  $("#ylabel").textContent=y; $("#yTitle").innerHTML=`${y} <span>at a glance</span>`;
+
+  const posted=C.filter(d=>d.del==="Posted").length;
+  const sched =C.filter(d=>d.del==="Scheduled").length;
+  const prop  =C.length-posted-sched;
+  const spend =B.reduce((a,d)=>a+nInt(d.boostData.spend),0);
+  const budget=B.reduce((a,d)=>a+budgetOf(d),0);
+  const eng   =B.reduce((a,d)=>a+nInt(d.boostData.eng),0);
+  const flw   =B.reduce((a,d)=>a+nInt(d.boostData.flw),0);
+  const pct   =budget?Math.round(spend/budget*100):0;
+  const pushes=Object.keys(C.filter(d=>isWeChat(d.ch)&&!d.mergedInto)
+    .reduce((a,d)=>(a[d.date]=1,a),{})).length;
+  const monthsWithContent=Object.keys(C.reduce((a,d)=>(a[d.date.slice(0,7)]=1,a),{})).length;
+  $("#ySub").textContent=`${monthsWithContent} month${monthsWithContent===1?"":"s"} planned · ${B.length} of ${C.length} posts put behind paid`;
+
+  $("#yKpis").innerHTML=`
+    <div class="kpi"><div class="rail" style="background:var(--st-posted)"></div>
+      <div class="cap">Published in ${y}</div><div class="val tnum">${posted}</div>
+      <div class="sub">of ${C.length} posts in the plan</div></div>
+    <div class="kpi"><div class="rail" style="background:var(--st-sched)"></div>
+      <div class="cap">Still to come</div><div class="val tnum">${sched+prop}</div>
+      <div class="sub">${sched} scheduled · ${prop} proposed</div></div>
+    <div class="kpi"><div class="rail" style="background:var(--ch-wechat)"></div>
+      <div class="cap">WeChat pushes used</div><div class="val tnum">${pushes} / ${WECHAT_CAP*12}</div>
+      <div class="bar"><i style="width:${Math.min(100,pushes/(WECHAT_CAP*12)*100)}%;background:var(--ch-wechat)"></i></div>
+      <div class="sub">${WECHAT_CAP} per month cap · ${WECHAT_CAP*12} a year</div></div>
+    <div class="kpi accent"><div class="rail" style="background:var(--orange)"></div>
+      <div class="cap">Paid boosting spend</div><div class="val tnum">${money(spend)}</div>
+      <div class="bar"><i style="width:${Math.min(100,pct)}%;background:${pct>100?'var(--crit)':'var(--orange)'}"></i></div>
+      <div class="sub">of ${money(budget)} planned · ${pct}%</div></div>
+    <div class="kpi"><div class="rail" style="background:var(--ch-red)"></div>
+      <div class="cap">Audience gained</div><div class="val tnum">${flw.toLocaleString()}</div>
+      <div class="sub">followers · ${eng.toLocaleString()} engagements${flw?` · ${cpX(spend,flw)} each`:""}</div></div>`;
+
+  // per-month rollup, one pass
+  const M=MO.map((m,i)=>({m:m,i:i,posted:0,sched:0,prop:0,push:{},boosts:0,bud:0,spend:0,eng:0,flw:0}));
+  C.forEach(d=>{ const r=M[+d.date.slice(5,7)-1];
+    if(d.del==="Posted")r.posted++; else if(d.del==="Scheduled")r.sched++; else r.prop++;
+    if(isWeChat(d.ch)&&!d.mergedInto) r.push[d.date]=1; });
+  B.forEach(d=>{ const r=M[bMonth(d)]; r.boosts++; r.bud+=budgetOf(d);
+    r.spend+=nInt(d.boostData.spend); r.eng+=nInt(d.boostData.eng); r.flw+=nInt(d.boostData.flw); });
+
+  const cMax=Math.max(1,...M.map(r=>r.posted+r.sched+r.prop));
+  $("#yContent").innerHTML=M.map(r=>{const t=r.posted+r.sched+r.prop, h=Math.round(t/cMax*158);
+    const seg=(n,c,l)=>n?`<div class="yseg" style="height:${n/t*100}%;background:${c}" data-tip="${r.m} ${y} · ${n} ${l}"></div>`:"";
+    return `<div class="colgrp"><span class="ycount">${t||""}</span><div class="cols">
+      <div class="ycol" style="height:${t?Math.max(4,h):2}px;${t?"":"background:var(--surface-2);border:1px solid var(--line-2)"}">
+      ${seg(r.prop,"var(--st-prop)","proposed")}${seg(r.sched,"var(--st-sched)","scheduled")}${seg(r.posted,"var(--st-posted)","posted")}</div>
+      </div><span class="xlab">${r.m}</span></div>`;}).join("");
+
+  const sMax=Math.max(1,...M.map(r=>Math.max(r.bud,r.spend)));
+  $("#ySpend").innerHTML=M.map(r=>`<div class="colgrp"><div class="cols">
+      <div class="col budget" style="height:${r.bud?Math.max(3,Math.round(r.bud/sMax*158)):2}px" data-tip="${r.m} ${y} · Planned ${money(r.bud)}"></div>
+      ${r.spend?`<div class="col ${r.spend>r.bud?'over':'spend'}" style="height:${Math.max(3,Math.round(r.spend/sMax*158))}px" data-tip="${r.m} ${y} · Spent ${money(r.spend)}${r.spend>r.bud?" (over plan)":""}"></div>`:""}
+    </div><span class="xlab">${r.m}</span></div>`).join("");
+
+  // channel table
+  const byCh={};
+  C.forEach(d=>{ const r=byCh[d.ch]=byCh[d.ch]||{posts:0,boosts:0,spend:0,eng:0,flw:0}; r.posts++; });
+  B.forEach(d=>{ const r=byCh[d.ch]=byCh[d.ch]||{posts:0,boosts:0,spend:0,eng:0,flw:0};
+    r.boosts++; r.spend+=nInt(d.boostData.spend); r.eng+=nInt(d.boostData.eng); r.flw+=nInt(d.boostData.flw); });
+  const chRows=Object.keys(byCh).sort((a,b)=>byCh[b].posts-byCh[a].posts);
+  $("#yChannels").innerHTML=`<thead><tr><th>Channel</th><th class="n">Posts</th><th class="n">Boosted</th><th class="n">Spend</th><th class="n">Engagements</th><th class="n">CPE</th><th class="n">Followers +</th><th class="n">Cost / follower</th></tr></thead><tbody>${
+    chRows.map(n=>{const r=byCh[n];
+      return `<tr><td><span class="chip" style="pointer-events:none;padding:2px 9px"><span class="dot" style="background:${(CH[n]||{}).color||"var(--ink-3)"}"></span>${n}</span></td>
+      <td class="n tnum">${r.posts}</td><td class="n tnum">${r.boosts||"—"}</td><td class="n tnum">${r.spend?money(r.spend):"—"}</td>
+      <td class="n tnum">${r.eng?r.eng.toLocaleString():"—"}</td><td class="n tnum">${cpX(r.spend,r.eng)}</td>
+      <td class="n tnum">${r.flw?r.flw.toLocaleString():"—"}</td><td class="n tnum">${cpX(r.spend,r.flw)}</td></tr>`;}).join("")
+      ||`<tr><td colspan="8" style="padding:14px 18px;color:var(--ink-3)">No content in ${y} yet.</td></tr>`
+  }</tbody><tfoot><tr><td>All channels</td><td class="n tnum">${C.length}</td><td class="n tnum">${B.length}</td><td class="n tnum">${money(spend)}</td><td class="n tnum">${eng.toLocaleString()}</td><td class="n tnum">${cpX(spend,eng)}</td><td class="n tnum">${flw.toLocaleString()}</td><td class="n tnum">${cpX(spend,flw)}</td></tr></tfoot>`;
+
+  // month table
+  const live=M.filter(r=>r.posted+r.sched+r.prop+r.boosts>0);
+  $("#yMonths").innerHTML=`<thead><tr><th>Month</th><th class="n">Posts</th><th class="n">Posted</th><th class="n">To come</th><th class="n">WeChat pushes</th><th class="n">Boosts</th><th class="n">Planned</th><th class="n">Spend</th><th class="n">% used</th><th class="n">Followers +</th></tr></thead><tbody>${
+    live.map(r=>{const t=r.posted+r.sched+r.prop, p=r.bud?Math.round(r.spend/r.bud*100):0, np=Object.keys(r.push).length;
+      return `<tr><td style="font-weight:700">${r.m} ${y}</td><td class="n tnum">${t||"—"}</td><td class="n tnum">${r.posted||"—"}</td>
+      <td class="n tnum">${(r.sched+r.prop)||"—"}</td><td class="n tnum" ${np>WECHAT_CAP?'style="color:var(--crit);font-weight:700"':''}>${np?np+" / "+WECHAT_CAP:"—"}</td>
+      <td class="n tnum">${r.boosts||"—"}</td><td class="n tnum">${r.bud?money(r.bud):"—"}</td><td class="n tnum">${r.spend?money(r.spend):"—"}</td>
+      <td class="n tnum" ${p>100?'style="color:var(--crit);font-weight:700"':''}>${r.bud?p+"%":"—"}</td><td class="n tnum">${r.flw?r.flw.toLocaleString():"—"}</td></tr>`;}).join("")
+      ||`<tr><td colspan="10" style="padding:14px 18px;color:var(--ink-3)">Nothing planned for ${y} yet.</td></tr>`
+  }</tbody><tfoot><tr><td>${y} total</td><td class="n tnum">${C.length}</td><td class="n tnum">${posted}</td><td class="n tnum">${sched+prop}</td><td class="n tnum">${pushes}</td><td class="n tnum">${B.length}</td><td class="n tnum">${money(budget)}</td><td class="n tnum">${money(spend)}</td><td class="n tnum">${pct}%</td><td class="n tnum">${flw.toLocaleString()}</td></tr></tfoot>`;
+}
+function stepYear(d){ yearY=(yearY||MONTHS[mi].y)+d; renderYear(); }
+$("#prevY").onclick=()=>stepYear(-1);
+$("#nextY").onclick=()=>stepYear(1);
 
 // ---- WIP & Admin board ----
 const RESP={GMS:"var(--orange)","UQ":"var(--uq)","GRG":"#1F8C7A","UQ & GMS":"var(--blue)","-":"var(--ink-3)"};
@@ -1043,7 +1400,7 @@ function openWipDrawer(w,isNew){
   $("#wsave").onclick=()=>{closeDrawer();toast("Task saved ✓");};
 }
 
-function renderAll(){ renderKPIs(); renderWeChat(); renderGrid(); if(view==="paid")renderPaid(); if(view==="wip")renderWIP(); }
+function renderAll(){ renderKPIs(); renderWeChat(); renderActions(); renderGrid(); if(view==="paid")renderPaid(); if(view==="year")renderYear(); if(view==="wip")renderWIP(); }
 const MOFULL=["January","February","March","April","May","June","July","August","September","October","November","December"];
 function setMonth(){const M=MONTHS[mi]; $("#mlabel").textContent=M.key;
   $("#monthband").innerHTML=`${MOFULL[M.m].toUpperCase()} <span>${M.y}</span>`; renderAll();}
@@ -1058,17 +1415,19 @@ function stepMonth(dir){
 $("#prevM").onclick=()=>{mi=stepMonth(-1);setMonth();};
 $("#nextM").onclick=()=>{mi=stepMonth(1);setMonth();};
 $("#search").oninput=e=>{q=e.target.value.toLowerCase();renderGrid();};
-$("#export").onclick=exportExcel;
+$("#export").onclick=e=>{ e.stopPropagation(); $("#xpop")?closeXPop():openExportPop(e.currentTarget); };
 $("#poolAdd").onclick=e=>{e.stopPropagation();openPoolPop(e.currentTarget);};
 $("#statusFilter").onchange=e=>{boostFilter=e.target.value;renderPaid();};
 $$("#tabs button").forEach(b=>b.onclick=()=>{view=b.dataset.view;$$("#tabs button").forEach(x=>x.classList.toggle("active",x===b));
+  const monthly=(view==="cal"||view==="paid");   // Year view and WIP aren't scoped to a month
   $("#calView").style.display=view==="cal"?"":"none";
-  $("#kpis").style.display=view==="wip"?"none":"grid";
-  $("#monthband").style.display=view==="wip"?"none":"block";
-  $(".month-nav").style.display=view==="wip"?"none":"flex";
+  $("#kpis").style.display=monthly?"grid":"none";
+  $("#monthband").style.display=monthly?"block":"none";
+  $(".tabbar .month-nav").style.display=monthly?"flex":"none";
   $("#paidView").classList.toggle("show",view==="paid");
+  $("#yearView").classList.toggle("show",view==="year");
   $("#wipView").classList.toggle("show",view==="wip");
-  if(view==="paid")renderPaid(); if(view==="wip")renderWIP();});
+  if(view==="paid")renderPaid(); if(view==="year")renderYear(); if(view==="wip")renderWIP();});
 $("#theme").onclick=()=>{const r=document.documentElement,c=r.getAttribute("data-theme")||(matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light");r.setAttribute("data-theme",c==="dark"?"light":"dark");};
 let tT; function toast(m){$("#toastMsg").textContent=m;$("#toast").classList.add("show");clearTimeout(tT);tT=setTimeout(()=>$("#toast").classList.remove("show"),2400);}
 // global hover tooltip for all charts/flight
