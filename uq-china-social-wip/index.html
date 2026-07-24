@@ -133,6 +133,11 @@
   .card .boost { font-size:9px; font-weight:800; color:var(--orange); background:var(--orange-soft); padding:1px 4px; border-radius:4px; letter-spacing:.3px; }
   .card .who { margin-left:auto; border-radius:5px; padding:1px 5px; color:#fff; font-size:8.5px; font-weight:800; letter-spacing:.3px; }
   .card.hide { display:none; }
+  .emptyfilter { display:none; padding:20px 18px; text-align:center; font-size:13px; color:var(--ink-2); border-top:1px solid var(--line); background:var(--surface-2); }
+  .emptyfilter.show { display:block; }
+  .emptyfilter b { color:var(--ink); }
+  .emptyfilter button { margin-left:10px; border:1px solid var(--line-2); background:var(--surface); border-radius:8px; padding:6px 12px; font-size:12.5px; font-weight:700; color:var(--ink); }
+  .emptyfilter button:hover { border-color:var(--orange); color:var(--orange); }
 
   .rail { display:flex; flex-direction:column; gap:14px; position:sticky; top:70px; }
   .panel { background:var(--surface); border:1px solid var(--line); border-radius:var(--radius); box-shadow:var(--shadow); }
@@ -364,12 +369,13 @@
   <div class="toolbar">
     <div class="grp"><span class="glabel">Channel</span><span id="chChips"></span></div>
     <div class="grp"><span class="glabel">Status</span><span id="stChips"></span></div>
-    <div class="search">🔍<input id="search" placeholder="Search content…"></div>
+    <div class="search">🔍<input id="search" type="search" name="content-search" placeholder="Search content…" autocomplete="off" autocorrect="off" spellcheck="false" data-lpignore="true" data-1p-ignore data-form-type="other"></div>
   </div>
   <div class="stage" id="stage">
     <div class="cal">
       <div class="dow"><div>Mon</div><div>Tue</div><div>Wed</div><div>Thu</div><div>Fri</div><div>Sat</div><div>Sun</div></div>
       <div class="grid" id="grid"></div>
+      <div class="emptyfilter" id="emptyFilter"></div>
     </div>
     <div class="rail">
       <div class="panel">
@@ -644,6 +650,20 @@ function renderGrid(){
   }
   const tail=(7-((lead+days)%7))%7; for(let i=0;i<tail;i++) html+=`<div class="cell dim"></div>`;
   $("#grid").innerHTML=html; wireGrid();
+  // tell the user when content exists but is hidden by search/filters (instead of a blank calendar)
+  const tot=monthItems().length, vis=monthItems().filter(visible).length, ef=$("#emptyFilter");
+  if(ef){
+    if(tot>0 && vis===0){
+      ef.classList.add("show");
+      ef.innerHTML='<b>'+tot+' post'+(tot>1?'s':'')+'</b> this month '+(tot>1?'are':'is')+' hidden by your search / filters.<button id="clearFilters">Clear filters</button>';
+      $("#clearFilters").onclick=clearFilters;
+    } else ef.classList.remove("show");
+  }
+}
+function clearFilters(){
+  q=""; if($("#search")) $("#search").value="";
+  Object.keys(chOn).forEach(k=>chOn[k]=1); Object.keys(stOn).forEach(k=>stOn[k]=1);
+  renderChips(); renderGrid(); toast("Filters cleared");
 }
 function wireGrid(){
   $$(".card").forEach(c=>{
