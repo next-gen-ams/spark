@@ -522,6 +522,8 @@ const ACTIONS = [
 const PMONTHS=["Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
 const BUDGET=[5000,5000,5000,6000,7000,7000,5500,0,6000,6000,7500];
 const SPEND ={Feb:5021.89,Mar:4815.52,Apr:3639.07,May:6042.97,Jun:6837.39,Jul:1194.89};
+// content labels — unknown values coming from the plan are kept, so new labels never get lost
+const LABELS=["Inform","Educate","Entertain","UGC","KOL"];
 const STATUSES=["Proposed","Scheduled","Live","Boosted","Finished","Paused"];
 const STATUS_C={Proposed:"var(--st-prop)",Scheduled:"var(--st-sched)",Live:"var(--orange)",Boosted:"var(--st-sched)",Finished:"var(--st-posted)",Paused:"var(--ink-3)"};
 // Demo "today" — in production this is isoLocal(new Date())
@@ -530,7 +532,26 @@ function deriveStatus(b){ if(!b.start||!b.end) return "Proposed"; if(TODAY<b.sta
 function effStatus(b){ return (!b.status||b.status==="Auto") ? deriveStatus(b) : b.status; }
 function cpX(spend,n){ const s=parseFloat(spend), d=parseFloat(n); return (s>0&&d>0)? "$"+(s/d).toFixed(2) : "—"; }
 
-const MONTHS=[{y:2025,m:11,key:"Dec 2025",p:null},{y:2026,m:1,key:"Feb 2026",p:"Feb"},{y:2026,m:2,key:"Mar 2026",p:"Mar"}];
+// month navigation — rebuilt from whatever months the data actually contains
+let MONTHS=[0,1,2,3,4,5,6].map(function(m){ return {y:2026,m:m,key:MO[m]+" 2026"}; });
+var _monthsReady=false;
+function mkMonth(y,m){ return {y:y,m:m,key:MO[m]+" "+y}; }
+function rebuildMonths(){
+  // Any month present in the data shows up automatically — add Aug/Sep/2027… to the DB and it just appears.
+  var prev=(_monthsReady && MONTHS[mi]) ? {y:MONTHS[mi].y,m:MONTHS[mi].m} : null;
+  var set={}; SEED.forEach(function(d){ if(/^\d{4}-\d{2}-\d{2}$/.test(d.date)) set[d.date.slice(0,7)]=1; });
+  var keys=Object.keys(set).sort(); if(!keys.length) return;
+  MONTHS=keys.map(function(k){ return mkMonth(+k.slice(0,4), +k.slice(5,7)-1); });
+  // keep the month you're viewing even if it has no content yet (e.g. you stepped ahead to plan it)
+  if(prev && !MONTHS.some(function(x){return x.y===prev.y&&x.m===prev.m;})){
+    MONTHS.push(mkMonth(prev.y,prev.m));
+    MONTHS.sort(function(a,b){ return (a.y-b.y)||(a.m-b.m); });
+  }
+  var idx=prev?MONTHS.findIndex(function(x){return x.y===prev.y&&x.m===prev.m;}):-1;
+  if(idx<0){ var t=new Date(); idx=MONTHS.findIndex(function(x){return x.y===t.getFullYear()&&x.m===t.getMonth();}); }
+  if(idx<0) idx=MONTHS.length-1;      // else land on the latest month we have
+  mi=idx; _monthsReady=true;
+}
 let mi=2, q="", view="cal", boostFilter="all";
 // resizable boosting-log column widths (px), persist across re-renders — [Channel, Post, Window, Budget, Spend, CTR, Eng, CPE, Flwr, Cost/Flwr, Status, Note]
 let BCOLW=[78,180,186,58,78,62,90,66,84,78,148,150];
@@ -550,6 +571,11 @@ function delStatus(d){
   return {k:"Draft",l:"Draft",c:"var(--st-draft)"};
 }
 const monthItems=()=>{const M=MONTHS[mi]; return SEED.filter(d=>{const dt=new Date(d.date+"T00:00"); return dt.getFullYear()===M.y&&dt.getMonth()===M.m;});};
+function inMonthISO(iso,M){ return !!iso && /^\d{4}-\d{2}/.test(iso) && +iso.slice(0,4)===M.y && (+iso.slice(5,7)-1)===M.m; }
+// Boosting belongs to the month the boost RUNS in (matches how the plan groups spend),
+// not the month the post was published — a Jan post boosted in Feb counts under Feb.
+function monthBoostItems(){ const M=MONTHS[mi];
+  return SEED.filter(d=>d.boost).filter(d=> d.boostData ? inMonthISO(d.boostData.start,M) : inMonthISO(d.date,M) ); }
 function visible(d){ if(!chOn[d.ch])return false; if(!stOn[delStatus(d).k])return false;
   if(q && !(d.note.toLowerCase().includes(q)))return false; return true; }
 
@@ -560,7 +586,7 @@ function renderKPIs(){
   const boosted=items.filter(d=>d.boost).length;
   const M=MONTHS[mi];
   // Paid spend derives from the month's boosted posts (same source as Channel split) — one number, no drift
-  const mBoost=items.filter(d=>d.boost);
+  const mBoost=monthBoostItems();
   const bud=mBoost.length?mBoost.reduce((a,d)=>a+((d.boostData&&d.boostData.budget)||(d.ch==="WeChat"?1575:925)),0):null;
   const spd=mBoost.length?mBoost.reduce((a,d)=>a+(parseFloat(d.boostData&&d.boostData.spend)||0),0):null;
   const pct=bud?Math.min(100,Math.round(spd/bud*100)):0;
@@ -785,7 +811,7 @@ function openDrawer(it,isNew){
       </div>
       <div class="row2">
         <div class="field"><label>Format</label><select id="f_fmt">${["Image","Article","Video","Carousel"].map(k=>`<option ${k===it.fmt?'selected':''}>${k}</option>`).join("")}</select></div>
-        <div class="field"><label>Label</label><select id="f_label">${["Inform","Educate","Entertain"].map(k=>`<option ${k===it.label?'selected':''}>${k}</option>`).join("")}</select></div>
+        <div class="field"><label>Label</label><select id="f_label">${LABELS.concat(it.label&&LABELS.indexOf(it.label)<0?[it.label]:[]).map(k=>`<option ${k===it.label?'selected':''}>${k}</option>`).join("")}</select></div>
       </div>
       ${isW?`<div class="wechatbox"><div class="bh">WeChat push slot <span style="color:var(--ink-3);font-weight:500">— 4 pushes / account / month</span></div>
         <div class="field"><label>Position</label>
@@ -844,7 +870,7 @@ function renderPaid(){
   const M=MONTHS[mi];
   const chColor={RED:"var(--ch-red)",WeChat:"var(--ch-wechat)",Weibo:"var(--ch-weibo)","Alumni WeChat":"var(--ch-alumni)"};
   const byCh={}, spentCh={};
-  monthItems().filter(d=>d.boost).forEach(d=>{const bd=d.boostData||{}; const bud=bd.budget||(d.ch==="WeChat"?1575:925);
+  monthBoostItems().forEach(d=>{const bd=d.boostData||{}; const bud=bd.budget||(d.ch==="WeChat"?1575:925);
     byCh[d.ch]=(byCh[d.ch]||0)+bud; spentCh[d.ch]=(spentCh[d.ch]||0)+(parseFloat(bd.spend)||0);});
   const sp=Object.keys(byCh).map(n=>[n,byCh[n],spentCh[n]||0,chColor[n]||"var(--ink-3)"]).sort((a,b)=>b[1]-a[1]);
   $("#splitSub").textContent=`${M.key} · budget vs. actual spend (live)`;
@@ -858,7 +884,7 @@ function renderPaid(){
     +`<div style="margin-top:18px;padding-top:14px;border-top:1px solid var(--line);display:flex;justify-content:space-between;font-weight:800"><span>Total spent / budget</span><span class="tnum"><span style="color:var(--orange)">$${Math.round(totS).toLocaleString()}</span> <span style="color:var(--ink-3);font-weight:600">/ $${totB.toLocaleString()}</span></span></div>`
     :`<div style="font-size:12px;color:var(--ink-3);padding:10px 0">No boosted posts this month yet — toggle Boost on a post in the calendar and it appears here.</div>`);
   // ---- Boosting: THIS MONTH only, derived from boosted posts, editable ----
-  const monthBoosts=monthItems().filter(d=>d.boost).sort((a,b)=>(a.boostData?.start||a.date).localeCompare(b.boostData?.start||b.date));
+  const monthBoosts=monthBoostItems().sort((a,b)=>(a.boostData?.start||a.date).localeCompare(b.boostData?.start||b.date));
   monthBoosts.forEach(d=>{ if(!d.boostData){ const s=new Date(d.date+"T00:00"); s.setDate(s.getDate()+3); const e=new Date(s); e.setDate(e.getDate()+14);
     d.boostData={budget:d.ch==="WeChat"?1575:925,spend:null,ctr:"",status:"Auto",start:isoLocal(s),end:isoLocal(e),eng:null,flw:null,note:""}; saveBoost(d); } });
   const filt=monthBoosts.filter(d=> boostFilter==="all" || effStatus(d.boostData)===boostFilter);
@@ -1021,8 +1047,16 @@ function renderAll(){ renderKPIs(); renderWeChat(); renderGrid(); if(view==="pai
 const MOFULL=["January","February","March","April","May","June","July","August","September","October","November","December"];
 function setMonth(){const M=MONTHS[mi]; $("#mlabel").textContent=M.key;
   $("#monthband").innerHTML=`${MOFULL[M.m].toUpperCase()} <span>${M.y}</span>`; renderAll();}
-$("#prevM").onclick=()=>{mi=Math.max(0,mi-1);setMonth();};
-$("#nextM").onclick=()=>{mi=Math.min(MONTHS.length-1,mi+1);setMonth();};
+// stepping past either end creates that month, so you can plan a month before it has any content
+function stepMonth(dir){
+  if(dir<0 && mi>0) return mi-1;
+  if(dir>0 && mi<MONTHS.length-1) return mi+1;
+  const M=MONTHS[mi], d=new Date(M.y, M.m+dir, 1), e=mkMonth(d.getFullYear(), d.getMonth());
+  if(dir<0){ MONTHS.unshift(e); return 0; }
+  MONTHS.push(e); return MONTHS.length-1;
+}
+$("#prevM").onclick=()=>{mi=stepMonth(-1);setMonth();};
+$("#nextM").onclick=()=>{mi=stepMonth(1);setMonth();};
 $("#search").oninput=e=>{q=e.target.value.toLowerCase();renderGrid();};
 $("#export").onclick=exportExcel;
 $("#poolAdd").onclick=e=>{e.stopPropagation();openPoolPop(e.currentTarget);};
@@ -1069,6 +1103,7 @@ async function loadAll(){
   POOL.length=0; (po.data||[]).forEach(function(r){ POOL.push({id:r.id,note:r.note||"",fmt:r.fmt||"",sug:r.sug||"GMS"}); });
   WIP.length=0; (wi.data||[]).forEach(function(r){ WIP.push({id:r.id,stage:r.stage||"todo",item:r.item||"",cat:r.cat||"",by:r.by||"",due:r.due||"",note:r.note||"",link:r.link||""}); });
   for(var k in KEYDATES) delete KEYDATES[k]; (kd.data||[]).forEach(function(r){ KEYDATES[r.iso]=r.label; });
+  rebuildMonths(); setMonth();
 }
 /* Resilient writes: queue every change, flush with retry, never lose an edit to a blip */
 var pendingWrites=[], flushing=false;
