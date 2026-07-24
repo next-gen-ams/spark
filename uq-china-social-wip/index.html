@@ -443,7 +443,7 @@
   <div class="paidgrid">
     <div class="chartcard">
       <h3>Budget vs. Spend by month</h3>
-      <div class="csub">Combined RED + WeChat · AUD · 2026 plan vs. actual (report-level feed)</div>
+      <div class="csub">Combined RED + WeChat · AUD · media-plan budget vs. actual spend</div>
       <div class="chart" id="chart"></div>
       <div class="legend"><span><i style="background:var(--surface-2);border:1px solid var(--line-2)"></i>Budgeted</span><span><i style="background:var(--orange)"></i>Actual spend</span></div>
     </div>
@@ -606,9 +606,14 @@ function actionItems(){
               sev:(d.date<=TODAY || d.del==="Scheduled") ? "crit" : "warn"}));
 }
 
-const PMONTHS=["Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
-const BUDGET=[5000,5000,5000,6000,7000,7000,5500,0,6000,6000,7500];
-const SPEND ={Feb:5021.89,Mar:4815.52,Apr:3639.07,May:6042.97,Jun:6837.39,Jul:1194.89};
+// The annual media-plan budget lives in the DB (table `budget`, keyed by month + channel),
+// so a new year's plan is a data change, never a code change.  { "2026-08": {WeChat:3465, RED:2035} }
+const BUDGETPLAN={};
+function planMonth(y,m){ const b=BUDGETPLAN[y+"-"+String(m+1).padStart(2,"0")];
+  return b ? Object.keys(b).reduce((a,k)=>a+(+b[k]||0),0) : 0; }
+// a month budgeted at $0 (Sep, in the 2026 plan) is different from a month with no plan at all
+function hasPlan(y,m){ return !!BUDGETPLAN[y+"-"+String(m+1).padStart(2,"0")]; }
+function planYear(y){ let t=0; for(let m=0;m<12;m++) t+=planMonth(y,m); return t; }
 // content labels — unknown values coming from the plan are kept, so new labels never get lost
 const LABELS=["Inform","Educate","Entertain","UGC","KOL"];
 const STATUSES=["Proposed","Scheduled","Live","Boosted","Finished","Paused"];
@@ -953,11 +958,17 @@ function closeDrawer(){$("#scrim").classList.remove("open");$("#drawer").classLi
 $("#scrim").onclick=closeDrawer;
 
 function renderPaid(){
-  const max=Math.max(...BUDGET,...Object.values(SPEND));
-  $("#chart").innerHTML=PMONTHS.map((m,i)=>{const b=BUDGET[i],s=SPEND[m];
+  // Annual chart: media-plan budget from the DB vs. actual spend from the boost rows — both live.
+  const yr=MONTHS[mi].y;
+  const spendByM=new Array(12).fill(0);
+  SEED.filter(d=>d.boost&&d.boostData).forEach(d=>{ const s=String(d.boostData.start||d.date);
+    if(+s.slice(0,4)===yr) spendByM[+s.slice(5,7)-1]+=parseFloat(d.boostData.spend)||0; });
+  const planByM=MO.map((_,m)=>planMonth(yr,m));
+  const max=Math.max(1,...planByM,...spendByM);
+  $("#chart").innerHTML=MO.map((m,i)=>{const b=planByM[i],s=spendByM[i];
     return `<div class="colgrp"><div class="cols">
-      <div class="col budget" style="height:${b?Math.round(b/max*160):2}px" data-tip="${m} · Budgeted  $${b.toLocaleString()}"></div>
-      ${s!==undefined?`<div class="col ${s>b?'over':'spend'}" style="height:${Math.round(s/max*160)}px" data-tip="${m} · Actual spend  $${Math.round(s).toLocaleString()}${s>b?'  (over budget)':''}"></div>`:''}</div><span class="xlab">${m}</span></div>`;}).join("");
+      <div class="col budget" style="height:${b?Math.max(3,Math.round(b/max*160)):2}px" data-tip="${m} ${yr} · Planned  $${b.toLocaleString()}"></div>
+      ${s?`<div class="col ${s>b?'over':'spend'}" style="height:${Math.max(3,Math.round(s/max*160))}px" data-tip="${m} ${yr} · Actual spend  $${Math.round(s).toLocaleString()}${s>b?'  (over plan)':''}"></div>`:''}</div><span class="xlab">${m}</span></div>`;}).join("");
   // Channel split — budget + LIVE actual spend, derived from this month's boosted posts
   const M=MONTHS[mi];
   const chColor={RED:"var(--ch-red)",WeChat:"var(--ch-wechat)",Weibo:"var(--ch-weibo)","Alumni WeChat":"var(--ch-alumni)"};
@@ -1166,25 +1177,29 @@ async function buildWorkbook(from,to,want){
   const r2=v=>(v==null?null:Math.round(v*100)/100);   // keep money free of float dust
 
   if(want.sum){
-    const cols=[{w:14},{w:9,fmt:"0"},{w:9,fmt:"0"},{w:10,fmt:"0"},{w:15,fmt:"0"},{w:9,fmt:"0"},
-                {w:13,fmt:'"$"#,##0.00'},{w:13,fmt:'"$"#,##0.00'},{w:10,fmt:"0%"},{w:14,fmt:"#,##0"},{w:13,fmt:"#,##0"}];
-    const heads=["Month","Posts","Posted","To come","WeChat pushes","Boosts","Planned budget","Actual spend","% used","Engagements","Followers +"];
+    const cols=[{w:14},{w:9,fmt:"0"},{w:9,fmt:"0"},{w:14,fmt:"0"},{w:15,fmt:"0"},{w:9,fmt:"0"},
+                {w:13,fmt:'"$"#,##0.00'},{w:13,fmt:'"$"#,##0.00'},{w:13,fmt:'"$"#,##0.00'},{w:11,fmt:"0%"},{w:14,fmt:"#,##0"},{w:13,fmt:"#,##0"}];
+    const heads=["Month","Posts","Posted","Not yet posted","WeChat pushes","Boosts","Media plan","Booked","Actual spend","% of plan","Engagements","Followers +"];
+    // include months that only carry budget — planned but nothing scheduled yet
     const keys=[...new Set([...content.map(d=>d.date.slice(0,7)),
-      ...boosts.map(d=>String(d.boostData.start||d.date).slice(0,7))])].sort();
+      ...boosts.map(d=>String(d.boostData.start||d.date).slice(0,7)),
+      ...Object.keys(BUDGETPLAN).filter(k=>k>=from&&k<=to)])].sort();
+    const planOf=k=>{ const b=BUDGETPLAN[k]; return b?Object.keys(b).reduce((a,x)=>a+(+b[x]||0),0):0; };
     const rows=keys.map(k=>{
       const c=content.filter(d=>d.date.slice(0,7)===k), b=boosts.filter(d=>String(d.boostData.start||d.date).slice(0,7)===k);
       const posted=c.filter(d=>d.del==="Posted").length;
       const push=new Set(c.filter(d=>isWeChat(d.ch)&&!d.mergedInto).map(d=>d.date)).size;
-      const bud=b.reduce((a,d)=>a+budgetOf(d),0), spd=b.reduce((a,d)=>a+nInt(d.boostData.spend),0);
-      return [MO[+k.slice(5,7)-1]+" "+k.slice(0,4), c.length, posted, c.length-posted, push, b.length,
-        r2(bud)||null, r2(spd)||null, bud?spd/bud:null,
+      const bud=b.reduce((a,d)=>a+budgetOf(d),0), spd=b.reduce((a,d)=>a+nInt(d.boostData.spend),0), pl=planOf(k);
+      return [MO[+k.slice(5,7)-1]+" "+k.slice(0,4), c.length||null, posted||null, (c.length-posted)||null, push||null, b.length||null,
+        BUDGETPLAN[k]?r2(pl):null, r2(bud)||null, r2(spd)||null, (pl&&spd)?spd/pl:null,
         b.reduce((a,d)=>a+nInt(d.boostData.eng),0)||null, b.reduce((a,d)=>a+nInt(d.boostData.flw),0)||null];
     });
     const tb=boosts.reduce((a,d)=>a+budgetOf(d),0), ts=boosts.reduce((a,d)=>a+nInt(d.boostData.spend),0);
+    const tp=keys.reduce((a,k)=>a+planOf(k),0);
     rows.push(["TOTAL", content.length, content.filter(d=>d.del==="Posted").length,
       content.filter(d=>d.del!=="Posted").length,
       new Set(content.filter(d=>isWeChat(d.ch)&&!d.mergedInto).map(d=>d.date)).size, boosts.length,
-      r2(tb)||null, r2(ts)||null, tb?ts/tb:null,
+      r2(tp)||null, r2(tb)||null, r2(ts)||null, (tp&&ts)?ts/tp:null,
       boosts.reduce((a,d)=>a+nInt(d.boostData.eng),0)||null, boosts.reduce((a,d)=>a+nInt(d.boostData.flw),0)||null]);
     const ws=wb.addWorksheet("Summary",{properties:{tabColor:{argb:HEX.orange}}});
     title(ws," · UQ China Social & Boosting — Summary",sub,heads.length);
@@ -1259,7 +1274,8 @@ function renderYear(){
   const budget=B.reduce((a,d)=>a+budgetOf(d),0);
   const eng   =B.reduce((a,d)=>a+nInt(d.boostData.eng),0);
   const flw   =B.reduce((a,d)=>a+nInt(d.boostData.flw),0);
-  const pct   =budget?Math.round(spend/budget*100):0;
+  const plan  =planYear(y) || budget;      // media plan for the year; falls back to what's booked
+  const pct   =plan?Math.round(spend/plan*100):0;
   const pushes=Object.keys(C.filter(d=>isWeChat(d.ch)&&!d.mergedInto)
     .reduce((a,d)=>(a[d.date]=1,a),{})).length;
   const monthsWithContent=Object.keys(C.reduce((a,d)=>(a[d.date.slice(0,7)]=1,a),{})).length;
@@ -1270,7 +1286,7 @@ function renderYear(){
       <div class="cap">Published in ${y}</div><div class="val tnum">${posted}</div>
       <div class="sub">of ${C.length} posts in the plan</div></div>
     <div class="kpi"><div class="rail" style="background:var(--st-sched)"></div>
-      <div class="cap">Still to come</div><div class="val tnum">${sched+prop}</div>
+      <div class="cap">Not yet posted</div><div class="val tnum">${sched+prop}</div>
       <div class="sub">${sched} scheduled · ${prop} proposed</div></div>
     <div class="kpi"><div class="rail" style="background:var(--ch-wechat)"></div>
       <div class="cap">WeChat pushes used</div><div class="val tnum">${pushes} / ${WECHAT_CAP*12}</div>
@@ -1279,13 +1295,13 @@ function renderYear(){
     <div class="kpi accent"><div class="rail" style="background:var(--orange)"></div>
       <div class="cap">Paid boosting spend</div><div class="val tnum">${money(spend)}</div>
       <div class="bar"><i style="width:${Math.min(100,pct)}%;background:${pct>100?'var(--crit)':'var(--orange)'}"></i></div>
-      <div class="sub">of ${money(budget)} planned · ${pct}%</div></div>
+      <div class="sub">of ${money(plan)} ${y} media plan · ${pct}% · ${money(budget)} booked</div></div>
     <div class="kpi"><div class="rail" style="background:var(--ch-red)"></div>
       <div class="cap">Audience gained</div><div class="val tnum">${flw.toLocaleString()}</div>
       <div class="sub">followers · ${eng.toLocaleString()} engagements${flw?` · ${cpX(spend,flw)} each`:""}</div></div>`;
 
   // per-month rollup, one pass
-  const M=MO.map((m,i)=>({m:m,i:i,posted:0,sched:0,prop:0,push:{},boosts:0,bud:0,spend:0,eng:0,flw:0}));
+  const M=MO.map((m,i)=>({m:m,i:i,posted:0,sched:0,prop:0,push:{},boosts:0,plan:planMonth(y,i),hasPlan:hasPlan(y,i),bud:0,spend:0,eng:0,flw:0}));
   C.forEach(d=>{ const r=M[+d.date.slice(5,7)-1];
     if(d.del==="Posted")r.posted++; else if(d.del==="Scheduled")r.sched++; else r.prop++;
     if(isWeChat(d.ch)&&!d.mergedInto) r.push[d.date]=1; });
@@ -1300,10 +1316,10 @@ function renderYear(){
       ${seg(r.prop,"var(--st-prop)","proposed")}${seg(r.sched,"var(--st-sched)","scheduled")}${seg(r.posted,"var(--st-posted)","posted")}</div>
       </div><span class="xlab">${r.m}</span></div>`;}).join("");
 
-  const sMax=Math.max(1,...M.map(r=>Math.max(r.bud,r.spend)));
+  const sMax=Math.max(1,...M.map(r=>Math.max(r.plan,r.spend)));
   $("#ySpend").innerHTML=M.map(r=>`<div class="colgrp"><div class="cols">
-      <div class="col budget" style="height:${r.bud?Math.max(3,Math.round(r.bud/sMax*158)):2}px" data-tip="${r.m} ${y} · Planned ${money(r.bud)}"></div>
-      ${r.spend?`<div class="col ${r.spend>r.bud?'over':'spend'}" style="height:${Math.max(3,Math.round(r.spend/sMax*158))}px" data-tip="${r.m} ${y} · Spent ${money(r.spend)}${r.spend>r.bud?" (over plan)":""}"></div>`:""}
+      <div class="col budget" style="height:${r.plan?Math.max(3,Math.round(r.plan/sMax*158)):2}px" data-tip="${r.m} ${y} · Media plan ${money(r.plan)}${r.bud?" · "+money(r.bud)+" booked":" · nothing booked yet"}"></div>
+      ${r.spend?`<div class="col ${r.spend>r.plan?'over':'spend'}" style="height:${Math.max(3,Math.round(r.spend/sMax*158))}px" data-tip="${r.m} ${y} · Spent ${money(r.spend)}${r.spend>r.plan?" (over plan)":""}"></div>`:""}
     </div><span class="xlab">${r.m}</span></div>`).join("");
 
   // channel table
@@ -1321,16 +1337,27 @@ function renderYear(){
       ||`<tr><td colspan="8" style="padding:14px 18px;color:var(--ink-3)">No content in ${y} yet.</td></tr>`
   }</tbody><tfoot><tr><td>All channels</td><td class="n tnum">${C.length}</td><td class="n tnum">${B.length}</td><td class="n tnum">${money(spend)}</td><td class="n tnum">${eng.toLocaleString()}</td><td class="n tnum">${cpX(spend,eng)}</td><td class="n tnum">${flw.toLocaleString()}</td><td class="n tnum">${cpX(spend,flw)}</td></tr></tfoot>`;
 
-  // month table
-  const live=M.filter(r=>r.posted+r.sched+r.prop+r.boosts>0);
-  $("#yMonths").innerHTML=`<thead><tr><th>Month</th><th class="n">Posts</th><th class="n">Posted</th><th class="n">To come</th><th class="n">WeChat pushes</th><th class="n">Boosts</th><th class="n">Planned</th><th class="n">Spend</th><th class="n">% used</th><th class="n">Followers +</th></tr></thead><tbody>${
-    live.map(r=>{const t=r.posted+r.sched+r.prop, p=r.bud?Math.round(r.spend/r.bud*100):0, np=Object.keys(r.push).length;
-      return `<tr><td style="font-weight:700">${r.m} ${y}</td><td class="n tnum">${t||"—"}</td><td class="n tnum">${r.posted||"—"}</td>
+  // Month table — always the full 12 months, so a month that only has budget behind it
+  // (planned but nothing scheduled yet) still shows up instead of vanishing.
+  const TIP={month:"Every month of the year, whether or not anything is planned in it yet.",
+    posts:"Everything in the plan for that month, published or not.",
+    posted:"Already live on the channel.",
+    tocome:"In the plan but not published yet — scheduled plus proposed/draft.",
+    push:"WeChat pushes used against the 4-per-month cap on the single OA.",
+    boosts:"Number of boosts running in that month.",
+    plan:"Media-plan budget allocated to the month (RED + WeChat).",
+    booked:"Sum of the budgets on the boosts actually planned in the calendar.",
+    spend:"Actual money spent.", pctp:"Spend as a share of the media plan.",
+    flw:"New followers attributed to that month's boosting."};
+  const th=(k,t,cls)=>`<th class="${cls||''}" data-tip="${TIP[k]}">${t}</th>`;
+  $("#yMonths").innerHTML=`<thead><tr>${th("month","Month")}${th("posts","Posts","n")}${th("posted","Posted","n")}${th("tocome","Not yet posted","n")}${th("push","WeChat pushes","n")}${th("boosts","Boosts","n")}${th("plan","Media plan","n")}${th("booked","Booked","n")}${th("spend","Spend","n")}${th("pctp","% of plan","n")}${th("flw","Followers +","n")}</tr></thead><tbody>${
+    M.map(r=>{const t=r.posted+r.sched+r.prop, p=r.plan?Math.round(r.spend/r.plan*100):0, np=Object.keys(r.push).length;
+      const idle=!(t||r.boosts||r.hasPlan);
+      return `<tr${idle?' style="opacity:.5"':''}><td style="font-weight:700">${r.m} ${y}</td><td class="n tnum">${t||"—"}</td><td class="n tnum">${r.posted||"—"}</td>
       <td class="n tnum">${(r.sched+r.prop)||"—"}</td><td class="n tnum" ${np>WECHAT_CAP?'style="color:var(--crit);font-weight:700"':''}>${np?np+" / "+WECHAT_CAP:"—"}</td>
-      <td class="n tnum">${r.boosts||"—"}</td><td class="n tnum">${r.bud?money(r.bud):"—"}</td><td class="n tnum">${r.spend?money(r.spend):"—"}</td>
-      <td class="n tnum" ${p>100?'style="color:var(--crit);font-weight:700"':''}>${r.bud?p+"%":"—"}</td><td class="n tnum">${r.flw?r.flw.toLocaleString():"—"}</td></tr>`;}).join("")
-      ||`<tr><td colspan="10" style="padding:14px 18px;color:var(--ink-3)">Nothing planned for ${y} yet.</td></tr>`
-  }</tbody><tfoot><tr><td>${y} total</td><td class="n tnum">${C.length}</td><td class="n tnum">${posted}</td><td class="n tnum">${sched+prop}</td><td class="n tnum">${pushes}</td><td class="n tnum">${B.length}</td><td class="n tnum">${money(budget)}</td><td class="n tnum">${money(spend)}</td><td class="n tnum">${pct}%</td><td class="n tnum">${flw.toLocaleString()}</td></tr></tfoot>`;
+      <td class="n tnum">${r.boosts||"—"}</td><td class="n tnum">${r.hasPlan?money(r.plan):"—"}</td><td class="n tnum">${r.bud?money(r.bud):"—"}</td><td class="n tnum">${r.spend?money(r.spend):"—"}</td>
+      <td class="n tnum" ${p>100?'style="color:var(--crit);font-weight:700"':''}>${r.plan&&r.spend?p+"%":"—"}</td><td class="n tnum">${r.flw?r.flw.toLocaleString():"—"}</td></tr>`;}).join("")
+  }</tbody><tfoot><tr><td>${y} total</td><td class="n tnum">${C.length}</td><td class="n tnum">${posted}</td><td class="n tnum">${sched+prop}</td><td class="n tnum">${pushes}</td><td class="n tnum">${B.length}</td><td class="n tnum">${money(plan)}</td><td class="n tnum">${money(budget)}</td><td class="n tnum">${money(spend)}</td><td class="n tnum">${pct}%</td><td class="n tnum">${flw.toLocaleString()}</td></tr></tfoot>`;
 }
 function stepYear(d){ yearY=(yearY||MONTHS[mi].y)+d; renderYear(); }
 $("#prevY").onclick=()=>stepYear(-1);
@@ -1471,9 +1498,9 @@ function rowToBoost(r){ return {start:r.win_start||"",end:r.win_end||"",budget:r
 function boostToRow(id,b){ var n=function(v){return (v===""||v==null)?null:v;}; return {id:id,win_start:b.start||null,win_end:b.end||null,budget:n(b.budget),spend:n(b.spend),ctr:b.ctr||"",status:b.status||"Auto",eng:n(b.eng),flw:n(b.flw),note:b.note||""}; }
 
 async function loadAll(){
-  const [c,bo,po,wi,kd]=await Promise.all([
+  const [c,bo,po,wi,kd,bg]=await Promise.all([
     SB.from("content").select("*"), SB.from("boosting").select("*"), SB.from("pool").select("*"),
-    SB.from("wip").select("*"), SB.from("keydates").select("*")]);
+    SB.from("wip").select("*"), SB.from("keydates").select("*"), SB.from("budget").select("*")]);
   if(c.error) throw c.error;
   SEED.length=0; (c.data||[]).forEach(function(r){ SEED.push(rowToContent(r)); });
   var bmap={}; (bo.data||[]).forEach(function(r){ bmap[r.id]=rowToBoost(r); });
@@ -1481,6 +1508,8 @@ async function loadAll(){
   POOL.length=0; (po.data||[]).forEach(function(r){ POOL.push({id:r.id,note:r.note||"",fmt:r.fmt||"",sug:r.sug||"GMS"}); });
   WIP.length=0; (wi.data||[]).forEach(function(r){ WIP.push({id:r.id,stage:r.stage||"todo",item:r.item||"",cat:r.cat||"",by:r.by||"",due:r.due||"",note:r.note||"",link:r.link||""}); });
   for(var k in KEYDATES) delete KEYDATES[k]; (kd.data||[]).forEach(function(r){ KEYDATES[r.iso]=r.label; });
+  for(var k2 in BUDGETPLAN) delete BUDGETPLAN[k2];
+  (bg.data||[]).forEach(function(r){ (BUDGETPLAN[r.ym]=BUDGETPLAN[r.ym]||{})[r.ch]=+r.amount||0; });
   rebuildMonths(); setMonth();
 }
 /* Resilient writes: queue every change, flush with retry, never lose an edit to a blip */
@@ -1521,7 +1550,7 @@ async function reloadRender(){ try{ await loadAll(); renderChips(); renderPool()
 function scheduleReload(){ if(editingNow()){ _pendingReload=true; return; } clearTimeout(_reloadT); _reloadT=setTimeout(reloadRender,800); }
 function subscribeRealtime(){
   if(realtimeUp) return;
-  ["content","boosting","pool","wip","keydates"].forEach(function(t){
+  ["content","boosting","pool","wip","keydates","budget"].forEach(function(t){
     SB.channel("rt-"+t).on("postgres_changes",{event:"*",schema:"public",table:t},scheduleReload).subscribe(); });
   realtimeUp=true;
 }
