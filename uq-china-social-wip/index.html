@@ -279,6 +279,9 @@
   .gatecard button { width:100%; margin-top:10px; border:none; border-radius:9px; padding:11px; font-size:13.5px; font-weight:700; background:var(--orange); color:#fff; }
   .gatecard button:hover { background:var(--orange-deep); }
   .gatecard button:disabled { opacity:.55; }
+  /* off-screen, not display:none — Chrome only autofills fields it considers rendered,
+     and this one exists purely to be the target instead of the calendar search box */
+  .gatecard input.ghostuser { position:absolute; left:-9999px; width:1px; height:1px; padding:0; border:0; opacity:0; }
   .gatemsg { margin-top:14px; font-size:12.5px; line-height:1.5; min-height:18px; }
   .gatemsg.ok { color:var(--good); } .gatemsg.err { color:var(--crit); }
   .gatedom { margin-top:16px; padding-top:14px; border-top:1px solid var(--line); font-size:11px; color:var(--ink-3); }
@@ -520,8 +523,15 @@
     <div class="gmark"><img id="gateLogo" alt="GMS"></div>
     <h2>UQ China Social WIP</h2>
     <p>Enter the team password to open the planner.</p>
-    <input id="gatePass" type="password" placeholder="Team password" autocomplete="current-password">
-    <button id="gateBtn">Sign in</button>
+    <form id="gateForm">
+      <!-- Chrome pairs a password field with the nearest text input it can find. Without a
+           username field inside a real <form>, it reaches outside the card and fills the
+           calendar's search box with the saved email — which then filters the month empty. -->
+      <input class="ghostuser" id="gateUser" type="text" name="username" autocomplete="username"
+             value="team@gms.global" readonly tabindex="-1" aria-hidden="true">
+      <input id="gatePass" type="password" name="password" placeholder="Team password" autocomplete="current-password">
+      <button id="gateBtn" type="submit">Sign in</button>
+    </form>
     <div class="gatemsg" id="gateMsg"></div>
     <div class="gatedom">Shared across <b>GMS</b> · <b>GRG</b> · <b>UQ</b> — ask the GMS team for the password.</div>
   </div>
@@ -1414,7 +1424,16 @@ function stepMonth(dir){
 }
 $("#prevM").onclick=()=>{mi=stepMonth(-1);setMonth();};
 $("#nextM").onclick=()=>{mi=stepMonth(1);setMonth();};
-$("#search").oninput=e=>{q=e.target.value.toLowerCase();renderGrid();};
+// Belt and braces against browser autofill: anything that lands in the search box without
+// the user ever touching it is not a search — drop it rather than silently filtering the month.
+var searchTouched=false;
+["focus","keydown","paste","drop","mousedown"].forEach(ev=>$("#search").addEventListener(ev,()=>{searchTouched=true;}));
+function purgeAutofill(){ const s=$("#search");
+  if(!searchTouched && s.value){ s.value=""; if(q){ q=""; renderGrid(); } } }
+setTimeout(purgeAutofill,400); setTimeout(purgeAutofill,1500);   // catches restored form state too
+$("#search").oninput=e=>{
+  if(!searchTouched){ e.target.value=""; return; }   // typing always focuses first — this is autofill
+  q=e.target.value.toLowerCase(); renderGrid(); };
 $("#export").onclick=e=>{ e.stopPropagation(); $("#xpop")?closeXPop():openExportPop(e.currentTarget); };
 $("#poolAdd").onclick=e=>{e.stopPropagation();openPoolPop(e.currentTarget);};
 $("#statusFilter").onchange=e=>{boostFilter=e.target.value;renderPaid();};
@@ -1533,7 +1552,8 @@ function showGate(msg,cls){
   $("#signout").style.display="none";
   if(msg!==undefined){ var m=$("#gateMsg"); m.textContent=msg||""; m.className="gatemsg"+(cls?" "+cls:""); }
 }
-function hideGate(){ $("#gate").classList.remove("show"); $("#signout").style.display=""; }
+function hideGate(){ $("#gate").classList.remove("show"); $("#signout").style.display="";
+  $("#gatePass").value=""; purgeAutofill(); }
 
 async function startSession(){
   setConn("connecting");
@@ -1566,15 +1586,16 @@ async function connect(){
 }
 
 var TEAM_EMAIL="team@gms.global";   // the shared account created in Supabase ▸ Authentication ▸ Users
-$("#gateBtn").onclick=async function(){
-  var pw=$("#gatePass").value;
+$("#gateUser").value=TEAM_EMAIL;      // keep the autofill target and the real login in sync
+$("#gateForm").onsubmit=async function(e){
+  e.preventDefault();
+  var btn=$("#gateBtn"), pw=$("#gatePass").value;
   if(!pw){ showGate("Enter the team password.","err"); return; }
-  this.disabled=true; showGate("Signing in…");
+  btn.disabled=true; showGate("Signing in…");
   var r=await SB.auth.signInWithPassword({email:TEAM_EMAIL,password:pw});
-  this.disabled=false;
+  btn.disabled=false;
   if(r.error){ showGate("That password didn’t work — check with the GMS team.","err"); $("#gatePass").select(); }
 };
-$("#gatePass").onkeydown=function(e){ if(e.key==="Enter") $("#gateBtn").click(); };
 $("#signout").onclick=async function(){ await SB.auth.signOut(); location.reload(); };
 
 renderChips(); renderPool(); renderAll();
