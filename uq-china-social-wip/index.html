@@ -435,11 +435,11 @@
   <div class="gatecard">
     <div class="gmark"><img id="gateLogo" alt="GMS"></div>
     <h2>UQ China Social WIP</h2>
-    <p>Sign in with your work email — we'll send a one-time link, no password.</p>
-    <input id="gateEmail" type="email" placeholder="you@gms.global" autocomplete="email">
-    <button id="gateBtn">Send me a sign-in link</button>
+    <p>Enter the team password to open the planner.</p>
+    <input id="gatePass" type="password" placeholder="Team password" autocomplete="current-password">
+    <button id="gateBtn">Sign in</button>
     <div class="gatemsg" id="gateMsg"></div>
-    <div class="gatedom">Access is limited to <b>@gms.global</b> · <b>@grg.co</b> · <b>@uq.edu.au</b><br>Need someone else added? Ask the GMS team.</div>
+    <div class="gatedom">Shared across <b>GMS</b> · <b>GRG</b> · <b>UQ</b> — ask the GMS team for the password.</div>
   </div>
 </div>
 
@@ -1081,16 +1081,16 @@ async function connect(){
   });
 }
 
+var TEAM_EMAIL="team@gms.global";   // the shared account created in Supabase ▸ Authentication ▸ Users
 $("#gateBtn").onclick=async function(){
-  var email=$("#gateEmail").value.trim();
-  if(!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)){ showGate("Enter a valid email address.","err"); return; }
-  this.disabled=true; showGate("Sending…");
-  var r=await SB.auth.signInWithOtp({email:email,options:{emailRedirectTo:location.href.split("#")[0]}});
+  var pw=$("#gatePass").value;
+  if(!pw){ showGate("Enter the team password.","err"); return; }
+  this.disabled=true; showGate("Signing in…");
+  var r=await SB.auth.signInWithPassword({email:TEAM_EMAIL,password:pw});
   this.disabled=false;
-  if(r.error) showGate(r.error.message||"Couldn’t send the link. Try again in a minute.","err");
-  else showGate("Link sent to "+email+". Open it on this device to sign in.","ok");
+  if(r.error){ showGate("That password didn’t work — check with the GMS team.","err"); $("#gatePass").select(); }
 };
-$("#gateEmail").onkeydown=function(e){ if(e.key==="Enter") $("#gateBtn").click(); };
+$("#gatePass").onkeydown=function(e){ if(e.key==="Enter") $("#gateBtn").click(); };
 $("#signout").onclick=async function(){ await SB.auth.signOut(); location.reload(); };
 
 renderChips(); renderPool(); renderAll();
