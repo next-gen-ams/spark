@@ -268,6 +268,10 @@
   .lane > .lh .lc { margin-left:auto; font-size:11px; color:var(--ink-3); background:var(--surface); padding:1px 8px; border-radius:10px; border:1px solid var(--line); }
   .wcard { background:var(--surface); border:1px solid var(--line); border-left:3px solid var(--wc); border-radius:9px; padding:10px 11px; margin-bottom:9px; box-shadow:0 1px 1px rgba(40,30,15,.04); cursor:pointer; transition:transform .1s,box-shadow .1s; }
   .wcard:hover { transform:translateY(-1px); box-shadow:var(--shadow); }
+  .wcard { cursor:grab; }
+  .wcard:active { cursor:grabbing; }
+  .wcard.dragging { opacity:.45; }
+  .lane.ldrop { background:var(--blue-soft); box-shadow:inset 0 0 0 2px var(--blue); }
   .wcard .wt { font-size:12.5px; font-weight:600; line-height:1.35; }
   .wcard .wtags { display:flex; align-items:center; gap:6px; margin-top:8px; flex-wrap:wrap; }
   .wcard .cat { font-size:10px; font-weight:700; color:var(--blue); background:var(--blue-soft); padding:2px 7px; border-radius:5px; }
@@ -625,7 +629,7 @@ function renderGrid(){
     const showMo=(d===1||dow===1); // month eyebrow on 1st + every Monday
     const cards=(byDay[d]||[]).map(it=>{
       const st=delStatus(it), w=WHO[it.by]||WHO.GMS;
-      return `<div class="card ${visible(it)?'':'hide'} ${it.del==='Proposed'?'prop':''}" data-id="${it.id}" style="--ch:${CH[it.ch].color}">
+      return `<div class="card ${visible(it)?'':'hide'} ${it.del==='Proposed'?'prop':''}" draggable="true" data-id="${it.id}" style="--ch:${CH[it.ch].color}">
         <div class="t">${esc(it.note)}</div>
         <div class="meta"><span class="stt" style="background:${st.c}"></span>
         <span class="fmt">${FMT_ICON[it.fmt]||''}</span>
@@ -642,14 +646,26 @@ function renderGrid(){
   $("#grid").innerHTML=html; wireGrid();
 }
 function wireGrid(){
-  $$(".card").forEach(c=>c.onclick=()=>openDrawer(SEED.find(d=>d.id===c.dataset.id)));
+  $$(".card").forEach(c=>{
+    c.onclick=()=>{ if(!c._dragged) openDrawer(SEED.find(d=>d.id===c.dataset.id)); };
+    c.ondragstart=e=>{ e.dataTransfer.setData("cid",c.dataset.id); e.dataTransfer.effectAllowed="move"; c._dragged=false; c.style.opacity=".5"; };
+    c.ondrag=()=>{ c._dragged=true; };
+    c.ondragend=()=>{ c.style.opacity=""; setTimeout(()=>c._dragged=false,50); };
+  });
   $$(".add").forEach(b=>b.onclick=e=>{e.stopPropagation();openAddPop(b.dataset.iso,b);});
   $$(".cell .dnum .key").forEach(k=>k.onclick=e=>{e.stopPropagation();delete KEYDATES[k.dataset.iso];delKeyDate(k.dataset.iso);renderGrid();toast("Key date removed");});
   $$(".cell[data-iso]").forEach(cell=>{
     cell.ondragover=e=>{e.preventDefault();cell.classList.add("drop");};
     cell.ondragleave=()=>cell.classList.remove("drop");
-    cell.ondrop=e=>{e.preventDefault();cell.classList.remove("drop");dropPool(e.dataTransfer.getData("pid"),cell.dataset.iso);};
+    cell.ondrop=e=>{e.preventDefault();cell.classList.remove("drop");
+      const cid=e.dataTransfer.getData("cid"), pid=e.dataTransfer.getData("pid");
+      if(cid) moveContent(cid,cell.dataset.iso);
+      else if(pid) dropPool(pid,cell.dataset.iso); };
   });
+}
+function moveContent(cid,iso){
+  const d=SEED.find(x=>x.id===cid); if(!d||d.date===iso) return;
+  d.date=iso; saveContent(d); renderAll(); toast("Moved to "+MO[+iso.slice(5,7)-1]+" "+(+iso.slice(-2)));
 }
 function renderPool(){
   $("#poolCount").textContent=POOL.length;
@@ -929,11 +945,23 @@ function renderWIP(){
     const items=WIP.filter(w=>w.stage===k);
     return `<div class="lane" data-lane="${k}"><div class="lh"><span class="ld" style="background:${c}"></span>${label}<span class="lc">${items.length}</span></div>
       ${items.map(w=>{const rc=RESP[w.by]||"var(--ink-3)"; const over=w.stage!=="done"&&w.due<today;
-        return `<div class="wcard" data-id="${w.id}" style="--wc:${c}"><div class="wt">${esc(w.item)}</div>
+        return `<div class="wcard" draggable="true" data-id="${w.id}" style="--wc:${c}"><div class="wt">${esc(w.item)}</div>
         <div class="wtags"><span class="cat">${w.cat}</span>${w.due?`<span class="due ${over?'over':''}">${w.due.slice(5)}</span>`:''}<span class="resp" style="background:${rc}">${w.by}</span></div>
         ${w.note?`<div class="wnote">${esc(w.note)}</div>`:''}</div>`;}).join("")||`<div style="font-size:11px;color:var(--ink-3);padding:8px 4px">Nothing here</div>`}</div>`;
   }).join("");
-  $$(".wcard").forEach(c=>c.onclick=()=>openWipDrawer(WIP.find(x=>x.id===c.dataset.id)));
+  $$("#board .wcard").forEach(c=>{
+    c.onclick=()=>{ if(!c._dragged) openWipDrawer(WIP.find(x=>x.id===c.dataset.id)); };
+    c.ondragstart=e=>{ e.dataTransfer.setData("wid",c.dataset.id); e.dataTransfer.effectAllowed="move"; c.classList.add("dragging"); c._dragged=false; };
+    c.ondrag=()=>{ c._dragged=true; };
+    c.ondragend=()=>{ c.classList.remove("dragging"); setTimeout(()=>c._dragged=false,50); };
+  });
+  $$("#board .lane").forEach(l=>{
+    l.ondragover=e=>{ e.preventDefault(); l.classList.add("ldrop"); };
+    l.ondragleave=()=>l.classList.remove("ldrop");
+    l.ondrop=e=>{ e.preventDefault(); l.classList.remove("ldrop");
+      const w=WIP.find(x=>x.id===e.dataTransfer.getData("wid"));
+      if(w && w.stage!==l.dataset.lane){ w.stage=l.dataset.lane; saveWip(w); renderWIP(); toast("Moved to "+LANES.find(L=>L[0]===w.stage)[1]); } };
+  });
 }
 $("#addWip").onclick=()=>{const w={id:"w"+Date.now(),stage:"todo",item:"New task",cat:"Admin",by:"GMS",due:"",note:"",link:""};WIP.unshift(w);saveWip(w);renderWIP();openWipDrawer(w,true);};
 
@@ -1022,8 +1050,27 @@ async function loadAll(){
   WIP.length=0; (wi.data||[]).forEach(function(r){ WIP.push({id:r.id,stage:r.stage||"todo",item:r.item||"",cat:r.cat||"",by:r.by||"",due:r.due||"",note:r.note||"",link:r.link||""}); });
   for(var k in KEYDATES) delete KEYDATES[k]; (kd.data||[]).forEach(function(r){ KEYDATES[r.iso]=r.label; });
 }
-async function up(table,row){ if(!ONLINE)return; setConn("saving"); var res=await SB.from(table).upsert(row); setConn(res.error?"offline":"synced"); if(res.error)console.warn("save",table,res.error); }
-async function delRow(table,col,val){ if(!ONLINE)return; setConn("saving"); var res=await SB.from(table).delete().eq(col,val); setConn(res.error?"offline":"synced"); }
+/* Resilient writes: queue every change, flush with retry, never lose an edit to a blip */
+var pendingWrites=[], flushing=false;
+function sleep(ms){ return new Promise(function(r){ setTimeout(r,ms); }); }
+function up(table,row){ pendingWrites.push({t:table,row:row}); flush(); }
+function delRow(table,col,val){ pendingWrites.push({t:table,del:{c:col,v:val}}); flush(); }
+async function flush(){
+  if(flushing||!SB) return; flushing=true;
+  var did=0;
+  if(pendingWrites.length) setConn("saving");
+  while(pendingWrites.length){
+    var job=pendingWrites[0];
+    try{
+      var res=job.del ? await SB.from(job.t).delete().eq(job.del.c,job.del.v) : await SB.from(job.t).upsert(job.row);
+      if(res.error) throw res.error;
+      pendingWrites.shift(); did++;
+    }catch(e){ console.warn("write failed — will retry",e); flushing=false; goOffline(); return; }
+  }
+  flushing=false;
+  if(did>0) goOnline();               // a write just succeeded → we're connected again
+  else if(ONLINE) setConn("synced");
+}
 function saveContent(d){ up("content",contentToRow(d)); }
 function saveBoost(d){ if(d && d.boostData) up("boosting",boostToRow(d.id,d.boostData)); }
 function delContent(id){ delRow("content","id",id); delRow("boosting","id",id); }
@@ -1035,12 +1082,36 @@ function saveKeyDate(iso,label){ up("keydates",{iso:iso,label:label}); }
 function delKeyDate(iso){ delRow("keydates","iso",iso); }
 var _dq={}; function qSave(kind,d){ var key=kind+":"+(d.id||""); clearTimeout(_dq[key]); _dq[key]=setTimeout(function(){ if(kind==="content")saveContent(d); else if(kind==="boost")saveBoost(d); else if(kind==="wip")saveWip(d); },600); }
 
-var _reloadT=null, _pendingReload=false;
+var _reloadT=null, _pendingReload=false, reconnectTimer=null, realtimeUp=false;
 function editingNow(){ return document.getElementById("scrim").classList.contains("open") || (document.activeElement && /^(INPUT|TEXTAREA|SELECT)$/.test(document.activeElement.tagName)); }
-async function reloadRender(){ try{ await loadAll(); renderChips(); renderPool(); renderAll(); setConn("synced"); }catch(e){ console.warn(e); } }
+async function reloadRender(){ try{ await loadAll(); renderChips(); renderPool(); renderAll(); if(ONLINE)setConn("synced"); }catch(e){ console.warn("reload failed",e); goOffline(); } }
 function scheduleReload(){ if(editingNow()){ _pendingReload=true; return; } clearTimeout(_reloadT); _reloadT=setTimeout(reloadRender,800); }
-function subscribeRealtime(){ ["content","boosting","pool","wip","keydates"].forEach(function(t){
-  SB.channel("rt-"+t).on("postgres_changes",{event:"*",schema:"public",table:t},scheduleReload).subscribe(); }); }
+function subscribeRealtime(){
+  if(realtimeUp) return;
+  ["content","boosting","pool","wip","keydates"].forEach(function(t){
+    SB.channel("rt-"+t).on("postgres_changes",{event:"*",schema:"public",table:t},scheduleReload).subscribe(); });
+  realtimeUp=true;
+}
+function goOnline(){ ONLINE=true; setConn(pendingWrites.length?"saving":"synced"); if(reconnectTimer){ clearInterval(reconnectTimer); reconnectTimer=null; } }
+function goOffline(){ ONLINE=false; setConn("offline"); ensureReconnect(); }
+function ensureReconnect(){
+  if(reconnectTimer) return;
+  reconnectTimer=setInterval(async function(){
+    if(!SB) return;
+    var s=await SB.auth.getSession();
+    if(!(s.data && s.data.session)) return;              // logged out → gate handles it
+    try{ await loadAll(); renderChips(); renderPool(); renderAll(); goOnline(); subscribeRealtime(); flush(); }
+    catch(e){ /* still down; keep retrying */ }
+  }, 10000);
+}
+// try loading a few times before declaring offline (covers transient errors right after login)
+async function loadWithRetry(){
+  for(var i=0;i<4;i++){
+    try{ await loadAll(); renderChips(); renderPool(); renderAll(); goOnline(); subscribeRealtime(); flush(); return true; }
+    catch(e){ console.warn("load attempt "+(i+1)+" failed",e); await sleep(700*(i+1)); }
+  }
+  goOffline(); return false;
+}
 
 /* ---------- auth gate (magic link, team domains only) ---------- */
 function showGate(msg,cls){
@@ -1051,34 +1122,33 @@ function showGate(msg,cls){
 function hideGate(){ $("#gate").classList.remove("show"); $("#signout").style.display=""; }
 
 async function startSession(){
-  // signed in — check they're on the allowed list, then load
-  var who=await SB.rpc("is_team");
-  if(who.error){ console.warn(who.error); }
+  setConn("connecting");
+  var who=await SB.rpc("is_team");        // allowed to see the data?
   if(who.data===false){
     var em=(await SB.auth.getUser()).data.user;
-    showGate("“"+((em&&em.email)||"That account")+"” isn’t on the access list. Use your @gms.global, @grg.co or @uq.edu.au address, or ask the GMS team to add you.","err");
+    showGate("“"+((em&&em.email)||"That account")+"” isn’t on the access list. Ask the GMS team to add you.","err");
     return;
   }
   hideGate();
-  try{
-    await loadAll();
-    ONLINE=true; setConn("synced");
-    renderChips(); renderPool(); renderAll();
-    subscribeRealtime();
-  }catch(e){ console.warn("load failed",e); ONLINE=false; setConn("offline"); }
+  await loadWithRetry();                   // retries transient errors, then watchdog reconnects
 }
 
 async function connect(){
   setConn("connecting");
-  SB=window.supabase.createClient(SUPA_URL,SUPA_KEY);
+  SB=window.supabase.createClient(SUPA_URL,SUPA_KEY,{
+    auth:{persistSession:true, autoRefreshToken:true, detectSessionInUrl:false}
+  });
   var logo=document.querySelector(".brandmark img"); if(logo) $("#gateLogo").src=logo.src;
   var s=await SB.auth.getSession();
   if(s.data && s.data.session){ await startSession(); }
   else { setConn("offline"); showGate(""); }
   SB.auth.onAuthStateChange(function(evt,sess){
-    if(evt==="SIGNED_IN" && sess) startSession();
-    if(evt==="SIGNED_OUT"){ ONLINE=false; setConn("offline"); showGate(""); }
+    if((evt==="SIGNED_IN"||evt==="TOKEN_REFRESHED") && sess && !ONLINE) startSession();
+    if(evt==="SIGNED_OUT"){ ONLINE=false; realtimeUp=false; setConn("offline"); showGate(""); }
   });
+  // recover when the tab/network comes back
+  window.addEventListener("online", function(){ if(!ONLINE) ensureReconnect(); });
+  document.addEventListener("visibilitychange", function(){ if(!document.hidden && !ONLINE) ensureReconnect(); });
 }
 
 var TEAM_EMAIL="team@gms.global";   // the shared account created in Supabase ▸ Authentication ▸ Users
