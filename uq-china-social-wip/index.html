@@ -336,9 +336,12 @@
   .wcard .due.over { color:var(--crit); }
   .wcard .resp { margin-left:auto; font-size:9px; font-weight:800; color:#fff; padding:2px 6px; border-radius:5px; }
   .wcard .wnote { font-size:11px; color:var(--ink-3); margin-top:6px; line-height:1.4; }
-  .scrim { position:fixed; inset:0; background:rgba(20,14,4,.34); backdrop-filter:blur(2px); opacity:0; pointer-events:none; transition:opacity .2s; z-index:60; }
-  .scrim.open { opacity:1; pointer-events:auto; }
-  .drawer { position:fixed; top:0; right:0; bottom:0; width:440px; max-width:94vw; background:var(--surface); border-left:1px solid var(--line); box-shadow:var(--shadow-lg); transform:translateX(100%); transition:transform .26s cubic-bezier(.16,1,.3,1); z-index:61; display:flex; flex-direction:column; }
+  /* Scrim is deliberately invisible + click-through: the plan behind the drawer stays
+     readable and clickable so you can back-reference (or jump to) other posts while editing.
+     Close via ✕, Save, or Esc. */
+  .scrim { position:fixed; inset:0; background:transparent; opacity:0; pointer-events:none; z-index:60; }
+  .scrim.open { opacity:1; }
+  .drawer { position:fixed; top:0; right:0; bottom:0; width:440px; max-width:94vw; background:var(--surface); border-left:1px solid var(--line); box-shadow:-14px 0 44px rgba(20,14,4,.18), var(--shadow-lg); transform:translateX(100%); transition:transform .26s cubic-bezier(.16,1,.3,1); z-index:61; display:flex; flex-direction:column; }
   .drawer.open { transform:none; }
   .dhead { padding:16px 18px 14px; border-bottom:1px solid var(--line); display:flex; align-items:flex-start; gap:12px; }
   .dhead .chtag { font-size:11px; font-weight:800; color:#fff; padding:3px 9px; border-radius:6px; }
@@ -351,6 +354,12 @@
   .field input:focus, .field textarea:focus, .field select:focus { border-color:var(--orange); box-shadow:0 0 0 3px var(--orange-soft); }
   .field textarea { resize:vertical; min-height:58px; line-height:1.5; }
   .row2 { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+  .alrow { display:flex; gap:6px; align-items:center; margin-bottom:6px; }
+  .alrow input { flex:1; min-width:0; }
+  .alrow .alrm { border:none; background:var(--surface-2); color:var(--ink-3); width:28px; height:28px; border-radius:7px; font-size:12px; cursor:pointer; flex:none; }
+  .alrow .alrm:hover { color:var(--crit); }
+  .linkadd { display:block; width:100%; border:1px dashed var(--line-2); background:transparent; color:var(--ink-2); font-size:11.5px; font-weight:600; padding:6px 10px; border-radius:8px; cursor:pointer; }
+  .linkadd:hover { border-color:var(--orange); color:var(--orange); }
   .seg { display:flex; gap:4px; background:var(--surface-2); border:1px solid var(--line); border-radius:9px; padding:3px; }
   .seg button { flex:1; border:none; background:transparent; padding:7px 4px; border-radius:6px; font-size:11.5px; font-weight:600; color:var(--ink-2); }
   .seg button.on { background:var(--surface); color:var(--ink); box-shadow:var(--shadow); }
@@ -590,7 +599,7 @@ let SEED = [
   {ch:"WeChat",date:"2025-12-05",note:"Romanticising UQ campus video",label:"Entertain",fmt:"Video",appr:"Approved",del:"Posted",boost:false,by:"UQ",url:"",wslot:"Headline"},
   {ch:"WeChat",date:"2025-12-24",note:"Welcome to Brisbane: a guide for international students",label:"Inform",fmt:"Article",appr:"Approved",del:"Posted",boost:false,by:"UQ",url:"",wslot:"Headline"},
 ];
-SEED.forEach((d,i)=>{ d.id="c"+i; d.copy=d.copy||""; d.back=d.back||""; d.asset=d.asset||""; });
+SEED.forEach((d,i)=>{ d.id="c"+i; d.copy=d.copy||""; d.back=d.back||""; d.asset=d.asset||""; d.preview=d.preview||""; });
 
 const POOL = [
   {note:"UQ aerospace grad’s ‘giant leap’ towards stellar career",fmt:"Article",sug:"GMS"},
@@ -837,13 +846,13 @@ function renderActions(){
 }
 function dropPool(pid,iso){
   const p=POOL.find(x=>x.id===pid); if(!p)return;
-  const it={id:"c"+Date.now(),ch:"RED",date:iso,note:p.note,label:"Inform",fmt:p.fmt||"Image",appr:"Pending",del:"Draft",boost:false,by:"GMS",url:"",copy:"",back:"",asset:""};
+  const it={id:"c"+Date.now(),ch:"RED",date:iso,note:p.note,label:"Inform",fmt:p.fmt||"Image",appr:"Pending",del:"Draft",boost:false,by:"GMS",url:"",copy:"",back:"",asset:"",preview:""};
   SEED.push(it); POOL.splice(POOL.indexOf(p),1);
   saveContent(it); delPool(p.id);
   renderAll(); toast(`Scheduled to ${iso} — fill it in`); openDrawer(it);
 }
 function addNew(iso,ch){
-  const it={id:"c"+Date.now(),ch:ch||"RED",date:iso,note:"New post",label:"Inform",fmt:"Image",appr:"Pending",del:"Proposed",boost:false,by:"GMS",url:"",copy:"",back:"",asset:""};
+  const it={id:"c"+Date.now(),ch:ch||"RED",date:iso,note:"New post",label:"Inform",fmt:"Image",appr:"Pending",del:"Proposed",boost:false,by:"GMS",url:"",copy:"",back:"",asset:"",preview:""};
   SEED.push(it); saveContent(it); renderAll(); openDrawer(it,true);
 }
 // "+" popover: two panels — pick a channel to add a post, or switch to the key-date panel
@@ -930,7 +939,10 @@ function openDrawer(it,isNew){
         <div class="field" id="attachWrap" style="display:${(it.wslot&&it.wslot!=='Headline')?'block':'none'}"><label>Attach under Headline <span style="text-transform:none;color:var(--ink-3);font-weight:500">— rides that push, no new slot</span></label>
             <select id="f_merge"><option value="">— none yet —</option>${headlines.map(h=>`<option value="${h.date}" ${it.mergedInto===h.date?'selected':''}>${MO[+h.date.slice(5,7)-1]} ${+h.date.slice(-2)} · ${esc(h.note.slice(0,30))}</option>`).join("")}</select></div>
         </div>`:''}
-      <div class="field"><label>Asset / resource link</label><input id="f_asset" placeholder="https://…" value="${esc(it.asset)}"></div>
+      <div class="field"><label>Preview doc link <span style="text-transform:none;color:var(--ink-3);font-weight:500">— draft for UQ to review</span></label><input id="f_preview" placeholder="https://…" value="${esc(it.preview||"")}"></div>
+      <div class="field"><label>Asset / resource links <span style="text-transform:none;color:var(--ink-3);font-weight:500">— source doc, images, files…</span></label>
+        <div id="assetList"></div>
+        <button type="button" class="linkadd" id="assetAdd">+ Add another link</button></div>
       <div class="field"><label>Lifecycle · GMS delivery</label>
         <div class="seg" id="seg_del">${["Proposed","Draft","Scheduled","Posted"].map(v=>`<button data-v="${v}" class="${it.del===v?'on':''}">${v}</button>`).join("")}</div></div>
       <div class="field"><label>UQ approval <span style="text-transform:none;color:var(--ink-3);font-weight:500">— allow 2–3 day lead time</span></label>
@@ -952,10 +964,19 @@ function openDrawer(it,isNew){
   $("#scrim").classList.add("open"); $("#drawer").classList.add("open");
   const upd=()=>{ cur.note=$("#f_note").value||"Untitled"; cur.ch=$("#f_ch").value; cur.date=$("#f_date").value;
     cur.fmt=$("#f_fmt").value; cur.label=$("#f_label").value;
-    cur.asset=$("#f_asset").value; cur.url=$("#f_url").value; cur.note2=$("#f_note2").value;
+    cur.preview=$("#f_preview").value; cur.url=$("#f_url").value; cur.note2=$("#f_note2").value;
     $("#drawer .chtag").style.background=CH[cur.ch].raw; $("#drawer .chtag").textContent=CH[cur.ch].label;
     renderAll(); qSave("content",cur); };
-  ["f_note","f_ch","f_date","f_fmt","f_label","f_asset","f_url","f_note2"].forEach(id=>$("#"+id)&&($("#"+id).oninput=upd));
+  ["f_note","f_ch","f_date","f_fmt","f_label","f_preview","f_url","f_note2"].forEach(id=>$("#"+id)&&($("#"+id).oninput=upd));
+  // Asset links — as many as needed; stored newline-separated in the one `asset` column
+  let aLinks=(it.asset||"").split("\n").map(s=>s.trim()).filter(Boolean); if(!aLinks.length)aLinks=[""];
+  const syncAssets=()=>{ cur.asset=aLinks.map(s=>s.trim()).filter(Boolean).join("\n"); qSave("content",cur); };
+  const drawAssets=()=>{ const box=$("#assetList"); if(!box) return;
+    box.innerHTML=aLinks.map((v,i)=>`<div class="alrow"><input data-i="${i}" placeholder="https://…" value="${esc(v)}">${aLinks.length>1?`<button type="button" class="alrm" data-i="${i}" title="Remove this link">✕</button>`:""}</div>`).join("");
+    box.querySelectorAll("input").forEach(inp=>inp.oninput=()=>{ aLinks[+inp.dataset.i]=inp.value; syncAssets(); });
+    box.querySelectorAll(".alrm").forEach(b=>b.onclick=()=>{ aLinks.splice(+b.dataset.i,1); if(!aLinks.length)aLinks=[""]; syncAssets(); drawAssets(); }); };
+  drawAssets();
+  $("#assetAdd").onclick=()=>{ aLinks.push(""); drawAssets(); const ins=$("#assetList").querySelectorAll("input"); ins[ins.length-1].focus(); };
   $$("#seg_by button").forEach(b=>b.onclick=()=>{cur.by=b.dataset.v;$$("#seg_by button").forEach(x=>x.classList.toggle("on",x===b));renderAll();saveContent(cur);});
   if($("#f_merge")) $("#f_merge").onchange=()=>{cur.mergedInto=$("#f_merge").value||undefined; renderAll();saveContent(cur);};
   $$("#seg_slot button").forEach(b=>b.onclick=()=>{cur.wslot=b.dataset.v;$$("#seg_slot button").forEach(x=>x.classList.toggle("on",x===b));
@@ -970,6 +991,8 @@ function openDrawer(it,isNew){
 }
 function closeDrawer(){$("#scrim").classList.remove("open");$("#drawer").classList.remove("open"); if(_pendingReload){_pendingReload=false; scheduleReload();}}
 $("#scrim").onclick=closeDrawer;
+// The page behind the drawer stays interactive (no dim/blur), so Esc is the "click outside" of this UI
+document.addEventListener("keydown",e=>{ if(e.key==="Escape"&&$("#drawer").classList.contains("open")) closeDrawer(); });
 
 function renderPaid(){
   // Annual chart: media-plan budget from the DB vs. actual spend from the boost rows — both live.
@@ -1225,11 +1248,11 @@ async function buildWorkbook(from,to,want){
   }
 
   if(want.cal){
-    const cols=[{w:11},{w:14},{w:12},{w:12},{w:11},{w:10},{w:52,wrap:true},{w:11},{w:12},{w:13},{w:9},{w:34,wrap:true},{w:30,wrap:true}];
-    const heads=["Date","Channel","Account","WeChat slot","Content type","Format","Subject line","Added by","UQ approval","GMS status","Boosted","Post link","Note"];
+    const cols=[{w:11},{w:14},{w:12},{w:12},{w:11},{w:10},{w:52,wrap:true},{w:11},{w:12},{w:13},{w:9},{w:30,wrap:true},{w:34,wrap:true},{w:30,wrap:true},{w:30,wrap:true}];
+    const heads=["Date","Channel","Account","WeChat slot","Content type","Format","Subject line","Added by","UQ approval","GMS status","Boosted","Preview doc","Post link","Asset links","Note"];
     const rows=content.map(d=>[d.date,(CH[d.ch]||{}).label||d.ch,(CH[d.ch]||{}).acct||"—",d.wslot||"—",
       d.label||"—",d.fmt||"—",(d.note||"").replace(/\n/g," "),d.by||"",d.appr||"",d.del||"",
-      d.boost?"Yes":"—",d.url||"",(d.note2||"").replace(/\n/g," ")]);
+      d.boost?"Yes":"—",d.preview||"",d.url||"",d.asset||"",(d.note2||"").replace(/\n/g," ")]);
     const ws=wb.addWorksheet("Social calendar");
     title(ws,"UQ China Social & Boosting — Social calendar",sub,heads.length);
     header(ws,5,heads); body(ws,5,rows,cols); signoff(ws,5+rows.length,heads.length);
@@ -1509,8 +1532,8 @@ function setConn(state){
   const m={connecting:["#DD8A1E","Connecting…"],synced:["#2E9E5B","Live · synced"],saving:["#DD8A1E","Saving…"],offline:["#9A9186","Offline · local only"]};
   const v=m[state]||m.offline; dot.style.background=v[0]; txt.textContent=v[1];
 }
-function rowToContent(r){ return {id:r.id,date:r.date||"",ch:r.ch||"RED",note:r.note||"",label:r.label||"",fmt:r.fmt||"",appr:r.appr||"",del:r.del||"",boost:!!r.boost,by:r.by||"GMS",url:r.url||"",note2:r.note2||"",wslot:r.wslot||"",mergedInto:r.mergedinto||"",asset:r.asset||""}; }
-function contentToRow(d){ return {id:d.id,date:d.date||null,ch:d.ch,note:d.note||"",label:d.label||"",fmt:d.fmt||"",appr:d.appr||"",del:d.del||"",boost:!!d.boost,by:d.by||"",url:d.url||"",note2:d.note2||"",wslot:d.wslot||"",mergedinto:d.mergedInto||"",asset:d.asset||""}; }
+function rowToContent(r){ return {id:r.id,date:r.date||"",ch:r.ch||"RED",note:r.note||"",label:r.label||"",fmt:r.fmt||"",appr:r.appr||"",del:r.del||"",boost:!!r.boost,by:r.by||"GMS",url:r.url||"",note2:r.note2||"",wslot:r.wslot||"",mergedInto:r.mergedinto||"",asset:r.asset||"",preview:r.preview||""}; }
+function contentToRow(d){ return {id:d.id,date:d.date||null,ch:d.ch,note:d.note||"",label:d.label||"",fmt:d.fmt||"",appr:d.appr||"",del:d.del||"",boost:!!d.boost,by:d.by||"",url:d.url||"",note2:d.note2||"",wslot:d.wslot||"",mergedinto:d.mergedInto||"",asset:d.asset||"",preview:d.preview||""}; }
 function rowToBoost(r){ return {start:r.win_start||"",end:r.win_end||"",budget:r.budget,spend:(r.spend==null?null:r.spend),ctr:r.ctr||"",status:r.status||"Auto",eng:(r.eng==null?null:r.eng),flw:(r.flw==null?null:r.flw),note:r.note||""}; }
 function boostToRow(id,b){ var n=function(v){return (v===""||v==null)?null:v;}; return {id:id,win_start:b.start||null,win_end:b.end||null,budget:n(b.budget),spend:n(b.spend),ctr:b.ctr||"",status:b.status||"Auto",eng:n(b.eng),flw:n(b.flw),note:b.note||""}; }
 
