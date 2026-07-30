@@ -355,7 +355,9 @@
   .field textarea { resize:vertical; min-height:58px; line-height:1.5; }
   .row2 { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
   .alrow { display:flex; gap:6px; align-items:center; margin-bottom:6px; }
-  .alrow input { flex:1; min-width:0; }
+  .alrow input { min-width:0; }
+  .alrow .al-t { flex:0 0 128px; font-size:12px; }
+  .alrow .al-u { flex:1; }
   .alrow .alrm { border:none; background:var(--surface-2); color:var(--ink-3); width:28px; height:28px; border-radius:7px; font-size:12px; cursor:pointer; flex:none; }
   .alrow .alrm:hover { color:var(--crit); }
   .linkadd { display:block; width:100%; border:1px dashed var(--line-2); background:transparent; color:var(--ink-2); font-size:11.5px; font-weight:600; padding:6px 10px; border-radius:8px; cursor:pointer; }
@@ -939,10 +941,10 @@ function openDrawer(it,isNew){
         <div class="field" id="attachWrap" style="display:${(it.wslot&&it.wslot!=='Headline')?'block':'none'}"><label>Attach under Headline <span style="text-transform:none;color:var(--ink-3);font-weight:500">— rides that push, no new slot</span></label>
             <select id="f_merge"><option value="">— none yet —</option>${headlines.map(h=>`<option value="${h.date}" ${it.mergedInto===h.date?'selected':''}>${MO[+h.date.slice(5,7)-1]} ${+h.date.slice(-2)} · ${esc(h.note.slice(0,30))}</option>`).join("")}</select></div>
         </div>`:''}
-      <div class="field"><label>Preview doc link <span style="text-transform:none;color:var(--ink-3);font-weight:500">— draft for UQ to review</span></label><input id="f_preview" placeholder="https://…" value="${esc(it.preview||"")}"></div>
-      <div class="field"><label>Asset / resource links <span style="text-transform:none;color:var(--ink-3);font-weight:500">— source doc, images, files…</span></label>
+      <div class="field"><label>Asset / resource links <span style="text-transform:none;color:var(--ink-3);font-weight:500">— label what each link is</span></label>
         <div id="assetList"></div>
         <button type="button" class="linkadd" id="assetAdd">+ Add another link</button></div>
+      <div class="field"><label>Preview doc link <span style="text-transform:none;color:var(--ink-3);font-weight:500">— draft for UQ to review</span></label><input id="f_preview" placeholder="https://…" value="${esc(it.preview||"")}"></div>
       <div class="field"><label>Lifecycle · GMS delivery</label>
         <div class="seg" id="seg_del">${["Proposed","Draft","Scheduled","Posted"].map(v=>`<button data-v="${v}" class="${it.del===v?'on':''}">${v}</button>`).join("")}</div></div>
       <div class="field"><label>UQ approval <span style="text-transform:none;color:var(--ink-3);font-weight:500">— allow 2–3 day lead time</span></label>
@@ -968,15 +970,20 @@ function openDrawer(it,isNew){
     $("#drawer .chtag").style.background=CH[cur.ch].raw; $("#drawer .chtag").textContent=CH[cur.ch].label;
     renderAll(); qSave("content",cur); };
   ["f_note","f_ch","f_date","f_fmt","f_label","f_preview","f_url","f_note2"].forEach(id=>$("#"+id)&&($("#"+id).oninput=upd));
-  // Asset links — as many as needed; stored newline-separated in the one `asset` column
-  let aLinks=(it.asset||"").split("\n").map(s=>s.trim()).filter(Boolean); if(!aLinks.length)aLinks=[""];
-  const syncAssets=()=>{ cur.asset=aLinks.map(s=>s.trim()).filter(Boolean).join("\n"); qSave("content",cur); };
+  // Asset links — as many as needed; each line in the `asset` column is "label | url"
+  // (a line with no " | " is a bare url — keeps every pre-label row working untouched)
+  let aLinks=(it.asset||"").split("\n").map(s=>s.trim()).filter(Boolean).map(line=>{
+    const i=line.indexOf(" | "); return i<0?{t:"",u:line}:{t:line.slice(0,i),u:line.slice(i+3)}; });
+  if(!aLinks.length)aLinks=[{t:"",u:""}];
+  const syncAssets=()=>{ cur.asset=aLinks.map(v=>({t:v.t.trim(),u:v.u.trim()})).filter(v=>v.t||v.u)
+    .map(v=>v.t?`${v.t} | ${v.u}`:v.u).join("\n"); qSave("content",cur); };
   const drawAssets=()=>{ const box=$("#assetList"); if(!box) return;
-    box.innerHTML=aLinks.map((v,i)=>`<div class="alrow"><input data-i="${i}" placeholder="https://…" value="${esc(v)}">${aLinks.length>1?`<button type="button" class="alrm" data-i="${i}" title="Remove this link">✕</button>`:""}</div>`).join("");
-    box.querySelectorAll("input").forEach(inp=>inp.oninput=()=>{ aLinks[+inp.dataset.i]=inp.value; syncAssets(); });
-    box.querySelectorAll(".alrm").forEach(b=>b.onclick=()=>{ aLinks.splice(+b.dataset.i,1); if(!aLinks.length)aLinks=[""]; syncAssets(); drawAssets(); }); };
+    box.innerHTML=aLinks.map((v,i)=>`<div class="alrow"><input class="al-t" data-i="${i}" placeholder="What's this? e.g. Source article" value="${esc(v.t)}"><input class="al-u" data-i="${i}" placeholder="https://…" value="${esc(v.u)}">${aLinks.length>1?`<button type="button" class="alrm" data-i="${i}" title="Remove this link">✕</button>`:""}</div>`).join("");
+    box.querySelectorAll(".al-t").forEach(inp=>inp.oninput=()=>{ aLinks[+inp.dataset.i].t=inp.value; syncAssets(); });
+    box.querySelectorAll(".al-u").forEach(inp=>inp.oninput=()=>{ aLinks[+inp.dataset.i].u=inp.value; syncAssets(); });
+    box.querySelectorAll(".alrm").forEach(b=>b.onclick=()=>{ aLinks.splice(+b.dataset.i,1); if(!aLinks.length)aLinks=[{t:"",u:""}]; syncAssets(); drawAssets(); }); };
   drawAssets();
-  $("#assetAdd").onclick=()=>{ aLinks.push(""); drawAssets(); const ins=$("#assetList").querySelectorAll("input"); ins[ins.length-1].focus(); };
+  $("#assetAdd").onclick=()=>{ aLinks.push({t:"",u:""}); drawAssets(); const ins=$("#assetList").querySelectorAll(".al-t"); ins[ins.length-1].focus(); };
   $$("#seg_by button").forEach(b=>b.onclick=()=>{cur.by=b.dataset.v;$$("#seg_by button").forEach(x=>x.classList.toggle("on",x===b));renderAll();saveContent(cur);});
   if($("#f_merge")) $("#f_merge").onchange=()=>{cur.mergedInto=$("#f_merge").value||undefined; renderAll();saveContent(cur);};
   $$("#seg_slot button").forEach(b=>b.onclick=()=>{cur.wslot=b.dataset.v;$$("#seg_slot button").forEach(x=>x.classList.toggle("on",x===b));
