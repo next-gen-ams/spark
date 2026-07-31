@@ -4,6 +4,12 @@
 export function el(tag, props = {}, ...kids) {
   const node = document.createElement(tag);
   for (const [k, v] of Object.entries(props || {})) {
+    /* ARIA state is a string, not a boolean HTML attribute. It has to be set
+       even when false — aria-pressed="false" is "an unpressed toggle", while
+       no attribute at all is "not a toggle" — and it must read "true", not "".
+       Rendering it empty makes every [aria-pressed="true"] rule silently miss,
+       which is how the view toggle and the tab highlight lost their styling. */
+    if (k.startsWith('aria-') && v != null) { node.setAttribute(k, String(v)); continue; }
     if (v == null || v === false) continue;
     if (k === 'class') node.className = v;
     else if (k === 'html') node.innerHTML = v;

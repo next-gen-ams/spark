@@ -68,10 +68,10 @@ function writeUrl() {
 let rows = [];
 
 function render() {
-  writeUrl();
-
   if (store.state.status === 'locked') { renderGate(); return; }
 
+  pruneStaleFilters();
+  writeUrl();
   rows = buildRows(state);
 
   /* fill() returns the container it filled, not the child — appending to its
@@ -101,6 +101,26 @@ function render() {
 }
 
 function goTo(tab) { state.tab = tab; closeDrawer(); closeExport(); render(); }
+
+/**
+ * A client or campaign filter is stored as an id. If that id no longer exists
+ * — a URL kept from the sample data, or a campaign since removed — the select
+ * falls back to showing "All" while the filter quietly removes every row. The
+ * page then looks empty for no visible reason, which is worse than wrong.
+ */
+let staleNotice = '';
+function pruneStaleFilters() {
+  const gone = [];
+  if (state.filters.client && !store.byId('client', state.filters.client)) {
+    gone.push('client'); state.filters.client = '';
+  }
+  if (state.filters.campaign && !store.byId('campaign', state.filters.campaign)) {
+    gone.push('campaign'); state.filters.campaign = '';
+  }
+  staleNotice = gone.length
+    ? `A saved ${gone.join(' and ')} filter pointed at something that is no longer here, so it was cleared.`
+    : '';
+}
 
 /* ------------------------------------------------------------------ gate */
 
@@ -310,6 +330,12 @@ function confidBand() {
     bands.push(el('div', { class: 'confid' },
       el('strong', {}, 'INTERNAL'),
       el('span', {}, 'This page shows margin and internal media cost. Do not share the link or a screenshot with a client — use Export ▸ Client report instead.')));
+  }
+
+  if (staleNotice) {
+    bands.push(el('div', { class: 'viewband' },
+      el('strong', {}, 'FILTER RESET'),
+      el('span', {}, staleNotice)));
   }
 
   /* Say it plainly — nobody should ever mistake the sample spend for actuals. */
