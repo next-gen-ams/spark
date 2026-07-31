@@ -150,16 +150,33 @@ export async function init() {
     state.mode = 'supabase';
     sb = window.supabase.createClient(SUPABASE.url, SUPABASE.anonKey, {
       db: { schema: SUPABASE.schema || 'public' },
-      auth: { persistSession: true, autoRefreshToken: true },
+      auth: {
+        persistSession: true,
+        autoRefreshToken: true,
+        /* The UQ dashboard lives in the same Supabase project, so by default
+           both apps share one session key in localStorage — open this page
+           after signing into that one and you inherit ITS account, which RLS
+           then correctly denies, leaving a page that says "synced" and shows
+           nothing. Separate storage keys keep the two logins independent. */
+        storageKey: `sb-${SUPABASE.schema || 'public'}-auth`,
+      },
     });
     const { data } = await sb.auth.getSession();
-    if (data?.session) await loadRemote();
+    if (data?.session && sessionMatches(data.session)) await loadRemote();
+    else if (data?.session) { await sb.auth.signOut(); state.status = 'locked'; }
     else state.status = 'locked';
   } else {
     state.mode = 'local';
     state.status = 'local';
   }
   emit();
+}
+
+/** The signed-in identity must be the one the RLS policy names, or every
+    query silently returns zero rows instead of failing. */
+function sessionMatches(session) {
+  const email = session?.user?.email;
+  return !SUPABASE.teamEmail || email === SUPABASE.teamEmail;
 }
 
 export async function signIn(password) {
@@ -181,10 +198,19 @@ export async function signOut() {
 async function loadRemote() {
   state.status = 'loading'; emit();
   try {
+    let received = 0;
     for (const t of TABLES) {
       const { data, error } = await sb.from(t).select('*');
       if (error) throw error;
       db[t] = data || [];
+      received += db[t].length;
+    }
+    /* Row-level security denies by returning nothing, not by erroring. An
+       empty read on a signed-in session means the wrong account, so say so
+       rather than rendering a convincingly empty dashboard. */
+    const { data: s2 } = await sb.auth.getSession();
+    if (!received && s2?.session && !sessionMatches(s2.session)) {
+      throw new Error(`Signed in as ${s2.session.user?.email} — that account cannot read this dashboard.`);
     }
     seed();
     saveLocal();

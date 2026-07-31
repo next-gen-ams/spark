@@ -72,7 +72,11 @@ function render() {
 
   rows = buildRows(state);
 
-  const app = fill(root, el('div', { class: 'app' }));
+  /* fill() returns the container it filled, not the child — appending to its
+     return value put the whole page outside .app, which is why the gutter and
+     the max-width never appeared. */
+  const app = el('div', { class: 'app' });
+  fill(root, app);
   app.appendChild(topbar());
   app.appendChild(tabbar());
   app.appendChild(confidBand());
