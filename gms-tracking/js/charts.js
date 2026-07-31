@@ -7,6 +7,7 @@
 
 import { el, money, pct, monthLabel } from './dom.js';
 import { PLATFORM_COLOR } from './config.js';
+import { resizable } from './resizable.js';
 
 const SVGNS = 'http://www.w3.org/2000/svg';
 
@@ -165,7 +166,7 @@ export function pacingAlerts(rows, side, onPick) {
       el('div', {}, 'No line is more than 15% ahead of or behind its time elapsed.'));
   }
 
-  return el('div', { class: 'tablewrap' }, el('table', { class: 'data' },
+  return el('div', { class: 'tablewrap' }, resizable(el('table', { class: 'data' },
     el('thead', {}, el('tr', {},
       el('th', {}, 'Client'), el('th', {}, 'Line'),
       el('th', { class: 'num' }, 'Spent'), el('th', { class: 'num' }, 'of budget'),
@@ -186,7 +187,7 @@ export function pacingAlerts(rows, side, onPick) {
           over
             ? `will overspend by ~${money(m[side].budget * (idx - 1))}`
             : `~${money(m[side].budget - m[side].spend)} still to place`));
-    }))));
+    }))), 'overview-alerts'));
 }
 
 /* --------------------------------------------------- campaign re-pacing */

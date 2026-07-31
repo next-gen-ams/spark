@@ -11,6 +11,7 @@ import { PLATFORM_COLOR } from './config.js';
 import { all, where, fxMap } from './store.js';
 import { lineMetrics, totals, todayIso, num } from './calc.js';
 import { openLine } from './drawer.js';
+import { resizable } from './resizable.js';
 
 /* Collapse state lives across re-renders, keyed by id. */
 const open = { campaigns: new Set(), clients: new Set() };
@@ -162,7 +163,7 @@ function lineTable(rows, { state, rerender }) {
   const months = [...new Set(rows.flatMap((m) =>
     where('line_month', (x) => x.line_id === m.line.id).map((x) => x.ym)))].sort();
 
-  return el('div', { class: 'tablewrap' }, el('table', { class: 'data' },
+  return el('div', { class: 'tablewrap' }, resizable(el('table', { class: 'data' },
     el('thead', {}, el('tr', {},
       el('th', {}, 'Platform'), el('th', {}, 'Objective'), el('th', {}, 'Line'),
       el('th', {}, 'Buy'),
@@ -174,7 +175,7 @@ function lineTable(rows, { state, rerender }) {
       ...months.map((ym) => el('th', { class: 'num mo', title: monthLabel(ym) }, monthLabel(ym).slice(0, 3))),
       el('th', {}, 'Status'))),
     el('tbody', {}, ...rows.map((m) => lineRow(m, months, side, rerender))),
-    footRow(rows, months, side)));
+    footRow(rows, months, side)), 'by-client'));
 }
 
 function lineRow(m, months, side, rerender) {

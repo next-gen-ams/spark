@@ -117,7 +117,16 @@ export function lineMetrics(line, campaign, months, spends, ctx) {
   }
   const spendInternal = spendCcy / rate;
 
-  /* ---- client-facing, both readings (the overspend decision is a human one) */
+  /* ---- client-facing.
+     The headline client figure is the pro-rata one: internal spend grossed up
+     at the plan margin. It is therefore ALWAYS larger than the internal figure
+     (margin > 0), which is the only reading that makes sense when you flip the
+     view — a client number smaller than the internal one is nonsense.
+
+     Capping at the booked budget is a separate, commercial question: if the
+     contract is fixed-fee, anything past the booked amount is GMS's to absorb
+     or to raise with the client. That reading is kept alongside, and the gap
+     between them is surfaced, but it is not what the dashboard leads with. */
   const clientProrata = line.billable === false ? 0 : grossUp(spendInternal, margin);
   const clientCapped = budgetClient > 0 ? Math.min(clientProrata, budgetClient) : clientProrata;
   const overspend = Math.max(0, clientProrata - clientCapped);
@@ -135,8 +144,11 @@ export function lineMetrics(line, campaign, months, spends, ctx) {
     line, campaign, ccy, rate, margin, billable: line.billable !== false,
     budgetInternal, budgetClient, budgetCcy: budgetInternal * rate,
     bookedUnits,
-    spendInternal, spendCcy, spendClient: clientCapped, clientProrata, overspend,
-    effMargin: effectiveMargin(spendInternal, clientCapped),
+    spendInternal, spendCcy,
+    spendClient: clientProrata,          // headline: never below the internal figure
+    clientCapped,                        // what a fixed-fee contract would allow
+    clientProrata, overspend,
+    effMargin: effectiveMargin(spendInternal, clientProrata),
     imp, clicks, activeDays: days,
     flight, totalDays, elapsedDays: elapsed, remainingDays: remaining, live,
     timePct: totalDays ? Math.min(1, elapsed / totalDays) : null,
@@ -273,30 +285,32 @@ export function repace(line, campaign, months, spends, { fx, today = todayIso(),
 export function repaceAdvice(r) {
   if (!r) return null;
   const off = r.due > 0 ? r.variance / r.due : 0;
+  const $ = (n) => '$' + Math.round(Math.abs(n)).toLocaleString('en-AU');
+  const days = (n) => `${n} day${n === 1 ? '' : 's'}`;
+
   if (r.finished) {
     return r.variance < -1
-      ? { kind: 'crit', text: `Flight ended ${Math.abs(r.variance) > 0 ? 'underspent' : ''} — ${Math.abs(r.variance).toFixed(0)} AUD was never placed.` }
-      : { kind: 'ok', text: 'Flight complete.' };
+      ? { kind: 'crit', text: `Finished with ${$(r.variance)} unspent — that budget was never placed.` }
+      : { kind: 'ok', text: 'Finished on budget.' };
   }
   if (Math.abs(off) < 0.05) return { kind: 'ok', text: 'On schedule.' };
   if (r.variance < 0) {
     return {
       kind: Math.abs(off) > 0.25 ? 'crit' : 'warn',
-      text: `Behind by ${Math.abs(r.variance).toFixed(0)} AUD. `
-        + `${r.daysLeft} day${r.daysLeft === 1 ? '' : 's'} left — run ${r.suggestedDaily.toFixed(0)}/day to land on budget.`,
+      text: `${$(r.variance)} behind — lift to ${$(r.suggestedDaily)}/day over the last ${days(r.daysLeft)} to land on budget.`,
     };
   }
   return {
     kind: off > 0.25 ? 'crit' : 'warn',
-    text: `Ahead by ${r.variance.toFixed(0)} AUD. `
-      + `Ease to ${r.suggestedDaily.toFixed(0)}/day for the remaining ${r.daysLeft} day${r.daysLeft === 1 ? '' : 's'}.`,
+    text: `${$(r.variance)} ahead — ease to ${$(r.suggestedDaily)}/day over the last ${days(r.daysLeft)}.`,
   };
 }
 
 /* ------------------------------------------------------------- aggregation */
 
 const SUM_KEYS = ['budgetInternal', 'budgetClient', 'budgetCcy', 'bookedUnits',
-  'spendInternal', 'spendClient', 'clientProrata', 'overspend', 'imp', 'clicks'];
+  'spendInternal', 'spendClient', 'clientCapped', 'clientProrata', 'overspend',
+  'imp', 'clicks'];
 
 /** Roll a set of lineMetrics up into one total. Only additive fields are
     summed; rates are recomputed so a blended CPM stays honest. */
@@ -308,6 +322,11 @@ export function totals(rows) {
     for (const k of SUM_KEYS) t[k] += num(r[k]);
   }
   t.effMargin = effectiveMargin(t.spendInternal, t.spendClient);
+  /* Overspend is a per-line fact — one line can blow its budget while the
+     campaign as a whole is underspent. Carry the count so the card can say
+     which it is instead of implying the total is over. */
+  t.linesOver = rows.filter((r) => r.overspend > 0.5);
+  t.totalOverBooked = Math.max(0, t.clientProrata - t.budgetClient);
   t.internal = {
     budget: t.budgetInternal, spend: t.spendInternal,
     pacingPct: t.budgetInternal > 0 ? t.spendInternal / t.budgetInternal : null,

@@ -122,10 +122,22 @@ function summaryCards(rows, state) {
     }));
   }
 
-  if (t.overspend > 0.5) {
+  /* Two different facts, and conflating them is what made the old card
+     contradict itself: individual lines can each blow their own booked budget
+     while the campaign as a whole is still underspent. Say which one it is. */
+  if (t.linesOver.length) {
+    const n = t.linesOver.length;
+    const names = t.linesOver.slice(0, 2)
+      .map((r) => r.line.placement || r.line.platform || 'a line').join(', ');
     wrap.appendChild(card({
-      cls: 'alert', k: 'Over booked budget', v: money(t.overspend),
-      s: `pro-rata client value ${money(t.clientProrata)} vs ${money(t.budgetClient)} booked`,
+      cls: 'alert',
+      k: `${n} line${n > 1 ? 's' : ''} past booked budget`,
+      v: money(t.overspend),
+      s: t.totalOverBooked > 0.5
+        ? `and the total is over too — ${money(t.clientProrata)} run against ${money(t.budgetClient)} booked`
+        : `${names}${n > 2 ? ` +${n - 2} more` : ''} · the total is still under (${money(t.clientProrata)} of ${money(t.budgetClient)})`,
+      title: 'Client value at the plan margin, above what those lines had booked. '
+        + 'A fixed-fee contract would cap them there; anything past it is GMS to absorb or to raise with the client.',
     }));
   } else if (side === 'client' && t.effMargin != null) {
     wrap.appendChild(card({

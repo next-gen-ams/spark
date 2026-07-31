@@ -14,7 +14,8 @@
 
 import { el, money, int, pct, monthLabel, dateAu } from './dom.js';
 import { put, where, byId, fxMap } from './store.js';
-import { monthBounds, num, repace, repaceAdvice, todayIso } from './calc.js';
+import { monthBounds, num, grossUp, repace, repaceAdvice, todayIso } from './calc.js';
+import { resizable } from './resizable.js';
 
 const spendId = (lineId, creativeId, date) => `${lineId}|${creativeId || '_'}|${date}`;
 
@@ -29,12 +30,11 @@ export function renderSpend(host, ctx) {
   }
 
   const today = todayIso();
-  const mode = state.spendMode || 'today';
+  const mode = state.spendMode === 'day' ? 'day' : 'today';
   const bounds = state.ym ? monthBounds(state.ym) : null;
 
   let date = today;
-  if (mode === 'month') date = bounds ? bounds.end : today;
-  else if (mode === 'day') {
+  if (mode === 'day') {
     date = state.spendDate || today;
     if (bounds && (date < bounds.start || date > bounds.end)) date = bounds.end;
   }
@@ -47,7 +47,6 @@ export function renderSpend(host, ctx) {
       el('div', { style: { flex: 1 } }),
       el('div', { class: 'seg' },
         segBtn('today', 'Today', mode, state, rerender),
-        segBtn('month', 'Whole month', mode, state, rerender),
         segBtn('day', 'Another day', mode, state, rerender)),
       mode === 'day' ? el('input', {
         type: 'date', class: 'pill-sel', value: date,
@@ -69,10 +68,8 @@ function modeBlurb(mode, state, date) {
     return 'Type what each line spent today — it saves as you go, and the pacing on the right '
       + 'recalculates against the whole flight, not just this month.';
   }
-  if (mode === 'month') {
-    return `One figure covering all of ${monthLabel(state.ym)} — for catching up a month that was never entered daily.`;
-  }
-  return `Writing against ${dateAu(date)}.`;
+  return `Writing against ${dateAu(date)}. Use this to fill a day that was missed — `
+    + 'monthly totals are worked out from the daily figures, never typed in as one number.';
 }
 
 /* ------------------------------------------------------------------ grid */
@@ -85,15 +82,11 @@ function grid(rows, date, mode, state, rerender) {
   const body = el('tbody');
   for (const m of rows) {
     for (const tgt of spendTargets(m)) {
-      /* What is already recorded against the cell being edited. */
-      const cellRows = mode === 'month' && state.ym
-        ? monthRows(m.line.id, tgt.creativeId, monthBounds(state.ym))
-        : [byId('spend', spendId(m.line.id, tgt.creativeId, date))].filter(Boolean);
-
-      const cell = cellRows.reduce((a, s) => a + num(s.spend_internal), 0);
-      const impT = cellRows.reduce((a, s) => a + num(s.imp), 0);
-      const clkT = cellRows.reduce((a, s) => a + num(s.clicks), 0);
-      const mixed = mode === 'month' && cellRows.length > 1;
+      /* Exactly one row per line per day — no aggregation to unpick. */
+      const existing = byId('spend', spendId(m.line.id, tgt.creativeId, date));
+      const cell = num(existing?.spend_internal);
+      const impT = num(existing?.imp);
+      const clkT = num(existing?.clicks);
 
       const write = (patch) => {
         put('spend', {
@@ -117,22 +110,26 @@ function grid(rows, date, mode, state, rerender) {
             `${m.line.platform || '—'} · ${tgt.label}`)),
 
         el('td', { class: 'num' },
-          mixed
-            ? el('span', { title: `${cellRows.length} daily rows — switch to “Another day” to edit one` },
-              money(cell, m.ccy, 2))
-            : el('input', {
-              class: 'cellinput', type: 'number', step: '0.01', value: cell || '',
-              placeholder: '0', 'aria-label': `Spend for ${tgt.label}`,
-              onchange: (e) => write({ spend_internal: Number(e.target.value) || 0 }),
-            }),
+          el('input', {
+            class: 'cellinput', type: 'number', step: '0.01', value: cell || '',
+            placeholder: '0', 'aria-label': `Spend for ${tgt.label}`,
+            onchange: (e) => write({ spend_internal: Number(e.target.value) || 0 }),
+          }),
           el('div', { class: 'muted', style: { fontSize: '11px', paddingRight: '7px' } }, m.ccy)),
 
-        el('td', { class: 'num' }, mixed ? int(impT) : el('input', {
+        /* (2) the two derived figures, back where they were asked for: this is
+           where you see the margin actually doing something. */
+        el('td', { class: 'num muted' }, money(cell / m.rate)),
+        el('td', { class: 'num' }, m.billable
+          ? el('b', {}, money(grossUp(cell / m.rate, m.margin)))
+          : el('span', { class: 'muted' }, 'n/a')),
+
+        el('td', { class: 'num' }, el('input', {
           class: 'cellinput', type: 'number', step: '1', value: impT || '',
           'aria-label': 'Impressions',
           onchange: (e) => write({ imp: Number(e.target.value) || null }),
         })),
-        el('td', { class: 'num' }, mixed ? int(clkT) : el('input', {
+        el('td', { class: 'num' }, el('input', {
           class: 'cellinput', type: 'number', step: '1', value: clkT || '',
           'aria-label': 'Clicks',
           onchange: (e) => write({ clicks: Number(e.target.value) || null }),
@@ -163,11 +160,15 @@ function grid(rows, date, mode, state, rerender) {
     }
   }
 
-  return el('table', { class: 'data' },
+  return resizable(el('table', { class: 'data' },
     el('thead', {}, el('tr', {},
       el('th', {}, 'Line'),
-      el('th', { class: 'num', title: 'Internal spend as paid to the media owner' },
-        mode === 'month' && state.ym ? `Spend · ${monthLabel(state.ym)}` : `Spend · ${dateAu(date)}`),
+      el('th', { class: 'num', title: 'Internal spend as paid to the media owner, in the line’s own currency' },
+        `Spend · ${dateAu(date)}`),
+      el('th', { class: 'num', title: 'The same figure converted to AUD at this campaign’s rate' },
+        'Internal AUD'),
+      el('th', { class: 'num', title: 'What the client is billed for it — internal ÷ (1 − margin)' },
+        'Client AUD'),
       el('th', { class: 'num' }, 'Impressions'),
       el('th', { class: 'num' }, 'Clicks'),
       el('th', { class: 'num', title: 'Total spent on this line across the whole flight' }, 'Spent to date'),
@@ -176,7 +177,7 @@ function grid(rows, date, mode, state, rerender) {
       el('th', { class: 'num', title: 'Everything not yet spent ÷ days left in the flight — carries an underspend forward' }, 'Run at'),
       el('th', {}, 'What to do'),
       el('th', { class: 'num' }, 'Margin'))),
-    body);
+    body), 'tracking-entry');
 }
 
 function varianceCell(r) {
@@ -195,7 +196,4 @@ function spendTargets(m) {
   return crs.map((c) => ({ creativeId: c.id, label: c.name || 'Creative' }));
 }
 
-const monthRows = (lineId, creativeId, bounds) =>
-  where('spend', (s) => s.line_id === lineId
-    && (s.creative_id || null) === (creativeId || null)
-    && s.date >= bounds.start && s.date <= bounds.end);
+

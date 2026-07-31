@@ -20,6 +20,7 @@ export function openLine(m, rerender) {
   const line = { ...m.line };
   const h = fill(mount());
   const refresh = () => { rerender(); openLine({ ...m, line: { ...line } }, rerender); };
+  reopen = refresh;
 
   const save = (patch) => {
     Object.assign(line, patch);
@@ -74,9 +75,9 @@ function derivation(m) {
     [`÷ FX (1 AUD = ${m.rate} ${m.ccy})`, money2(m.spendInternal)],
     [`÷ (1 − margin ${pct(m.margin, 1)})`, money2(m.clientProrata)],
   ];
-  if (m.budgetClient > 0) {
-    rows.push(['Capped at booked budget', money2(m.spendClient)]);
-    if (m.overspend > 0.5) rows.push(['Over booked budget', money2(m.overspend)]);
+  if (m.overspend > 0.5) {
+    rows.push(['Booked budget for this line', money2(m.budgetClient)]);
+    rows.push(['Over booked budget', money2(m.overspend)]);
   }
   rows.push(['Margin realised', m.effMargin == null ? '—' : pct(m.effMargin, 1)]);
 
@@ -89,6 +90,12 @@ function derivation(m) {
       ])),
       el('div', { class: 'formula' },
         'client = internal ÷ FX ÷ (1 − margin)'),
+      m.overspend > 0.5
+        ? el('div', { class: 'hint', style: { marginTop: '8px', color: 'var(--warn)' } },
+          `This line has run ${money2(m.overspend)} past what it booked. A fixed-fee `
+          + `contract would cap it at ${money2(m.clientCapped)} — the difference is GMS's `
+          + 'to absorb or to raise with the client.')
+        : null,
       !m.billable
         ? el('div', { class: 'hint', style: { marginTop: '8px', color: 'var(--ink-3)' } },
           'Non-billable line — excluded from pacing, cost efficiency and the client export.')
@@ -170,32 +177,71 @@ function commercials(line, save, m) {
         }), 'Billable — include in pacing, cost efficiency and the client report')));
 }
 
+/**
+ * Monthly bookings, with the two money columns linked through the line's
+ * margin. A line's margin does not change from month to month, so letting
+ * both figures be typed independently only creates opportunities for them to
+ * disagree — and a disagreement here is silently wrong client billing. Type
+ * either one and the other follows.
+ */
 function monthly(m) {
   const rows = where('line_month', (x) => x.line_id === m.line.id)
     .sort((a, b) => a.ym.localeCompare(b.ym));
   if (!rows.length) return el('div');
+
+  const margin = num(m.line.margin_pct);
+  const linked = margin > 0 && margin < 1;
+
+  const write = (row, key, value) => {
+    const v = value === '' ? null : Number(value);
+    const patch = { id: row.id, [key]: v };
+    if (linked && v != null) {
+      /* Derive the other side rather than leaving it stale. */
+      if (key === 'budget_media') patch.budget_gms = round2(v / (1 - margin));
+      else patch.budget_media = round2(v * (1 - margin));
+    }
+    put('line_month', patch);
+  };
+
   return el('div', { class: 'field' },
     el('label', {}, 'Booked by month — from the media plan'),
+    el('div', { class: 'hint', style: { marginTop: 0, marginBottom: '7px' } }, linked
+      ? `Internal and client are locked together at this line's margin of ${pct(margin, 1)} — type either one and the other follows, so they cannot drift apart.`
+      : 'This line has no margin set, so the two columns are independent. Set a margin above to link them.'),
     el('div', { class: 'tablewrap' },
       el('table', { class: 'data' },
         el('thead', {}, el('tr', {},
           el('th', {}, 'Month'), el('th', { class: 'num' }, 'Units'),
-          el('th', { class: 'num' }, 'Internal'), el('th', { class: 'num' }, 'Client'))),
+          el('th', { class: 'num' }, 'Internal'),
+          el('th', { class: 'num' }, linked ? `Client (÷ ${(1 - margin).toFixed(2)})` : 'Client'))),
         el('tbody', {}, ...rows.map((r) => el('tr', {},
           el('td', {}, monthLabel(r.ym)),
-          el('td', { class: 'num' }, int(r.units)),
-          el('td', { class: 'num' }, numInput(r, 'budget_media')),
-          el('td', { class: 'num' }, numInput(r, 'budget_gms'))))))));
+          el('td', { class: 'num' }, el('input', {
+            class: 'cellinput', type: 'number', step: '1', value: r.units ?? '',
+            onchange: (e) => put('line_month', {
+              id: r.id, units: e.target.value === '' ? null : Number(e.target.value),
+            }),
+          })),
+          el('td', { class: 'num' }, el('input', {
+            class: 'cellinput', type: 'number', step: '1', value: r.budget_media ?? '',
+            onchange: (e) => { write(r, 'budget_media', e.target.value); refreshDrawer(); },
+          })),
+          el('td', { class: 'num' }, el('input', {
+            class: 'cellinput', type: 'number', step: '1', value: r.budget_gms ?? '',
+            onchange: (e) => { write(r, 'budget_gms', e.target.value); refreshDrawer(); },
+          }))))),
+        el('tfoot', {}, el('tr', {},
+          el('td', {}, 'Total'),
+          el('td', { class: 'num' }, int(rows.reduce((a, r) => a + num(r.units), 0) || null)),
+          el('td', { class: 'num' }, money(rows.reduce((a, r) => a + num(r.budget_media), 0))),
+          el('td', { class: 'num' }, money(rows.reduce((a, r) => a + num(r.budget_gms), 0))))))));
 }
 
-function numInput(row, key) {
-  return el('input', {
-    class: 'cellinput', type: 'number', step: '1', value: row[key] ?? '',
-    onchange: (e) => put('line_month', {
-      id: row.id, [key]: e.target.value === '' ? null : Number(e.target.value),
-    }),
-  });
-}
+const round2 = (n) => Math.round(n * 100) / 100;
+
+/* Re-opening the drawer is how the linked column shows its new value. */
+let reopen = null;
+function refreshDrawer() { if (reopen) reopen(); }
 
 /* ------------------------------------------------------------- creatives */
 
