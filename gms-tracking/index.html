@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex, nofollow">
+  <title>Tracking Dashboard — GMS Digital</title>
+  <link rel="icon" href="assets/gms-logo.png">
+  <link rel="stylesheet" href="styles/tokens.css">
+  <link rel="stylesheet" href="styles/app.css">
+</head>
+<body>
+  <main id="root">
+    <div class="app">
+      <div class="empty" style="padding-top:120px">Loading…</div>
+    </div>
+  </main>
+
+  <!-- Both libraries are vendored rather than pulled from a CDN — half this
+       team works in China, where CDN reachability is not a given. -->
+  <script src="vendor/supabase.js"></script>
+
+  <!-- ExcelJS is ~950kb and only needed on export / import, so it is loaded on
+       demand rather than blocking first paint. -->
+  <script>
+    window.__loadExcel = function () {
+      if (window.ExcelJS) return Promise.resolve();
+      return new Promise(function (res, rej) {
+        var s = document.createElement('script');
+        s.src = 'vendor/exceljs.min.js';
+        s.onload = res; s.onerror = function () { rej(new Error('Excel library failed to load')); };
+        document.head.appendChild(s);
+      });
+    };
+  </script>
+  <script type="module" src="js/main.js"></script>
+</body>
+</html>
