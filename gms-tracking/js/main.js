@@ -174,7 +174,7 @@ function topbar() {
       el('p', {}, APP.sub)),
     el('div', { class: 'spacer' }),
 
-    el('div', { class: 'seg', role: 'group', 'aria-label': 'Figure view' },
+    el('div', { class: 'seg audience-seg', role: 'group', 'aria-label': 'Which figures to show' },
       el('button', {
         'aria-pressed': state.view === 'internal',
         title: 'Budgets and spend as paid to the media owner',
@@ -305,6 +305,18 @@ function confidBand() {
       el('strong', {}, 'INTERNAL'),
       el('span', {}, 'This page shows margin and internal media cost. Do not share the link or a screenshot with a client — use Export ▸ Client report instead.')));
   }
+  /* Which figures are on screen has to be readable at a glance, and survive a
+     screenshot — the toggle alone is too easy to lose track of. */
+  if (state.view === 'client') {
+    bands.push(el('div', { class: 'viewband' },
+      el('strong', {}, 'CLIENT-FACING'),
+      el('span', {}, 'Every figure below is what the client is billed — internal spend grossed up at each line’s plan margin. Switch to Internal for what GMS pays the media owner.'),
+      el('button', {
+        class: 'btn sm', style: { marginLeft: 'auto' },
+        onclick: () => { state.view = 'internal'; render(); },
+      }, 'Show internal')));
+  }
+
   /* Say it plainly — nobody should ever mistake the sample spend for actuals. */
   if (store.isDemo()) {
     bands.push(el('div', { class: 'confid demo' },

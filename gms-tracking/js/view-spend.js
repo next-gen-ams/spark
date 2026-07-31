@@ -1,10 +1,13 @@
-/* Spend entry. Three ways in, because nobody is going to click 400 cells:
-   type it, paste a column, or round-trip a CSV.
+/* Spend entry — type the figures in, or round-trip a CSV for a bulk update.
 
    Storage is always daily rows — the monthly view just writes one row dated
-   the last day of the month, so nothing is hidden and nothing double-counts. */
+   the last day of the month, so nothing is hidden and nothing double-counts.
 
-import { el, money, int, monthLabel, toast, download, dateAu } from './dom.js';
+   The margin column is here on purpose: whoever types the spend can see the
+   rate the client figure is being derived at, and catch a line whose margin
+   never came across from the plan. */
+
+import { el, money, int, pct, monthLabel, toast, download, dateAu } from './dom.js';
 import { put, putMany, where, all, byId, fxMap } from './store.js';
 import { monthBounds, num, grossUp, perAud } from './calc.js';
 
@@ -57,8 +60,7 @@ export function renderSpend(host, ctx) {
           type: 'file', accept: '.csv,text/csv', style: { display: 'none' },
           onchange: (e) => importCsv(e.target.files[0], rerender),
         }))),
-    el('div', { class: 'tablewrap' }, grid(rows, date, mode, state, rerender)),
-    el('div', { class: 'body' }, pasteBox(rows, date, rerender))));
+    el('div', { class: 'tablewrap' }, grid(rows, date, mode, state, rerender))));
 }
 
 /* ------------------------------------------------------------------ grid */
@@ -105,7 +107,9 @@ function grid(rows, date, mode, state, rerender) {
               'data-k': 'spend', placeholder: '0',
               onchange: (e) => write({ spend_internal: Number(e.target.value) || 0 }),
             }),
-          el('div', { class: 'muted', style: { fontSize: '11px' } }, m.ccy)),
+          /* match .cellinput's 6px padding + 1px border so the currency
+             caption lines up under the figure rather than 7px to its left */
+          el('div', { class: 'muted', style: { fontSize: '11px', paddingRight: '7px' } }, m.ccy)),
         el('td', { class: 'num' }, mixed ? int(impT) : el('input', {
           class: 'cellinput', type: 'number', step: '1', value: impT || '', 'data-k': 'imp',
           onchange: (e) => write({ imp: Number(e.target.value) || null }),
@@ -117,7 +121,15 @@ function grid(rows, date, mode, state, rerender) {
         el('td', { class: 'num muted' }, money(total / perAud(m.ccy, fx, m.campaign))),
         el('td', { class: 'num' }, m.billable
           ? money(grossUp(total / perAud(m.ccy, fx, m.campaign), m.margin))
-          : el('span', { class: 'muted' }, 'n/a'))));
+          : el('span', { class: 'muted' }, 'n/a')),
+        el('td', { class: 'num' }, m.billable
+          ? el('span', {
+            class: 'tag' + (m.margin > 0 ? '' : ' crit'),
+            title: m.margin > 0
+              ? `From the media plan. Client = internal ÷ FX ÷ (1 − ${(m.margin * 100).toFixed(1)}%)`
+              : 'No margin on this line — the client figure equals the internal one. Set it in the line drawer.',
+          }, m.margin > 0 ? pct(m.margin, 1) : 'not set')
+          : el('span', { class: 'muted' }, '—'))));
     }
   }
 
@@ -128,7 +140,9 @@ function grid(rows, date, mode, state, rerender) {
       el('th', { class: 'num', title: 'Internal spend as paid to the media owner' },
         mode === 'month' ? `Spend · ${monthLabel(state.ym)}` : `Spend · ${dateAu(date)}`),
       el('th', { class: 'num' }, 'Impressions'), el('th', { class: 'num' }, 'Clicks'),
-      el('th', { class: 'num' }, 'Internal AUD'), el('th', { class: 'num' }, 'Client AUD'))),
+      el('th', { class: 'num' }, 'Internal AUD'), el('th', { class: 'num' }, 'Client AUD'),
+      el('th', { class: 'num', title: 'The margin from the media plan that this line’s client figure is derived at' },
+        'Margin'))),
     body);
 }
 
@@ -144,48 +158,6 @@ const monthRows = (lineId, creativeId, bounds) =>
   where('spend', (s) => s.line_id === lineId
     && (s.creative_id || null) === (creativeId || null)
     && s.date >= bounds.start && s.date <= bounds.end);
-
-/* ----------------------------------------------------------------- paste */
-
-function pasteBox(rows, date, rerender) {
-  const ta = el('textarea', {
-    rows: 3, placeholder: 'Paste a column of spend here — or spend⇥impressions⇥clicks — one line per row above, top to bottom.',
-    style: { width: '100%', border: '1px solid var(--line-2)', borderRadius: 'var(--radius-xs)', padding: '8px' },
-  });
-
-  return el('div', {},
-    el('div', { class: 'field' }, el('label', {}, 'Paste from the media console')),
-    ta,
-    el('div', { style: { display: 'flex', gap: '8px', marginTop: '8px', alignItems: 'center' } },
-      el('button', {
-        class: 'btn primary sm',
-        onclick: () => {
-          const lines = ta.value.split(/\r?\n/).map((l) => l.trim()).filter(Boolean);
-          if (!lines.length) return toast('Nothing pasted', 'bad');
-          const targets = rows.flatMap((m) => spendTargets(m).map((t) => ({ m, t })));
-          if (lines.length > targets.length) {
-            return toast(`${lines.length} pasted rows but only ${targets.length} lines in view`, 'bad');
-          }
-          const out = lines.map((l, i) => {
-            const [sp, imp, clk] = l.split(/[\t,;]/).map((x) => Number(String(x).replace(/[^0-9.\-]/g, '')));
-            const { m, t } = targets[i];
-            return {
-              id: spendId(m.line.id, t.creativeId, date),
-              line_id: m.line.id, creative_id: t.creativeId || null, date,
-              spend_internal: Number.isFinite(sp) ? sp : 0,
-              imp: Number.isFinite(imp) ? imp : null,
-              clicks: Number.isFinite(clk) ? clk : null,
-            };
-          });
-          putMany('spend', out);
-          ta.value = '';
-          toast(`${out.length} rows updated`);
-          rerender();
-        },
-      }, 'Apply to the rows above'),
-      el('span', { class: 'muted', style: { fontSize: '11.5px' } },
-        `Writes against ${dateAu(date)} · order must match the table.`)));
-}
 
 /* ------------------------------------------------------------------- csv */
 

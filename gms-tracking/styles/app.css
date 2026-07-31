@@ -69,6 +69,33 @@ body { padding-top: 6px; }
 .seg button[aria-pressed="true"] { background: var(--header); color: var(--header-tx); }
 .seg button[aria-pressed="true"].client { background: var(--blue); color: #fff; }
 
+/* Which set of numbers you are looking at is the most consequential state on
+   the page — a subtly-shaded pill was not enough to carry it. The active side
+   gets a dot and a shadow, and the page itself changes colour underneath. */
+.seg.audience-seg { padding: 3px; gap: 2px; }
+.seg.audience-seg button {
+  display: inline-flex; align-items: center; gap: 6px; padding: 6px 15px; font-size: 12.5px;
+}
+.seg.audience-seg button::before {
+  content: ''; width: 7px; height: 7px; border-radius: 50%;
+  background: var(--line-2); transition: background .15s;
+}
+.seg.audience-seg button[aria-pressed="true"] {
+  box-shadow: 0 1px 3px rgba(0,0,0,.22);
+}
+.seg.audience-seg button[aria-pressed="true"]::before { background: #fff; }
+
+/* A standing band under the tabs, so the client-facing view can never be
+   mistaken for the internal one — including in a screenshot. */
+.viewband {
+  display: flex; align-items: center; gap: 9px; margin-top: 12px;
+  padding: 7px 13px; border-radius: var(--radius-xs); font-size: 12px;
+  background: var(--blue-soft); color: var(--ink-2);
+  border: 1px solid color-mix(in oklab, var(--blue) 32%, transparent);
+}
+.viewband strong { color: var(--blue); letter-spacing: .1em; font-size: 10.5px; white-space: nowrap; }
+:root[data-theme="dark"] .viewband strong { color: #7FB2E8; }
+
 .tabbar {
   position: sticky; top: 69px; z-index: 39; background: var(--bg);
   display: flex; align-items: center; gap: 16px;
