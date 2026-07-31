@@ -310,7 +310,7 @@ function actions(s, ctx) {
         }
         /* Carry any FX rates the plan carried into the app's own FX table. */
         for (const [ccy, rate] of Object.entries(s.fxTable || {})) {
-          if (!all('fx').some((f) => f.ccy === ccy)) put('fx', { id: ccy, ccy, per_aud: rate });
+          if (!all('fx').some((f) => f.ccy === ccy)) put('fx', { ccy, per_aud: rate });
         }
         const res = commit(s, { clientId, spendCcy: target.spendCcy });
         parsed = null;

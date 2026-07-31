@@ -8,7 +8,8 @@ import { renderTracking } from './view-tracking.js';
 import { renderSpend } from './view-spend.js';
 import { renderImport } from './view-import.js';
 import { renderAdmin } from './view-admin.js';
-import { exportInternal, exportExternal, exportBackup } from './exportxlsx.js';
+import { exportBackup } from './exportxlsx.js';
+import { openExport, closeExport } from './view-export.js';
 import { ymOf, todayIso } from './calc.js';
 import { closeDrawer } from './drawer.js';
 
@@ -92,7 +93,7 @@ function render() {
   app.appendChild(footer());
 }
 
-function goTo(tab) { state.tab = tab; closeDrawer(); render(); }
+function goTo(tab) { state.tab = tab; closeDrawer(); closeExport(); render(); }
 
 /* ------------------------------------------------------------------ gate */
 
@@ -221,11 +222,10 @@ function exportMenu() {
       position: 'absolute', right: 0, top: 'calc(100% + 6px)', zIndex: 50,
       background: 'var(--surface)', border: '1px solid var(--line)',
       borderRadius: 'var(--radius-s)', boxShadow: 'var(--shadow-lg)',
-      padding: '6px', display: 'none', minWidth: '260px',
+      padding: '6px', display: 'none', minWidth: '250px',
     },
   },
-  item('Internal workbook', 'Everything — margin, internal cost, spend log', () => exportInternal(rows, state)),
-  item('Client report', 'Margin and internal cost are never written', () => exportExternal(rows, state)),
+  item('Export to Excel…', 'Choose internal or a per-client report', () => openExport(state)),
   el('div', { style: { height: '1px', background: 'var(--line)', margin: '5px 0' } }),
   item('Backup (.json)', 'Full data snapshot', exportBackup));
 

@@ -98,7 +98,7 @@ function deleteCampaign(campaignId) {
 }
 
 function fxRates(rerender) {
-  const list = all('fx').sort((a, b) => (a.ccy || a.id).localeCompare(b.ccy || b.id));
+  const list = all('fx').sort((a, b) => String(a.ccy).localeCompare(String(b.ccy)));
   const ccy = el('input', { placeholder: 'CCY', class: 'pill-sel', style: { maxWidth: '80px' } });
   const rate = el('input', { placeholder: 'per 1 AUD', class: 'pill-sel', type: 'number', step: '0.0001', style: { maxWidth: '120px' } });
 
@@ -106,13 +106,13 @@ function fxRates(rerender) {
     el('div', { class: 'tablewrap' }, el('table', { class: 'data' },
       el('thead', {}, el('tr', {}, el('th', {}, 'Currency'), el('th', { class: 'num' }, '1 AUD ='), el('th', {}, ''))),
       el('tbody', {}, ...list.map((f) => el('tr', {},
-        el('td', {}, f.ccy || f.id),
+        el('td', {}, f.ccy),
         el('td', { class: 'num' }, el('input', {
           class: 'cellinput', type: 'number', step: '0.0001', value: f.per_aud ?? '',
-          onchange: (e) => put('fx', { id: f.id, ccy: f.ccy || f.id, per_aud: Number(e.target.value) || 1 }),
+          onchange: (e) => put('fx', { ccy: f.ccy, per_aud: Number(e.target.value) || 1 }),
         })),
-        el('td', {}, (f.ccy || f.id) === 'AUD' ? null : el('button', {
-          class: 'btn ghost sm', onclick: () => { remove('fx', f.id); rerender(); },
+        el('td', {}, f.ccy === 'AUD' ? null : el('button', {
+          class: 'btn ghost sm', onclick: () => { remove('fx', f.ccy); rerender(); },
         }, 'Remove')))))),
     ),
     el('div', { class: 'body', style: { display: 'flex', gap: '8px' } }, ccy, rate,
@@ -121,7 +121,7 @@ function fxRates(rerender) {
         onclick: () => {
           const c = ccy.value.trim().toUpperCase(); const r = Number(rate.value);
           if (!c || !(r > 0)) return toast('Need a currency code and a positive rate', 'bad');
-          put('fx', { id: c, ccy: c, per_aud: r });
+          put('fx', { ccy: c, per_aud: r });
           ccy.value = ''; rate.value = ''; rerender();
         },
       }, '+ Add currency')));

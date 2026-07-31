@@ -23,7 +23,7 @@
   --mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, monospace;
 
   --gap: 18px;
-  --shell: clamp(20px, 3vw, 52px);
+  --shell: clamp(24px, 3.4vw, 72px);
 }
 
 @media (prefers-color-scheme: dark) {

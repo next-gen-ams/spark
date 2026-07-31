@@ -12,6 +12,13 @@ export const TABLES = ['client', 'campaign', 'line', 'line_month',
 
 const LS_KEY = 'gms-tracking-v1';
 
+/* Not every table keys on `id` — fx is keyed by currency code and settings by
+   its key name, matching the schema. Assuming `id` everywhere made upserts to
+   those two fail against Postgres (dropping the app to Offline) and collide
+   locally, because `undefined === undefined` matches the first row. */
+const PK = { fx: 'ccy', settings: 'k' };
+export const pkOf = (table) => PK[table] || 'id';
+
 export const db = Object.fromEntries(TABLES.map((t) => [t, []]));
 
 let sb = null;                       // supabase client, when configured
@@ -26,7 +33,7 @@ export const state = { mode: 'local', status: 'ready', error: '' };
 /* ------------------------------------------------------------------- read */
 
 export const all = (table) => db[table] || [];
-export const byId = (table, id) => all(table).find((r) => r.id === id) || null;
+export const byId = (table, id) => all(table).find((r) => r[pkOf(table)] === id) || null;
 export const where = (table, fn) => all(table).filter(fn);
 
 export function index(table, key) {
@@ -42,8 +49,10 @@ export function index(table, key) {
 /* ------------------------------------------------------------------ write */
 
 export function put(table, row) {
+  const pk = pkOf(table);
+  if (row[pk] == null) { console.warn(`[store] ${table} row has no ${pk}`, row); return row; }
   const list = db[table];
-  const i = list.findIndex((r) => r.id === row.id);
+  const i = list.findIndex((r) => r[pk] === row[pk]);
   const next = { ...(i >= 0 ? list[i] : {}), ...row };
   if (i >= 0) list[i] = next; else list.push(next);
   persist(table, next);
@@ -52,9 +61,11 @@ export function put(table, row) {
 }
 
 export function putMany(table, rows) {
+  const pk = pkOf(table);
   for (const row of rows) {
+    if (row[pk] == null) continue;
     const list = db[table];
-    const i = list.findIndex((r) => r.id === row.id);
+    const i = list.findIndex((r) => r[pk] === row[pk]);
     if (i >= 0) list[i] = { ...list[i], ...row }; else list.push({ ...row });
   }
   persistMany(table, rows);
@@ -62,8 +73,9 @@ export function putMany(table, rows) {
 }
 
 export function remove(table, id) {
-  db[table] = db[table].filter((r) => r.id !== id);
-  if (sb) run(() => sb.from(table).delete().eq('id', id));
+  const pk = pkOf(table);
+  db[table] = db[table].filter((r) => r[pk] !== id);
+  if (sb) run(() => sb.from(table).delete().eq(pk, id));
   saveLocal();
   emit();
 }
@@ -190,9 +202,10 @@ function subscribe() {
     .on('postgres_changes', { event: '*', schema: SUPABASE.schema || 'public' }, (p) => {
       const t = p.table;
       if (!db[t]) return;
-      if (p.eventType === 'DELETE') db[t] = db[t].filter((r) => r.id !== p.old.id);
+      const pk = pkOf(t);
+      if (p.eventType === 'DELETE') db[t] = db[t].filter((r) => r[pk] !== p.old[pk]);
       else {
-        const i = db[t].findIndex((r) => r.id === p.new.id);
+        const i = db[t].findIndex((r) => r[pk] === p.new[pk]);
         if (i >= 0) db[t][i] = p.new; else db[t].push(p.new);
       }
       saveLocal();
@@ -236,7 +249,7 @@ function loadLocal() {
 
 function seed() {
   if (!db.fx.length) {
-    db.fx = Object.entries(FX_DEFAULT).map(([ccy, per_aud]) => ({ id: ccy, ccy, per_aud }));
+    db.fx = Object.entries(FX_DEFAULT).map(([ccy, per_aud]) => ({ ccy, per_aud }));
   }
   if (!db.vocab.length) {
     db.vocab = Object.entries(VOCAB_DEFAULT).flatMap(([kind, vals]) =>
