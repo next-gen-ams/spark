@@ -43,6 +43,24 @@ const SOURCE = {
  * required field with no column blocks the import outright.
  */
 function mappingPanel(sheet, rerender) {
+  const needsEye = FIELDS.filter((f) =>
+    (f.required && !sheet.mapping[f.key]) || sheet.mapping[f.key]?.source === 'inferred');
+  const blocked = sheet.missing.length > 0;
+
+  /* When every field came straight off a recognised header there is nothing
+     to decide, so this collapses to a single green line. Column mapping is
+     plumbing; it should only surface when the plumbing needs you. */
+  if (!blocked && !needsEye.length && !showAllFields) {
+    return el('div', { class: 'panel' }, el('div', { class: 'body okrow' },
+      el('span', { class: 'tag good' }, '✓'),
+      el('div', { style: { flex: 1 } },
+        el('b', {}, 'All columns recognised'),
+        el('div', { class: 'muted', style: { fontSize: '11.5px' } },
+          `${Object.keys(sheet.mapping).length} fields matched from this plan’s own headers.`)),
+      el('button', { class: 'btn sm', onclick: () => { showAllFields = true; rerender(); } },
+        'Check them')));
+  }
+
   const shownFields = showAllFields
     ? FIELDS
     : FIELDS.filter((f) => f.required || f.derivable || !sheet.cols[f.key]
@@ -83,14 +101,13 @@ function mappingPanel(sheet, rerender) {
         p ? (p.samples.join(' · ') || '—') : '—'));
   };
 
-  const blocked = sheet.missing.length > 0;
   return el('div', { class: 'panel' },
     el('header', {},
       el('div', {},
-        el('h3', {}, 'Column mapping'),
+        el('h3', {}, blocked ? 'Two columns need pointing at' : 'Check these columns'),
         el('p', {}, blocked
-          ? 'Point at the missing columns before importing — the sample values on the right tell you which is which.'
-          : 'Every field found. Check anything marked “Inferred”, then import.')),
+          ? 'This plan uses wording we have not seen. The sample values on the right tell you which column is which — pick them and the rest follows.'
+          : 'These were worked out from the numbers rather than the headers. Worth a glance before importing.')),
       el('div', { style: { flex: 1 } }),
       el('button', {
         class: 'btn sm',
@@ -130,10 +147,9 @@ function dropZone(rerender) {
         el('h3', {}, 'Import a media plan'),
         el('p', {}, 'Lines, monthly budgets, booked rates and margin are read straight off the plan.'))),
     el('div', { class: 'body' }, zone,
-      el('ul', { class: 'warnlist', style: { marginTop: '14px' } },
-        el('li', { class: 'ok' }, 'Subtotal, Total and Baidu-style breakdown / top-up rows are detected and skipped so money is not counted twice.'),
-        el('li', { class: 'ok' }, 'Monthly booking columns are verified against each line’s own totals before they are trusted.'),
-        el('li', {}, 'Production (BONUS) and GMS Internal lines are imported as non-billable — visible, but excluded from pacing and the client report.'))));
+      el('div', { class: 'hint', style: { marginTop: '14px', textAlign: 'center' } },
+        'Nothing is saved until you press Import. Subtotal rows, top-up rows and fee lines are '
+        + 'handled for you — you will see exactly what was skipped and why.')));
 }
 
 async function load(file, rerender) {
@@ -188,7 +204,7 @@ function planSummary(s) {
   return el('div', { class: 'panel' },
     el('header', {}, el('div', {},
       el('h3', {}, c.name || 'Untitled campaign'),
-      el('p', {}, `${parsed.fileName} · sheet “${s.sheet}”`))),
+      el('p', {}, `${parsed.fileName}${parsed.sheets.length > 1 ? ` · sheet “${s.sheet}”` : ''}`))),
     el('div', { class: 'body' },
       el('div', { style: { display: 'grid', gap: '14px', gridTemplateColumns: 'repeat(auto-fit,minmax(140px,1fr))' } },
         item('Advertiser', c.advertiser),
@@ -242,7 +258,7 @@ function rowTable(s, rerender) {
   for (const r of s.rows) {
     if (r.objective && r.objective !== group) {
       group = r.objective;
-      body.appendChild(el('tr', { class: 'grp' }, el('td', { colspan: 10 }, group)));
+      body.appendChild(el('tr', { class: 'grp' }, el('td', { colspan: 8 }, group)));
     }
     const mMedia = r.months.reduce((a, m) => a + (m.budget_media || 0), 0);
     body.appendChild(el('tr', { class: r.billable ? '' : 'nb' },
@@ -254,12 +270,10 @@ function rowTable(s, rerender) {
       el('td', { class: 'wrap' }, r.placement || r.category,
         r.reason ? el('div', { class: 'muted', style: { fontSize: '11px' } }, r.reason) : null),
       el('td', {}, r.buy_method || '—'),
-      el('td', { class: 'num' }, int(r.booked_units)),
       el('td', { class: 'num' }, money(r.cost_media)),
       el('td', { class: 'num' }, money(r.cost_gms)),
       el('td', { class: 'num' }, r.margin_pct == null
         ? el('span', { class: 'muted' }, '—') : pct(r.margin_pct, 1)),
-      el('td', { class: 'num' }, money(mMedia)),
       el('td', {}, r.months.length
         ? el('span', { class: 'muted', style: { fontSize: '11px' } },
           `${monthLabel(r.months[0].ym).split(' ')[0]}–${monthLabel(r.months.at(-1).ym).split(' ')[0]}`)
@@ -270,15 +284,15 @@ function rowTable(s, rerender) {
   return el('div', { class: 'panel' },
     el('header', {},
       el('div', {},
-        el('h3', {}, `Lines to import — ${on} of ${s.rows.length} ticked`),
-        el('p', {}, 'Untick anything you do not want tracked. Greyed rows are non-billable.'))),
+        el('h3', {}, `${on} lines will be imported`),
+        el('p', {}, s.rows.length > on
+          ? `${s.rows.length - on} row${s.rows.length - on > 1 ? 's were' : ' was'} skipped — the reason is on each one. Untick anything else you do not want.`
+          : 'Untick anything you do not want tracked. Greyed rows are fee or production lines: tracked, but kept out of pacing and the client report.'))),
     el('div', { class: 'tablewrap' }, el('table', { class: 'data' },
       el('thead', {}, el('tr', {},
         el('th', {}, ''), el('th', {}, 'Platform'), el('th', {}, 'Line'), el('th', {}, 'Buy'),
-        el('th', { class: 'num' }, 'Booked units'),
         el('th', { class: 'num' }, 'Net media'), el('th', { class: 'num' }, 'Net GMS'),
-        el('th', { class: 'num' }, 'Margin'), el('th', { class: 'num' }, 'Monthly Σ'),
-        el('th', {}, 'Months'))),
+        el('th', { class: 'num' }, 'Margin'), el('th', {}, 'Months'))),
       body)));
 }
 

@@ -5,6 +5,7 @@ import { el, fill, clear, monthLabel, toast } from './dom.js';
 import * as store from './store.js';
 import { buildRows, facets, monthsAvailable, emptyFilters } from './model.js';
 import { renderTracking } from './view-tracking.js';
+import { renderClients } from './view-clients.js';
 import { renderSpend } from './view-spend.js';
 import { renderImport } from './view-import.js';
 import { renderAdmin } from './view-admin.js';
@@ -14,7 +15,8 @@ import { ymOf, todayIso } from './calc.js';
 import { closeDrawer } from './drawer.js';
 
 const TABS = [
-  ['tracking', 'Tracking'],
+  ['tracking', 'Overview'],
+  ['clients', 'Clients'],
   ['spend', 'Spend entry'],
   ['import', 'Import plan'],
   ['admin', 'Admin'],
@@ -82,7 +84,7 @@ function render() {
   app.appendChild(confidBand());
 
   if (state.tab !== 'admin' && state.tab !== 'import') {
-    app.appendChild(period());
+    if (state.tab !== 'clients') app.appendChild(period());
     app.appendChild(filterBar());
   }
 
@@ -90,6 +92,7 @@ function render() {
   app.appendChild(view);
   const ctx = { rows, state, rerender: render, goTo };
   if (state.tab === 'tracking') renderTracking(view, ctx);
+  else if (state.tab === 'clients') renderClients(view, ctx);
   else if (state.tab === 'spend') renderSpend(view, ctx);
   else if (state.tab === 'import') renderImport(view, ctx);
   else renderAdmin(view, ctx);
@@ -261,7 +264,7 @@ function exportMenu() {
 }
 
 function tabbar() {
-  const showNav = state.tab !== 'admin' && state.tab !== 'import';
+  const showNav = state.tab === 'tracking' || state.tab === 'spend';
   return el('nav', { class: 'tabbar' },
     ...TABS.map(([id, label]) =>
       el('button', {

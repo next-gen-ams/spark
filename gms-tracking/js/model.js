@@ -2,7 +2,7 @@
    the tracking table renders. Keeps store (I/O) and calc (maths) apart. */
 
 import { all, index, fxMap, byId } from './store.js';
-import { lineMetrics, monthBounds, todayIso, ymOf } from './calc.js';
+import { lineMetrics, monthBounds, todayIso, ymOf, totals } from './calc.js';
 
 export const emptyFilters = () => ({
   client: '', platform: '', objective: '', status: '', campaign: '', q: '',
@@ -90,6 +90,19 @@ export function facets() {
     objectives: uniq(lines.map((l) => l.objective)),
     statuses: uniq(lines.map((l) => l.status || 'Not started')),
   };
+}
+
+/**
+ * Budget and spend for every month in range — the series behind the monthly
+ * chart. Recomputed per month rather than cached: the data is small, and a
+ * stale cache here would show a client the wrong number.
+ */
+export function monthlySeries(filters, side = 'internal') {
+  return monthsAvailable().map((ym) => {
+    const rows = buildRows({ ym, filters });
+    const t = totals(rows);
+    return { ym, budget: t[side].budget, spend: t[side].spend, lines: rows.length };
+  });
 }
 
 export const clientOf = (line) => {
