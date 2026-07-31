@@ -16,10 +16,10 @@ import { closeDrawer } from './drawer.js';
 
 const TABS = [
   ['tracking', 'Overview'],
-  ['clients', 'Clients'],
-  ['spend', 'Spend entry'],
-  ['import', 'Import plan'],
-  ['admin', 'Admin'],
+  ['clients', 'By Client'],
+  ['spend', 'Tracking Entry'],
+  ['import', 'Add New Campaign'],
+  ['admin', 'Settings'],
 ];
 
 const state = {
@@ -303,21 +303,13 @@ function monthNav() {
 
 function confidBand() {
   const bands = [];
-  if (APP.confidential) {
+  /* The warning belongs to the internal figures. On the client-facing view
+     there is nothing sensitive on screen, so the toggle carries the state on
+     its own and the band would just be noise. */
+  if (APP.confidential && state.view === 'internal') {
     bands.push(el('div', { class: 'confid' },
       el('strong', {}, 'INTERNAL'),
       el('span', {}, 'This page shows margin and internal media cost. Do not share the link or a screenshot with a client — use Export ▸ Client report instead.')));
-  }
-  /* Which figures are on screen has to be readable at a glance, and survive a
-     screenshot — the toggle alone is too easy to lose track of. */
-  if (state.view === 'client') {
-    bands.push(el('div', { class: 'viewband' },
-      el('strong', {}, 'CLIENT-FACING'),
-      el('span', {}, 'Every figure below is what the client is billed — internal spend grossed up at each line’s plan margin. Switch to Internal for what GMS pays the media owner.'),
-      el('button', {
-        class: 'btn sm', style: { marginLeft: 'auto' },
-        onclick: () => { state.view = 'internal'; render(); },
-      }, 'Show internal')));
   }
 
   /* Say it plainly — nobody should ever mistake the sample spend for actuals. */
@@ -380,11 +372,11 @@ function filterBar() {
     sel('objective', 'Objective', f.objectives),
     sel('campaign', 'Campaign', f.campaigns, (c) => c.id, (c) => c.name),
     sel('status', 'Status', f.statuses),
-    el('div', { class: 'grow', style: { display: 'flex' } }, search),
-    active ? el('button', {
-      class: 'btn ghost sm',
-      onclick: () => { state.filters = emptyFilters(); render(); },
-    }, 'Clear') : null);
+    el('div', { class: 'grow' }, search,
+      active ? el('button', {
+        class: 'btn ghost sm', style: { flex: 'none' },
+        onclick: () => { state.filters = emptyFilters(); render(); },
+      }, 'Clear') : null));
 }
 
 /* ---------------------------------------------------------------- footer */

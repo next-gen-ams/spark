@@ -11,8 +11,8 @@
 import { el, money, pct, monthLabel } from './dom.js';
 import { CARD_PLATFORMS, PLATFORM_COLOR } from './config.js';
 import { totals, byPlatform } from './calc.js';
-import { monthlySeries } from './model.js';
-import { monthlyBars, platformSplit, pacingAlerts } from './charts.js';
+import { monthlySeries, campaignPace } from './model.js';
+import { monthlyBars, platformSplit, pacingAlerts, campaignPacing } from './charts.js';
 import { openLine } from './drawer.js';
 
 export function renderTracking(host, ctx) {
@@ -48,8 +48,14 @@ export function renderTracking(host, ctx) {
       el('div', { class: 'body' }, platformSplit(
         byPlatform(rows, side).sort((a, b) => b.budget - a.budget))))));
 
-  host.appendChild(panel('Needs attention',
-    'Lines more than 15% ahead of or behind their time elapsed. Click one to open it.',
+  /* Campaign-level first: an underspent month is a campaign-level decision,
+     and it is what the team acts on before drilling into a line. */
+  host.appendChild(panel('Campaign pacing',
+    'Spend against the plan’s own schedule, across the whole flight. The tick on each track is where the schedule says you should be — the gap is what is still owed to the campaign.',
+    el('div', { class: 'body' }, campaignPacing(campaignPace(state.filters, side)))));
+
+  host.appendChild(panel('Lines needing attention',
+    'More than 15% ahead of or behind their time elapsed. Click one to open it.',
     pacingAlerts(rows, side, (m) => openLine(m, rerender))));
 }
 

@@ -1,7 +1,7 @@
 /* Admin — the managed lists everything else picks from. */
 
 import { el, toast, dateAu } from './dom.js';
-import { all, put, remove, removeWhere, newId, vocab, addVocab, importJson, wipe, where, loadDemo, isDemo } from './store.js';
+import { all, put, remove, removeWhere, newId, vocab, addVocab, importJson, where, loadDemo, isDemo } from './store.js';
 import { exportBackup } from './exportxlsx.js';
 import { VOCAB_DEFAULT } from './config.js';
 
@@ -63,27 +63,70 @@ function campaigns(rerender) {
   const list = all('campaign');
   if (!list.length) return el('div');
   const clientName = (id) => all('client').find((c) => c.id === id)?.name || '—';
+  const today = new Date().toISOString().slice(0, 10);
 
-  return panel('Campaigns', 'One per imported media plan. Deleting a campaign removes its lines, budgets and spend.',
+  /* Ordered by IO number, which is how the team refers to a campaign in
+     conversation and in the finance system. */
+  const sorted = list.slice().sort((a, b) =>
+    String(a.io_number || 'zzz').localeCompare(String(b.io_number || 'zzz'), undefined, { numeric: true }));
+
+  const state = (k) => {
+    if (!k.end_date) return { label: 'no dates', kind: 'muted' };
+    if (k.end_date < today) {
+      const months = Math.round((Date.parse(today) - Date.parse(k.end_date)) / 2.6e9);
+      return { label: months >= 1 ? `ended ${months} month${months > 1 ? 's' : ''} ago` : 'ended', kind: 'done' };
+    }
+    if (k.start_date && k.start_date > today) return { label: 'not started', kind: 'muted' };
+    return { label: 'running', kind: 'live' };
+  };
+
+  const ended = sorted.filter((k) => state(k).kind === 'done');
+
+  return panel('Campaigns',
+    'One per imported plan, ordered by IO number. Removing a campaign takes its lines, monthly budgets and spend with it.',
     el('div', { class: 'tablewrap' }, el('table', { class: 'data' },
-      el('thead', {}, el('tr', {}, el('th', {}, 'Client'), el('th', {}, 'Campaign'),
-        el('th', {}, 'IO'), el('th', {}, 'Flight'), el('th', {}, 'FX'),
-        el('th', { class: 'num' }, 'Lines'), el('th', {}, 'Imported'), el('th', {}, ''))),
-      el('tbody', {}, ...list.map((k) => el('tr', {},
-        el('td', {}, clientName(k.client_id)),
-        el('td', { class: 'wrap' }, k.name || '—'),
-        el('td', { class: 'wrap muted' }, k.io_number || '—'),
-        el('td', {}, k.start_date ? `${dateAu(k.start_date)} – ${dateAu(k.end_date)}` : '—'),
-        el('td', {}, k.fx_rate ? `1 AUD = ${k.fx_rate} ${k.fx_ccy || ''}` : '—'),
-        el('td', { class: 'num' }, all('line').filter((l) => l.campaign_id === k.id).length),
-        el('td', { class: 'muted' }, k.imported_at || '—'),
-        el('td', {}, el('button', {
-          class: 'btn ghost sm',
+      el('thead', {}, el('tr', {},
+        el('th', {}, 'IO number'), el('th', {}, 'Client'), el('th', {}, 'Campaign'),
+        el('th', {}, 'Flight'), el('th', {}, 'Status'),
+        el('th', { class: 'num' }, 'Lines'), el('th', { class: 'num' }, 'Spend rows'),
+        el('th', {}, 'Imported'), el('th', {}, ''))),
+      el('tbody', {}, ...sorted.map((k) => {
+        const st = state(k);
+        const lineIds = where('line', (l) => l.campaign_id === k.id).map((l) => l.id);
+        const spendRows = all('spend').filter((x) => lineIds.includes(x.line_id)).length;
+        return el('tr', {},
+          el('td', { class: 'wrap' }, k.io_number || el('span', { class: 'muted' }, 'no IO number')),
+          el('td', {}, clientName(k.client_id)),
+          el('td', { class: 'wrap' }, k.name || '—'),
+          el('td', {}, k.start_date ? `${dateAu(k.start_date)} – ${dateAu(k.end_date)}` : '—'),
+          el('td', {}, el('span', {
+            class: 'tag' + (st.kind === 'live' ? ' good' : st.kind === 'done' ? ' warn' : ''),
+          }, st.label)),
+          el('td', { class: 'num' }, lineIds.length),
+          el('td', { class: 'num' }, spendRows),
+          el('td', { class: 'muted' }, k.imported_at || '—'),
+          el('td', {}, el('button', {
+            class: 'btn ghost sm',
+            onclick: () => {
+              if (!confirm(`Remove “${k.name}”?\n\n${lineIds.length} lines, their monthly budgets and ${spendRows} spend rows go with it. This cannot be undone — take a backup first if you might want it back.`)) return;
+              deleteCampaign(k.id); rerender(); toast('Campaign removed');
+            },
+          }, 'Remove')));
+      })))),
+    ended.length
+      ? el('div', { class: 'body', style: { display: 'flex', gap: '10px', alignItems: 'center' } },
+        el('span', { class: 'hint', style: { flex: 1 } },
+          `${ended.length} campaign${ended.length > 1 ? 's have' : ' has'} finished. Removing them keeps the dashboard to what is actually running — export a backup first if you want the history.`),
+        el('button', {
+          class: 'btn sm',
           onclick: () => {
-            if (!confirm(`Delete “${k.name}” with all its lines, budgets and spend?`)) return;
-            deleteCampaign(k.id); rerender(); toast('Campaign deleted');
+            const names = ended.map((k) => `· ${k.io_number || k.name}`).join('\n');
+            if (!confirm(`Remove ${ended.length} finished campaign${ended.length > 1 ? 's' : ''}?\n\n${names}\n\nAll their lines, budgets and spend go too.`)) return;
+            ended.forEach((k) => deleteCampaign(k.id));
+            rerender(); toast(`${ended.length} finished campaigns removed`);
           },
-        }, 'Delete'))))))));
+        }, `Remove ${ended.length} finished`))
+      : el('div'));
 }
 
 function deleteCampaign(campaignId) {
@@ -177,13 +220,12 @@ function data(rerender) {
           rerender();
         },
       }, isDemo() ? 'Reload sample data' : 'Load sample data'),
-      el('div', { style: { flex: 1 } }),
-      el('button', {
-        class: 'btn', style: { color: 'var(--crit)', borderColor: 'var(--crit)' },
-        onclick: () => {
-          if (!confirm('Erase every client, campaign, line and spend row? This cannot be undone.')) return;
-          if (!confirm('Really erase everything?')) return;
-          wipe(); toast('All data cleared'); rerender();
-        },
-      }, 'Erase everything')));
+      el('div', { style: { flex: 1 } })),
+    /* "Erase everything" used to sit here. One mis-click away from deleting
+       every client's plan and spend is not a trade-off worth any convenience —
+       campaigns are removed one at a time above, which is the real need. */
+    el('div', { class: 'body', style: { paddingTop: 0 } },
+      el('div', { class: 'hint' },
+        'To remove data, delete a campaign or a client above — each asks first and '
+        + 'tells you what goes with it. There is deliberately no “erase everything” button.')));
 }

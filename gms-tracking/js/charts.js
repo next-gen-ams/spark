@@ -188,3 +188,55 @@ export function pacingAlerts(rows, side, onPick) {
             : `~${money(m[side].budget - m[side].spend)} still to place`));
     }))));
 }
+
+/* --------------------------------------------------- campaign re-pacing */
+
+/**
+ * Where each campaign stands against its own schedule, and what that means
+ * for the months still to run.
+ *
+ * This is the "you underspent June, so July can carry more" panel. The plan's
+ * monthly split is a schedule, not a set of expiring budgets — money not
+ * placed in June is still owed to the campaign, and the daily figure to aim at
+ * from here reflects that automatically.
+ */
+export function campaignPacing(groups, onPick) {
+  if (!groups.length) {
+    return el('div', { class: 'empty' }, 'No campaign has a flight to pace against yet.');
+  }
+
+  return el('div', { class: 'pacelist' }, ...groups.map((g) => {
+    const behind = g.variance < -1;
+    const ahead = g.variance > 1;
+    const kind = !behind && !ahead ? 'good' : (Math.abs(g.variance) / Math.max(g.due, 1) > 0.25 ? 'crit' : 'warn');
+
+    return el('div', { class: 'pacerow', style: { cursor: onPick ? 'pointer' : 'default' },
+      onclick: () => onPick && onPick(g) },
+    el('div', { class: 'pacehead' },
+      el('b', {}, g.clientName),
+      el('span', { class: 'muted' }, g.campaignName),
+      g.io ? el('span', { class: 'muted', style: { fontSize: '11px' } }, g.io) : null,
+      el('span', { style: { marginLeft: 'auto', fontVariantNumeric: 'tabular-nums' } },
+        el('b', {}, money(g.spent)), el('span', { class: 'muted' }, ` of ${money(g.total)}`))),
+
+    /* Two marks on one track: how far through the money, and how far through
+       the schedule. The gap between them IS the story. */
+    el('div', { class: 'pacetrack', title: `Spent ${pct(g.total ? g.spent / g.total : 0, 0)} · scheduled ${pct(g.total ? g.due / g.total : 0, 0)}` },
+      el('i', { style: { width: Math.min(100, (g.total ? g.spent / g.total : 0) * 100) + '%',
+        background: ahead ? 'var(--crit)' : 'var(--orange)' } }),
+      el('u', { style: { left: Math.min(100, (g.total ? g.due / g.total : 0) * 100) + '%' } })),
+
+    el('div', { class: 'pacefoot' },
+      el('span', { class: 'tag ' + kind },
+        behind ? `${money(Math.abs(g.variance))} behind schedule`
+          : ahead ? `${money(g.variance)} ahead of schedule` : 'on schedule'),
+      g.finished
+        ? el('span', { class: 'muted' }, 'flight finished')
+        : el('span', { class: 'muted' },
+          `${money(g.remaining)} left over ${g.daysLeft} day${g.daysLeft === 1 ? '' : 's'} — `,
+          el('b', { style: { color: 'var(--ink)' } }, `run ${money(g.suggestedDaily)}/day`),
+          g.plannedThisMonth > 0
+            ? ` · this month can take ${money(g.allowedThisMonth)} (plan said ${money(g.plannedThisMonth)})`
+            : '')));
+  }));
+}

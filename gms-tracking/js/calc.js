@@ -195,6 +195,104 @@ export function flightWindow(line, campaign, ym) {
   return overlap(s, e, b.start, b.end);
 }
 
+/* ------------------------------------------------------------ re-pacing */
+
+/**
+ * What a line *should* have spent by today, what it actually spent, and what
+ * that means for the months still to run.
+ *
+ * A media plan books money month by month, but the money does not expire at
+ * the end of each month — an underspent June is still owed to the campaign in
+ * July. So the daily figure to aim at is never "this month's budget ÷ days in
+ * month"; it is "everything not yet spent ÷ days still left in the flight",
+ * which automatically carries a shortfall forward and absorbs an overspend.
+ *
+ * @param {array} months  line_month rows for the whole line, not one month
+ * @returns {object|null} null when there is no flight to pace against
+ */
+export function repace(line, campaign, months, spends, { fx, today = todayIso(), side = 'internal' } = {}) {
+  const flight = flightWindow(line, campaign, null);
+  if (!flight) return null;
+
+  const rate = perAud(line.currency || 'AUD', fx, campaign);
+  const margin = num(line.margin_pct);
+  const toClient = (aud) => (side === 'client' ? grossUp(aud, margin) : aud);
+
+  const budgetOf = (m) => (side === 'client'
+    ? (num(m.budget_gms) || grossUp(num(m.budget_media), margin))
+    : num(m.budget_media));
+
+  const total = months.reduce((a, m) => a + budgetOf(m), 0);
+  if (!(total > 0)) return null;
+
+  /* Booked to date: whole months already past, plus today's share of the
+     current month. Half a month gone means half of that month is due. */
+  const ym = today.slice(0, 7);
+  let due = 0;
+  for (const m of months) {
+    if (!m.ym) continue;
+    if (m.ym < ym) due += budgetOf(m);
+    else if (m.ym === ym) {
+      const b = monthBounds(m.ym);
+      const days = daysBetween(b.start, b.end);
+      const gone = Math.min(days, Math.max(0, daysBetween(b.start, today)));
+      due += budgetOf(m) * (gone / days);
+    }
+  }
+  due = Math.min(due, total);
+
+  const spentLocal = spends.reduce((a, s) => a + num(s.spend_internal), 0);
+  const spent = toClient(spentLocal / rate);
+
+  const variance = spent - due;                 // negative = behind
+  const remaining = Math.max(0, total - spent);
+  const daysLeft = today > flight.end
+    ? 0
+    : Math.max(1, daysBetween(today > flight.start ? today : flight.start, flight.end));
+
+  /* This month's original schedule, and what it becomes once the carried
+     shortfall (or surplus) is folded in. */
+  const thisMonth = months.find((m) => m.ym === ym);
+  const plannedThisMonth = thisMonth ? budgetOf(thisMonth) : 0;
+  const allowedThisMonth = Math.max(0, plannedThisMonth - variance);
+
+  return {
+    flight, total, due, spent, variance, remaining, daysLeft,
+    onTrack: due > 0 ? spent / due : null,       // 1.0 = exactly to schedule
+    plannedThisMonth,
+    allowedThisMonth,
+    plannedDaily: total / Math.max(1, daysBetween(flight.start, flight.end)),
+    /* The number the team actually needs: what to run per day from here to
+       land on budget. */
+    suggestedDaily: daysLeft ? remaining / daysLeft : 0,
+    finished: today > flight.end,
+  };
+}
+
+/** Wording for the carried shortfall — the thing the team acts on. */
+export function repaceAdvice(r) {
+  if (!r) return null;
+  const off = r.due > 0 ? r.variance / r.due : 0;
+  if (r.finished) {
+    return r.variance < -1
+      ? { kind: 'crit', text: `Flight ended ${Math.abs(r.variance) > 0 ? 'underspent' : ''} — ${Math.abs(r.variance).toFixed(0)} AUD was never placed.` }
+      : { kind: 'ok', text: 'Flight complete.' };
+  }
+  if (Math.abs(off) < 0.05) return { kind: 'ok', text: 'On schedule.' };
+  if (r.variance < 0) {
+    return {
+      kind: Math.abs(off) > 0.25 ? 'crit' : 'warn',
+      text: `Behind by ${Math.abs(r.variance).toFixed(0)} AUD. `
+        + `${r.daysLeft} day${r.daysLeft === 1 ? '' : 's'} left — run ${r.suggestedDaily.toFixed(0)}/day to land on budget.`,
+    };
+  }
+  return {
+    kind: off > 0.25 ? 'crit' : 'warn',
+    text: `Ahead by ${r.variance.toFixed(0)} AUD. `
+      + `Ease to ${r.suggestedDaily.toFixed(0)}/day for the remaining ${r.daysLeft} day${r.daysLeft === 1 ? '' : 's'}.`,
+  };
+}
+
 /* ------------------------------------------------------------- aggregation */
 
 const SUM_KEYS = ['budgetInternal', 'budgetClient', 'budgetCcy', 'bookedUnits',

@@ -2,7 +2,7 @@
    the tracking table renders. Keeps store (I/O) and calc (maths) apart. */
 
 import { all, index, fxMap, byId } from './store.js';
-import { lineMetrics, monthBounds, todayIso, ymOf, totals } from './calc.js';
+import { lineMetrics, monthBounds, todayIso, ymOf, totals, repace } from './calc.js';
 
 export const emptyFilters = () => ({
   client: '', platform: '', objective: '', status: '', campaign: '', q: '',
@@ -52,11 +52,9 @@ export function buildRows(state) {
     if (filters.platform && line.platform !== filters.platform) continue;
     if (filters.objective && line.objective !== filters.objective) continue;
     if (filters.status && (line.status || 'Not started') !== filters.status) continue;
-    if (q) {
-      const hay = [client?.name, campaign.name, line.platform, line.objective,
-        line.placement, line.supplier, line.market].join(' ').toLowerCase();
-      if (!hay.includes(q)) continue;
-    }
+    /* Search covers everything a person might half-remember — the line, the
+       supplier, the IO number, the KPI, a note — not just the campaign name. */
+    if (q && !haystack(line, campaign, client).includes(q)) continue;
 
     const months = (monthsBy.get(line.id) || []).filter((m) => !ym || m.ym === ym);
     const spends = (spendBy.get(line.id) || [])
@@ -77,6 +75,15 @@ export function buildRows(state) {
     || a.campaignName.localeCompare(b.campaignName)
     || (a.line.seq ?? 0) - (b.line.seq ?? 0));
   return out;
+}
+
+/** Everything about a line that free-text search should reach. */
+function haystack(line, campaign, client) {
+  return [
+    client?.name, campaign.name, campaign.io_number, campaign.advertiser, campaign.am,
+    line.platform, line.objective, line.placement, line.supplier, line.market,
+    line.buy_method, line.kpi, line.landing_page, line.note, line.status, line.currency,
+  ].filter(Boolean).join(' ').toLowerCase();
 }
 
 /** Distinct values present in the data, for the filter dropdowns. */
@@ -103,6 +110,51 @@ export function monthlySeries(filters, side = 'internal') {
     const t = totals(rows);
     return { ym, budget: t[side].budget, spend: t[side].spend, lines: rows.length };
   });
+}
+
+/**
+ * Re-pacing rolled up per campaign — the numbers behind the Overview panel
+ * that tells the team what an underspent month leaves them to place.
+ */
+export function campaignPace(filters, side = 'internal', today = todayIso()) {
+  const fx = fxMap();
+  const clients = new Map(all('client').map((c) => [c.id, c]));
+  const monthsBy = index('line_month', 'line_id');
+  const spendBy = index('spend', 'line_id');
+  const out = [];
+
+  for (const campaign of all('campaign')) {
+    if (filters.client && campaign.client_id !== filters.client) continue;
+    if (filters.campaign && campaign.id !== filters.campaign) continue;
+
+    const lines = all('line').filter((l) => l.campaign_id === campaign.id && l.billable !== false
+      && (!filters.platform || l.platform === filters.platform)
+      && (!filters.objective || l.objective === filters.objective));
+    if (!lines.length) continue;
+
+    const parts = lines
+      .map((l) => repace(l, campaign, monthsBy.get(l.id) || [], spendBy.get(l.id) || [],
+        { fx, today, side }))
+      .filter(Boolean);
+    if (!parts.length) continue;
+
+    const sum = (k) => parts.reduce((a, p) => a + p[k], 0);
+    out.push({
+      campaignId: campaign.id,
+      clientName: clients.get(campaign.client_id)?.name || '—',
+      campaignName: campaign.name || '—',
+      io: campaign.io_number || '',
+      total: sum('total'), due: sum('due'), spent: sum('spent'),
+      variance: sum('variance'), remaining: sum('remaining'),
+      plannedThisMonth: sum('plannedThisMonth'), allowedThisMonth: sum('allowedThisMonth'),
+      suggestedDaily: sum('suggestedDaily'),
+      daysLeft: Math.max(...parts.map((p) => p.daysLeft)),
+      finished: parts.every((p) => p.finished),
+    });
+  }
+  /* Worst first — the top of this list is the day's work. */
+  return out.sort((a, b) =>
+    Math.abs(b.variance) / Math.max(b.due, 1) - Math.abs(a.variance) / Math.max(a.due, 1));
 }
 
 export const clientOf = (line) => {
