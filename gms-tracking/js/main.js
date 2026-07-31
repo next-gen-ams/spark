@@ -144,11 +144,15 @@ function renderGate() {
       el('span', { class: 'rule' }),
       el('span', { class: 'mark' }, 'DIGITAL')),
     el('h2', { style: { margin: '0 0 4px', fontSize: '18px', fontWeight: 700 } }, APP.title),
+    /* Signed-out copy stays deliberately blank about what is inside. This
+       screen is reachable by anyone with the URL; describing the contents
+       would advertise them. The INTERNAL banner after sign-in does that job,
+       to an audience that is already allowed to see it. */
     el('p', { class: 'muted', style: { margin: '0 0 18px', fontSize: '12.5px' } },
-      'Internal — this dashboard shows margin and internal media cost.'),
+      'GMS internal only'),
     form,
     el('div', { class: 'hint', style: { marginTop: '14px' } },
-      'One shared GMS account. If you need access, ask Coco — do not forward the password outside GMS.'))));
+      'If you need access, ask Coco.'))));
   setTimeout(() => pw.focus(), 30);
 }
 
