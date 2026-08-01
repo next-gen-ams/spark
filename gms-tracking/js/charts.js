@@ -183,7 +183,7 @@ export function pacingAlerts(rows, side, onPick) {
         el('td', { class: 'num muted' }, pct(m.timePct, 0)),
         el('td', {}, el('span', { class: 'tag ' + (over ? 'crit' : 'warn') },
           over ? `${pct(idx - 1, 0)} ahead` : `${pct(1 - idx, 0)} behind`)),
-        el('td', { class: 'muted', style: { fontSize: '11px' } },
+        el('td', { class: 'wrap prose muted', style: { fontSize: '11px' } },
           over
             ? `will overspend by ~${money(m[side].budget * (idx - 1))}`
             : `~${money(m[side].budget - m[side].spend)} still to place`));

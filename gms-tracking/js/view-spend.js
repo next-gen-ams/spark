@@ -145,8 +145,8 @@ function grid(rows, date, mode, state, rerender) {
             el('div', { class: 'muted', style: { fontSize: '11px' } },
               `${r.daysLeft} day${r.daysLeft === 1 ? '' : 's'} left`))
           : el('span', { class: 'muted' }, '—')),
-        el('td', { class: 'wrap' }, advice
-          ? el('span', { class: 'tag ' + (advice.kind === 'ok' ? 'good' : advice.kind) }, advice.text)
+        el('td', { class: 'wrap prose' }, advice
+          ? el('span', { class: 'advice ' + (advice.kind === 'ok' ? 'good' : advice.kind) }, advice.text)
           : el('span', { class: 'muted' }, 'no flight dates')),
 
         el('td', { class: 'num' }, m.billable

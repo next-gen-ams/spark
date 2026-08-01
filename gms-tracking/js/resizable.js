@@ -18,7 +18,20 @@ function save(all) {
   try { localStorage.setItem(KEY, JSON.stringify(all)); } catch { /* quota — not worth failing over */ }
 }
 
-const MIN = 56;
+/* A column of figures can go narrow; a column of prose cannot. 56px of a
+   sentence is one letter per line and a row four hundred pixels tall, which
+   is technically "nothing was lost" and practically unusable. */
+const MIN_NUM = 64;
+const MIN_TEXT = 96;
+const MIN_PROSE = 150;
+
+function minWidth(table, i) {
+  const cell = table.tBodies?.[0]?.rows?.[0]?.cells?.[i];
+  if (!cell) return MIN_TEXT;
+  if (cell.classList.contains('prose') || cell.classList.contains('wrap')) return MIN_PROSE;
+  if (cell.classList.contains('num')) return MIN_NUM;
+  return MIN_TEXT;
+}
 
 /**
  * @param {HTMLTableElement} table
@@ -36,8 +49,10 @@ export function resizable(table, key) {
      treat them as suggestions and quietly ignore the narrow ones. */
   if (stored && stored.length === cells.length) applyWidths(table, cells, stored);
 
+  /* Every column gets one, the last included — it is the one most likely to
+     hold a long sentence, and without a grip there is no way to widen it back
+     out once the table is under fixed layout. */
   cells.forEach((th, i) => {
-    if (i === cells.length - 1) return;            // last column takes the slack
     const grip = document.createElement('span');
     grip.className = 'colgrip';
     grip.title = 'Drag to resize · double-click to reset this column';
@@ -53,10 +68,11 @@ export function resizable(table, key) {
 
       const startX = e.clientX;
       const startW = widths[i];
+      const floor = minWidth(table, i);
       document.body.classList.add('col-resizing');
 
       const move = (ev) => {
-        widths[i] = Math.max(MIN, startW + (ev.clientX - startX));
+        widths[i] = Math.max(floor, startW + (ev.clientX - startX));
         setWidth(table, i, widths[i]);
       };
       const up = () => {
@@ -91,6 +107,20 @@ function applyWidths(table, cells, widths) {
   widths.forEach((w, i) => { group.children[i].style.width = w + 'px'; });
   table.style.tableLayout = 'fixed';
   table.style.width = widths.reduce((a, b) => a + b, 0) + 'px';
+  titleTruncatedCells(table);
+}
+
+/**
+ * Under fixed layout a narrow column shows an ellipsis, which is honest but
+ * unreadable. Carry the full text into a tooltip so nothing is lost — only
+ * where there isn't already a more useful one.
+ */
+function titleTruncatedCells(table) {
+  for (const cell of table.querySelectorAll('td')) {
+    if (cell.title || cell.querySelector('input, select, button')) continue;
+    const text = cell.textContent.trim();
+    if (text) cell.title = text;
+  }
 }
 
 function setWidth(table, i, w) {

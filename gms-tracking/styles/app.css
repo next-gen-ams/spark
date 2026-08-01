@@ -244,7 +244,40 @@ table.data th { position: sticky; }
 .colgrip:hover::after { background: var(--orange); width: 2px; top: 0; bottom: 0; }
 body.col-resizing { cursor: col-resize; user-select: none; }
 body.col-resizing .colgrip::after { background: var(--orange); width: 2px; top: 0; bottom: 0; }
-table.data[style*="fixed"] th, table.data[style*="fixed"] td { overflow: hidden; }
+/* Fixed layout has to clip — otherwise one long cell forces its column back
+   open and the drag does nothing. But clipping in silence just eats the text,
+   so: prose columns wrap and grow taller, everything else shows an ellipsis
+   and keeps the full text on hover. */
+table.data[style*="fixed"] th,
+table.data[style*="fixed"] td {
+  overflow: hidden; text-overflow: ellipsis;
+}
+table.data[style*="fixed"] td.wrap,
+table.data[style*="fixed"] td.prose {
+  white-space: normal;
+  /* break-word, never anywhere: words stay whole instead of being sliced a
+     letter at a time down a narrow column. */
+  overflow-wrap: break-word;
+  text-overflow: clip;
+  /* Cap the height so a squeezed column costs a few lines, not a screenful.
+     The full text stays reachable via the cell's tooltip. */
+  display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 4;
+}
+table.data[style*="fixed"] td.wrap *,
+table.data[style*="fixed"] td.prose * {
+  white-space: normal; overflow-wrap: break-word;
+}
+
+/* Pacing advice is a sentence. It was wearing .tag, which is nowrap, so it
+   stretched into one long line and got cut off at the column edge. */
+.advice {
+  display: block; font-size: 11.5px; line-height: 1.35;
+  padding: 3px 8px; border-radius: var(--radius-xs);
+  background: var(--surface-2); color: var(--ink-2);
+}
+.advice.good { background: var(--good-soft); color: var(--good); }
+.advice.warn { background: var(--warn-soft); color: var(--warn); }
+.advice.crit { background: var(--crit-soft); color: var(--crit); }
 
 /* First column is pinned horizontally: at 16 columns you scroll far enough to
    forget whose row you are on. */
