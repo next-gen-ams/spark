@@ -15,7 +15,7 @@
 
 import { download, toast, monthLabel, money } from './dom.js';
 import { all, where, byId } from './store.js';
-import { totals, byPlatform, num } from './calc.js';
+import { totals, byPlatform, num, effectiveStatus } from './calc.js';
 import { fileName } from './view-export.js';
 import { GMS_LOGO_B64 } from './logo-b64.js';
 
@@ -343,7 +343,7 @@ function sheetLines(wb, rows, { isClient, title, subtitle }) {
     ri: m.internal.rateIndex, ric: m.client.rateIndex,
     pc: m.internal.pacingPct, pcc: m.client.pacingPct,
     nb: m.billable ? 'Yes' : 'No',
-    status: m.line.status || '', note: m.line.note || '',
+    status: effectiveStatus(m.line, m.campaign), note: m.line.note || '',
   }));
   finish(ws, writeRows(ws, cols, data), cols.length);
 }

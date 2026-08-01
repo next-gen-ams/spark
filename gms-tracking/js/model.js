@@ -2,7 +2,7 @@
    the tracking table renders. Keeps store (I/O) and calc (maths) apart. */
 
 import { all, index, fxMap, byId } from './store.js';
-import { lineMetrics, monthBounds, todayIso, ymOf, totals, repace } from './calc.js';
+import { lineMetrics, monthBounds, todayIso, ymOf, totals, repace, effectiveStatus } from './calc.js';
 
 export const emptyFilters = () => ({
   client: '', platform: '', objective: '', status: '', campaign: '', q: '',
@@ -51,7 +51,7 @@ export function buildRows(state) {
     if (filters.campaign && line.campaign_id !== filters.campaign) continue;
     if (filters.platform && line.platform !== filters.platform) continue;
     if (filters.objective && line.objective !== filters.objective) continue;
-    if (filters.status && (line.status || 'Not started') !== filters.status) continue;
+    if (filters.status && effectiveStatus(line, campaign, today) !== filters.status) continue;
     /* Search covers everything a person might half-remember — the line, the
        supplier, the IO number, the KPI, a note — not just the campaign name. */
     if (q && !haystack(line, campaign, client).includes(q)) continue;
@@ -82,7 +82,10 @@ function haystack(line, campaign, client) {
   return [
     client?.name, campaign.name, campaign.io_number, campaign.advertiser, campaign.am,
     line.platform, line.objective, line.placement, line.supplier, line.market,
-    line.buy_method, line.kpi, line.landing_page, line.note, line.status, line.currency,
+    /* Effective, not stored: typing "completed" must find the lines that read
+       Completed on screen, not the ones whose stored label happens to say so. */
+    line.buy_method, line.kpi, line.landing_page, line.note,
+    effectiveStatus(line, campaign), line.currency,
   ].filter(Boolean).join(' ').toLowerCase();
 }
 
@@ -90,12 +93,17 @@ function haystack(line, campaign, client) {
 export function facets() {
   const lines = all('line');
   const uniq = (arr) => [...new Set(arr.filter(Boolean))].sort();
+  /* Statuses are the *effective* ones — the dropdown must offer exactly what
+     the rows will say, or picking "Completed" would miss every line whose
+     stored label never advanced past the import default. */
+  const campaigns = new Map(all('campaign').map((c) => [c.id, c]));
+  const today = todayIso();
   return {
     clients: all('client').slice().sort((a, b) => (a.name || '').localeCompare(b.name || '')),
     campaigns: all('campaign').slice().sort((a, b) => (a.name || '').localeCompare(b.name || '')),
     platforms: uniq(lines.map((l) => l.platform)),
     objectives: uniq(lines.map((l) => l.objective)),
-    statuses: uniq(lines.map((l) => l.status || 'Not started')),
+    statuses: uniq(lines.map((l) => effectiveStatus(l, campaigns.get(l.campaign_id), today))),
   };
 }
 

@@ -9,7 +9,7 @@
 import { el, money, pct, monthLabel, dateAu, tag } from './dom.js';
 import { PLATFORM_COLOR } from './config.js';
 import { all, where, fxMap } from './store.js';
-import { lineMetrics, totals, todayIso, num } from './calc.js';
+import { lineMetrics, totals, todayIso, num, effectiveStatus } from './calc.js';
 import { openLine } from './drawer.js';
 import { resizable } from './resizable.js';
 
@@ -113,7 +113,7 @@ function buildCampaign(campaign, { fx, today, state }) {
   const rows = where('line', (l) => l.campaign_id === campaign.id)
     .filter((l) => (!f.platform || l.platform === f.platform)
       && (!f.objective || l.objective === f.objective)
-      && (!f.status || (l.status || 'Not started') === f.status)
+      && (!f.status || effectiveStatus(l, campaign, today) === f.status)
       && (!f.q || [l.platform, l.objective, l.placement, l.supplier, l.market, campaign.name]
         .join(' ').toLowerCase().includes(f.q.trim().toLowerCase())))
     .sort((a, b) => (a.seq ?? 0) - (b.seq ?? 0))
@@ -213,7 +213,7 @@ function lineRow(m, months, side, rerender) {
     const v = byMonth.get(ym);
     return el('td', { class: 'num mo' + (v ? '' : ' muted') }, v ? money(v) : '·');
   }),
-  el('td', {}, el('span', { class: 'tag' }, m.line.status || 'Not started')));
+  el('td', {}, el('span', { class: 'tag' }, effectiveStatus(m.line, m.campaign))));
 }
 
 function footRow(rows, months, side) {

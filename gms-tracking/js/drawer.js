@@ -3,7 +3,7 @@
 
 import { el, fill, money, money2, int, pct, dateAu, monthLabel, toast, selectOrNew } from './dom.js';
 import { put, remove, where, newId, vocab, addVocab, fxMap } from './store.js';
-import { grossUp, num, perAud } from './calc.js';
+import { grossUp, num, perAud, effectiveStatus } from './calc.js';
 
 let host = null;
 
@@ -40,7 +40,7 @@ export function openLine(m, rerender) {
 
     el('div', { class: 'content' },
       derivation(m),
-      identity(line, save),
+      identity(line, save, m.campaign),
       commercials(line, save, m),
       monthly(m),
       creatives(line, refresh),
@@ -104,10 +104,17 @@ function derivation(m) {
 
 /* --------------------------------------------------------------- fields */
 
-function identity(line, save) {
+function identity(line, save, campaign) {
   const pick = (kind, key) => selectOrNew(line[key] || '', vocab(kind), (v) => {
     addVocab(kind, v); save({ [key]: v });
   }, { cls: '' });
+
+  /* 'Not started' and 'Live' only describe where the calendar is, so the app
+     derives them from the flight and everywhere else shows the derived one.
+     The select still edits the stored value — the hint says what actually
+     displays, so the two can't silently disagree. */
+  const shown = effectiveStatus(line, campaign);
+  const stored = line.status || 'Not started';
 
   return el('div', {},
     el('div', { class: 'row2' },
@@ -115,7 +122,11 @@ function identity(line, save) {
       el('div', { class: 'field' }, el('label', {}, 'Objective'), pick('objective', 'objective'))),
     el('div', { class: 'row3' },
       el('div', { class: 'field' }, el('label', {}, 'Buy method'), pick('buy_method', 'buy_method')),
-      el('div', { class: 'field' }, el('label', {}, 'Status'), pick('status', 'status')),
+      el('div', { class: 'field' }, el('label', {}, 'Status'), pick('status', 'status'),
+        shown !== stored
+          ? el('div', { class: 'hint' },
+            `Shows as “${shown}” — automatic from the flight dates. Pick Paused or Stopped to override.`)
+          : null),
       el('div', { class: 'field' }, el('label', {}, 'Market'),
         el('input', { value: line.market || '', onchange: (e) => save({ market: e.target.value }) }))),
     el('div', { class: 'row2' },

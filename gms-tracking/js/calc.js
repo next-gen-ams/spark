@@ -196,6 +196,27 @@ export function pacingFlag(index, billable = true) {
   return 'ok';
 }
 
+/**
+ * The status a line should *display* — derived from its flight, not from the
+ * label alone.
+ *
+ * `status` starts as 'Not started' at import and nobody comes back to advance
+ * it, so a finished campaign was reaching client reports labelled Not started
+ * next to 99% delivery. The two labels that just describe where the calendar
+ * is ('Not started', 'Live') now come from the calendar; the labels that
+ * record a human decision ('Paused', 'Stopped', an early 'Completed') stick,
+ * because no date can know about them.
+ */
+export function effectiveStatus(line, campaign, today = todayIso()) {
+  const stored = line.status || 'Not started';
+  if (stored !== 'Not started' && stored !== 'Live') return stored;
+  const f = flightWindow(line, campaign, null);
+  if (!f) return stored;                       // no dates — nothing to derive from
+  if (today < f.start) return 'Not started';
+  if (today > f.end) return 'Completed';
+  return 'Live';
+}
+
 /** Flight = the line's own dates if the plan gave any, else the campaign's,
     clipped to the month currently in view. */
 export function flightWindow(line, campaign, ym) {
