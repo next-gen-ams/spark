@@ -211,7 +211,8 @@ const COLW = [
   92,   // Internal AUD
   92,   // Client AUD
   100,  // Impressions — floor widens this to fit the word
-  84,   // Clicks
+  92,   // Clicks — cell padding (20) + input min-width (68) need 88; below
+        // that the input's left edge is clipped at the cell boundary
   106,  // Spent to date ("of $15,000" underneath)
   88,   // Should be
   94,   // Variance

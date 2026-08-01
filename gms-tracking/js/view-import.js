@@ -105,7 +105,9 @@ function mappingPanel(sheet, rerender) {
   return el('div', { class: 'panel' },
     el('header', {},
       el('div', {},
-        el('h3', {}, blocked ? 'Two columns need pointing at' : 'Check these columns'),
+        el('h3', {}, blocked
+          ? `${sheet.missing.length === 1 ? 'A required column needs' : `${sheet.missing.length} required columns need`} pointing at`
+          : 'Check these columns'),
         el('p', {}, blocked
           ? 'This plan uses wording we have not seen. The sample values on the right tell you which column is which — pick them and the rest follows.'
           : 'These were worked out from the numbers rather than the headers. Worth a glance before importing.')),
@@ -312,8 +314,8 @@ function fillGaps(s, rerender) {
         }),
       })),
     `1 AUD = this many ${ccy}. ${foreign.length
-      ? `${foreign.join(' and ')} ${foreign.length > 1 ? 'lines are' : 'lines are'} quoted on this plan.`
-      : ''} Left blank, the campaign falls back to the rate in Settings`
+      ? `This plan quotes rows in ${foreign.join(' and ')}. `
+      : ''}Left blank, the campaign falls back to the rate in Settings`
       + `${rates[ccy] ? ` (currently ${rates[ccy]})` : ''}.`));
   }
 
@@ -380,7 +382,10 @@ function destination(s, rerender) {
           el('label', {}, 'Spend entry currency'),
           el('select', { onchange: (e) => { target.spendCcy = e.target.value; } },
             ...ccys.map((c) => el('option', { value: c, selected: c === target.spendCcy }, c))),
-          el('div', { class: 'hint' }, 'China buys are topped up in CNY; the plan itself is quoted in AUD. This only affects how spend is typed — every derived figure is AUD.')))));
+          /* Since v3 the currency is decided per line (China platforms → RMB,
+             international-rep buys → AUD); this select is only the fallback,
+             and the copy has to say so or it reads as though it overrides. */
+          el('div', { class: 'hint' }, 'Fallback only. Lines decide for themselves — a China platform is typed in RMB, an international rep buy in AUD — and this covers lines with neither signal. Every derived figure is AUD.')))));
 }
 
 function rowTable(s, rerender) {

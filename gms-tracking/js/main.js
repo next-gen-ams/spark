@@ -242,7 +242,7 @@ function paintStatus() {
   statusChip.className = 'chip ' + kind;
   fill(statusChip, el('span', { class: 'dot' }), label);
   statusChip.title = store.state.mode === 'local'
-    ? 'Data lives in this browser only. Take a backup from Admin.'
+    ? 'Data lives in this browser only. Take a backup from Settings ▸ Data.'
     : (store.state.error || 'Supabase');
 }
 

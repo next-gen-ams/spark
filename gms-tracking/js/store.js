@@ -91,6 +91,40 @@ export function removeWhere(table, key, value) {
   return doomed;
 }
 
+/* The tables wipeData() empties — the *data*, as opposed to the *setup*.
+   FX rates, dropdown vocabulary and settings (column-mapping memory, saved
+   column widths) survive a wipe: they are how the team taught the tool to
+   work, and re-teaching it is exactly the friction a fresh start should not
+   carry. */
+const DATA_TABLES = ['spend', 'creative', 'line_month', 'line', 'campaign', 'client'];
+
+/**
+ * Empty every data table, locally and — when signed in — in Postgres too.
+ * Child tables go first so a failure part-way never leaves orphaned rows that
+ * a later delete of the parent would have caught.
+ * @returns {{rows: number}} how many rows went
+ */
+export function wipeData() {
+  let rows = 0;
+  for (const t of DATA_TABLES) {
+    rows += db[t].length;
+    db[t] = [];
+    /* One statement per table, not one per row — 1,700 spend rows as
+       individual deletes would sit in the queue for minutes. */
+    if (sb) run(() => sb.from(t).delete().not(pkOf(t), 'is', null));
+  }
+  /* The sample-data banner keys off these; data gone means they must go too,
+     or an empty dashboard would still claim to be showing the sample. */
+  for (const k of ['demo', 'demo_kind']) {
+    if (!db.settings.some((s) => s.k === k)) continue;
+    db.settings = db.settings.filter((s) => s.k !== k);
+    if (sb) run(() => sb.from('settings').delete().eq('k', k));
+  }
+  saveLocal();
+  emit();
+  return { rows };
+}
+
 /* ------------------------------------------------------------ persistence */
 
 function persist(table, row) {

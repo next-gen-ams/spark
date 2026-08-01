@@ -17,6 +17,7 @@ import { download, toast, monthLabel, money } from './dom.js';
 import { all, where, byId } from './store.js';
 import { totals, byPlatform, num } from './calc.js';
 import { fileName } from './view-export.js';
+import { GMS_LOGO_B64 } from './logo-b64.js';
 
 /* ------------------------------------------------------------- house style */
 
@@ -44,7 +45,15 @@ const stamp = () => new Date().toISOString().slice(0, 10);
 function layout(ws, { title, subtitle, cols }) {
   const span = cols.length;
 
-  ws.getRow(1).height = 28;
+  /* The GMS logo sits in the top band of every sheet — the client report
+     doubly so, since that file travels under the GMS name. Added once per
+     workbook, stamped per sheet; 600×124 source kept at its own ratio. */
+  const wb = ws.workbook;
+  if (wb.__gmsLogo == null) wb.__gmsLogo = wb.addImage({ base64: GMS_LOGO_B64, extension: 'png' });
+  ws.getRow(1).height = 40;
+  ws.addImage(wb.__gmsLogo, {
+    tl: { col: 0.05, row: 0.15 }, ext: { width: 174, height: 36 }, editAs: 'oneCell',
+  });
 
   ws.mergeCells(2, 1, 2, span);
   const t = ws.getCell(2, 1);

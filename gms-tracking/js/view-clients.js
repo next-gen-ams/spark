@@ -45,7 +45,9 @@ export function renderClients(host, ctx) {
     el('header', {},
       el('div', {},
         el('h3', {}, 'Plans by client'),
-        el('p', {}, 'The whole booked plan, not just the month above. Click a campaign to show its lines.')),
+        /* This page has no month stepper — it always shows the full flight, so
+           the copy must not point at a control that is not there. */
+        el('p', {}, 'Each plan in the shape it arrived in, across every month it covers. Click a campaign to show its lines.')),
       el('div', { style: { flex: 1 } }),
       el('button', {
         class: 'btn sm',

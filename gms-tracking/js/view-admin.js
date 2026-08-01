@@ -1,7 +1,7 @@
 /* Admin — the managed lists everything else picks from. */
 
 import { el, toast, dateAu } from './dom.js';
-import { all, put, remove, removeWhere, newId, vocab, addVocab, importJson, where, loadDemo, isDemo } from './store.js';
+import { all, put, remove, removeWhere, newId, vocab, addVocab, importJson, where, loadDemo, isDemo, wipeData } from './store.js';
 import { exportBackup } from './exportxlsx.js';
 import { VOCAB_DEFAULT } from './config.js';
 
@@ -30,30 +30,45 @@ function panel(title, sub, ...body) {
  * Putting Download backup on the dialog turns the advice into a one-click
  * detour that keeps the deletion flowing.
  */
-function confirmDanger({ title, detail, confirmLabel, onConfirm }) {
+function confirmDanger({ title, detail, confirmLabel, onConfirm, typeToConfirm }) {
   const host = el('div');
   const close = () => host.remove();
   document.body.appendChild(host);
+
+  const go = el('button', {
+    class: 'btn sm danger', disabled: !!typeToConfirm,
+    onclick: () => { close(); onConfirm(); },
+  }, confirmLabel);
+
+  /* For the wipe-everything case a single click is not enough friction —
+     typing the word means the hand and the intent agree. */
+  const gate = typeToConfirm
+    ? el('input', {
+      class: 'pill-sel', placeholder: `Type ${typeToConfirm} to enable`,
+      'aria-label': `Type ${typeToConfirm} to enable ${confirmLabel}`,
+      oninput: (e) => { go.disabled = e.target.value.trim() !== typeToConfirm; },
+    })
+    : null;
+
   host.appendChild(el('div', { class: 'scrim', onclick: close }));
   host.appendChild(el('div', { class: 'confirmbox', role: 'alertdialog', 'aria-label': title },
     el('h3', {}, title),
     el('p', {}, detail),
     el('p', { class: 'hint' }, 'This cannot be undone. The backup is the whole dashboard as one .json — restore it from Settings ▸ Data.'),
+    gate,
     el('div', { class: 'row' },
       el('button', { class: 'btn sm', onclick: exportBackup }, 'Download backup first'),
       el('div', { style: { flex: 1 } }),
       el('button', { class: 'btn sm', onclick: close }, 'Cancel'),
-      el('button', {
-        class: 'btn sm danger',
-        onclick: () => { close(); onConfirm(); },
-      }, confirmLabel))));
+      go)));
+  if (gate) setTimeout(() => gate.focus(), 30);
 }
 
 function clients(rerender) {
   const list = all('client').sort((a, b) => (a.name || '').localeCompare(b.name || ''));
   const input = el('input', { placeholder: 'New client name', class: 'pill-sel', style: { maxWidth: '240px' } });
 
-  return panel('Clients', 'Used by the client filter and the top-right dropdown.',
+  return panel('Clients', 'Used by the client filter and the per-client report export.',
     el('div', { class: 'tablewrap' }, el('table', { class: 'data' },
       el('thead', {}, el('tr', {}, el('th', {}, 'Client'), el('th', { class: 'num' }, 'Campaigns'),
         el('th', { class: 'num' }, 'Lines'), el('th', {}, ''))),
@@ -317,11 +332,35 @@ function data(rerender) {
         },
       }, isDemo() ? 'Reload sample data' : 'Load sample data'),
       el('div', { style: { flex: 1 } })),
-    /* "Erase everything" used to sit here. One mis-click away from deleting
-       every client's plan and spend is not a trade-off worth any convenience —
-       campaigns are removed one at a time above, which is the real need. */
-    el('div', { class: 'body', style: { paddingTop: 0 } },
-      el('div', { class: 'hint' },
-        'To remove data, delete a campaign or a client above — each asks first and '
-        + 'tells you what goes with it. There is deliberately no “erase everything” button.')));
+    /* Wipe-everything exists for exactly one moment: the switch from test data
+       to real tracking. Hence the friction — a typed word, not a click — and
+       the backup button on the same dialog. (An earlier build deliberately had
+       no such button; Coco asked for it back for the go-live reset, guarded.) */
+    el('div', { class: 'body', style: { paddingTop: 0, display: 'flex', gap: '12px', alignItems: 'center' } },
+      el('div', { class: 'hint', style: { flex: 1 } },
+        'Going live? Delete all data clears every client, campaign, line and spend row — here and, '
+        + 'when signed in, in the shared database — so real tracking starts from a clean sheet. '
+        + 'FX rates, dropdown lists and column mappings are kept.'),
+      el('button', {
+        class: 'btn sm',
+        onclick: () => {
+          const n = TABLES_SNAPSHOT();
+          confirmDanger({
+            title: 'Delete all data?',
+            detail: `${n.client} clients, ${n.campaign} campaigns, ${n.line} lines and ${n.spend} spend rows — everywhere this dashboard stores them. FX rates, dropdown lists and column mappings stay.`,
+            confirmLabel: 'Delete all data',
+            typeToConfirm: 'DELETE',
+            onConfirm: () => {
+              const { rows } = wipeData();
+              rerender();
+              toast(`All data deleted — ${rows} rows. Import a media plan to start tracking.`, 'ok', 8000);
+            },
+          });
+        },
+      }, 'Delete all data…')));
 }
+
+const TABLES_SNAPSHOT = () => ({
+  client: all('client').length, campaign: all('campaign').length,
+  line: all('line').length, spend: all('spend').length,
+});
