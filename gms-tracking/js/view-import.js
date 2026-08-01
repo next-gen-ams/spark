@@ -459,7 +459,10 @@ function actions(s, ctx) {
         }
         const res = commit(s, { clientId, spendCcy: target.spendCcy });
         parsed = null;
-        toast(`Imported ${res.lines} lines and ${res.months} monthly budgets`);
+        /* This toast is the only receipt the import leaves — hold it long
+           enough to actually read the numbers. */
+        toast(`Imported “${s.campaign.name || 'campaign'}” — ${res.lines} lines, ${res.months} monthly budgets`,
+          'ok', 8000);
         ctx.goTo('tracking');
       },
     }, `Import ${ticked} line${ticked === 1 ? '' : 's'}`));

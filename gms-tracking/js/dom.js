@@ -110,7 +110,13 @@ export function download(name, blob) {
   setTimeout(() => URL.revokeObjectURL(url), 4000);
 }
 
-export function toast(msg, kind = 'ok') {
+/**
+ * @param {number} [ms] how long it stays. The default suits acknowledgements
+ * ("saved"); anything carrying numbers the user might want to read — an import
+ * result, a row count — should pass longer, because a toast that vanishes
+ * mid-read might as well not have appeared.
+ */
+export function toast(msg, kind = 'ok', ms = 3600) {
   const t = el('div', {
     class: 'chip' + (kind === 'bad' ? ' crit' : ''),
     style: {
@@ -119,5 +125,5 @@ export function toast(msg, kind = 'ok') {
     },
   }, el('span', { class: 'dot' }), msg);
   document.body.appendChild(t);
-  setTimeout(() => t.remove(), 3600);
+  setTimeout(() => t.remove(), ms);
 }

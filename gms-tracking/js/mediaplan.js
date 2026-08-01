@@ -205,6 +205,46 @@ export function normaliseMarket(raw) {
   }).join(' ');
 }
 
+/* -------------------------------------------------------------- suppliers */
+
+/**
+ * One supplier, one spelling — but only when the difference is *provably*
+ * cosmetic. The same vendor arrives ALL-CAPS on one row and Title-case on the
+ * next, and each spelling becomes its own row everywhere the data is grouped.
+ * Anything beyond case — a spacing difference, an abbreviation — is NOT
+ * merged: whether those are one vendor is a judgement call, and judgement
+ * calls belong to a person. Settings ▸ Suppliers is where they get made.
+ *
+ * Choosing the winning spelling: an existing spelling in the dashboard wins
+ * outright, because renaming what is already stored is the human's job, not an
+ * import side-effect. Within a new batch, a mixed-case spelling beats a
+ * shouted or mumbled one — mixed case had to be typed on purpose.
+ *
+ * @param {string[]} names  supplier cells from the rows being imported
+ * @param {string[]} known  spellings already stored in the dashboard
+ * @returns {Map<string,string>} lower-cased name → the spelling to store
+ */
+export function supplierSpellings(names, known) {
+  const canon = new Map();
+  for (const k of known) {
+    const key = String(k).trim().replace(/\s+/g, ' ').toLowerCase();
+    if (key && !canon.has(key)) canon.set(key, String(k).trim().replace(/\s+/g, ' '));
+  }
+  const mixed = (s) => s !== s.toUpperCase() && s !== s.toLowerCase();
+  for (const raw of names) {
+    const s = String(raw ?? '').trim().replace(/\s+/g, ' ');
+    if (!s) continue;
+    const key = s.toLowerCase();
+    const cur = canon.get(key);
+    if (cur == null) canon.set(key, s);
+    /* Upgrade a shouty batch spelling when a deliberate one arrives — but
+       never touch a spelling that came from `known`. */
+    else if (!known.some((k) => String(k).trim().replace(/\s+/g, ' ') === cur)
+      && mixed(s) && !mixed(cur)) canon.set(key, s);
+  }
+  return canon;
+}
+
 /* ------------------------------------------------------------------ dates */
 
 function parseDate(v, endOfMonth = false) {
@@ -632,6 +672,16 @@ export function commit(sheet, opts) {
   const monthRows = [];
   let seq = 0;
 
+  /* Case-only supplier variants collapse to one spelling before anything is
+     stored — an existing spelling in the dashboard always wins. */
+  const suppliers = supplierSpellings(
+    sheet.rows.filter((r) => r.include).map((r) => r.supplier),
+    all('line').map((l) => l.supplier).filter(Boolean));
+  const supplierOf = (r) => {
+    const s = String(r.supplier ?? '').trim().replace(/\s+/g, ' ');
+    return s ? (suppliers.get(s.toLowerCase()) || s) : '';
+  };
+
   for (const r of sheet.rows) {
     if (!r.include) continue;
     const id = newId('ln');
@@ -641,7 +691,7 @@ export function commit(sheet, opts) {
 
     lines.push({
       id, campaign_id: campaignId, seq: seq++,
-      objective: r.objective || '', platform: r.platform || '', supplier: r.supplier || '',
+      objective: r.objective || '', platform: r.platform || '', supplier: supplierOf(r),
       market: r.market || '', placement: r.placement || '',
       buy_method: (r.buy_method || '').toUpperCase(),
       currency: lineSpendCcy(r, spendCcy),

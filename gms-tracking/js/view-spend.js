@@ -123,7 +123,17 @@ function grid(rows, date, mode, state, rerender) {
             placeholder: '0', 'aria-label': `Spend for ${tgt.label}`,
             onchange: (e) => write({ spend_internal: Number(e.target.value) || 0 }),
           }),
-          el('div', { class: 'muted', style: { fontSize: '11px', paddingRight: '7px' } }, m.ccy)),
+          /* A finished flight still accepts entries — a late invoice is real
+             money — but it should never accept them *unremarked*. */
+          r?.finished
+            ? el('div', {
+              class: 'muted',
+              style: { fontSize: '11px', paddingRight: '7px', color: 'var(--warn)' },
+              title: m.campaign.end_date
+                ? `This flight ended ${dateAu(m.campaign.end_date)}. An entry here is a late actual — it lands in the flight's history, not in a running month.`
+                : 'This flight has ended. An entry here is a late actual.',
+            }, `${m.ccy} · flight ended`)
+            : el('div', { class: 'muted', style: { fontSize: '11px', paddingRight: '7px' } }, m.ccy)),
 
         /* (2) the two derived figures, back where they were asked for: this is
            where you see the margin actually doing something. */

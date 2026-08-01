@@ -9,6 +9,7 @@ export function renderAdmin(host, ctx) {
   const { rerender } = ctx;
   host.appendChild(clients(rerender));
   host.appendChild(campaigns(rerender));
+  host.appendChild(suppliers(rerender));
   host.appendChild(fxRates(rerender));
   host.appendChild(vocabs(rerender));
   host.appendChild(data(rerender));
@@ -18,6 +19,34 @@ function panel(title, sub, ...body) {
   return el('div', { class: 'panel' },
     el('header', {}, el('div', {}, el('h3', {}, title), el('p', {}, sub))),
     ...body);
+}
+
+/**
+ * The destructive confirm, with the mitigation *on the dialog*.
+ *
+ * Every confirm here used to say "take a backup first" — advice delivered at
+ * the exact moment the user cannot act on it without cancelling, hunting for
+ * the button, and starting again. Nobody restarts; they just click through.
+ * Putting Download backup on the dialog turns the advice into a one-click
+ * detour that keeps the deletion flowing.
+ */
+function confirmDanger({ title, detail, confirmLabel, onConfirm }) {
+  const host = el('div');
+  const close = () => host.remove();
+  document.body.appendChild(host);
+  host.appendChild(el('div', { class: 'scrim', onclick: close }));
+  host.appendChild(el('div', { class: 'confirmbox', role: 'alertdialog', 'aria-label': title },
+    el('h3', {}, title),
+    el('p', {}, detail),
+    el('p', { class: 'hint' }, 'This cannot be undone. The backup is the whole dashboard as one .json — restore it from Settings ▸ Data.'),
+    el('div', { class: 'row' },
+      el('button', { class: 'btn sm', onclick: exportBackup }, 'Download backup first'),
+      el('div', { style: { flex: 1 } }),
+      el('button', { class: 'btn sm', onclick: close }, 'Cancel'),
+      el('button', {
+        class: 'btn sm danger',
+        onclick: () => { close(); onConfirm(); },
+      }, confirmLabel))));
 }
 
 function clients(rerender) {
@@ -40,11 +69,15 @@ function clients(rerender) {
           el('td', { class: 'num' }, lines.length),
           el('td', {}, el('button', {
             class: 'btn ghost sm',
-            onclick: () => {
-              if (!confirm(`Delete ${c.name} and its ${cmps.length} campaign(s), lines and spend?`)) return;
-              for (const k of cmps) deleteCampaign(k.id);
-              remove('client', c.id); rerender(); toast('Client deleted');
-            },
+            onclick: () => confirmDanger({
+              title: `Delete ${c.name}?`,
+              detail: `${cmps.length} campaign${cmps.length === 1 ? '' : 's'}, every line and all their spend go with it.`,
+              confirmLabel: 'Delete client',
+              onConfirm: () => {
+                for (const k of cmps) deleteCampaign(k.id);
+                remove('client', c.id); rerender(); toast('Client deleted');
+              },
+            }),
           }, 'Delete')));
       })))),
     el('div', { class: 'body', style: { display: 'flex', gap: '8px' } }, input,
@@ -107,10 +140,12 @@ function campaigns(rerender) {
           el('td', { class: 'muted' }, k.imported_at || '—'),
           el('td', {}, el('button', {
             class: 'btn ghost sm',
-            onclick: () => {
-              if (!confirm(`Remove “${k.name}”?\n\n${lineIds.length} lines, their monthly budgets and ${spendRows} spend rows go with it. This cannot be undone — take a backup first if you might want it back.`)) return;
-              deleteCampaign(k.id); rerender(); toast('Campaign removed');
-            },
+            onclick: () => confirmDanger({
+              title: `Remove “${k.name}”?`,
+              detail: `${lineIds.length} lines, their monthly budgets and ${spendRows} spend rows go with it.`,
+              confirmLabel: 'Remove campaign',
+              onConfirm: () => { deleteCampaign(k.id); rerender(); toast('Campaign removed'); },
+            }),
           }, 'Remove')));
       })))),
     ended.length
@@ -119,12 +154,15 @@ function campaigns(rerender) {
           `${ended.length} campaign${ended.length > 1 ? 's have' : ' has'} finished. Removing them keeps the dashboard to what is actually running — export a backup first if you want the history.`),
         el('button', {
           class: 'btn sm',
-          onclick: () => {
-            const names = ended.map((k) => `· ${k.io_number || k.name}`).join('\n');
-            if (!confirm(`Remove ${ended.length} finished campaign${ended.length > 1 ? 's' : ''}?\n\n${names}\n\nAll their lines, budgets and spend go too.`)) return;
-            ended.forEach((k) => deleteCampaign(k.id));
-            rerender(); toast(`${ended.length} finished campaigns removed`);
-          },
+          onclick: () => confirmDanger({
+            title: `Remove ${ended.length} finished campaign${ended.length > 1 ? 's' : ''}?`,
+            detail: `${ended.map((k) => k.io_number || k.name).join(' · ')} — all their lines, budgets and spend go too.`,
+            confirmLabel: `Remove ${ended.length} finished`,
+            onConfirm: () => {
+              ended.forEach((k) => deleteCampaign(k.id));
+              rerender(); toast(`${ended.length} finished campaigns removed`);
+            },
+          }),
         }, `Remove ${ended.length} finished`))
       : el('div'));
 }
@@ -138,6 +176,56 @@ function deleteCampaign(campaignId) {
   }
   removeWhere('line', 'campaign_id', campaignId);
   remove('campaign', campaignId);
+}
+
+/**
+ * Suppliers are free text on every line, so the same vendor drifts into
+ * several spellings. Case-only drift is merged automatically at import;
+ * everything beyond that — a spacing difference, an abbreviation, or fixing a
+ * name outright — is a judgement call, and this is where it gets made: rename a
+ * spelling and every line carrying it follows. Renaming onto an existing
+ * name merges the two.
+ */
+function suppliers(rerender) {
+  const lines = all('line');
+  const counts = new Map();
+  for (const l of lines) {
+    const s = (l.supplier || '').trim();
+    if (s) counts.set(s, (counts.get(s) || 0) + 1);
+  }
+  if (!counts.size) return el('div');
+  const list = [...counts.entries()].sort((a, b) => a[0].localeCompare(b[0]));
+
+  const renameTo = (from, to) => {
+    const target = to.trim().replace(/\s+/g, ' ');
+    if (!target || target === from) { rerender(); return; }
+    /* Renaming onto an existing spelling (however cased) adopts it exactly,
+       so a merge cannot itself create a fresh near-duplicate. */
+    const existing = list.map(([name]) => name)
+      .find((name) => name !== from && name.toLowerCase() === target.toLowerCase());
+    const final = existing || target;
+    let n = 0;
+    for (const l of lines) {
+      if ((l.supplier || '').trim() === from) { put('line', { ...l, supplier: final }); n++; }
+    }
+    rerender();
+    toast(existing
+      ? `Merged “${from}” into “${final}” — ${n} line${n === 1 ? '' : 's'} updated`
+      : `Renamed “${from}” to “${final}” across ${n} line${n === 1 ? '' : 's'}`);
+  };
+
+  return panel('Suppliers',
+    'Free text on each line, so spellings drift. Rename one here and every line follows; renaming onto an existing name merges them.',
+    el('div', { class: 'tablewrap' }, el('table', { class: 'data' },
+      el('thead', {}, el('tr', {},
+        el('th', {}, 'Supplier'), el('th', { class: 'num' }, 'Lines'))),
+      el('tbody', {}, ...list.map(([name, n]) => el('tr', {},
+        el('td', {}, el('input', {
+          class: 'cellinput', style: { textAlign: 'left' }, value: name,
+          'aria-label': `Rename supplier ${name}`,
+          onchange: (e) => renameTo(name, e.target.value),
+        })),
+        el('td', { class: 'num' }, n)))))));
 }
 
 function fxRates(rerender) {
@@ -200,9 +288,17 @@ function data(rerender) {
     onchange: async (e) => {
       const f = e.target.files[0];
       if (!f) return;
-      if (!confirm('Restore replaces everything currently in the dashboard. Continue?')) return;
-      try { importJson(await f.text()); toast('Backup restored'); rerender(); }
-      catch (err) { toast('That file is not a valid backup', 'bad'); }
+      const text = await f.text();
+      e.target.value = '';                 // so picking the same file again re-fires
+      confirmDanger({
+        title: 'Restore this backup?',
+        detail: `Everything currently in the dashboard is replaced by “${f.name}”.`,
+        confirmLabel: 'Restore',
+        onConfirm: () => {
+          try { importJson(text); toast('Backup restored'); rerender(); }
+          catch (err) { toast('That file is not a valid backup', 'bad'); }
+        },
+      });
     },
   });
 

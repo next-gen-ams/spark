@@ -166,12 +166,13 @@ export function pacingAlerts(rows, side, onPick) {
       el('div', {}, 'No line is more than 15% ahead of or behind its time elapsed.'));
   }
 
+  const LIMIT = 12;
   return el('div', { class: 'tablewrap' }, resizable(el('table', { class: 'data' },
     el('thead', {}, el('tr', {},
       el('th', {}, 'Client'), el('th', {}, 'Line'),
       el('th', { class: 'num' }, 'Spent'), el('th', { class: 'num' }, 'of budget'),
       el('th', { class: 'num' }, 'Time elapsed'), el('th', {}, ''), el('th', {}, ''))),
-    el('tbody', {}, ...flagged.slice(0, 12).map(({ m, idx }) => {
+    el('tbody', {}, ...flagged.slice(0, LIMIT).map(({ m, idx }) => {
       const over = idx > 1;
       return el('tr', { style: { cursor: 'pointer' }, onclick: () => onPick && onPick(m) },
         el('td', { class: 'wrap' }, m.clientName),
@@ -187,7 +188,15 @@ export function pacingAlerts(rows, side, onPick) {
           over
             ? `will overspend by ~${money(m[side].budget * (idx - 1))}`
             : `~${money(m[side].budget - m[side].spend)} still to place`));
-    }))), 'overview-alerts', [170, 260, 105, 100, 110, 120, 200]));
+    })),
+  /* The list is capped to keep the panel readable, but a silent cap reads as
+     "that's all of them" — which is exactly wrong when the worst 12 are shown
+     and more are hiding behind them. */
+  flagged.length > LIMIT
+    ? el('tfoot', {}, el('tr', {}, el('td', {
+      colspan: 7, class: 'muted', style: { fontSize: '11.5px' },
+    }, `…and ${flagged.length - LIMIT} more off pace — filter by client or platform to see them.`)))
+    : null), 'overview-alerts', [170, 260, 105, 100, 110, 120, 200]));
 }
 
 /* --------------------------------------------------- campaign re-pacing */
