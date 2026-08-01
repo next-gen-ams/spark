@@ -22,11 +22,18 @@ export function renderTracking(host, ctx) {
   host.appendChild(summaryCards(rows, state));
 
   if (!rows.length) {
-    host.appendChild(el('div', { class: 'panel' }, el('div', { class: 'empty' },
-      el('strong', {}, 'Nothing booked in this period'),
-      el('div', {}, state.ym
+    /* Say why it is empty, not just that it is. "Import a media plan" on top
+       of a live dataset — because a search matched nothing — reads as though
+       the data is gone. */
+    const filtered = Object.values(state.filters).some(Boolean);
+    const why = filtered
+      ? 'Nothing matches these filters. Clear them, or widen the search.'
+      : state.ym
         ? `No media-plan lines or spend fall inside ${monthLabel(state.ym)}. Try “All”, or clear the filters.`
-        : 'Import a media plan to get started — Import plan tab.'))));
+        : 'Import a media plan to get started — Add New Campaign tab.';
+    host.appendChild(el('div', { class: 'panel' }, el('div', { class: 'empty' },
+      el('strong', {}, filtered ? 'Nothing matches' : 'Nothing booked in this period'),
+      el('div', {}, why))));
     return;
   }
 

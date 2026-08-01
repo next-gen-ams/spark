@@ -37,6 +37,9 @@ export function renderSpend(host, ctx) {
   if (mode === 'day') {
     date = state.spendDate || today;
     if (bounds && (date < bounds.start || date > bounds.end)) date = bounds.end;
+    /* Actuals only. "Another day" exists to fill a day that was missed, and a
+       day that has not happened cannot have been missed. */
+    if (date > today) date = today;
   }
 
   host.appendChild(el('div', { class: 'panel' },
@@ -50,7 +53,8 @@ export function renderSpend(host, ctx) {
         segBtn('day', 'Another day', mode, state, rerender)),
       mode === 'day' ? el('input', {
         type: 'date', class: 'pill-sel', value: date,
-        min: bounds ? bounds.start : null, max: bounds ? bounds.end : null,
+        min: bounds ? bounds.start : null,
+        max: bounds && bounds.end < today ? bounds.end : today,
         onchange: (e) => { state.spendDate = e.target.value; rerender(); },
       }) : null,
       el('button', {

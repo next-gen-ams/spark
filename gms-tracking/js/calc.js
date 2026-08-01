@@ -289,9 +289,19 @@ export function repaceAdvice(r) {
   const days = (n) => `${n} day${n === 1 ? '' : 's'}`;
 
   if (r.finished) {
-    return r.variance < -1
-      ? { kind: 'crit', text: `Finished with ${$(r.variance)} unspent — that budget was never placed.` }
-      : { kind: 'ok', text: 'Finished on budget.' };
+    if (r.variance < -1) {
+      return { kind: 'crit', text: `Finished with ${$(r.variance)} unspent — that budget was never placed.` };
+    }
+    /* Overspend on a finished flight was falling through to "Finished on
+       budget" — the one state where the commercial call (pro-rata vs capped)
+       actually has to be made was the one state the advice column hid. */
+    if (r.variance > 1) {
+      return {
+        kind: r.variance / Math.max(r.total, 1) > 0.05 ? 'crit' : 'warn',
+        text: `Finished ${$(r.variance)} over budget — open the line for the capped vs pro-rata client figures.`,
+      };
+    }
+    return { kind: 'ok', text: 'Finished on budget.' };
   }
   if (Math.abs(off) < 0.05) return { kind: 'ok', text: 'On schedule.' };
   if (r.variance < 0) {
