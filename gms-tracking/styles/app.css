@@ -168,10 +168,18 @@ body { padding-top: 6px; }
 .filters .grow { flex: 1 1 220px; min-width: 200px; display: flex; gap: 8px; align-items: center; }
 .filters .grow input { flex: 1; max-width: none; }
 
+/* ------------------------------------------------------------------ view */
+
+/* The gap above the page body belongs to the body, not to whatever happens to
+   be first inside it. Overview opens with .cards and used to carry its own
+   padding-top; By Client opens with a .panel and carried none, so its first
+   card sat flush against the filter bar. */
+.view { margin-top: 14px; }
+
 /* ----------------------------------------------------------------- cards */
 
 .cards { display: grid; gap: 12px; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
-  padding: 14px 0 4px; margin-bottom: 16px; }
+  padding: 0 0 4px; margin-bottom: 16px; }
 .card {
   background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius);
   box-shadow: var(--shadow); padding: 13px 15px; position: relative; overflow: hidden;
@@ -207,7 +215,38 @@ body { padding-top: 6px; }
 .tablewrap {
   overflow-x: auto; max-width: 100%; min-width: 0;
   overscroll-behavior-x: contain;    /* scrolling the table stops at its edge */
+
+  /* A wide table just stopped at the panel edge with nothing to say it went on.
+     On a 1024px screen that hid Variance, Run at and the whole What-to-do
+     column, and the only clue was that the numbers looked oddly incomplete.
+     Two pairs of gradients: the `local` ones travel with the content and act as
+     masks, the `scroll` ones are pinned to the viewport and read as shadow — so
+     each edge shades only while there is more table beyond it. */
+  background:
+    linear-gradient(to right, var(--surface) 30%, transparent) left / 28px 100% no-repeat local,
+    linear-gradient(to left, var(--surface) 30%, transparent) right / 28px 100% no-repeat local,
+    radial-gradient(farthest-side at 0 50%, var(--edge-shadow), transparent) left / 13px 100% no-repeat,
+    radial-gradient(farthest-side at 100% 50%, var(--edge-shadow), transparent) right / 13px 100% no-repeat;
+  background-color: var(--surface);
+
+  /* macOS hides overlay scrollbars until you already scroll, which is no use
+     to someone who does not yet know there is anything to the right. Styling
+     the scrollbar at all opts this container out of overlay mode, so the bar
+     is drawn, takes its own row, and stays there — the shading says there is
+     more, the bar says how much and lets you drag to it. It only appears when
+     the table is genuinely wider than the panel. */
+  scrollbar-width: thin;
+  scrollbar-color: var(--ink-3) var(--surface-2);
 }
+.tablewrap::-webkit-scrollbar { height: 12px; }
+.tablewrap::-webkit-scrollbar-track {
+  background: var(--surface-2); border-top: 1px solid var(--line);
+}
+.tablewrap::-webkit-scrollbar-thumb {
+  background: var(--ink-3); border-radius: 6px;
+  border: 3px solid var(--surface-2);      /* insets the thumb inside the track */
+}
+.tablewrap::-webkit-scrollbar-thumb:hover { background: var(--ink-2); }
 table.data { border-collapse: separate; border-spacing: 0; width: 100%; font-size: 12.5px; }
 table.data th {
   background: var(--header); color: var(--header-tx); text-align: left; font-weight: 600;
@@ -248,9 +287,21 @@ body.col-resizing .colgrip::after { background: var(--orange); width: 2px; top: 
    open and the drag does nothing. But clipping in silence just eats the text,
    so: prose columns wrap and grow taller, everything else shows an ellipsis
    and keeps the full text on hover. */
-table.data[style*="fixed"] th,
 table.data[style*="fixed"] td {
   overflow: hidden; text-overflow: ellipsis;
+}
+/* Headers never ellipsise. A truncated figure is still a figure you can widen
+   to read; a truncated header ("CLIENT A…") removes the only thing that says
+   what the column means, and it stays wrong at every width. Two-line headers
+   cost one row of height, once. */
+table.data[style*="fixed"] th {
+  white-space: normal;
+  /* normal, not break-word: the drag floor already guarantees the widest word
+     fits, so a header wraps at its spaces and never down the middle of a word. */
+  overflow-wrap: normal;
+  overflow: visible;
+  text-overflow: clip;
+  vertical-align: bottom;
 }
 table.data[style*="fixed"] td.wrap,
 table.data[style*="fixed"] td.prose {
@@ -259,9 +310,14 @@ table.data[style*="fixed"] td.prose {
      letter at a time down a narrow column. */
   overflow-wrap: break-word;
   text-overflow: clip;
-  /* Cap the height so a squeezed column costs a few lines, not a screenful.
-     The full text stays reachable via the cell's tooltip. */
+  overflow: visible;
+}
+/* Only prose gets clamped. A .wrap cell stacks a client name over its line
+   detail — clamping that truncates the identity of the row, which is the one
+   thing you always need to read. */
+table.data[style*="fixed"] td.prose > * {
   display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 4;
+  overflow: hidden;
 }
 table.data[style*="fixed"] td.wrap *,
 table.data[style*="fixed"] td.prose * {
@@ -467,6 +523,19 @@ table.data td.mo { color: var(--ink-2); font-size: 11.5px; }
 .field .hint { font-size: 11.5px; color: var(--ink-3); margin-top: 4px; }
 .row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
 .row3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; }
+
+/* Import ▸ fill in what the plan left out. Each field carries a sentence
+   saying what happens if it stays blank, so they need room to breathe rather
+   than the tight two-up the drawer uses. */
+.gapgrid {
+  display: grid; gap: 4px 18px;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  align-items: start;
+}
+/* Currency picker sized to its code; the rate takes what is left. */
+.fxpair { display: flex; gap: 8px; }
+.field .fxpair select { width: auto; flex: 0 0 84px; }
+.field .fxpair input { flex: 1; min-width: 0; }
 
 .calcbox {
   background: var(--surface-2); border: 1px solid var(--line); border-radius: var(--radius-s);

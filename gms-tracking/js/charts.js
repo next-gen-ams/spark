@@ -187,7 +187,7 @@ export function pacingAlerts(rows, side, onPick) {
           over
             ? `will overspend by ~${money(m[side].budget * (idx - 1))}`
             : `~${money(m[side].budget - m[side].spend)} still to place`));
-    }))), 'overview-alerts'));
+    }))), 'overview-alerts', [170, 260, 105, 100, 110, 120, 200]));
 }
 
 /* --------------------------------------------------- campaign re-pacing */

@@ -17,6 +17,8 @@
   --radius: 12px; --radius-s: 8px; --radius-xs: 6px;
   --shadow: 0 1px 2px rgba(40,30,15,.05), 0 8px 24px -12px rgba(40,30,15,.18);
   --shadow-lg: 0 18px 50px -18px rgba(40,30,15,.35);
+  /* Cast inward from the edge of a table that scrolls past its panel. */
+  --edge-shadow: rgba(40,30,15,.15);
 
   --font: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", system-ui,
           "PingFang SC", "Microsoft YaHei", sans-serif;
@@ -36,6 +38,7 @@
     --header: #000000; --header-tx: #F1ECE2;
     --shadow: 0 1px 2px rgba(0,0,0,.3), 0 8px 24px -12px rgba(0,0,0,.6);
     --shadow-lg: 0 18px 50px -18px rgba(0,0,0,.7);
+    --edge-shadow: rgba(0,0,0,.55);
   }
 }
 
@@ -48,4 +51,5 @@
   --header: #000000; --header-tx: #F1ECE2;
   --shadow: 0 1px 2px rgba(0,0,0,.3), 0 8px 24px -12px rgba(0,0,0,.6);
   --shadow-lg: 0 18px 50px -18px rgba(0,0,0,.7);
+  --edge-shadow: rgba(0,0,0,.55);
 }

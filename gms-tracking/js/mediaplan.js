@@ -91,6 +91,12 @@ function groupRuns(hits) {
 
 /* -------------------------------------------------------------- IO header */
 
+/* Shared with the import preview, which withdraws this warning once the dates
+   have been filled in by hand rather than leaving it contradicting the panel
+   directly above it. */
+export const WARN_NO_FLIGHT_DATES =
+  'Campaign start/end date missing — flight defaults to the plan months.';
+
 function readHeader(ws, headerRow) {
   const out = {};
   const want = {
@@ -145,6 +151,58 @@ function readFxTable(ws) {
     }
   }
   return fx;
+}
+
+/* ---------------------------------------------------------------- markets */
+
+/* Markets arrive however the plan typed them. One reference plan carries CHINA,
+ * India, Hong Kong, SIRI LANKA and FIJI at once — and because the filter keys
+ * off the string, "CHINA" and "China" would be two different markets in the
+ * dropdown.
+ *
+ * Place names are safe to re-case; supplier names are not. Several vendors
+ * carry internal capitals that title case would flatten, which is why the same
+ * treatment is deliberately not applied to `supplier`.
+ */
+const MARKET_FIXES = {
+  'siri lanka': 'Sri Lanka',
+  srilanka: 'Sri Lanka',
+  'sri-lanka': 'Sri Lanka',
+  hongkong: 'Hong Kong',
+  'hong-kong': 'Hong Kong',
+  'viet nam': 'Vietnam',
+  phillipines: 'Philippines',
+  philipines: 'Philippines',
+  phillippines: 'Philippines',
+};
+
+/* Abbreviations, not words — "Uae" helps nobody. */
+const MARKET_CAPS = new Set(['UAE', 'USA', 'US', 'UK', 'HK', 'NZ', 'PRC', 'SAR',
+  'EU', 'SEA', 'APAC', 'ANZ', 'MENA', 'GCC', 'KSA', 'ROW', 'DACH', 'UK/IE']);
+
+/* Lower-cased mid-name: "Republic of Korea", not "Republic Of Korea". */
+const MARKET_SMALL = new Set(['of', 'and', 'the', 'de', 'da']);
+
+/**
+ * Title-case a market name and correct the spellings we have actually seen.
+ * @param {string} raw the cell as typed on the plan
+ */
+export function normaliseMarket(raw) {
+  const s = String(raw ?? '').trim().replace(/\s+/g, ' ');
+  if (!s) return '';
+  if (!/[A-Za-z]/.test(s)) return s;                 // a Chinese name is already right
+  const fixed = MARKET_FIXES[s.toLowerCase()];
+  if (fixed) return fixed;
+  /* Mixed case was typed deliberately — "Hong Kong", "iOS", a brand. Only a
+     name shouted in caps or mumbled in lower case gets re-cased. */
+  if (s !== s.toUpperCase() && s !== s.toLowerCase()) return s;
+  return s.split(' ').map((word, i) => {
+    const up = word.toUpperCase();
+    if (MARKET_CAPS.has(up)) return up;
+    if (i > 0 && MARKET_SMALL.has(word.toLowerCase())) return word.toLowerCase();
+    // Capitalise after a hyphen, slash or apostrophe too: "Asia-Pacific".
+    return word.toLowerCase().replace(/(^|[-/'])([a-z])/g, (m, sep, ch) => sep + ch.toUpperCase());
+  }).join(' ');
 }
 
 /* ------------------------------------------------------------------ dates */
@@ -282,7 +340,7 @@ function parseSheet(ws, headerRow, fileName, { memory = {}, overrides = {} } = {
     source_file: fileName,
   };
   if (fxCcy && fxTable[fxCcy] == null) fxTable[fxCcy] = fxRate;
-  if (!startDate || !endDate) warnings.push('Campaign start/end date missing — flight defaults to the plan months.');
+  if (!startDate || !endDate) warnings.push(WARN_NO_FLIGHT_DATES);
 
   const mr = findMonthRow(ws, headerRow, lastMainCol);
   const runs = mr ? groupRuns(mr.hits) : [];
@@ -313,7 +371,7 @@ function parseSheet(ws, headerRow, fileName, { memory = {}, overrides = {} } = {
     raw.push({
       excelRow: r, kind: 'line', objective, category,
       supplier: txt(at(r, cols.supplier)),
-      market: txt(at(r, cols.market)),
+      market: normaliseMarket(txt(at(r, cols.market))),
       placement: txt(at(r, cols.placement)) || txt(at(r, cols.rationale)),
       buy_method: txt(at(r, cols.buy_method)).replace(/^-$/, ''),
       plan_ccy: (txt(at(r, cols.currency)) || 'AUD').toUpperCase(),
@@ -334,6 +392,41 @@ function parseSheet(ws, headerRow, fileName, { memory = {}, overrides = {} } = {
 
   /* ---- decide what each month-column group actually is, by checking sums */
   const roles = assignRuns(runs, raw, warnings);
+
+  /**
+   * Make each month's volume target agree with that month's money.
+   *
+   * Two things go wrong in real plans, and both produce nonsense efficiency:
+   *
+   *  - the plan has no monthly volume block at all, only money (one of the
+   *    reference plans does exactly this), so every month's target is null; or
+   *  - a row's monthly volume cells were copied from a neighbouring row, so
+   *    the line claims a total its own budget cannot buy. Another carries
+   *    16,400 clicks on three separate Baidu rows; it is right on the $25,317
+   *    one and wrong on the $2,573 and $5,146 ones.
+   *
+   * The line total is trustworthy either way — pickUnits() already reconciles
+   * it against rate x cost. So when the monthly figures do not add up to that
+   * total, they are discarded and re-split by each month's share of the money,
+   * which is what a planner would assume anyway. When they do add up, the
+   * plan's own split is kept: it carries real seasonality this cannot invent.
+   *
+   * @returns {string} a warning to surface, or '' when the plan was believed
+   */
+  function reconcileMonthlyUnits(months, bookedUnits) {
+    const budget = months.reduce((a, m) => a + (m.budget_media || 0), 0);
+    if (!(bookedUnits > 0) || !(budget > 0)) return '';
+
+    const stated = months.reduce((a, m) => a + (m.units || 0), 0);
+    /* 2% covers rounding in the plan's own arithmetic, not a copied cell. */
+    if (stated > 0 && Math.abs(stated - bookedUnits) <= bookedUnits * 0.02) return '';
+
+    for (const m of months) m.units = bookedUnits * ((m.budget_media || 0) / budget);
+    return stated > 0
+      ? `monthly volume added up to ${Math.round(stated).toLocaleString()} against a booked `
+        + `${Math.round(bookedUnits).toLocaleString()} — split by monthly budget instead`
+      : 'plan gives no monthly volume — split by monthly budget';
+  }
 
   /* ---- shape the reviewable rows */
   const rows = raw.filter((x) => x.kind === 'line').map((x) => {
@@ -359,6 +452,7 @@ function parseSheet(ws, headerRow, fileName, { memory = {}, overrides = {} } = {
       });
     }
     months.sort((a, b) => a.ym.localeCompare(b.ym));
+    const unitsNote = reconcileMonthlyUnits(months, x.booked_units);
 
     let margin = x.margin_pct;
     if (margin == null && x.cost_gms > 0 && x.cost_media != null) {
@@ -373,6 +467,7 @@ function parseSheet(ws, headerRow, fileName, { memory = {}, overrides = {} } = {
       billable: !nonBillable,
       margin_pct: nonBillable ? null : margin,
       months,
+      units_note: unitsNote,
       include: !isBreakdown,
       flag: isBreakdown ? 'breakdown' : (nonBillable ? 'non-billable' : ''),
       reason: isBreakdown
@@ -382,6 +477,9 @@ function parseSheet(ws, headerRow, fileName, { memory = {}, overrides = {} } = {
   });
 
   for (const r of rows) {
+    if (r.include && r.units_note) {
+      warnings.push(`Row ${r.excelRow} (${r.category}): ${r.units_note}.`);
+    }
     if (r.include && r.billable && (r.margin_pct == null || r.margin_pct <= 0)) {
       warnings.push(`Row ${r.excelRow} (${r.category}) has no usable MARGIN % — client-facing spend will equal internal spend until you set one.`);
     }
@@ -429,7 +527,7 @@ function parseSheet(ws, headerRow, fileName, { memory = {}, overrides = {} } = {
 /**
  * Work out which month-column group is units / internal booking / client
  * booking by summing each group per row and matching it against that row's
- * Net Media Cost and Net GMS Cost. Labels are only a tiebreaker — CPA's plan
+ * Net Media Cost and Net GMS Cost. Labels are only a tiebreaker — one reference plan
  * labels both money groups "Media Booking (Client)".
  */
 function assignRuns(runs, raw, warnings) {
@@ -471,6 +569,42 @@ function assignRuns(runs, raw, warnings) {
 /* ---------------------------------------------------------------- commit */
 
 /**
+ * Which currency the team actually tops this line's media owner up in.
+ *
+ * It belongs to the line, not the plan. One single plan buys Baidu and RED
+ * inside China (paid in RMB) alongside a DSP across India, Hong Kong and
+ * Singapore (paid in AUD) — one campaign-wide answer is wrong for half of it,
+ * and it is wrong by a factor of 4.3.
+ *
+ * @param {object} line     a reviewed row
+ * @param {string} fallback the plan-level answer, used when the platform says
+ *                          nothing either way
+ */
+export function lineSpendCcy(line, fallback = 'AUD') {
+  if (!line.billable) return 'AUD';
+  const platform = `${line.platform || ''} ${line.category || ''}`;
+  const market = line.market || '';
+
+  /* Chinese inventory bought through an international rep and invoiced in AUD.
+     Checked first and stated explicitly, because the platform on its own would
+     say RMB and it would only land on AUD by the accident of the plan carrying
+     no FX currency. IQIYI is bought via IPY — confirmed with Coco 2026-08-01. */
+  if (/iqiyi/i.test(platform)) return 'AUD';
+
+  /* These GMS tops up directly, in RMB and nothing else, wherever the audience
+     sits. */
+  if (/baidu|wechat|weibo|douyin|tencent|bilibili|xiaohongshu|\bred\b/i.test(platform)) return 'CNY';
+
+  /* Otherwise the market decides: a DSP served into Singapore is paid for in
+     AUD even on a plan whose other half is topped up in RMB. */
+  if (market && !/china|prc|mainland|hong\s*kong|macau/i.test(market)) return 'AUD';
+
+  /* No platform signal and no market — the plan-level answer is all there is.
+     Settings ▸ per-campaign currency exists to correct this by hand. */
+  return fallback;
+}
+
+/**
  * Persist a reviewed sheet. Only rows with include === true are written.
  * @param {object} sheet   a parseSheet() result, possibly edited in the preview
  * @param {object} opts    { clientId, spendCcy, campaignId? }
@@ -510,7 +644,7 @@ export function commit(sheet, opts) {
       objective: r.objective || '', platform: r.platform || '', supplier: r.supplier || '',
       market: r.market || '', placement: r.placement || '',
       buy_method: (r.buy_method || '').toUpperCase(),
-      currency: r.billable ? spendCcy : 'AUD',
+      currency: lineSpendCcy(r, spendCcy),
       rate_media: r.rate_media, rate_gms: r.rate_gms,
       booked_units: r.booked_units,
       cost_media: r.cost_media, cost_gms: r.cost_gms,

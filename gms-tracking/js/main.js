@@ -88,7 +88,7 @@ function render() {
     app.appendChild(filterBar());
   }
 
-  const view = el('div');
+  const view = el('div', { class: 'view' });
   app.appendChild(view);
   const ctx = { rows, state, rerender: render, goTo };
   if (state.tab === 'tracking') renderTracking(view, ctx);

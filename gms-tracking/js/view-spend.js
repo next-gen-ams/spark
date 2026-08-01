@@ -15,7 +15,7 @@
 import { el, money, int, pct, monthLabel, dateAu } from './dom.js';
 import { put, where, byId, fxMap } from './store.js';
 import { monthBounds, num, grossUp, repace, repaceAdvice, todayIso } from './calc.js';
-import { resizable } from './resizable.js';
+import { resizable, forgetWidths } from './resizable.js';
 
 const spendId = (lineId, creativeId, date) => `${lineId}|${creativeId || '_'}|${date}`;
 
@@ -52,7 +52,11 @@ export function renderSpend(host, ctx) {
         type: 'date', class: 'pill-sel', value: date,
         min: bounds ? bounds.start : null, max: bounds ? bounds.end : null,
         onchange: (e) => { state.spendDate = e.target.value; rerender(); },
-      }) : null),
+      }) : null,
+      el('button', {
+        class: 'btn ghost sm', title: 'Put every column back to its default width',
+        onclick: () => { forgetWidths('tracking-entry'); rerender(); },
+      }, 'Reset columns')),
     el('div', { class: 'tablewrap' }, grid(rows, date, mode, state, rerender))));
 }
 
@@ -177,8 +181,30 @@ function grid(rows, date, mode, state, rerender) {
       el('th', { class: 'num', title: 'Everything not yet spent ÷ days left in the flight — carries an underspend forward' }, 'Run at'),
       el('th', {}, 'What to do'),
       el('th', { class: 'num' }, 'Margin'))),
-    body), 'tracking-entry');
+    body), 'tracking-entry', COLW);
 }
+
+/* Line and What-to-do carry sentences; the rest are figures and only need
+   enough room for the widest number plus its caption.
+ *
+ * Twelve columns do not fit a laptop, so every column that was carrying slack
+ * was pushing What-to-do — the one column that tells you what to actually do —
+ * off the right edge. These are sized to the widest figure each one holds;
+ * anything narrower than its own header is widened back by the drag floor. */
+const COLW = [
+  210,  // Line (client over platform · placement)
+  100,  // Spend
+  92,   // Internal AUD
+  92,   // Client AUD
+  100,  // Impressions — floor widens this to fit the word
+  84,   // Clicks
+  106,  // Spent to date ("of $15,000" underneath)
+  88,   // Should be
+  94,   // Variance
+  92,   // Run at
+  220,  // What to do
+  78,   // Margin
+];
 
 function varianceCell(r) {
   if (Math.abs(r.variance) < 1) return el('span', { class: 'tag good' }, 'on plan');

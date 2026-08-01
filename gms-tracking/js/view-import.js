@@ -5,7 +5,7 @@
    get into a client report. */
 
 import { el, money, pct, int, dateAu, toast, monthLabel } from './dom.js';
-import { parseWorkbook, commit, reparse } from './mediaplan.js';
+import { parseWorkbook, commit, reparse, WARN_NO_FLIGHT_DATES } from './mediaplan.js';
 import { FIELDS, FIELD, colLetter } from './mediaplan-columns.js';
 import { all, put, newId, fxMap } from './store.js';
 import { facets } from './model.js';
@@ -22,6 +22,7 @@ export function renderImport(host, ctx) {
   const sheet = parsed.sheets[picked];
   host.appendChild(sheetPicker(rerender));
   host.appendChild(planSummary(sheet));
+  host.appendChild(fillGaps(sheet, rerender));
   host.appendChild(mappingPanel(sheet, rerender));
   host.appendChild(destination(sheet, rerender));
   host.appendChild(rowTable(sheet, rerender));
@@ -197,6 +198,11 @@ function planSummary(s) {
   const totMedia = bill.reduce((a, r) => a + (r.cost_media || 0), 0);
   const totGms = bill.reduce((a, r) => a + (r.cost_gms || 0), 0);
 
+  /* A warning that has since been answered by hand is worse than no warning —
+     it sits directly above the panel that answered it and contradicts it. */
+  const live = s.warnings.filter((w) =>
+    !(w === WARN_NO_FLIGHT_DATES && c.start_date && c.end_date));
+
   const item = (k, v) => el('div', {},
     el('div', { class: 'k', style: { fontSize: '10.5px', letterSpacing: '.11em', textTransform: 'uppercase', color: 'var(--ink-3)', fontWeight: 620 } }, k),
     el('div', { style: { fontWeight: 600, marginTop: '2px' } }, v || '—'));
@@ -211,18 +217,143 @@ function planSummary(s) {
         item('IO number', c.io_number),
         item('Flight', c.start_date ? `${dateAu(c.start_date)} – ${dateAu(c.end_date)}` : null),
         item('Exchange rate', c.fx_rate ? `1 AUD = ${c.fx_rate} ${c.fx_ccy || ''}` : null),
-        item('Account', c.am),
+        /* Name over address: a plan often writes a short form of the name while
+           the address spells it out in full, and only the pair makes it obvious
+           they are the same colleague. */
+        item('Account', c.am
+          ? el('span', {}, c.am, c.am_email
+            ? el('div', {
+              class: 'muted',
+              style: { fontSize: '11px', fontWeight: 400, wordBreak: 'break-all' },
+            }, c.am_email)
+            : null)
+          : null),
         item('Version', c.version)),
       el('div', { style: { display: 'grid', gap: '14px', gridTemplateColumns: 'repeat(auto-fit,minmax(140px,1fr))', marginTop: '16px', paddingTop: '14px', borderTop: '1px solid var(--line)' } },
         item('Billable lines', int(bill.length)),
         item('Net media cost', money(totMedia)),
         item('Net GMS cost', money(totGms)),
         item('Blended margin', totGms > 0 ? pct(1 - totMedia / totGms, 1) : '—')),
-      s.warnings.length
+      live.length
         ? el('ul', { class: 'warnlist', style: { marginTop: '16px' } },
-          ...s.warnings.map((w) => el('li', {}, w)))
+          ...live.map((w) => el('li', {}, w)))
         : el('ul', { class: 'warnlist', style: { marginTop: '16px' } },
           el('li', { class: 'ok' }, 'Parsed cleanly — monthly budgets add back up to the line totals.'))));
+}
+
+/* ------------------------------------------------------------- fill gaps */
+
+/**
+ * What the plan did not say, filled in by hand before anything is written.
+ *
+ * These used to be warnings and nothing else: the panel told you the flight
+ * dates were missing and then imported the campaign anyway with the months
+ * standing in for a flight. A campaign whose real dates are known to the person
+ * doing the import is not a campaign that should be stored without them —
+ * pacing, "days left" and every repace figure are computed off this flight.
+ *
+ * Only the fields the plan actually left blank appear; a plan that carries all
+ * of them shows nothing at all.
+ */
+const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+function fillGaps(s, rerender) {
+  const c = s.campaign;
+  const span = planSpan(s);
+  const foreign = [...new Set(s.rows
+    .filter((r) => r.include && r.plan_ccy && r.plan_ccy !== 'AUD')
+    .map((r) => r.plan_ccy))];
+
+  const needDates = !c.start_date || !c.end_date;
+  /* A rate is worth confirming whenever the plan quotes in something other than
+     AUD, even if the IO header did carry one — the header rate and the currency
+     the lines are quoted in do not always agree. */
+  const needFx = !c.fx_rate || foreign.length > 0;
+  /* Not just a blank name: one of the reference plans carries a contact address
+     with a space where a dot belongs — a typo in the workbook itself. It is the
+     only contact stored against the campaign, so it is worth catching at the
+     door rather than discovering it months later. */
+  const needAm = !c.am || (c.am_email && !EMAIL.test(c.am_email));
+  if (!needDates && !needFx && !needAm) return el('div');
+
+  const rates = fxMap();
+  const set = (patch) => { Object.assign(c, patch); rerender(); };
+
+  const fields = [];
+
+  if (needDates) {
+    fields.push(field('Flight starts', el('input', {
+      type: 'date', value: c.start_date || '',
+      onchange: (e) => set({ start_date: e.target.value || null }),
+    }), span ? `Plan months run ${dateAu(span.start)} – ${dateAu(span.end)}.` : ''));
+
+    fields.push(field('Flight ends', el('input', {
+      type: 'date', value: c.end_date || '',
+      onchange: (e) => set({ end_date: e.target.value || null }),
+    }), 'Pacing, “days left” and every suggested daily figure are measured against this.'));
+  }
+
+  if (needFx) {
+    const ccy = c.fx_ccy || foreign[0] || 'CNY';
+    fields.push(field('Exchange rate', el('div', { class: 'fxpair' },
+      el('select', {
+        onchange: (e) => set({ fx_ccy: e.target.value }),
+      /* AUD is the base of every rate in this app, so "1 AUD = n AUD" is not a
+         choice worth offering. */
+      }, ...[...new Set([...foreign, ...Object.keys(rates)])].filter((k) => k !== 'AUD')
+        .map((k) => el('option', { value: k, selected: k === ccy }, k))),
+      el('input', {
+        type: 'number', step: '0.0001', min: '0',
+        placeholder: String(rates[ccy] ?? ''),
+        value: c.fx_rate ?? '',
+        onchange: (e) => set({
+          fx_rate: e.target.value === '' ? null : Number(e.target.value),
+          fx_ccy: c.fx_ccy || ccy,
+        }),
+      })),
+    `1 AUD = this many ${ccy}. ${foreign.length
+      ? `${foreign.join(' and ')} ${foreign.length > 1 ? 'lines are' : 'lines are'} quoted on this plan.`
+      : ''} Left blank, the campaign falls back to the rate in Settings`
+      + `${rates[ccy] ? ` (currently ${rates[ccy]})` : ''}.`));
+  }
+
+  if (needAm) {
+    const badEmail = c.am_email && !EMAIL.test(c.am_email);
+    fields.push(field('Account management', el('input', {
+      type: 'text', placeholder: 'Who runs this account',
+      value: c.am || '',
+      onchange: (e) => set({ am: e.target.value.trim() }),
+    }), 'Read off the IO header when the plan fills it in.'));
+
+    fields.push(field('Contact email', el('input', {
+      type: 'text', placeholder: 'name@gms.global',
+      value: c.am_email || '',
+      onchange: (e) => set({ am_email: e.target.value.trim() }),
+    }), badEmail
+      ? 'The address on the plan is not a valid one — worth fixing here and in the workbook.'
+      : 'The only contact stored against this campaign.'));
+  }
+
+  return el('div', { class: 'panel' },
+    el('header', {}, el('div', {},
+      el('h3', {}, 'Fill in what the plan left out'),
+      el('p', {}, 'These are saved with the campaign when you import. '
+        + 'Anything left blank keeps the fallback described under it.'))),
+    el('div', { class: 'body gapgrid' }, ...fields));
+}
+
+function field(label, control, hint) {
+  return el('div', { class: 'field' },
+    el('label', {}, label), control,
+    hint ? el('div', { class: 'hint' }, hint) : null);
+}
+
+/** Earliest and latest month the plan actually books, as real dates. */
+function planSpan(s) {
+  const yms = s.rows.filter((r) => r.include).flatMap((r) => r.months.map((m) => m.ym)).sort();
+  if (!yms.length) return null;
+  const [ly, lm] = yms.at(-1).split('-').map(Number);
+  return { start: `${yms[0]}-01`, end: `${yms.at(-1)}-${String(new Date(ly, lm, 0).getDate())}` };
 }
 
 function destination(s, rerender) {

@@ -175,7 +175,9 @@ function lineTable(rows, { state, rerender }) {
       ...months.map((ym) => el('th', { class: 'num mo', title: monthLabel(ym) }, monthLabel(ym).slice(0, 3))),
       el('th', {}, 'Status'))),
     el('tbody', {}, ...rows.map((m) => lineRow(m, months, side, rerender))),
-    footRow(rows, months, side)), 'by-client'));
+    footRow(rows, months, side)),
+  `by-client-${months.length}`,
+  [110, 115, 250, 80, 105, 105, 105, 130, 85, ...months.map(() => 90), 105]));
 }
 
 function lineRow(m, months, side, rerender) {
