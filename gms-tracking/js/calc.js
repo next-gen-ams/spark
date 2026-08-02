@@ -109,11 +109,13 @@ export function lineMetrics(line, campaign, months, spends, ctx) {
 
   /* ---- actuals */
   let spendCcy = 0, imp = 0, clicks = 0, days = 0;
+  const extra = {};                        // custom KPI counters, summed
   for (const s of spends) {
     spendCcy += num(s.spend_internal);
     imp += num(s.imp);
     clicks += num(s.clicks);
     if (num(s.spend_internal)) days++;
+    for (const [k, v] of Object.entries(s.extra || {})) extra[k] = (extra[k] || 0) + num(v);
   }
   const spendInternal = spendCcy / rate;
 
@@ -149,7 +151,7 @@ export function lineMetrics(line, campaign, months, spends, ctx) {
     clientCapped,                        // what a fixed-fee contract would allow
     clientProrata, overspend,
     effMargin: effectiveMargin(spendInternal, clientProrata),
-    imp, clicks, activeDays: days,
+    imp, clicks, extra, activeDays: days,
     flight, totalDays, elapsedDays: elapsed, remainingDays: remaining, live,
     timePct: totalDays ? Math.min(1, elapsed / totalDays) : null,
   };
@@ -218,11 +220,18 @@ export function pacingFlag(index, billable = true) {
 export function daySplit(creatives, spends, date) {
   const known = new Set(creatives.map((c) => c.id));
   const onDay = spends.filter((s) => s.date === date);
-  const bucket = (rows) => ({
-    spend: rows.reduce((a, s) => a + num(s.spend_internal), 0),
-    imp: rows.reduce((a, s) => a + num(s.imp), 0),
-    clicks: rows.reduce((a, s) => a + num(s.clicks), 0),
-  });
+  const bucket = (rows) => {
+    const b = { spend: 0, imp: 0, clicks: 0, extra: {} };
+    for (const s of rows) {
+      b.spend += num(s.spend_internal);
+      b.imp += num(s.imp);
+      b.clicks += num(s.clicks);
+      for (const [k, v] of Object.entries(s.extra || {})) {
+        b.extra[k] = (b.extra[k] || 0) + num(v);
+      }
+    }
+    return b;
+  };
 
   const parts = creatives.map((c) => ({
     creative: c, ...bucket(onDay.filter((s) => s.creative_id === c.id)),
@@ -232,12 +241,47 @@ export function daySplit(creatives, spends, date) {
   const loose = bucket(onDay.filter((s) => !s.creative_id || !known.has(s.creative_id)));
 
   const add = (k) => parts.reduce((a, p) => a + p[k], 0) + loose[k];
+  const extra = {};
+  for (const src of [...parts.map((p) => p.extra), loose.extra]) {
+    for (const [k, v] of Object.entries(src)) extra[k] = (extra[k] || 0) + v;
+  }
   return {
     split: creatives.length > 0,
     parts,
     loose,
-    total: { spend: add('spend'), imp: add('imp'), clicks: add('clicks') },
+    total: { spend: add('spend'), imp: add('imp'), clicks: add('clicks'), extra },
   };
+}
+
+/* ------------------------------------------------------------ custom KPIs */
+
+/**
+ * Evaluate one KPI column over a set of already-summed figures.
+ *
+ * The rule that makes this a function instead of a spreadsheet cell: **a rate
+ * is always recomputed from sums, never aggregated from other rates.** Three
+ * creatives at 2% CTR each make a line at 2% — not 6%, not whichever average
+ * happens to be handy. Callers therefore pass totals for whatever level they
+ * are rendering (a creative, a line, a month), and the division happens here,
+ * once, at that level.
+ *
+ * @param {object} def  { kind:'counter'|'rate', id, num, den, per, format }
+ *                      num/den are 'spend' | 'imp' | 'clicks' | a counter id
+ * @param {object} t    { spend, imp, clicks, extra } — spend already in the
+ *                      currency/side the caller wants the rate expressed in
+ * @returns {number|null} null when the denominator is 0 — "no data yet",
+ *                      which is not the same thing as a rate of zero
+ */
+export function kpiValue(def, t) {
+  const pick = (ref) =>
+    ref === 'spend' ? num(t.spend)
+      : ref === 'imp' ? num(t.imp)
+        : ref === 'clicks' ? num(t.clicks)
+          : num(t.extra?.[ref]);
+  if (def.kind === 'counter') return pick(def.id);
+  const den = pick(def.den);
+  if (!den) return null;
+  return (pick(def.num) / den) * (def.per || 1);
 }
 
 /** Spend on a line that belongs to no creative, across every date. */

@@ -60,18 +60,46 @@ body { padding-top: 6px; }
 .btn.danger { background: var(--crit); border-color: var(--crit); color: #fff; font-weight: 600; }
 .btn.danger:hover { background: color-mix(in oklab, var(--crit) 85%, black); border-color: transparent; }
 
-/* Destructive-confirm dialog — the mitigation (Download backup) lives ON the
-   dialog, so following the advice is a detour of one click, not a cancel. */
-.confirmbox {
-  position: fixed; z-index: 70; left: 50%; top: 38%; transform: translate(-50%, -50%);
-  width: min(440px, calc(100vw - 40px));
+/* In-app dialog. Replaces prompt()/confirm() — see modal.js for why that
+   mattered beyond looks. Destructive ones keep their mitigation (Download
+   backup) ON the dialog, so following the advice is a detour of one click. */
+.dialogbox, .confirmbox {
+  position: fixed; z-index: 70; left: 50%; top: 50%; transform: translate(-50%, -50%);
+  width: min(470px, calc(100vw - 40px)); max-height: calc(100vh - 60px); overflow-y: auto;
   background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius);
-  box-shadow: var(--shadow-lg); padding: 18px 20px;
+  box-shadow: var(--shadow-lg); padding: 20px 22px;
 }
-.confirmbox h3 { margin: 0 0 6px; font-size: 15px; font-weight: 700; letter-spacing: -.01em; }
-.confirmbox p { margin: 0 0 10px; font-size: 13px; color: var(--ink-2); }
-.confirmbox p.hint { font-size: 11.5px; color: var(--ink-3); }
-.confirmbox .row { display: flex; gap: 8px; align-items: center; margin-top: 14px; }
+.dialogbox h3, .confirmbox h3 { margin: 0 0 6px; font-size: 15.5px; font-weight: 700; letter-spacing: -.01em; }
+.dialogbox p, .confirmbox p { margin: 0 0 10px; font-size: 13px; color: var(--ink-2); }
+.dialogbox p.dsub { margin-bottom: 16px; }
+.dialogbox p.hint, .confirmbox p.hint { font-size: 11.5px; color: var(--ink-3); }
+.dialogbox .drow, .confirmbox .row { display: flex; gap: 8px; align-items: center; margin-top: 18px; }
+.dialogbox .field { margin-bottom: 16px; }
+.derr { font-size: 12px; color: var(--crit); min-height: 16px; }
+
+/* Choices whose options differ in consequence, not in degree — each carries
+   the number at stake, so the decision cannot be made by button position. */
+.choices { display: flex; flex-direction: column; gap: 8px; }
+/* .field label is a small-caps field caption; a .choice is a label too, but a
+   row of content — undo the caption treatment inside it. */
+.field .choices label.choice {
+  display: flex; text-transform: none; letter-spacing: 0;
+  font-size: 13px; color: var(--ink); font-weight: 400; margin-bottom: 0;
+}
+.choice {
+  display: flex; gap: 10px; align-items: flex-start; cursor: pointer;
+  border: 1px solid var(--line-2); border-radius: var(--radius-s);
+  padding: 11px 13px; background: var(--surface);
+}
+.choice:hover { border-color: var(--ink-3); }
+.choice.on { border-color: var(--orange); background: var(--orange-soft); }
+/* Outranks `.field input { width:100% }`, which was inflating the radio to
+   the full row and squeezing the text into the margin. */
+.field .choices .choice input[type="radio"] {
+  margin: 2px 0 0; flex: none; width: 15px; height: 15px; accent-color: var(--orange);
+}
+.choice b { display: block; font-size: 13px; font-weight: 600; color: var(--ink); }
+.choice .cnote { display: block; font-size: 11.5px; color: var(--ink-2); margin-top: 3px; line-height: 1.45; }
 
 /* Internal / Client segmented control — the single most consequential switch
    on the page, so it gets real presence rather than a plain select. */
@@ -406,8 +434,20 @@ table.data tbody tr.crrow td:first-child { background: var(--surface-2); padding
   width: 8px; height: 8px; border-left: 1px solid var(--line-2);
   border-bottom: 1px solid var(--line-2); border-radius: 0 0 0 2px;
 }
-.splitbtn { margin-top: 6px; font-size: 11px; padding: 2px 7px; opacity: .75; }
-.splitbtn:hover { opacity: 1; }
+/* Add-a-creative / add-a-column chip.
+ *
+ * Blue, not orange, and deliberately: inside this table orange already means
+ * "look at this" — the advice pills, the variance tags, the over-budget card
+ * all use it. A structural action that adds a row would be competing with a
+ * status signal for the same attention. Blue is the system's structure colour,
+ * so the chip reads as a control rather than as a warning. */
+.btn.chip {
+  margin-top: 7px; font-size: 11px; font-weight: 600; padding: 3px 9px;
+  border-radius: 20px; background: var(--blue-soft); color: var(--blue);
+  border-color: color-mix(in oklab, var(--blue) 28%, transparent);
+  letter-spacing: .01em; white-space: nowrap;
+}
+.btn.chip:hover { background: var(--blue); border-color: var(--blue); color: #fff; }
 
 /* Pacing meter — a bar that reads against time, not just against budget. */
 .meter { position: relative; height: 6px; border-radius: 3px; background: var(--surface-2); min-width: 76px; }

@@ -15,7 +15,8 @@
 
 import { download, toast, monthLabel, money } from './dom.js';
 import { all, where, byId } from './store.js';
-import { totals, byPlatform, num, effectiveStatus, looseSpendTotal } from './calc.js';
+import { totals, byPlatform, num, effectiveStatus, looseSpendTotal, kpiValue } from './calc.js';
+import { kpiDefs } from './kpis.js';
 import { fileName } from './view-export.js';
 import { GMS_LOGO_B64 } from './logo-b64.js';
 
@@ -32,6 +33,7 @@ const MONEY = '"$"#,##0.00';
 const MONEY0 = '"$"#,##0';
 const PCT = '0%';
 const PCT1 = '0.0%';
+const PCT2 = '0.00%';
 const INTF = '#,##0';
 const NUM0 = '0';
 
@@ -321,10 +323,27 @@ function sheetSummary(wb, rows, { isClient, title, subtitle }) {
 
 function sheetLines(wb, rows, { isClient, title, subtitle }) {
   const ws = wb.addWorksheet(isClient ? 'Campaign performance' : 'Line detail');
-  const cols = isClient ? COLS.linesClient : COLS.linesInternal;
+
+  /* Custom KPI columns ride along on both audiences — counters are the
+     tracker's own numbers, and rates recompute here from this row's sums, on
+     the side's own spend figure (a client file quotes client cost per
+     conversion, not internal). */
+  const defs = kpiDefs();
+  const kpiCols = defs.map((d) => ({
+    h: d.name, k: `kpi_${d.id}`, w: 14,
+    fmt: d.kind === 'counter' ? INTF : d.format === 'pct' ? PCT2 : d.format === 'money' ? MONEY : INTF,
+  }));
+  const cols = [...(isClient ? COLS.linesClient : COLS.linesInternal), ...kpiCols];
   layout(ws, { title: `${title} — ${isClient ? 'Performance' : 'Line detail'}`, subtitle, cols });
 
+  const kpiVals = (m) => Object.fromEntries(defs.map((d) => [`kpi_${d.id}`,
+    kpiValue(d, {
+      spend: isClient ? m.spendClient : m.spendInternal,
+      imp: m.imp, clicks: m.clicks, extra: m.extra,
+    })]));
+
   const data = rows.map((m) => ({
+    ...kpiVals(m),
     month: monthLabel(m.ym), client: m.clientName, campaign: m.campaignName,
     io: m.campaign.io_number || '',
     platform: m.line.platform, objective: m.line.objective,

@@ -4,6 +4,7 @@ import { el, toast, dateAu } from './dom.js';
 import { all, put, remove, removeWhere, newId, vocab, addVocab, importJson, where, loadDemo, isDemo, wipeData } from './store.js';
 import { exportBackup } from './exportxlsx.js';
 import { VOCAB_DEFAULT } from './config.js';
+import { confirmDanger } from './modal.js';
 
 export function renderAdmin(host, ctx) {
   const { rerender } = ctx;
@@ -19,49 +20,6 @@ function panel(title, sub, ...body) {
   return el('div', { class: 'panel' },
     el('header', {}, el('div', {}, el('h3', {}, title), el('p', {}, sub))),
     ...body);
-}
-
-/**
- * The destructive confirm, with the mitigation *on the dialog*.
- *
- * Every confirm here used to say "take a backup first" — advice delivered at
- * the exact moment the user cannot act on it without cancelling, hunting for
- * the button, and starting again. Nobody restarts; they just click through.
- * Putting Download backup on the dialog turns the advice into a one-click
- * detour that keeps the deletion flowing.
- */
-function confirmDanger({ title, detail, confirmLabel, onConfirm, typeToConfirm }) {
-  const host = el('div');
-  const close = () => host.remove();
-  document.body.appendChild(host);
-
-  const go = el('button', {
-    class: 'btn sm danger', disabled: !!typeToConfirm,
-    onclick: () => { close(); onConfirm(); },
-  }, confirmLabel);
-
-  /* For the wipe-everything case a single click is not enough friction —
-     typing the word means the hand and the intent agree. */
-  const gate = typeToConfirm
-    ? el('input', {
-      class: 'pill-sel', placeholder: `Type ${typeToConfirm} to enable`,
-      'aria-label': `Type ${typeToConfirm} to enable ${confirmLabel}`,
-      oninput: (e) => { go.disabled = e.target.value.trim() !== typeToConfirm; },
-    })
-    : null;
-
-  host.appendChild(el('div', { class: 'scrim', onclick: close }));
-  host.appendChild(el('div', { class: 'confirmbox', role: 'alertdialog', 'aria-label': title },
-    el('h3', {}, title),
-    el('p', {}, detail),
-    el('p', { class: 'hint' }, 'This cannot be undone. The backup is the whole dashboard as one .json — restore it from Settings ▸ Data.'),
-    gate,
-    el('div', { class: 'row' },
-      el('button', { class: 'btn sm', onclick: exportBackup }, 'Download backup first'),
-      el('div', { style: { flex: 1 } }),
-      el('button', { class: 'btn sm', onclick: close }, 'Cancel'),
-      go)));
-  if (gate) setTimeout(() => gate.focus(), 30);
 }
 
 function clients(rerender) {
@@ -85,6 +43,7 @@ function clients(rerender) {
           el('td', {}, el('button', {
             class: 'btn ghost sm',
             onclick: () => confirmDanger({
+              onBackup: exportBackup,
               title: `Delete ${c.name}?`,
               detail: `${cmps.length} campaign${cmps.length === 1 ? '' : 's'}, every line and all their spend go with it.`,
               confirmLabel: 'Delete client',
@@ -156,6 +115,7 @@ function campaigns(rerender) {
           el('td', {}, el('button', {
             class: 'btn ghost sm',
             onclick: () => confirmDanger({
+              onBackup: exportBackup,
               title: `Remove “${k.name}”?`,
               detail: `${lineIds.length} lines, their monthly budgets and ${spendRows} spend rows go with it.`,
               confirmLabel: 'Remove campaign',
@@ -170,6 +130,7 @@ function campaigns(rerender) {
         el('button', {
           class: 'btn sm',
           onclick: () => confirmDanger({
+            onBackup: exportBackup,
             title: `Remove ${ended.length} finished campaign${ended.length > 1 ? 's' : ''}?`,
             detail: `${ended.map((k) => k.io_number || k.name).join(' · ')} — all their lines, budgets and spend go too.`,
             confirmLabel: `Remove ${ended.length} finished`,
@@ -306,6 +267,7 @@ function data(rerender) {
       const text = await f.text();
       e.target.value = '';                 // so picking the same file again re-fires
       confirmDanger({
+        onBackup: exportBackup,
         title: 'Restore this backup?',
         detail: `Everything currently in the dashboard is replaced by “${f.name}”.`,
         confirmLabel: 'Restore',
@@ -346,6 +308,7 @@ function data(rerender) {
         onclick: () => {
           const n = TABLES_SNAPSHOT();
           confirmDanger({
+            onBackup: exportBackup,
             title: 'Delete all data?',
             detail: `${n.client} clients, ${n.campaign} campaigns, ${n.line} lines and ${n.spend} spend rows — everywhere this dashboard stores them. FX rates, dropdown lists and column mappings stay.`,
             confirmLabel: 'Delete all data',

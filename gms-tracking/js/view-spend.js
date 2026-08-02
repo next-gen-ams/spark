@@ -12,9 +12,11 @@
  * forward instead of quietly losing it at month end.
  */
 
-import { el, money, money2, int, pct, monthLabel, dateAu } from './dom.js';
-import { put, where, newId, fxMap } from './store.js';
-import { monthBounds, grossUp, repace, repaceAdvice, todayIso, daySplit, looseSpendTotal } from './calc.js';
+import { el, money, money2, int, pct, monthLabel, dateAu, toast } from './dom.js';
+import { put, remove, where, byId, newId, fxMap } from './store.js';
+import { dialog, closeDialog, textField, choiceField, errorLine } from './modal.js';
+import { monthBounds, grossUp, repace, repaceAdvice, todayIso, daySplit, looseSpendTotal, kpiValue } from './calc.js';
+import { kpiDefs, addKpi, removeKpi, PRESETS, hasPreset, companionsFor, kpiFormula, formatKpi } from './kpis.js';
 import { resizable, forgetWidths } from './resizable.js';
 
 const spendId = (lineId, creativeId, date) => `${lineId}|${creativeId || '_'}|${date}`;
@@ -58,6 +60,11 @@ export function renderSpend(host, ctx) {
         onchange: (e) => { state.spendDate = e.target.value; rerender(); },
       }) : null,
       el('button', {
+        class: 'btn chip', style: { marginTop: 0 },
+        title: 'Track another number — a typed counter like H5 clicks, or a computed rate like CTR',
+        onclick: () => addColumnDialog(rerender),
+      }, '+ Add column'),
+      el('button', {
         class: 'btn ghost sm', title: 'Put every column back to its default width',
         onclick: () => { forgetWidths('tracking-entry'); rerender(); },
       }, 'Reset columns')),
@@ -86,6 +93,7 @@ function grid(rows, date, mode, state, rerender) {
   const fx = fxMap();
   const today = todayIso();
   const side = state.view;
+  const defs = kpiDefs();
 
   const body = el('tbody');
   for (const m of rows) {
@@ -109,13 +117,23 @@ function grid(rows, date, mode, state, rerender) {
       });
       rerender();
     };
+    /* extra is one object on the spend row; a per-column write must merge into
+       whatever the other columns already put there, or it would erase them. */
+    const writeExtra = (creativeId, defId, v) => {
+      const existing = byId('spend', spendId(m.line.id, creativeId, date));
+      write(creativeId, { extra: { ...(existing?.extra || {}), [defId]: v } });
+    };
+    const lineTotals = () => ({
+      spend: day.total.spend / m.rate, imp: day.total.imp,
+      clicks: day.total.clicks, extra: day.total.extra,
+    });
 
     /* ---- the line's own row. Editable only while nothing is split off it. */
     body.appendChild(el('tr', { class: m.billable ? '' : 'nb' },
       el('td', { class: 'wrap' }, m.clientName,
         el('div', { class: 'muted', style: { fontSize: '11px' } },
           `${m.line.platform || '—'} · ${lineLabel(m)}`),
-        creativeControl(m, creatives, spends, rerender)),
+        creativeControl(m, creatives, spends, date, rerender)),
 
       el('td', { class: 'num' },
         day.split
@@ -138,6 +156,9 @@ function grid(rows, date, mode, state, rerender) {
 
       countCell(day.split, day.total.imp, 'Impressions', (v) => write(null, { imp: v })),
       countCell(day.split, day.total.clicks, 'Clicks', (v) => write(null, { clicks: v })),
+      ...defs.map((d) => d.kind === 'counter'
+        ? countCell(day.split, day.total.extra[d.id], d.name, (v) => writeExtra(null, d.id, v))
+        : rateCell(d, lineTotals())),
 
       /* --- running position across the whole flight --- */
       el('td', { class: 'num' }, r ? money(r.spent) : '—',
@@ -166,14 +187,17 @@ function grid(rows, date, mode, state, rerender) {
     if (!day.split) continue;
     for (const p of day.parts) {
       body.appendChild(creativeRow(m, p.creative.name || 'Creative', p, {
+        defs,
         onSpend: (v) => write(p.creative.id, { spend_internal: v }),
         onImp: (v) => write(p.creative.id, { imp: v }),
         onClicks: (v) => write(p.creative.id, { clicks: v }),
+        onExtra: (defId, v) => writeExtra(p.creative.id, defId, v),
       }));
     }
-    if (day.loose.spend || day.loose.imp || day.loose.clicks) {
+    if (day.loose.spend || day.loose.imp || day.loose.clicks
+      || Object.values(day.loose.extra).some(Boolean)) {
       body.appendChild(creativeRow(m, 'Not attributed to a creative', day.loose, {
-        readonly: true,
+        defs, readonly: true,
         note: 'Typed before this line was split. It still counts toward the line total — '
           + 'move it onto a creative from the line drawer if it belongs to one.',
       }));
@@ -191,13 +215,16 @@ function grid(rows, date, mode, state, rerender) {
         'Client AUD'),
       el('th', { class: 'num' }, 'Impressions'),
       el('th', { class: 'num' }, 'Clicks'),
+      ...defs.map((d) => el('th', { class: 'num', title: kpiFormula(d, defs) }, d.name)),
       el('th', { class: 'num', title: 'Total spent on this line across the whole flight' }, 'Spent to date'),
       el('th', { class: 'num', title: 'What the plan’s schedule says should have been spent by today' }, 'Should be'),
       el('th', { class: 'num', title: 'Spent minus scheduled. Negative means the money is still owed to the campaign.' }, 'Variance'),
       el('th', { class: 'num', title: 'Everything not yet spent ÷ days left in the flight — carries an underspend forward' }, 'Run at'),
       el('th', {}, 'What to do'),
       el('th', { class: 'num' }, 'Margin'))),
-    body), 'tracking-entry', COLW);
+    /* Width memory is keyed by column count, so a saved layout from before a
+       column was added or removed never lands on the wrong columns. */
+    body), `tracking-entry-${defs.length}`, [...COLW.slice(0, 6), ...defs.map(() => 96), ...COLW.slice(6)]);
 }
 
 /* Line and What-to-do carry sentences; the rest are figures and only need
@@ -243,7 +270,7 @@ const lineLabel = (m) =>
  * three creative rows reads as three different positions.
  */
 function creativeRow(m, label, figures, opts = {}) {
-  const { readonly, note, onSpend, onImp, onClicks } = opts;
+  const { readonly, note, defs = [], onSpend, onImp, onClicks, onExtra } = opts;
   /* Built fresh each time rather than cloned — el() is the app's own node
      factory and cloneNode is not part of that contract. */
   const dim = () => el('td', { class: 'num muted' }, '');
@@ -269,10 +296,103 @@ function creativeRow(m, label, figures, opts = {}) {
 
     countCell(readonly, figures.imp, 'Impressions', onImp),
     countCell(readonly, figures.clicks, 'Clicks', onClicks),
+    ...defs.map((d) => d.kind === 'counter'
+      ? countCell(readonly, figures.extra?.[d.id], d.name, (v) => onExtra(d.id, v))
+      : rateCell(d, { spend: figures.spend / m.rate, imp: figures.imp, clicks: figures.clicks, extra: figures.extra })),
 
     dim(), dim(), dim(), dim(),
     el('td', { class: 'wrap prose muted' }, ''),
     dim());
+}
+
+/** A computed KPI cell. Never an input at any level — see calc.kpiValue. */
+function rateCell(def, totals) {
+  const v = kpiValue(def, totals);
+  return el('td', { class: 'num muted', title: kpiFormula(def) },
+    formatKpi(def, v, { money, int, pct }));
+}
+
+/* --------------------------------------------------------- add-column UI */
+
+/**
+ * The add-column dialog, shaped around how a tracker actually thinks:
+ * "I want to watch H5 clicks" — so they type the number they will record, and
+ * the rates that make it meaningful (cost per, rate vs clicks) are offered in
+ * the same breath, pre-wired to the right arithmetic. Presets cover the three
+ * classics. Columns are global across clients; one added for a single
+ * campaign is simply empty elsewhere, which is fine.
+ */
+function addColumnDialog(rerender) {
+  const err = errorLine();
+  const name = textField('Track a new number', {
+    placeholder: 'e.g. H5 clicks · Followers gained · Form submits',
+  });
+
+  const cb = (labelText, subText, checked) => {
+    const input = el('input', { type: 'checkbox', checked });
+    const node = el('label', { class: 'choice', style: { alignItems: 'center' } },
+      input, el('span', {}, el('b', {}, labelText), el('span', { class: 'cnote' }, subText)));
+    node.checked = () => input.checked;
+    return node;
+  };
+  const costPer = cb('Also add “Cost per …”', 'spend ÷ this number — named after what you type above', true);
+  const rateVs = cb('Also add “… rate”', 'this number ÷ clicks, shown as a % — for counters that happen after a click', false);
+
+  const presetRow = el('div', { style: { display: 'flex', gap: '8px', flexWrap: 'wrap', marginBottom: '16px' } },
+    ...PRESETS.map((pr) => el('button', {
+      class: 'btn sm', disabled: hasPreset(pr),
+      title: kpiFormula(pr),
+      onclick: () => { addKpi({ ...pr }); rerender(); toast(`${pr.name} column added`); },
+    }, hasPreset(pr) ? `${pr.name} ✓` : `+ ${pr.name}`)));
+
+  const existing = kpiDefs();
+  const existingList = existing.length
+    ? el('div', { class: 'field' },
+      el('label', {}, 'Columns already added'),
+      el('div', { style: { display: 'flex', gap: '6px', flexWrap: 'wrap' } },
+        ...existing.map((d) => el('span', { class: 'tag', title: kpiFormula(d) }, d.name,
+          el('button', {
+            class: 'btn ghost sm', style: { padding: '0 4px', lineHeight: 1 },
+            title: 'Remove the column. Typed values stay on the spend rows, so re-adding it brings them back. Rates built on it go with it.',
+            onclick: (e) => {
+              e.preventDefault();
+              removeKpi(d.id); rerender();
+              closeDialog(); addColumnDialog(rerender);   // reopen with the list refreshed
+            },
+          }, '✕')))))
+    : null;
+
+  dialog({
+    title: 'Add a column',
+    sub: 'Counters are typed like clicks; rates are computed and never typed. On a split line, counters sum from the creatives and rates recompute from the sums.',
+    width: '520px',
+    content: [
+      el('div', { class: 'field' }, el('label', {}, 'Quick presets'), presetRow),
+      name, costPer, rateVs, el('div', { style: { height: '10px' } }), err, existingList,
+    ].filter(Boolean),
+    actions: [
+      { label: 'Close' },
+      {
+        label: 'Add column', primary: true,
+        onClick: () => {
+          const n = name.value();
+          if (!n) { err.say('Name the number first — it becomes the column header.'); return false; }
+          if (kpiDefs().some((d) => d.name.toLowerCase() === n.toLowerCase())) {
+            err.say(`“${n}” already exists — remove it below first if you want to redefine it.`);
+            return false;
+          }
+          const counter = addKpi({ name: n, kind: 'counter' });
+          for (const [box, comp] of [[costPer, 0], [rateVs, 1]]) {
+            if (box.checked()) addKpi(companionsFor(n, counter.id)[comp]);
+          }
+          rerender();
+          toast(`“${n}” added${costPer.checked() || rateVs.checked() ? ' with its companion rate' : ''} — it appears after Clicks.`, 'ok', 6000);
+          return undefined;
+        },
+      },
+    ],
+  });
+  setTimeout(() => name.focus(), 30);
 }
 
 /** Impressions / clicks: an input, or the derived sum when the row is a total. */
@@ -316,47 +436,131 @@ function flightNote(m, r, day) {
  * own figure stops being typeable and starts being the sum, so the first split
  * has to deal honestly with money that was already entered at line level.
  */
-function creativeControl(m, creatives, spends, rerender) {
-  const add = (name, adopt) => {
+function creativeControl(m, creatives, spends, date, rerender) {
+  const create = (name) => {
     const id = newId('cr');
     put('creative', { id, line_id: m.line.id, name, live_from: '', status: 'Live' });
-    if (adopt) {
-      for (const s of spends.filter((x) => !x.creative_id)) {
-        put('spend', { ...s, creative_id: id });
-      }
-    }
-    rerender();
+    return id;
   };
 
-  if (!creatives.length) {
-    const loose = looseSpendTotal(creatives, spends);
+  /* --- adding a second, third… creative: nothing to decide. */
+  if (creatives.length) {
     return el('button', {
-      class: 'btn ghost sm splitbtn',
-      title: 'Track this line as separate creatives. The line total becomes the sum of them.',
-      onclick: () => {
-        const name = (prompt('Name of the first creative on this line:', 'Creative A') || '').trim();
-        if (!name) return;
-        /* Money already typed against the line belongs somewhere. Asking is
-           the only honest option: silently adopting it would rewrite history,
-           silently stranding it would leave a total nobody can explain. */
-        const adopt = loose > 0.005
-          ? confirm(`This line already has ${money2(loose, m.ccy)} of spend entered before any creative existed.\n\n`
-            + `OK — move it onto “${name}”.\n`
-            + 'Cancel — leave it unattributed. It still counts toward the line total and stays visible as its own row.')
-          : false;
-        add(name, adopt);
-      },
-    }, '+ Split by creative');
+      class: 'btn chip', title: 'Add another creative to this line',
+      onclick: () => nameDialog('Add a creative', `Creative ${String.fromCharCode(65 + creatives.length)}`,
+        (name) => { create(name); rerender(); }),
+    }, '+ Creative');
   }
 
+  /* --- the first split. Money already on the line has to go somewhere, and
+     the three destinations differ in consequence, so the choice is explicit
+     and carries its own numbers. Silently adopting it would rewrite history;
+     silently stranding it would leave a total nobody can explain; and clearing
+     it is a real deletion that must never happen by default. */
+  const loose = spends.filter((s) => !s.creative_id);
+  const looseTotal = looseSpendTotal(creatives, spends);
+  const monthOf = (d) => String(d || '').slice(0, 7);
+  const thisMonth = loose.filter((s) => monthOf(s.date) === monthOf(date));
+  const thisMonthTotal = thisMonth.reduce((a, s) => a + Number(s.spend_internal || 0), 0);
+
   return el('button', {
-    class: 'btn ghost sm splitbtn',
-    title: 'Add another creative to this line',
-    onclick: () => {
-      const name = (prompt('Name of the new creative:', `Creative ${String.fromCharCode(65 + creatives.length)}`) || '').trim();
-      if (name) add(name, false);
+    class: 'btn chip',
+    title: 'Track this line as separate creatives. The line total becomes the sum of them.',
+    onclick: () => splitDialog(m, { looseTotal, loose, thisMonth, thisMonthTotal, date }, (name, choice) => {
+      const id = create(name);
+      if (choice === 'adopt') {
+        for (const s of loose) put('spend', { ...s, creative_id: id });
+      } else if (choice === 'clear') {
+        for (const s of thisMonth) remove('spend', s.id);
+      }
+      rerender();
+      if (choice === 'clear' && thisMonth.length) {
+        toast(`Cleared ${thisMonth.length} line-level ${thisMonth.length === 1 ? 'entry' : 'entries'} for ${monthLabel(monthOf(date))} — re-enter them per creative.`, 'ok', 8000);
+      }
+    }),
+  }, '+ Split by creative');
+}
+
+/** Name-only dialog, for every creative after the first. */
+function nameDialog(title, suggested, done) {
+  const err = errorLine();
+  const name = textField('Creative name', {
+    value: suggested, placeholder: 'e.g. H5 banner – Parents',
+    onEnter: () => submit(),
+  });
+  let box;
+  const submit = () => {
+    if (!name.value()) { err.say('Give it a name so it can be told apart on the report.'); return false; }
+    done(name.value());
+    return true;
+  };
+  box = dialog({
+    title,
+    sub: 'Creatives are entered separately; the line’s own figure becomes their sum.',
+    content: [name, err],
+    actions: [
+      { label: 'Cancel' },
+      { label: 'Add creative', primary: true, onClick: () => (submit() ? undefined : false) },
+    ],
+  });
+  setTimeout(() => name.focus(), 30);
+  return box;
+}
+
+/** The first split: name it, and say what happens to the spend already there. */
+function splitDialog(m, ctx, done) {
+  const { looseTotal, loose, thisMonth, thisMonthTotal, date } = ctx;
+  const err = errorLine();
+  const name = textField('Name of the first creative', {
+    value: 'Creative A', placeholder: 'e.g. H5 banner – Parents',
+  });
+
+  const has = looseTotal > 0.005;
+  const choices = [
+    {
+      value: 'keep',
+      label: 'Keep it as recorded before the split',
+      note: `${money2(looseTotal, m.ccy)} across ${loose.length} ${loose.length === 1 ? 'day' : 'days'} stays on the line, `
+        + 'shown as its own read-only row. It still counts toward the line total. Nothing is lost.',
     },
-  }, '+ Creative');
+    {
+      value: 'adopt',
+      label: 'Move all of it onto this creative',
+      note: `Attributes the whole ${money2(looseTotal, m.ccy)} to the creative you are creating — `
+        + 'right when this line only ever ran one creative.',
+    },
+    {
+      value: 'clear',
+      label: `Clear ${monthLabel(String(date).slice(0, 7))} and re-enter per creative`,
+      note: thisMonth.length
+        ? `Deletes ${money2(thisMonthTotal, m.ccy)} across ${thisMonth.length} `
+          + `${thisMonth.length === 1 ? 'day' : 'days'} of line-level entries in this month. Earlier months are untouched. `
+          + 'Only do this if you have the per-creative split to type back in.'
+        : 'Nothing was recorded at line level this month, so this deletes nothing.',
+    },
+  ];
+  const choice = choiceField('The spend already on this line', choices, { value: 'keep' });
+
+  const box = dialog({
+    title: 'Split this line by creative',
+    sub: 'From here, the creatives are the only editable figures — the line’s own number becomes their sum.',
+    width: '520px',
+    content: has ? [name, choice, err] : [name, err],
+    actions: [
+      { label: 'Cancel' },
+      {
+        label: 'Split line',
+        primary: true,
+        onClick: () => {
+          if (!name.value()) { err.say('Give the creative a name first.'); return false; }
+          done(name.value(), has ? choice.value() : 'keep');
+          return undefined;
+        },
+      },
+    ],
+  });
+  setTimeout(() => name.focus(), 30);
+  return box;
 }
 
 
