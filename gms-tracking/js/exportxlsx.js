@@ -141,6 +141,52 @@ function finish(ws, lastDataRow, span) {
   signOff(ws, lastDataRow, span);
 }
 
+/* ------------------------------------------------------------ KPI columns
+ *
+ * Custom columns are not a bonus feature of one sheet — whoever added a column
+ * added it because it is how they judge the campaign, so it belongs on every
+ * sheet where the underlying figures appear. These helpers keep the four
+ * sheets from drifting apart: one definition of the columns, one definition of
+ * how a value is produced.
+ *
+ * Counters go everywhere, including the raw spend log (they are typed, so the
+ * log of typed values must show them). Rates go on the aggregate sheets only —
+ * a rate is a property of a set of rows, and the log's rows are single days.
+ */
+function kpiColumns(defs, { ratesToo = true, base = [] } = {}) {
+  /* A user column can collide with one a sheet already has — Creative
+     breakdown ships a built-in CTR, and adding the CTR preset produced two
+     identical columns side by side. The sheet's own column wins; the
+     duplicate is dropped rather than printed twice. */
+  const taken = new Set(base.map((c) => String(c.h).toLowerCase()));
+  return defs
+    .filter((d) => (d.kind === 'counter' ? true : ratesToo))
+    .filter((d) => !taken.has(String(d.name).toLowerCase()))
+    .map((d) => ({
+      h: d.name, k: `kpi_${d.id}`, w: 14,
+      fmt: d.kind === 'counter' ? INTF : d.format === 'pct' ? PCT2 : MONEY,
+    }));
+}
+
+/** Values for one row of KPI cells, given already-summed figures. */
+function kpiCells(defs, t, { ratesToo = true } = {}) {
+  const out = {};
+  for (const d of defs) {
+    if (d.kind !== 'counter' && !ratesToo) continue;
+    out[`kpi_${d.id}`] = kpiValue(d, t);
+  }
+  return out;
+}
+
+/** Sum the custom counters across a set of metric rows. */
+function sumExtras(rows) {
+  const extra = {};
+  for (const m of rows) {
+    for (const [k, v] of Object.entries(m.extra || {})) extra[k] = (extra[k] || 0) + num(v);
+  }
+  return extra;
+}
+
 /* -------------------------------------------------------------- columns */
 
 const COLS = {
@@ -295,13 +341,21 @@ export async function exportWorkbook(cfg) {
 
 function sheetSummary(wb, rows, { isClient, title, subtitle }) {
   const ws = wb.addWorksheet('Summary');
-  const cols = isClient ? COLS.summaryClient : COLS.summaryInternal;
+  const defs = kpiDefs();
+  const sumBase = isClient ? COLS.summaryClient : COLS.summaryInternal;
+  const cols = [...sumBase, ...kpiColumns(defs, { base: sumBase })];
   layout(ws, { title: `${title} — Summary`, subtitle, cols });
 
   const pInt = byPlatform(rows, 'internal');
   const pCli = byPlatform(rows, 'client');
+  /* byPlatform sums the money; the custom counters are summed here from the
+     same rows, so a platform's cost-per divides that platform's own spend by
+     that platform's own conversions rather than a global average. */
   const data = pInt.map((p) => {
     const q = pCli.find((x) => x.platform === p.platform) || { spend: 0, budget: 0 };
+    const mine = rows.filter((m) => (m.line.platform || '') === (p.platform || ''));
+    const agg = { spend: isClient ? q.spend : p.spend, imp: 0, clicks: 0, extra: sumExtras(mine) };
+    for (const m of mine) { agg.imp += num(m.imp); agg.clicks += num(m.clicks); }
     return {
       platform: p.platform || '—', lines: p.lines,
       bi: p.budget || null, si: p.spend || null,
@@ -310,10 +364,15 @@ function sheetSummary(wb, rows, { isClient, title, subtitle }) {
       gm: (q.spend - p.spend) || null,
       mp: q.spend > 0 ? (q.spend - p.spend) / q.spend : null,
       dl: q.budget > 0 ? q.spend / q.budget : null,
+      ...kpiCells(defs, agg),
     };
   });
   const end = writeRows(ws, cols, data);
   const t = totals(rows);
+  const grand = {
+    spend: isClient ? t.spendClient : t.spendInternal,
+    imp: t.imp, clicks: t.clicks, extra: sumExtras(rows),
+  };
   const after = totalRow(ws, end, cols, {
     lines: rows.length,
     bi: t.budgetInternal || null, si: t.spendInternal || null,
@@ -322,6 +381,7 @@ function sheetSummary(wb, rows, { isClient, title, subtitle }) {
     gm: (t.spendClient - t.spendInternal) || null,
     mp: t.effMargin,
     dl: t.budgetClient > 0 ? t.spendClient / t.budgetClient : null,
+    ...kpiCells(defs, grand),
   }, 'TOTAL');
   finish(ws, after, cols.length);
 }
@@ -334,21 +394,15 @@ function sheetLines(wb, rows, { isClient, title, subtitle }) {
      the side's own spend figure (a client file quotes client cost per
      conversion, not internal). */
   const defs = kpiDefs();
-  const kpiCols = defs.map((d) => ({
-    h: d.name, k: `kpi_${d.id}`, w: 14,
-    fmt: d.kind === 'counter' ? INTF : d.format === 'pct' ? PCT2 : d.format === 'money' ? MONEY : INTF,
-  }));
-  const cols = [...(isClient ? COLS.linesClient : COLS.linesInternal), ...kpiCols];
+  const lineBase = isClient ? COLS.linesClient : COLS.linesInternal;
+  const cols = [...lineBase, ...kpiColumns(defs, { base: lineBase })];
   layout(ws, { title: `${title} — ${isClient ? 'Performance' : 'Line detail'}`, subtitle, cols });
 
-  const kpiVals = (m) => Object.fromEntries(defs.map((d) => [`kpi_${d.id}`,
-    kpiValue(d, {
+  const data = rows.map((m) => ({
+    ...kpiCells(defs, {
       spend: isClient ? m.spendClient : m.spendInternal,
       imp: m.imp, clicks: m.clicks, extra: m.extra,
-    })]));
-
-  const data = rows.map((m) => ({
-    ...kpiVals(m),
+    }),
     month: monthLabel(m.ym), client: m.clientName, campaign: m.campaignName,
     io: m.campaign.io_number || '',
     platform: m.line.platform, objective: m.line.objective,
@@ -373,9 +427,15 @@ function sheetLines(wb, rows, { isClient, title, subtitle }) {
 }
 
 function sheetCreative(wb, rows, { isClient, title, subtitle }) {
+  const defs = kpiDefs();
   const data = [];
   const seen = new Set();
   const seenLines = new Set();
+  const sumRows = (sp) => {
+    const extra = {};
+    for (const r of sp) for (const [k, v] of Object.entries(r.extra || {})) extra[k] = (extra[k] || 0) + num(v);
+    return extra;
+  };
   for (const m of rows) {
     /* A split line whose spend predates the split would make this sheet add up
        to less than the same line does everywhere else. The gap gets its own
@@ -387,11 +447,16 @@ function sheetCreative(wb, rows, { isClient, title, subtitle }) {
         ? looseSpendTotal(crs, where('spend', (s) => s.line_id === m.line.id)) / m.rate
         : 0;
       if (loose > 0.005) {
+        const known = new Set(crs.map((c) => c.id));
+        const looseRows = where('spend', (x) => x.line_id === m.line.id
+          && (!x.creative_id || !known.has(x.creative_id)));
+        const spendSide = isClient ? loose / (1 - (m.margin || 0)) : loose;
         data.push({
           client: m.clientName, campaign: m.campaignName, platform: m.line.platform,
           creative: 'Not attributed to a creative', from: '',
-          spend: isClient ? loose / (1 - (m.margin || 0)) : loose,
+          spend: spendSide,
           imp: null, clk: null, ctr: null, url: '',
+          ...kpiCells(defs, { spend: spendSide, imp: 0, clicks: 0, extra: sumRows(looseRows) }),
         });
       }
     }
@@ -402,27 +467,35 @@ function sheetCreative(wb, rows, { isClient, title, subtitle }) {
       const internal = sp.reduce((a, s) => a + num(s.spend_internal), 0) / m.rate;
       const imp = sp.reduce((a, s) => a + num(s.imp), 0);
       const clk = sp.reduce((a, s) => a + num(s.clicks), 0);
-      if (!internal && !imp && !clk) continue;
+      const extra = sumRows(sp);
+      if (!internal && !imp && !clk && !Object.values(extra).some(Boolean)) continue;
+      const spendSide = isClient ? internal / (1 - (m.margin || 0)) : internal;
       data.push({
         client: m.clientName, campaign: m.campaignName, platform: m.line.platform,
         creative: c.name || '', from: c.live_from || '',
-        spend: isClient ? internal / (1 - (m.margin || 0)) : internal,
+        spend: spendSide,
         imp: imp || null, clk: clk || null,
         ctr: imp > 0 ? clk / imp : null,
         url: c.preview_url || '',
+        ...kpiCells(defs, { spend: spendSide, imp, clicks: clk, extra }),
       });
     }
   }
   if (!data.length) return;               // no creatives with spend — no sheet
   const ws = wb.addWorksheet('Creative breakdown');
-  const cols = isClient ? COLS.creative.filter((c) => c.k !== 'client') : COLS.creative;
+  const base = isClient ? COLS.creative.filter((c) => c.k !== 'client') : COLS.creative;
+  const cols = [...base, ...kpiColumns(defs, { base })];
   layout(ws, { title: `${title} — Creative`, subtitle, cols });
   finish(ws, writeRows(ws, cols, data), cols.length);
 }
 
 function sheetSpendLog(wb, rows, { title, subtitle }) {
   const ws = wb.addWorksheet('Spend log');
-  layout(ws, { title: `${title} — Spend log`, subtitle, cols: COLS.spendlog });
+  const defs = kpiDefs();
+  /* Counters only: this sheet is every daily entry exactly as typed, and a
+     rate is a property of a set of rows rather than of one day. */
+  const cols = [...COLS.spendlog, ...kpiColumns(defs, { ratesToo: false, base: COLS.spendlog })];
+  layout(ws, { title: `${title} — Spend log`, subtitle, cols });
 
   const seen = new Set();
   const data = [];
@@ -437,11 +510,12 @@ function sheetSpendLog(wb, rows, { title, subtitle }) {
         creative: s.creative_id ? (byId('creative', s.creative_id)?.name || '') : '',
         ccy: m.ccy, sp: num(s.spend_internal) || null,
         imp: num(s.imp) || null, clk: num(s.clicks) || null, note: s.note || '',
+        ...kpiCells(defs, { spend: 0, imp: 0, clicks: 0, extra: s.extra || {} }, { ratesToo: false }),
       });
     }
   }
   data.sort((a, b) => (a.date || '').localeCompare(b.date || ''));
-  finish(ws, writeRows(ws, COLS.spendlog, data), COLS.spendlog.length);
+  finish(ws, writeRows(ws, cols, data), cols.length);
 }
 
 /* ---------------------------------------------------------------- backup */
