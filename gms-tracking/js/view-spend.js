@@ -17,7 +17,7 @@ import { put, remove, where, byId, newId, fxMap, loadCreativeImages } from './st
 import { dialog, closeDialog, textField, choiceField, errorLine } from './modal.js';
 import { imageField } from './paste-image.js';
 import { openLog, noteCount } from './notes.js';
-import { monthBounds, grossUp, repace, repaceAdvice, todayIso, daySplit, looseSpendTotal, kpiValue, spendForSide } from './calc.js';
+import { monthBounds, grossUp, repace, repaceAdvice, todayIso, daySplit, looseSpendTotal, periodSpend, kpiValue, spendForSide } from './calc.js';
 import { kpiDefs, addKpi, removeKpi, PRESETS, hasPreset, companionsFor, kpiFormula, formatKpi } from './kpis.js';
 import { resizable, forgetWidths } from './resizable.js';
 
@@ -682,7 +682,11 @@ function creativeControl(m, creatives, spends, date, rerender) {
   const looseTotal = looseSpendTotal(creatives, spends);
   const monthOf = (d) => String(d || '').slice(0, 7);
   const thisMonth = loose.filter((s) => monthOf(s.date) === monthOf(date));
-  const thisMonthTotal = thisMonth.reduce((a, s) => a + Number(s.spend_internal || 0), 0);
+  /* These rows are cumulative snapshots. The amount being cleared from this
+     month is therefore its closing balance minus its opening balance, never
+     the sum of every snapshot shown in the confirmation dialog. */
+  const bounds = monthBounds(monthOf(date));
+  const thisMonthTotal = periodSpend(loose, bounds.start, bounds.end).spend;
 
   return el('button', {
     class: 'btn chip',
@@ -793,8 +797,8 @@ function splitDialog(m, ctx, done) {
       value: 'clear',
       label: `Clear ${monthLabel(String(date).slice(0, 7))} and re-enter per creative`,
       note: thisMonth.length
-        ? `Deletes ${money2(thisMonthTotal, m.ccy)} across ${thisMonth.length} `
-          + `${thisMonth.length === 1 ? 'day' : 'days'} of line-level entries in this month. Earlier months are untouched. `
+        ? `Removes ${thisMonth.length} line-level ${thisMonth.length === 1 ? 'snapshot' : 'snapshots'} from this month. `
+          + `Their net movement is ${money2(thisMonthTotal, m.ccy)}; earlier months are untouched. `
           + 'Only do this if you have the per-creative split to type back in.'
         : 'Nothing was recorded at line level this month, so this deletes nothing.',
     },
@@ -822,5 +826,3 @@ function splitDialog(m, ctx, done) {
   setTimeout(() => name.focus(), 30);
   return box;
 }
-
-
