@@ -70,6 +70,20 @@ let rows = [];
 function render() {
   if (store.state.status === 'locked') { renderGate(); return; }
 
+  /* The whole page is rebuilt on every change, which is what keeps every
+     derived figure honest — but a rebuild resets scroll to the top and drops
+     focus, so typing a number in row 40 flung the view back to row 1. The
+     position and the focused cell are captured here and put back after the
+     rebuild; inputs carry a stable data-focus key so "the same cell" survives
+     its own DOM being replaced. */
+  const scrollY = window.scrollY;
+  const panes = [...document.querySelectorAll('.tablewrap')].map((w) => w.scrollLeft);
+  const focusKey = document.activeElement?.dataset?.focus;
+  /* Where the focused cell sat in the viewport — restoring THIS, rather than
+     the page offset, is what makes the browser's "reveal the focused element"
+     scroll a no-op: the element is already exactly where it was. */
+  const focusTop = focusKey ? document.activeElement.getBoundingClientRect().top : 0;
+
   pruneStaleFilters();
   writeUrl();
   rows = buildRows(state);
@@ -98,6 +112,25 @@ function render() {
   else renderAdmin(view, ctx);
 
   app.appendChild(footer());
+
+  /* Put the reader back where they were. Focus first, then pin the offsets —
+     and pin them AGAIN one frame later, because both scroll anchoring and the
+     browser's own focus handling like to re-scroll asynchronously after a DOM
+     swap, and whoever scrolls last wins. */
+  [...app.querySelectorAll('.tablewrap')].forEach((w, i) => { w.scrollLeft = panes[i] || 0; });
+  const back = focusKey && app.querySelector(`[data-focus="${CSS.escape(focusKey)}"]`);
+  if (back) {
+    /* Scroll so the rebuilt cell lands at the exact viewport position its
+       predecessor occupied, THEN focus. The browser's asynchronous "reveal
+       the focused element" scroll — which ignores preventScroll's guarantee
+       beyond the call itself, and outlasts any pin — finds the element
+       already fully in view and has nothing to do. Fighting that reveal with
+       timers loses; making it a no-op cannot. */
+    window.scrollTo(0, Math.max(0, back.getBoundingClientRect().top + window.scrollY - focusTop));
+    back.focus({ preventScroll: true });
+  } else {
+    window.scrollTo(0, scrollY);
+  }
 }
 
 function goTo(tab) { state.tab = tab; closeDrawer(); closeExport(); render(); }

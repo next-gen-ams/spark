@@ -151,15 +151,16 @@ function grid(rows, date, mode, state, rerender) {
             class: 'cellinput', type: 'number', step: '0.01',
             value: day.loose.spend || '', placeholder: '0',
             'aria-label': `Spend for ${lineLabel(m)}`,
+            'data-focus': `${m.line.id}|_|s`,
             onchange: (e) => write(null, { spend_internal: Number(e.target.value) || 0 }),
           }),
         flightNote(m, r, day)),
 
       /* --- the rest of the typed block: what you enter sits together. */
-      countCell(day.split, day.total.imp, 'Impressions', (v) => write(null, { imp: v })),
-      countCell(day.split, day.total.clicks, 'Clicks', (v) => write(null, { clicks: v })),
+      countCell(day.split, day.total.imp, 'Impressions', (v) => write(null, { imp: v }), `${m.line.id}|_|i`),
+      countCell(day.split, day.total.clicks, 'Clicks', (v) => write(null, { clicks: v }), `${m.line.id}|_|c`),
       ...counters.map((d) =>
-        countCell(day.split, day.total.extra[d.id], d.name, (v) => writeExtra(null, d.id, v))),
+        countCell(day.split, day.total.extra[d.id], d.name, (v) => writeExtra(null, d.id, v), `${m.line.id}|_|${d.id}`)),
 
       /* --- the computed block: the margin doing something, then the rates. */
       el('td', { class: 'num muted' }, money(day.total.spend / m.rate)),
@@ -195,7 +196,7 @@ function grid(rows, date, mode, state, rerender) {
     if (!day.split) continue;
     for (const p of day.parts) {
       body.appendChild(creativeRow(m, p.creative.name || 'Creative', p, {
-        side, counters, rates: ratesK,
+        side, counters, rates: ratesK, focusBase: `${m.line.id}|${p.creative.id}`,
         onSpend: (v) => write(p.creative.id, { spend_internal: v }),
         onImp: (v) => write(p.creative.id, { imp: v }),
         onClicks: (v) => write(p.creative.id, { clicks: v }),
@@ -212,20 +213,23 @@ function grid(rows, date, mode, state, rerender) {
     }
   }
 
+  /* Three header tints, one per block: warm for what you type, blue for what
+     the app computes, neutral for the flight position. The colour carries the
+     grouping so the eye does not have to parse it from column names. */
   return resizable(el('table', { class: 'data' },
     el('thead', {}, el('tr', {},
       el('th', {}, 'Line'),
-      el('th', { class: 'num', title: 'Internal spend as paid to the media owner, in the line’s own currency' },
+      el('th', { class: 'num gtyped', title: 'Internal spend as paid to the media owner, in the line’s own currency' },
         `Spend · ${dateAu(date)}`),
-      el('th', { class: 'num' }, 'Impressions'),
-      el('th', { class: 'num' }, 'Clicks'),
-      ...counters.map((d) => el('th', { class: 'num', title: kpiFormula(d, defs) }, d.name)),
-      el('th', { class: 'num', title: 'The same figure converted to AUD at this campaign’s rate' },
+      el('th', { class: 'num gtyped' }, 'Impressions'),
+      el('th', { class: 'num gtyped' }, 'Clicks'),
+      ...counters.map((d) => el('th', { class: 'num gtyped', title: kpiFormula(d, defs) }, d.name)),
+      el('th', { class: 'num gcalc', title: 'The same figure converted to AUD at this campaign’s rate' },
         'Internal AUD'),
-      el('th', { class: 'num', title: 'What the client is billed for it — internal ÷ (1 − margin)' },
+      el('th', { class: 'num gcalc', title: 'What the client is billed for it — internal ÷ (1 − margin)' },
         'Client AUD'),
       ...ratesK.map((d) => el('th', {
-        class: 'num',
+        class: 'num gcalc',
         title: `${kpiFormula(d, defs)}${d.num === 'spend' ? ' · follows the Internal / Client-facing toggle' : ''}`,
       }, d.name)),
       el('th', { class: 'num', title: 'Total spent on this line across the whole flight' }, 'Spent to date'),
@@ -285,7 +289,8 @@ const lineLabel = (m) =>
  * three creative rows reads as three different positions.
  */
 function creativeRow(m, label, figures, opts = {}) {
-  const { readonly, note, side = 'internal', counters = [], rates = [], onSpend, onImp, onClicks, onExtra } = opts;
+  const { readonly, note, side = 'internal', counters = [], rates = [],
+    focusBase = '', onSpend, onImp, onClicks, onExtra } = opts;
   /* Built fresh each time rather than cloned — el() is the app's own node
      factory and cloneNode is not part of that contract. */
   const dim = () => el('td', { class: 'num muted' }, '');
@@ -301,13 +306,13 @@ function creativeRow(m, label, figures, opts = {}) {
         : el('input', {
           class: 'cellinput', type: 'number', step: '0.01',
           value: figures.spend || '', placeholder: '0',
-          'aria-label': `Spend for ${label}`,
+          'aria-label': `Spend for ${label}`, 'data-focus': `${focusBase}|s`,
           onchange: (e) => onSpend(Number(e.target.value) || 0),
         })),
 
-    countCell(readonly, figures.imp, 'Impressions', onImp),
-    countCell(readonly, figures.clicks, 'Clicks', onClicks),
-    ...counters.map((d) => countCell(readonly, figures.extra?.[d.id], d.name, (v) => onExtra(d.id, v))),
+    countCell(readonly, figures.imp, 'Impressions', onImp, `${focusBase}|i`),
+    countCell(readonly, figures.clicks, 'Clicks', onClicks, `${focusBase}|c`),
+    ...counters.map((d) => countCell(readonly, figures.extra?.[d.id], d.name, (v) => onExtra(d.id, v), `${focusBase}|${d.id}`)),
 
     el('td', { class: 'num muted' }, money(figures.spend / m.rate)),
     el('td', { class: 'num muted' }, m.billable
@@ -413,14 +418,14 @@ function addColumnDialog(rerender) {
 }
 
 /** Impressions / clicks: an input, or the derived sum when the row is a total. */
-function countCell(derived, value, label, onChange) {
+function countCell(derived, value, label, onChange, focusKey) {
   if (derived) {
     return el('td', { class: 'num' },
       el('div', { class: 'derived' }, value ? int(value) : '—'));
   }
   return el('td', { class: 'num' }, el('input', {
     class: 'cellinput', type: 'number', step: '1', value: value || '',
-    'aria-label': label,
+    'aria-label': label, 'data-focus': focusKey,
     onchange: (e) => onChange(Number(e.target.value) || null),
   }));
 }

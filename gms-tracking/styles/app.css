@@ -296,7 +296,19 @@ table.data th {
   padding: 9px 10px; white-space: nowrap; position: sticky; top: 0; z-index: 2;
   font-size: 11px; letter-spacing: .04em; text-transform: uppercase;
 }
-table.data th.num, table.data td.num { text-align: right; font-variant-numeric: tabular-nums; }
+/* Cells right-align (figures line up on the decimal); their HEADERS centre.
+   A band of two-line uppercase labels ragged against the right edge read as
+   clutter — centred, each label sits over its column like a title, and the
+   identity column stays left with its rows. */
+table.data td.num { text-align: right; font-variant-numeric: tabular-nums; }
+table.data th { text-align: center; }
+table.data th:first-child { text-align: left; }
+
+/* Entry-grid header blocks: warm = you type it, blue = the app computes it,
+   charcoal = where the flight stands. Same family as the page's colour rules
+   (orange feeling, blue structure), dark enough to keep white text legible. */
+table.data th.gtyped { background: #3A2A1A; box-shadow: inset 0 3px 0 var(--orange); }
+table.data th.gcalc { background: #1A2A3A; box-shadow: inset 0 3px 0 var(--blue); }
 table.data td { padding: 8px 10px; border-bottom: 1px solid var(--line); vertical-align: middle; }
 table.data tbody tr:hover td { background: var(--surface-2); }
 table.data tbody tr.sub td { background: var(--surface-2); font-weight: 600; }
