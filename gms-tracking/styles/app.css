@@ -102,8 +102,24 @@ table.data tbody tr.crrow td:first-child { overflow: visible; }
 
 /* Tracking log. The visibility tag is the thing to read first, so it sits on
    the same line as the date rather than under the text. */
-.loglist { max-height: 230px; overflow-y: auto; border: 1px solid var(--line);
-  border-radius: var(--radius-s); background: var(--surface-2); padding: 4px; }
+/* Tall enough for four or five entries, then it scrolls — a campaign logged
+   every other day runs to dozens by the end of a flight. Same reasoning as
+   .tablewrap: styling the scrollbar opts the container out of macOS overlay
+   mode, so the bar is visible before you scroll rather than after. */
+/* Capped against the viewport, not just in pixels. The dialog itself scrolls
+   when it outgrows the screen, and on a 13" laptop that scrolls Add entry out
+   of sight — the button you came here to press. Letting the list shrink keeps
+   the whole dialog on screen instead. */
+.loglist { max-height: min(320px, 28vh); overflow-y: auto; border: 1px solid var(--line);
+  border-radius: var(--radius-s); background: var(--surface-2); padding: 4px;
+  scrollbar-width: thin; scrollbar-color: var(--ink-3) var(--surface-2); }
+.loglist::-webkit-scrollbar { width: 11px; }
+.loglist::-webkit-scrollbar-track { background: var(--surface-2); }
+.loglist::-webkit-scrollbar-thumb {
+  background: var(--ink-3); border-radius: 6px;
+  border: 3px solid var(--surface-2);
+}
+.loglist::-webkit-scrollbar-thumb:hover { background: var(--ink-2); }
 .logitem { background: var(--surface); border: 1px solid var(--line);
   border-radius: var(--radius-xs); padding: 9px 11px; margin-bottom: 5px; }
 .logitem:last-child { margin-bottom: 0; }
@@ -671,6 +687,11 @@ table.data td.mo { color: var(--ink-2); font-size: 11.5px; }
   width: 100%; border: 1px solid var(--line-2); background: var(--surface);
   border-radius: var(--radius-xs); padding: 7px 9px; outline: none;
 }
+/* A campaign name is longer than the box. Without room reserved for the native
+   dropdown arrow the label runs underneath it and the last characters are
+   unreadable — which is worst on exactly the option that has to be identified
+   precisely, the campaign an entry is about. */
+.field select { padding-right: 28px; text-overflow: ellipsis; }
 .field input:focus, .field select:focus, .field textarea:focus { border-color: var(--orange); }
 .field .hint { font-size: 11.5px; color: var(--ink-3); margin-top: 4px; }
 .row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }

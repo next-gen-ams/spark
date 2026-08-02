@@ -16,7 +16,7 @@
  * One dialog, one form, one decision.
  */
 
-import { el, fill } from './dom.js';
+import { el, fill, setTextPrompt } from './dom.js';
 
 let host = null;
 let escHandler = null;
@@ -40,11 +40,14 @@ export function closeDialog() {
  * @param {string} [o.width]
  * @returns {{close: Function, setDisabled: Function}}
  */
-export function dialog({ title, sub, content = [], actions = [], width }) {
+export function dialog({ title, sub, content = [], actions = [], width, onBeforeClose }) {
   const h = fill(mount());
   const buttons = [];
 
-  const close = () => closeDialog();
+  /* Escape and the scrim bypass the action buttons, so a dialog holding
+     unsaved work has to be able to refuse every exit, not just the labelled
+     one. Returning false from onBeforeClose keeps the box open. */
+  const close = () => { if (onBeforeClose && onBeforeClose() === false) return; closeDialog(); };
 
   for (const a of actions) {
     buttons.push(el('button', {
@@ -197,3 +200,44 @@ export function confirmDanger({ title, detail, confirmLabel, onConfirm, typeToCo
   if (gate) setTimeout(() => gate.focus(), 30);
   return box;
 }
+
+/* ------------------------------------------------- one-line text prompt */
+
+/**
+ * The in-app replacement for window.prompt, resolved rather than returned so
+ * a caller can await it. Registered with dom.js on import so "+ Add new…"
+ * uses it wherever a dialog is available — native prompts are unstyleable and,
+ * more to the point, Chrome suppresses the second one in a sequence.
+ */
+export function askText(title, { label = 'Value', placeholder = '' } = {}) {
+  return new Promise((resolve) => {
+    let answered = false;
+    const field = textField(label, { placeholder, onEnter: () => submit() });
+    const submit = () => {
+      if (!field.value()) return false;
+      answered = true;
+      resolve(field.value());
+      closeDialog();
+      return undefined;
+    };
+    dialog({
+      title,
+      content: [field],
+      actions: [
+        { label: 'Cancel', onClick: () => { answered = true; resolve(null); } },
+        { label: 'Add', primary: true, onClick: submit },
+      ],
+    });
+    setTimeout(() => field.focus(), 30);
+    /* Escape and the scrim both close without an answer; resolve so the
+       caller is never left waiting on a dialog that is gone. */
+    const watch = setInterval(() => {
+      if (!document.querySelector('.dialogbox')) {
+        clearInterval(watch);
+        if (!answered) resolve(null);
+      }
+    }, 200);
+  });
+}
+
+setTextPrompt((title) => askText(title));

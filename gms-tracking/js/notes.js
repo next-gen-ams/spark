@@ -56,17 +56,29 @@ export function openLog(m, rerender) {
 
   const body = el('textarea', {
     rows: 3, placeholder: 'What happened? e.g. “Client paused Campus Day push pending approvals — restart 12/08.”',
+    /* Plain Enter has to stay a newline — entries run to several lines. */
+    onkeydown: (e) => { if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) add(); },
   });
   const date = el('input', { type: 'date', value: todayIso() });
-  const scope = el('select', {},
-    el('option', { value: 'campaign', selected: true }, `Whole campaign — ${m.campaignName || 'campaign'}`),
-    el('option', { value: 'line' }, `This line only — ${m.line.placement || m.line.platform || 'line'}`));
+  /* The full campaign name is already on the row the user opened this from, so
+     the option leads with the scope — the part that changes what happens. */
+  const scope = el('select', { title: 'Which entries this is filed under' },
+    el('option', { value: 'campaign', selected: true },
+      `Whole campaign — ${m.campaignName || 'campaign'}`),
+    el('option', { value: 'line' },
+      `This line only — ${m.line.placement || m.line.platform || 'line'}`));
   const shared = el('input', { type: 'checkbox' });
 
   const list = el('div', { class: 'loglist' });
+  const logLabel = el('label', {}, 'Logged so far');
 
   const paint = () => {
     const rows = campaignLog(campaignId);
+    /* Say how many and in what order — otherwise a list that scrolls looks
+       like a list that ends, and the older entries are never found. */
+    fill(logLabel, rows.length
+      ? `Logged so far — ${rows.length} ${rows.length === 1 ? 'entry' : 'entries'}, newest first`
+      : 'Logged so far');
     if (!rows.length) {
       fill(list, el('div', { class: 'hint' },
         'Nothing logged for this campaign yet. The first entry is usually the most useful one.'));
@@ -126,12 +138,26 @@ export function openLog(m, rerender) {
           el('span', { class: 'cnote' },
             'Off by default. Only shared entries reach a client report — everything else stays inside GMS.'))),
       err,
-      el('div', { class: 'field' }, el('label', {}, 'Logged so far'), list),
+      el('div', { class: 'field' }, logLabel, list),
     ],
+    /* "Add entry" is the primary button and "Close" is not.
+       The first version had them the other way round, and the blue button on
+       the right — the one every dialog trains you to press — threw the entry
+       away without a word. Coco wrote a log, pressed it, and the entry was
+       never created. Emphasis follows consequence: the button that keeps your
+       work is the one that looks like the answer. */
     actions: [
-      { label: 'Add entry', onClick: add },
-      { label: 'Done', primary: true },
+      { label: 'Close' },
+      { label: 'Add entry', primary: true, onClick: add },
     ],
+    /* And no exit — button, Escape, or scrim — discards typed text in silence. */
+    onBeforeClose: () => {
+      if (!body.value.trim()) return undefined;
+      err.say('You’ve written an entry but haven’t added it yet. '
+        + 'Press Add entry (or ⌘/Ctrl + Enter), or clear the box to close.');
+      body.focus();
+      return false;
+    },
   });
   setTimeout(() => body.focus(), 30);
 }

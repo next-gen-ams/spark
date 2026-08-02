@@ -1,7 +1,7 @@
 /* Admin — the managed lists everything else picks from. */
 
 import { el, toast, dateAu } from './dom.js';
-import { all, put, remove, removeWhere, newId, vocab, addVocab, importJson, where, loadDemo, isDemo, wipeData } from './store.js';
+import { all, put, remove, newId, vocab, addVocab, importJson, where, loadDemo, isDemo, wipeData, deleteCascade } from './store.js';
 import { exportBackup } from './exportxlsx.js';
 import { VOCAB_DEFAULT } from './config.js';
 import { confirmDanger } from './modal.js';
@@ -48,8 +48,7 @@ function clients(rerender) {
               detail: `${cmps.length} campaign${cmps.length === 1 ? '' : 's'}, every line and all their spend go with it.`,
               confirmLabel: 'Delete client',
               onConfirm: () => {
-                for (const k of cmps) deleteCampaign(k.id);
-                remove('client', c.id); rerender(); toast('Client deleted');
+                deleteCascade('client', c.id); rerender(); toast('Client deleted');
               },
             }),
           }, 'Delete')));
@@ -143,16 +142,9 @@ function campaigns(rerender) {
       : el('div'));
 }
 
-function deleteCampaign(campaignId) {
-  const lineIds = where('line', (l) => l.campaign_id === campaignId).map((l) => l.id);
-  for (const id of lineIds) {
-    removeWhere('spend', 'line_id', id);
-    removeWhere('creative', 'line_id', id);
-    removeWhere('line_month', 'line_id', id);
-  }
-  removeWhere('line', 'campaign_id', campaignId);
-  remove('campaign', campaignId);
-}
+/* The cascade itself lives in store.js, next to the map of what points at
+   what — it was open-coded here and in the drawer, and the two drifted. */
+const deleteCampaign = (campaignId) => deleteCascade('campaign', campaignId);
 
 /**
  * Suppliers are free text on every line, so the same vendor drifts into
@@ -287,10 +279,23 @@ function data(rerender) {
         class: 'btn',
         title: 'Reloads the three reference media plans with made-up spend',
         onclick: async () => {
-          if (all('line').length && !isDemo()
-            && !confirm('Replace everything currently here with the sample data?')) return;
-          await loadDemo() ? toast('Sample data loaded') : toast('data/demo.json not found', 'bad');
-          rerender();
+          const load = async () => {
+            await loadDemo() ? toast('Sample data loaded') : toast('data/demo.json not found', 'bad');
+            rerender();
+          };
+          /* Loading the sample over real tracking is a wipe wearing a friendly
+             label — same consequence as Delete all, so it gets the same
+             dialog, backup button included. */
+          if (!all('line').length || isDemo()) return load();
+          confirmDanger({
+            title: 'Replace everything with the sample data?',
+            detail: `There ${all('line').length === 1 ? 'is' : 'are'} ${all('line').length} `
+              + 'real line items here. Loading the sample data removes all of them.',
+            confirmLabel: 'Replace with sample data',
+            onBackup: exportBackup,
+            onConfirm: load,
+          });
+          return undefined;
         },
       }, isDemo() ? 'Reload sample data' : 'Load sample data'),
       el('div', { style: { flex: 1 } })),

@@ -1,11 +1,12 @@
 /* Line drawer — edit a media-plan line, see exactly how its client-facing
    number was derived, and manage its creatives. */
 
-import { el, fill, money, money2, int, pct, dateAu, monthLabel, toast, selectOrNew } from './dom.js';
-import { put, remove, where, newId, vocab, addVocab, fxMap, loadCreativeImages } from './store.js';
+import { el, fill, money, money2, int, pct, monthLabel, toast, selectOrNew } from './dom.js';
+import { put, where, newId, vocab, addVocab, fxMap, loadCreativeImages, deleteCascade, deleteCreative } from './store.js';
 import { imageField } from './paste-image.js';
-import { dialog } from './modal.js';
+import { dialog, confirmDanger } from './modal.js';
 import { grossUp, num, perAud, effectiveStatus } from './calc.js';
+import { exportBackup } from './exportxlsx.js';
 
 let host = null;
 
@@ -55,12 +56,25 @@ export function openLine(m, rerender) {
 
     el('footer', {},
       el('button', { class: 'btn ghost', onclick: () => {
-        if (!confirm('Delete this line and all of its spend and creatives?')) return;
-        remove('line', line.id);
-        for (const s of where('spend', (x) => x.line_id === line.id)) remove('spend', s.id);
-        for (const c of where('creative', (x) => x.line_id === line.id)) remove('creative', c.id);
-        for (const mm of where('line_month', (x) => x.line_id === line.id)) remove('line_month', mm.id);
-        closeDrawer(); rerender(); toast('Line deleted');
+        /* Say what actually goes, counted. "and all of its spend" is a phrase;
+           "and the 24 spend entries on it" is a number the user can weigh. */
+        const spend = where('spend', (x) => x.line_id === line.id).length;
+        const creatives = where('creative', (c) => c.line_id === line.id).length;
+        const also = [
+          spend ? `${spend} spend ${spend === 1 ? 'entry' : 'entries'}` : null,
+          creatives ? `${creatives} creative${creatives === 1 ? '' : 's'}` : null,
+        ].filter(Boolean);
+        confirmDanger({
+          title: 'Delete this line?',
+          detail: `${line.supplier || 'This line'} — ${line.placement || 'no placement'}`
+            + (also.length ? `. This also deletes ${also.join(' and ')}.` : '.'),
+          confirmLabel: 'Delete line',
+          onBackup: exportBackup,
+          onConfirm: () => {
+            deleteCascade('line', line.id);
+            closeDrawer(); rerender(); toast('Line deleted');
+          },
+        });
       } }, 'Delete line'),
       el('button', { class: 'btn primary', onclick: closeDrawer }, 'Done'))));
 
@@ -335,11 +349,18 @@ function creatives(line, refresh) {
     el('td', {}, el('button', {
       class: 'btn ghost sm', title: 'Remove creative',
       onclick: () => {
-        if (!confirm('Remove this creative? Its spend rows stay on the line.')) return;
-        for (const s of spend.filter((x) => x.creative_id === c.id)) {
-          put('spend', { id: s.id, creative_id: null });
-        }
-        remove('creative', c.id); refresh();
+        const owned = where('spend', (x) => x.creative_id === c.id).length;
+        dialog({
+          title: `Remove ${c.name || 'this creative'}?`,
+          sub: owned
+            ? `Its ${owned} spend ${owned === 1 ? 'entry stays' : 'entries stay'} on the line, `
+              + 'no longer attributed to a creative. No money is lost.'
+            : 'It has no spend against it yet.',
+          actions: [
+            { label: 'Cancel' },
+            { label: 'Remove', danger: true, onClick: () => { deleteCreative(c.id); refresh(); } },
+          ],
+        });
       },
     }, '✕')))));
 

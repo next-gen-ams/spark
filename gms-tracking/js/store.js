@@ -83,6 +83,10 @@ function execOp(op) {
   if (op.t === 'up') return sb.from(op.table).upsert(op.row);
   if (op.t === 'upm') return sb.from(op.table).upsert(op.rows);
   if (op.t === 'del') return sb.from(op.table).delete().eq(pkOf(op.table), op.id);
+  /* 'delw' (delete-where) no longer has a producer — deleteCascade issues one
+     'del' per row instead, so the outbox says exactly what it did. The handler
+     stays because a browser that closed with unsent work still has the old
+     ops sitting in localStorage, and dropping it would strand them. */
   if (op.t === 'delw') return sb.from(op.table).delete().eq(op.key, op.value);
   if (op.t === 'delall') return sb.from(op.table).delete().not(pkOf(op.table), 'is', null);
   return Promise.resolve({ error: new Error(`unknown op ${op.t}`) });
@@ -181,15 +185,48 @@ export function remove(table, id) {
   emit();
 }
 
-/** Delete every row of `table` whose `key` equals `value` (cascade by hand,
-    so local mode behaves the same as Postgres' ON DELETE CASCADE). */
-export function removeWhere(table, key, value) {
-  const doomed = db[table].filter((r) => r[key] === value).map((r) => r.id);
-  db[table] = db[table].filter((r) => r[key] !== value);
-  enqueue({ t: 'delw', table, key, value });
-  saveLocal();
-  emit();
-  return doomed;
+/* ------------------------------------------------------------- cascades
+ *
+ * Who points at whom. Postgres knows this already (every child carries ON
+ * DELETE CASCADE), but the browser holds its own copy of the data and has to
+ * delete by hand, or the local view and the database disagree until the next
+ * refresh — rows that look deleted come back, or rows that look present are
+ * already gone.
+ *
+ * The map is the point. Deleting used to be open-coded in two places (Settings
+ * and the line drawer), so adding the `note` table left tracking-log entries
+ * orphaned in both — the log survived the campaign it described. One
+ * declaration, one implementation, and a suite check that walks every table
+ * looking for a parent that no longer exists.
+ */
+const CHILDREN = {
+  client: [['campaign', 'client_id']],
+  campaign: [['line', 'campaign_id'], ['note', 'campaign_id']],
+  line: [['spend', 'line_id'], ['creative', 'line_id'],
+    ['line_month', 'line_id'], ['note', 'line_id']],
+  creative: [],                        // spend rows survive; see deleteCreative
+};
+
+/** Delete a row and everything that hangs off it, depth-first. */
+export function deleteCascade(table, id) {
+  for (const [childTable, fk] of CHILDREN[table] || []) {
+    for (const child of db[childTable].filter((r) => r[fk] === id)) {
+      deleteCascade(childTable, child[pkOf(childTable)]);
+    }
+  }
+  remove(table, id);
+}
+
+/**
+ * Removing a creative keeps its spend — the money was real whatever it was
+ * attributed to. The rows fall back to the line, where the entry grid shows
+ * them as "Not attributed to a creative" rather than letting them vanish.
+ */
+export function deleteCreative(id) {
+  for (const s of db.spend.filter((r) => r.creative_id === id)) {
+    put('spend', { ...s, creative_id: null });
+  }
+  remove('creative', id);
 }
 
 /* The tables wipeData() empties — the *data*, as opposed to the *setup*.

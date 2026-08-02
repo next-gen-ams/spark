@@ -90,12 +90,23 @@ export function tag(text, kind, title) {
 }
 
 /** A <select> that also lets the user type a value that isn't in the list. */
+/**
+ * How "+ Add new…" asks for the new value.
+ *
+ * dom.js is the bottom of the import graph — modal.js depends on it, so it
+ * cannot depend on modal.js in return. The dialog registers itself here
+ * instead, which keeps the cycle from forming and leaves a working fallback
+ * for anything that loads dom.js on its own.
+ */
+let askForText = async (title) => window.prompt(title, '');
+export const setTextPrompt = (fn) => { askForText = fn; };
+
 export function selectOrNew(value, options, onPick, { allowNew = true, cls = 'pill-sel' } = {}) {
   const NEW = '__new__';
-  const sel = el('select', { class: cls, onchange: () => {
+  const sel = el('select', { class: cls, onchange: async () => {
     if (sel.value !== NEW) return onPick(sel.value);
-    const v = prompt('Add a new option:', '');
     sel.value = value || '';
+    const v = await askForText('Add a new option');
     if (v && v.trim()) onPick(v.trim());
   } },
   el('option', { value: '' }, '—'),
