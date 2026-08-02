@@ -17,8 +17,10 @@ import { download, toast, monthLabel, money } from './dom.js';
 import { all, where, byId, loadCreativeImages } from './store.js';
 import { totals, byPlatform, num, effectiveStatus, looseSpendTotal, kpiValue } from './calc.js';
 import { kpiDefs } from './kpis.js';
+import { campaignLog } from './notes.js';
 import { fileName } from './view-export.js';
 import { GMS_LOGO_B64 } from './logo-b64.js';
+import { imageSize } from './paste-image.js';
 
 /* ------------------------------------------------------------- house style */
 
@@ -205,15 +207,25 @@ function placeThumbnails(ws, wb, cols, data) {
   const ci = cols.findIndex((c) => c.image);
   if (ci < 0) return;
   const colWidthPx = (cols[ci].w || 26) * 7;          // Excel width unit ≈ 7px
+  const boxW = colWidthPx - 8;
+  const MAX_H = 150;                                   // keep rows workable
   data.forEach((rec, i) => {
     const url = rec[cols[ci].k];
     if (!url) return;
     const m = /^data:image\/(png|jpeg|jpg);base64,(.+)$/i.exec(url);
     if (!m) return;
+    /* The true ratio, read from the image's own header. Guessing it — which an
+       earlier version did, at a fixed 16:9 — is exactly how a screenshot ends
+       up stretched in the report. A picture that cannot be measured is left
+       out rather than placed at a made-up shape. */
+    const dims = imageSize(url);
+    if (!dims || !dims.w || !dims.h) return;
+    const scale = Math.min(boxW / dims.w, MAX_H / dims.h);
+    const w = Math.round(dims.w * scale);
+    const h = Math.round(dims.h * scale);
     const id = wb.addImage({ base64: m[2], extension: m[1] === 'jpg' ? 'jpeg' : m[1] });
-    const w = colWidthPx - 8;
-    const h = Math.round(w * (rec.__shotAr || 0.56));  // 16:9-ish unless told
-    ws.getRow(6 + i).height = Math.max(ws.getRow(6 + i).height || 0, h * 0.78);
+    /* Excel row height is in points; a pixel is 0.75pt. */
+    ws.getRow(6 + i).height = Math.max(ws.getRow(6 + i).height || 0, h * 0.75 + 8);
     ws.addImage(id, { tl: { col: ci + 0.06, row: 6 + i - 1 + 0.06 }, ext: { width: w, height: h } });
   });
 }
@@ -313,6 +325,14 @@ const COLS = {
     { h: 'Preview', k: 'url', w: 36, opt: true },
     { h: 'Screenshot', k: 'shot', w: 26, opt: true, image: true },
   ],
+  activity: [
+    { h: 'Date', k: 'date', w: 12 },
+    { h: 'Client', k: 'client', w: 20 },
+    { h: 'Campaign', k: 'campaign', w: 26 },
+    { h: 'Applies to', k: 'scope', w: 30 },
+    { h: 'Entry', k: 'body', w: 78 },
+    { h: 'Visibility', k: 'vis', w: 15, opt: true },
+  ],
   spendlog: [
     { h: 'Date', k: 'date', w: 12 },
     { h: 'Client', k: 'client', w: 20 },
@@ -375,6 +395,7 @@ export async function exportWorkbook(cfg) {
   if (cfg.sheets.summary) sheetSummary(wb, rows, { isClient, title, subtitle });
   if (cfg.sheets.lines) sheetLines(wb, rows, { isClient, title, subtitle });
   if (cfg.sheets.creative) sheetCreative(wb, rows, { isClient, title, subtitle });
+  if (cfg.sheets.activity !== false) sheetActivity(wb, rows, { isClient, title, subtitle });
   if (!isClient && cfg.sheets.spendlog) sheetSpendLog(wb, rows, { title, subtitle });
 
   if (!wb.worksheets.length) { toast('Pick at least one sheet', 'bad'); return; }
@@ -544,6 +565,43 @@ function sheetCreative(wb, rows, { isClient, title, subtitle }) {
   const end = writeRows(ws, cols, data);
   placeThumbnails(ws, wb, cols, data);
   finish(ws, end, cols.length);
+}
+
+/**
+ * The tracking log as a sheet.
+ *
+ * The client workbook carries only entries explicitly marked shared — an
+ * internal note is free text, and free text is the easiest way to put a margin
+ * conversation in front of a client. The Visibility column exists only in the
+ * internal file, where the distinction is worth seeing; in a client file every
+ * row is shared by definition, so the column prunes itself away.
+ */
+function sheetActivity(wb, rows, { isClient, title, subtitle }) {
+  const campaigns = new Map();
+  for (const m of rows) if (m.campaign?.id) campaigns.set(m.campaign.id, m);
+  const lineName = (id) => {
+    const l = all('line').find((x) => x.id === id);
+    return l ? (l.placement || l.supplier || l.platform || 'line') : 'line';
+  };
+
+  const data = [];
+  for (const [cid, m] of campaigns) {
+    for (const n of campaignLog(cid, { sharedOnly: isClient })) {
+      data.push({
+        date: n.date || '', client: m.clientName, campaign: m.campaignName,
+        scope: n.line_id ? lineName(n.line_id) : 'Whole campaign',
+        body: n.body || '',
+        vis: isClient ? '' : (n.shared ? 'Shared with client' : 'Internal only'),
+      });
+    }
+  }
+  if (!data.length) return;                    // nothing logged — no sheet
+  data.sort((a, b) => String(a.date).localeCompare(String(b.date)));
+
+  const ws = wb.addWorksheet('Tracking log');
+  const cols = pruneEmpty(isClient ? COLS.activity.filter((c) => c.k !== 'client') : COLS.activity, data);
+  layout(ws, { title: `${title} — Tracking log`, subtitle, cols });
+  finish(ws, writeRows(ws, cols, data), cols.length);
 }
 
 function sheetSpendLog(wb, rows, { title, subtitle }) {

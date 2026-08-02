@@ -13,9 +13,10 @@
  */
 
 import { el, money, money2, int, pct, monthLabel, dateAu, toast } from './dom.js';
-import { put, remove, where, byId, newId, fxMap } from './store.js';
+import { put, remove, where, byId, newId, fxMap, loadCreativeImages } from './store.js';
 import { dialog, closeDialog, textField, choiceField, errorLine } from './modal.js';
 import { imageField } from './paste-image.js';
+import { openLog, noteCount } from './notes.js';
 import { monthBounds, grossUp, repace, repaceAdvice, todayIso, daySplit, looseSpendTotal, kpiValue, spendForSide } from './calc.js';
 import { kpiDefs, addKpi, removeKpi, PRESETS, hasPreset, companionsFor, kpiFormula, formatKpi } from './kpis.js';
 import { resizable, forgetWidths } from './resizable.js';
@@ -142,7 +143,8 @@ function grid(rows, date, mode, state, rerender) {
       el('td', { class: 'wrap' }, m.clientName,
         el('div', { class: 'muted', style: { fontSize: '11px' } },
           `${m.line.platform || '—'} · ${lineLabel(m)}`),
-        creativeControl(m, creatives, spends, date, rerender)),
+        creativeControl(m, creatives, spends, date, rerender),
+        logControl(m, rerender)),
 
       el('td', { class: 'num' },
         day.split
@@ -198,6 +200,7 @@ function grid(rows, date, mode, state, rerender) {
     for (const p of day.parts) {
       body.appendChild(creativeRow(m, p.creative.name || 'Creative', p, {
         side, counters, rates: ratesK, focusBase: `${m.line.id}|${p.creative.id}`,
+        creative: p.creative, refresh: rerender,
         onSpend: (v) => write(p.creative.id, { spend_internal: v }),
         onImp: (v) => write(p.creative.id, { imp: v }),
         onClicks: (v) => write(p.creative.id, { clicks: v }),
@@ -281,6 +284,34 @@ function varianceCell(r) {
 const lineLabel = (m) =>
   m.line.placement || m.line.supplier || m.line.objective || 'Line';
 
+/**
+ * The creative's own artwork, inline in its row.
+ *
+ * A name like "Creative B" tells you nothing three months later; the picture
+ * does. Small enough not to change the row's rhythm, and it grows on hover so
+ * the ad can actually be read without leaving the grid.
+ *
+ * Images are not in the boot read, so the first render of a split line asks
+ * for them and repaints once they land.
+ */
+function creativeThumb(c, refresh) {
+  if (c.preview_image === undefined) {
+    /* Repaint only if the fetch actually settled something — an unconditional
+       refresh here repaints, re-asks, and repaints again, forever. */
+    loadCreativeImages([c.id]).then((changed) => { if (changed && refresh) refresh(); });
+    return null;
+  }
+  if (!c.preview_image) return null;
+  /* Two copies on purpose. Enlarging the inline image itself would take it out
+     of flow, collapse its container, drop the :hover that caused it, and snap
+     back — a flicker loop. The small one never moves; a second, larger copy is
+     layered over the grid and ignores the pointer entirely. */
+  return el('span', { class: 'crthumb' },
+    el('img', { class: 'crthumb-sm', src: c.preview_image, alt: `${c.name || 'Creative'} artwork`, loading: 'lazy' }),
+    el('span', { class: 'crthumb-pop', 'aria-hidden': 'true' },
+      el('img', { src: c.preview_image, alt: '' })));
+}
+
 /* ------------------------------------------------------- creative rows */
 
 /**
@@ -299,6 +330,7 @@ function creativeRow(m, label, figures, opts = {}) {
   return el('tr', { class: 'crrow' + (m.billable ? '' : ' nb') },
     el('td', { class: 'wrap' },
       el('span', { class: 'crname' }, label),
+      opts.creative ? creativeThumb(opts.creative, opts.refresh) : null,
       note ? el('div', { class: 'muted', style: { fontSize: '11px', color: 'var(--warn)' } }, note) : null),
 
     el('td', { class: 'num' },
@@ -535,6 +567,16 @@ function creativeFields(suggested) {
       preview_url: url.value(),
       preview_image: shot.value() || null,
     }) };
+}
+
+/** The log button, with a count so a campaign with history says so. */
+function logControl(m, rerender) {
+  const n = noteCount(m.campaign?.id);
+  return el('button', {
+    class: 'btn chip logchip', style: { marginLeft: '6px' },
+    title: 'What happened on this campaign, in the team’s own words',
+    onclick: () => openLog(m, rerender),
+  }, n ? `Log · ${n}` : '+ Log');
 }
 
 /** Dialog for every creative after the first. */

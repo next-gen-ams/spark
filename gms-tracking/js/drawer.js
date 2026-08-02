@@ -269,7 +269,7 @@ function refreshDrawer() { if (reopen) reopen(); }
  */
 function thumbCell(c, refresh) {
   if (c.preview_image === undefined) {
-    loadCreativeImages([c.id]).then(refresh);
+    loadCreativeImages([c.id]).then((changed) => { if (changed) refresh(); });
     return el('span', { class: 'muted', style: { fontSize: '11px' } }, 'loading…');
   }
   if (c.preview_image) {

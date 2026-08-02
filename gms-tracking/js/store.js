@@ -8,7 +8,7 @@
 import { SUPABASE, FX_DEFAULT, VOCAB_DEFAULT } from './config.js';
 
 export const TABLES = ['client', 'campaign', 'line', 'line_month',
-  'creative', 'spend', 'vocab', 'fx', 'settings'];
+  'creative', 'spend', 'note', 'vocab', 'fx', 'settings'];
 
 const LS_KEY = 'gms-tracking-v1';
 
@@ -197,7 +197,7 @@ export function removeWhere(table, key, value) {
    column widths) survive a wipe: they are how the team taught the tool to
    work, and re-teaching it is exactly the friction a fresh start should not
    carry. */
-const DATA_TABLES = ['spend', 'creative', 'line_month', 'line', 'campaign', 'client'];
+const DATA_TABLES = ['spend', 'note', 'creative', 'line_month', 'line', 'campaign', 'client'];
 
 /**
  * Empty every data table, locally and — when signed in — in Postgres too.
@@ -353,21 +353,40 @@ export async function loadCreativeImages(ids) {
     const c = byId('creative', id);
     return c && c.preview_image === undefined;
   });
-  if (!sb || !want.length) return;
-  for (let i = 0; i < want.length; i += 50) {
-    const chunk = want.slice(i, i + 50);
-    const { data, error } = await sb.from('creative')
-      .select('id,preview_image').in('id', chunk);
-    if (error) { console.warn('[store] thumbnails unavailable', error); return; }
-    for (const row of data || []) {
-      const c = byId('creative', row.id);
-      /* null, not undefined — "asked and there is none" must be
-         distinguishable from "never asked", or every render re-fetches. */
-      if (c) c.preview_image = row.preview_image ?? null;
+  if (!want.length) return false;
+
+  /* Every path below MUST leave preview_image settled — null when there is
+     nothing to show. A value left at `undefined` means "never asked", and a
+     caller that repaints when the answer arrives will ask again, repaint
+     again, and spin the CPU forever. Local mode and a failed fetch are both
+     answers: there is no image to be had. */
+  const settle = () => {
+    for (const id of want) {
+      const c = byId('creative', id);
+      if (c && c.preview_image === undefined) c.preview_image = null;
     }
+  };
+
+  if (!sb) { settle(); return true; }
+
+  try {
+    for (let i = 0; i < want.length; i += 50) {
+      const chunk = want.slice(i, i + 50);
+      const { data, error } = await sb.from('creative')
+        .select('id,preview_image').in('id', chunk);
+      if (error) throw error;
+      for (const row of data || []) {
+        const c = byId('creative', row.id);
+        if (c) c.preview_image = row.preview_image ?? null;
+      }
+    }
+  } catch (e) {
+    console.warn('[store] thumbnails unavailable', e);
   }
+  settle();
   saveLocal();
   emit();
+  return true;
 }
 
 async function loadRemote() {

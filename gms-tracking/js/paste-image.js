@@ -20,8 +20,15 @@
 
 import { el, fill } from './dom.js';
 
-const MAX_W = 480;
-const QUALITY = 0.72;
+/* Scale down, don't crush.
+ *
+ * The job is to make the file smaller by making the picture smaller — not by
+ * degrading what is left. 720px wide at q0.9 keeps ad copy legible when you
+ * hover it, and a screenshot still lands around 60–110 KB: a hundred creatives
+ * cost single-digit megabytes of a 500 MB allowance. Aspect ratio is always
+ * preserved exactly; nothing here ever stretches an image. */
+const MAX_W = 720;
+const QUALITY = 0.9;
 
 /** Roughly how many bytes a data URL costs once stored (base64 is ~4/3). */
 export const dataUrlBytes = (url) => Math.round(((url || '').length - 22) * 0.75);
@@ -56,6 +63,50 @@ export function shrinkImage(blob) {
     img.onerror = () => { URL.revokeObjectURL(url); reject(new Error('not an image')); };
     img.src = url;
   });
+}
+
+/**
+ * Read a stored image's real pixel dimensions out of its own header.
+ *
+ * The Excel export has to know the true aspect ratio to place a thumbnail, and
+ * guessing it is how a picture ends up stretched. Reading the header rather
+ * than storing the numbers alongside means images saved before this existed
+ * are handled correctly too — there is nothing to migrate.
+ *
+ * @param {string} dataUrl
+ * @returns {{w: number, h: number}|null}
+ */
+export function imageSize(dataUrl) {
+  const m = /^data:image\/(png|jpe?g);base64,(.+)$/i.exec(dataUrl || '');
+  if (!m) return null;
+  let b;
+  try {
+    const bin = atob(m[2]);
+    b = new Uint8Array(bin.length);
+    for (let i = 0; i < bin.length; i++) b[i] = bin.charCodeAt(i);
+  } catch { return null; }
+
+  /* PNG: IHDR is always the first chunk, width and height at bytes 16–23. */
+  if (/png/i.test(m[1])) {
+    if (b.length < 24) return null;
+    const rd = (o) => (b[o] << 24 | b[o + 1] << 16 | b[o + 2] << 8 | b[o + 3]) >>> 0;
+    return { w: rd(16), h: rd(20) };
+  }
+
+  /* JPEG: walk the marker chain to the start-of-frame, which carries the
+     dimensions. DHT/DAC/RST markers are skipped — they are not frames. */
+  let i = 2;
+  while (i + 9 < b.length) {
+    if (b[i] !== 0xFF) { i++; continue; }
+    const marker = b[i + 1];
+    const isFrame = marker >= 0xC0 && marker <= 0xCF
+      && marker !== 0xC4 && marker !== 0xC8 && marker !== 0xCC;
+    if (isFrame) return { h: (b[i + 5] << 8) | b[i + 6], w: (b[i + 7] << 8) | b[i + 8] };
+    const len = (b[i + 2] << 8) | b[i + 3];
+    if (len < 2) return null;
+    i += 2 + len;
+  }
+  return null;
 }
 
 /** The first image on a clipboard event, or null. */

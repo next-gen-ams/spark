@@ -77,6 +77,42 @@ body { padding-top: 6px; }
 .dialogbox .field { margin-bottom: 16px; }
 .derr { font-size: 12px; color: var(--crit); min-height: 16px; }
 
+/* The creative's artwork inline in its row: small enough to leave the row's
+   rhythm alone, and it grows on hover so the ad can be read without leaving
+   the grid. The enlarged copy is absolutely positioned and pointer-transparent
+   so it never blocks the cells it covers. */
+.crthumb { display: inline-block; margin-left: 8px; vertical-align: middle; position: relative; }
+.crthumb .crthumb-sm {
+  display: block; height: 22px; width: auto; max-width: 90px; object-fit: contain;
+  border: 1px solid var(--line); border-radius: 3px; background: var(--surface);
+}
+/* The enlarged copy is a separate layer that never touches layout, so hovering
+   it cannot move the thing being hovered — the flicker loop that an
+   enlarge-in-place version produced. */
+.crthumb-pop {
+  position: absolute; left: 0; bottom: calc(100% + 6px); z-index: 40;
+  display: none; pointer-events: none;
+  padding: 5px; background: var(--surface);
+  border: 1px solid var(--line-2); border-radius: var(--radius-s);
+  box-shadow: var(--shadow-lg);
+}
+.crthumb-pop img { display: block; max-width: 340px; max-height: 220px; border-radius: 3px; }
+.crthumb:hover .crthumb-pop, .crthumb:focus-within .crthumb-pop { display: block; }
+table.data tbody tr.crrow td:first-child { overflow: visible; }
+
+/* Tracking log. The visibility tag is the thing to read first, so it sits on
+   the same line as the date rather than under the text. */
+.loglist { max-height: 230px; overflow-y: auto; border: 1px solid var(--line);
+  border-radius: var(--radius-s); background: var(--surface-2); padding: 4px; }
+.logitem { background: var(--surface); border: 1px solid var(--line);
+  border-radius: var(--radius-xs); padding: 9px 11px; margin-bottom: 5px; }
+.logitem:last-child { margin-bottom: 0; }
+.loghead { display: flex; gap: 8px; align-items: center; margin-bottom: 5px; }
+.loghead b { font-size: 12px; }
+.logitem p { font-size: 12.5px; color: var(--ink-2); line-height: 1.5; white-space: pre-wrap; }
+.logchip { background: var(--surface-2); color: var(--ink-2); border-color: var(--line-2); }
+.logchip:hover { background: var(--ink-2); border-color: var(--ink-2); color: #fff; }
+
 /* Paste-a-screenshot target. Focusable because ⌘V needs somewhere to land. */
 .pastezone {
   border: 1.5px dashed var(--line-2); border-radius: var(--radius-s);

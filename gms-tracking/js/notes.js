@@ -1,0 +1,137 @@
+/* The tracking log.
+ *
+ * Numbers say what happened; they never say why. "Spend dropped 40% in week
+ * three" is a mystery six weeks later unless someone wrote "client paused the
+ * Campus Day push pending approvals". This is where that sentence lives.
+ *
+ * An entry hangs off a campaign or off a single line. Campaign-level is the
+ * default because most of what is worth writing down — a brief change, an
+ * approval delay, a platform outage — affects everything under it; line-level
+ * is there for when the note really is about one placement.
+ *
+ * The `shared` flag is the load-bearing part. This dashboard's whole
+ * discipline is that nothing internal reaches a client by accident, and free
+ * text is the easiest way to break that: "dropped the margin to 20% to keep
+ * them happy" is one careless export away from the client reading it. So an
+ * entry is **internal by default** and has to be deliberately marked before it
+ * can appear in a client report — the same shape as the export dialog's "who
+ * is this for" question, for the same reason.
+ */
+
+import { el, fill, dateAu } from './dom.js';
+import { all, put, remove, newId, where } from './store.js';
+import { todayIso } from './calc.js';
+import { dialog, textField, errorLine } from './modal.js';
+
+/** Entries for a campaign, newest first. `lineId` narrows to one line. */
+export function notesFor({ campaignId, lineId } = {}) {
+  return where('note', (n) => (lineId
+    ? n.line_id === lineId
+    : n.campaign_id === campaignId))
+    .sort((a, b) => String(b.date || '').localeCompare(String(a.date || ''))
+      || String(b.id).localeCompare(String(a.id)));
+}
+
+/** Everything visible from a campaign: its own entries plus its lines'. */
+export function campaignLog(campaignId, { sharedOnly = false } = {}) {
+  const lineIds = new Set(where('line', (l) => l.campaign_id === campaignId).map((l) => l.id));
+  return all('note')
+    .filter((n) => n.campaign_id === campaignId || lineIds.has(n.line_id))
+    .filter((n) => !sharedOnly || n.shared === true)
+    .sort((a, b) => String(a.date || '').localeCompare(String(b.date || '')));
+}
+
+export const noteCount = (campaignId) => campaignLog(campaignId).length;
+
+/* --------------------------------------------------------------------- UI */
+
+/**
+ * Read and add entries. Opened from a line, so it offers both scopes: this
+ * line, or the campaign it belongs to.
+ */
+export function openLog(m, rerender) {
+  const campaignId = m.campaign?.id;
+  const lineId = m.line?.id;
+  const err = errorLine();
+
+  const body = el('textarea', {
+    rows: 3, placeholder: 'What happened? e.g. “Client paused Campus Day push pending approvals — restart 12/08.”',
+  });
+  const date = el('input', { type: 'date', value: todayIso() });
+  const scope = el('select', {},
+    el('option', { value: 'campaign', selected: true }, `Whole campaign — ${m.campaignName || 'campaign'}`),
+    el('option', { value: 'line' }, `This line only — ${m.line.placement || m.line.platform || 'line'}`));
+  const shared = el('input', { type: 'checkbox' });
+
+  const list = el('div', { class: 'loglist' });
+
+  const paint = () => {
+    const rows = campaignLog(campaignId);
+    if (!rows.length) {
+      fill(list, el('div', { class: 'hint' },
+        'Nothing logged for this campaign yet. The first entry is usually the most useful one.'));
+      return;
+    }
+    fill(list, ...rows.slice().reverse().map((n) => el('div', { class: 'logitem' },
+      el('div', { class: 'loghead' },
+        el('b', {}, n.date ? dateAu(n.date) : '—'),
+        el('span', { class: 'tag' + (n.shared ? ' good' : '') },
+          n.shared ? 'Shared with client' : 'Internal only'),
+        n.line_id ? el('span', { class: 'muted', style: { fontSize: '11px' } }, 'this line') : null,
+        el('div', { style: { flex: 1 } }),
+        el('button', {
+          class: 'btn ghost sm', title: n.shared
+            ? 'Stop sharing — it will drop out of client reports'
+            : 'Share with the client — it will appear in client reports',
+          onclick: () => { put('note', { id: n.id, shared: !n.shared }); paint(); rerender && rerender(); },
+        }, n.shared ? 'Unshare' : 'Share'),
+        el('button', {
+          class: 'btn ghost sm', title: 'Delete this entry',
+          onclick: () => { remove('note', n.id); paint(); rerender && rerender(); },
+        }, '✕')),
+      el('p', {}, n.body || ''))));
+  };
+
+  const add = () => {
+    const text = body.value.trim();
+    if (!text) { err.say('Write the entry first — an empty log line helps nobody.'); return false; }
+    put('note', {
+      id: newId('nt'),
+      campaign_id: campaignId || null,
+      line_id: scope.value === 'line' ? lineId : null,
+      date: date.value || todayIso(),
+      body: text,
+      shared: shared.checked === true,
+    });
+    body.value = ''; shared.checked = false; err.say('');
+    paint();
+    rerender && rerender();
+    return false;                        // keep the dialog open to write another
+  };
+
+  paint();
+  dialog({
+    title: 'Tracking log',
+    sub: 'What happened, in the team’s own words — so a number nobody can explain six weeks later has an explanation attached.',
+    width: '600px',
+    content: [
+      el('div', { class: 'field' }, el('label', {}, 'New entry'), body),
+      el('div', { class: 'row2' },
+        el('div', { class: 'field' }, el('label', {}, 'Date'), date),
+        el('div', { class: 'field' }, el('label', {}, 'Applies to'), scope)),
+      el('label', { class: 'choice', style: { alignItems: 'center', marginBottom: '4px' } },
+        shared,
+        el('span', {},
+          el('b', {}, 'Share this entry with the client'),
+          el('span', { class: 'cnote' },
+            'Off by default. Only shared entries reach a client report — everything else stays inside GMS.'))),
+      err,
+      el('div', { class: 'field' }, el('label', {}, 'Logged so far'), list),
+    ],
+    actions: [
+      { label: 'Add entry', onClick: add },
+      { label: 'Done', primary: true },
+    ],
+  });
+  setTimeout(() => body.focus(), 30);
+}
