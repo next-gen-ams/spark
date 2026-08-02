@@ -15,7 +15,7 @@
 
 import { download, toast, monthLabel, money } from './dom.js';
 import { all, where, byId, loadCreativeImages } from './store.js';
-import { totals, byPlatform, num, effectiveStatus, looseSpendTotal, kpiValue } from './calc.js';
+import { totals, byPlatform, num, effectiveStatus, looseSpendTotal, kpiValue, cumulative} from './calc.js';
 import { kpiDefs } from './kpis.js';
 import { campaignLog } from './notes.js';
 import { fileName } from './view-export.js';
@@ -345,9 +345,14 @@ const COLS = {
     { h: 'Line', k: 'line', w: 30 },
     { h: 'Creative', k: 'creative', w: 24 },
     { h: 'Currency', k: 'ccy', w: 9 },
-    { h: 'Spend internal', k: 'sp', w: 15, fmt: MONEY },
-    { h: 'Impressions', k: 'imp', w: 13, fmt: INTF },
-    { h: 'Clicks', k: 'clk', w: 11, fmt: INTF },
+    /* Each row is the running total as reported on that date, which is what
+       the team types. The delta is derived here rather than typed, because a
+       reader asking "what did this line do in July" should not have to
+       subtract two rows by hand. */
+    { h: 'Running total', k: 'sp', w: 15, fmt: MONEY },
+    { h: 'Change since previous', k: 'spDelta', w: 20, fmt: MONEY, opt: true },
+    { h: 'Impressions (total)', k: 'imp', w: 17, fmt: INTF },
+    { h: 'Clicks (total)', k: 'clk', w: 14, fmt: INTF },
     { h: 'Note', k: 'note', w: 30, opt: true },
   ],
 };
@@ -538,11 +543,14 @@ function sheetCreative(wb, rows, { isClient, title, subtitle }) {
     for (const c of where('creative', (x) => x.line_id === m.line.id)) {
       if (seen.has(c.id)) continue;
       seen.add(c.id);
-      const sp = where('spend', (s) => s.creative_id === c.id);
-      const internal = sp.reduce((a, s) => a + num(s.spend_internal), 0) / m.rate;
-      const imp = sp.reduce((a, s) => a + num(s.imp), 0);
-      const clk = sp.reduce((a, s) => a + num(s.clicks), 0);
-      const extra = sumRows(sp);
+      /* Each creative keeps its own running total, so its figure is the
+         latest snapshot — and each metric carries forward on its own, so a
+         day when only spend was filled in does not zero the counters. */
+      const at = cumulative(where('spend', (s) => s.creative_id === c.id));
+      const internal = at.spend / m.rate;
+      const imp = at.imp;
+      const clk = at.clicks;
+      const extra = at.extra;
       if (!internal && !imp && !clk && !Object.values(extra).some(Boolean)) continue;
       const spendSide = isClient ? internal / (1 - (m.margin || 0)) : internal;
       data.push({
@@ -614,18 +622,34 @@ function sheetSpendLog(wb, rows, { title, subtitle }) {
   const seen = new Set();
   const data = [];
   for (const m of rows) {
+    /* Per bucket, in date order, so "change since previous" compares a
+       creative with itself rather than with whatever row happened to precede
+       it in the table. */
+    const buckets = new Map();
     for (const s of where('spend', (x) => x.line_id === m.line.id)) {
-      if (seen.has(s.id)) continue;
-      seen.add(s.id);
-      data.push({
-        date: s.date, client: m.clientName, campaign: m.campaignName,
-        platform: m.line.platform,
-        line: m.line.placement || m.line.supplier || '',
-        creative: s.creative_id ? (byId('creative', s.creative_id)?.name || '') : '',
-        ccy: m.ccy, sp: num(s.spend_internal) || null,
-        imp: num(s.imp) || null, clk: num(s.clicks) || null, note: s.note || '',
-        ...kpiCells(defs, { spend: 0, imp: 0, clicks: 0, extra: s.extra || {} }, { ratesToo: false }),
-      });
+      const k = s.creative_id || '';
+      if (!buckets.has(k)) buckets.set(k, []);
+      buckets.get(k).push(s);
+    }
+    for (const bucket of buckets.values()) {
+      bucket.sort((a, b) => String(a.date).localeCompare(String(b.date)));
+      let previous = null;
+      for (const s of bucket) {
+        const running = num(s.spend_internal);
+        const delta = previous == null ? null : Math.round((running - previous) * 100) / 100;
+        if (s.spend_internal != null && s.spend_internal !== '') previous = running;
+        if (seen.has(s.id)) continue;
+        seen.add(s.id);
+        data.push({
+          date: s.date, client: m.clientName, campaign: m.campaignName,
+          platform: m.line.platform,
+          line: m.line.placement || m.line.supplier || '',
+          creative: s.creative_id ? (byId('creative', s.creative_id)?.name || '') : '',
+          ccy: m.ccy, sp: running || null, spDelta: delta,
+          imp: num(s.imp) || null, clk: num(s.clicks) || null, note: s.note || '',
+          ...kpiCells(defs, { spend: 0, imp: 0, clicks: 0, extra: s.extra || {} }, { ratesToo: false }),
+        });
+      }
     }
   }
   data.sort((a, b) => (a.date || '').localeCompare(b.date || ''));

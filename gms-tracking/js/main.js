@@ -11,6 +11,7 @@ import { renderImport } from './view-import.js';
 import { renderAdmin } from './view-admin.js';
 import { exportBackup } from './exportxlsx.js';
 import { openExport, closeExport } from './view-export.js';
+import { dialog } from './modal.js';
 import { ymOf, todayIso } from './calc.js';
 import { closeDrawer } from './drawer.js';
 
@@ -256,7 +257,14 @@ function renderGate() {
 let statusChip = null;
 
 function topbar() {
-  statusChip = el('span', { class: 'chip' }, el('span', { class: 'dot' }), 'ready');
+  /* Clickable, because "Offline" on its own tells a colleague nothing about
+     whether to keep typing. The reason was already captured; it was only ever
+     in a tooltip, which is not where someone looks when something is wrong. */
+  statusChip = el('span', {
+    class: 'chip', role: 'button', tabindex: '0',
+    onclick: () => syncDetail(),
+    onkeydown: (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); syncDetail(); } },
+  }, el('span', { class: 'dot' }), 'ready');
   paintStatus();
 
   return el('div', { class: 'topbar' },
@@ -299,6 +307,43 @@ function topbar() {
     }, '◐'));
 }
 
+/**
+ * What the sync state actually means, and what to do about it.
+ *
+ * Every line here answers one question a colleague mid-entry has: is my work
+ * safe, and do I stop?
+ */
+function syncDetail() {
+  const st = store.state;
+  const n = st.pending || 0;
+  const queued = n
+    ? `${n} change${n === 1 ? '' : 's'} waiting to send. They are kept on this `
+      + 'computer and go up on their own once the connection is back.'
+    : 'Nothing is waiting to send.';
+
+  const copy = {
+    synced: ['Everything is saved', 'Your entries are in the shared database. Colleagues see them.'],
+    saving: ['Saving', 'A moment — your entries are on their way up.'],
+    loading: ['Loading', 'Reading the shared database.'],
+    local: ['This browser only', 'Not signed in to the shared database, so nothing you type here reaches '
+      + 'anyone else. Take a backup from Settings ▸ Data before you rely on it.'],
+    locked: ['Signed out', st.error || 'Enter the team password to reconnect.'],
+    offline: ['Not reaching the database', `${queued} Keep working — nothing is lost.`],
+  }[st.status] || ['Ready', ''];
+
+  dialog({
+    title: copy[0],
+    sub: copy[1],
+    content: st.status === 'offline' && st.error
+      ? [el('p', { class: 'hint' }, 'What the server said: ' + st.error)]
+      : [],
+    actions: [
+      { label: 'Download backup', onClick: () => { exportBackup(); return false; } },
+      { label: 'Close', primary: true },
+    ],
+  });
+}
+
 function paintStatus() {
   if (!statusChip) return;
   const map = {
@@ -306,7 +351,7 @@ function paintStatus() {
     synced: ['Live · synced', ''],
     saving: ['Saving…', 'warn'],
     loading: ['Loading…', 'warn'],
-    offline: ['Offline — changes queued', 'crit'],
+    offline: ['Not syncing', 'crit'],
     locked: ['Signed out', 'crit'],
     ready: ['Ready', ''],
   };
@@ -315,15 +360,15 @@ function paintStatus() {
      Nothing in the outbox is lost on refresh any more, and the chip says so. */
   const n = store.state.pending || 0;
   if (store.state.status === 'offline') {
-    label = `Offline — ${n} change${n === 1 ? '' : 's'} queued, kept until synced`;
+    label = n
+      ? `Not syncing · ${n} change${n === 1 ? '' : 's'} kept — click`
+      : 'Not syncing — click to see why';
   } else if (n > 0) {
     label += ` · ${n} queued`;
   }
   statusChip.className = 'chip ' + kind;
   fill(statusChip, el('span', { class: 'dot' }), label);
-  statusChip.title = store.state.mode === 'local'
-    ? 'Data lives in this browser only. Take a backup from Settings ▸ Data.'
-    : (store.state.error || 'Supabase');
+  statusChip.title = store.state.error || 'Click for detail';
 }
 
 function exportMenu() {

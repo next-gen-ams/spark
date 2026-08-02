@@ -59,12 +59,20 @@ export function buildRows(state) {
     if (q && !haystack(line, campaign, client).includes(q)) continue;
 
     const months = (monthsBy.get(line.id) || []).filter((m) => !ym || m.ym === ym);
-    const spends = (spendBy.get(line.id) || [])
-      .filter((s) => !bounds || (s.date >= bounds.start && s.date <= bounds.end));
+    /* Spend rows go through UNFILTERED. They are cumulative snapshots, so a
+       month's figure is the closing snapshot minus the one before the month
+       opened — filtering here would throw the opening balance away and make
+       every month read as the whole flight's running total. lineMetrics does
+       the windowing itself, from ctx.ym. */
+    const spends = spendBy.get(line.id) || [];
 
-    /* A month with neither a booking nor any spend isn't part of that month's
-       plan — showing it would pad the table with empty rows. */
-    if (ym && !months.length && !spends.length) continue;
+    /* A month with neither a booking nor a snapshot dated inside it isn't part
+       of that month's plan — showing it would pad the table with empty rows.
+       The test is "was anything recorded in this month", not "does this line
+       have any spend at all", which after the unfiltering above would be true
+       of every month a line ever ran in. */
+    const touched = bounds && spends.some((s) => s.date >= bounds.start && s.date <= bounds.end);
+    if (ym && !months.length && !touched) continue;
 
     const m = lineMetrics(line, campaign, months, spends, { fx, ym, today });
     m.client_ = client;

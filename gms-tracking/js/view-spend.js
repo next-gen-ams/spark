@@ -12,7 +12,7 @@
  * forward instead of quietly losing it at month end.
  */
 
-import { el, money, money2, int, pct, monthLabel, dateAu, toast, shown } from './dom.js';
+import { el, fill, money, money2, int, pct, monthLabel, dateAu, toast, shown } from './dom.js';
 import { put, remove, where, byId, newId, fxMap, loadCreativeImages } from './store.js';
 import { dialog, closeDialog, textField, choiceField, errorLine } from './modal.js';
 import { imageField } from './paste-image.js';
@@ -82,11 +82,13 @@ function segBtn(id, label, mode, state, rerender) {
 
 function modeBlurb(mode, state, date) {
   if (mode === 'today') {
-    return 'Type what each line spent today. It saves as you go, and the pacing on the right '
-      + 'recalculates across the whole flight, not only this month.';
+    return 'Type each line’s running total as the platform reports it today — '
+      + 'everything spent since it went live, not just today’s share. Miss a few days and '
+      + 'the next total you copy across is still right.';
   }
-  return `Writing against ${dateAu(date)}. Use this to fill a day that was missed — `
-    + 'monthly totals are worked out from the daily figures, never typed in as one number.';
+  return `Writing the running total as at ${dateAu(date)}. Use this to close off a month `
+    + '(a figure dated the 31st settles that month) or to record a total you read on a day '
+    + 'you did not get to.';
 }
 
 /* ------------------------------------------------------------------ grid */
@@ -152,18 +154,24 @@ function grid(rows, date, mode, state, rerender) {
             money2(day.total.spend, m.ccy))
           : el('input', {
             class: 'cellinput', type: 'number', step: '0.01',
-            value: day.loose.spend || '', placeholder: '0',
-            'aria-label': `Spend for ${lineLabel(m)}`,
+            value: day.loose.typed ? day.loose.typed.spend : '',
+            placeholder: day.loose.at ? '' : '0',
+            'aria-label': `Running total for ${lineLabel(m)}`,
             'data-focus': `${m.line.id}|_|s`,
-            onchange: (e) => write(null, { spend_internal: Number(e.target.value) || 0 }),
+            onchange: (e) => confirmRise(e.target, day.loose, m,
+              (v) => write(null, { spend_internal: v })),
           }),
-        flightNote(m, r, day)),
+        flightNote(m, r, day),
+        carriedNote(day.loose, m, date)),
 
       /* --- the rest of the typed block: what you enter sits together. */
-      countCell(day.split, day.total.imp, 'Impressions', (v) => write(null, { imp: v }), `${m.line.id}|_|i`),
-      countCell(day.split, day.total.clicks, 'Clicks', (v) => write(null, { clicks: v }), `${m.line.id}|_|c`),
+      countCell(day.split, day.total.imp, day.loose.typed?.imp ?? null,
+        'Impressions', (v) => write(null, { imp: v }), `${m.line.id}|_|i`),
+      countCell(day.split, day.total.clicks, day.loose.typed?.clicks ?? null,
+        'Clicks', (v) => write(null, { clicks: v }), `${m.line.id}|_|c`),
       ...counters.map((d) =>
-        countCell(day.split, day.total.extra[d.id], d.name, (v) => writeExtra(null, d.id, v), `${m.line.id}|_|${d.id}`)),
+        countCell(day.split, day.total.extra[d.id], day.loose.typed?.extra?.[d.id] ?? null,
+          d.name, (v) => writeExtra(null, d.id, v), `${m.line.id}|_|${d.id}`)),
 
       /* --- the computed block: the margin doing something, then the rates. */
       el('td', { class: 'num muted' }, money(day.total.spend / m.rate)),
@@ -200,7 +208,7 @@ function grid(rows, date, mode, state, rerender) {
     for (const p of day.parts) {
       body.appendChild(creativeRow(m, p.creative.name || 'Creative', p, {
         side, counters, rates: ratesK, focusBase: `${m.line.id}|${p.creative.id}`,
-        creative: p.creative, refresh: rerender,
+        creative: p.creative, refresh: rerender, date,
         onSpend: (v) => write(p.creative.id, { spend_internal: v }),
         onImp: (v) => write(p.creative.id, { imp: v }),
         onClicks: (v) => write(p.creative.id, { clicks: v }),
@@ -210,6 +218,7 @@ function grid(rows, date, mode, state, rerender) {
     if (day.loose.spend || day.loose.imp || day.loose.clicks
       || Object.values(day.loose.extra).some(Boolean)) {
       body.appendChild(creativeRow(m, 'Not attributed to a creative', day.loose, {
+        date,
         side, counters, rates: ratesK, readonly: true,
         note: 'Typed before this line was split. It still counts toward the line total — '
           + 'move it onto a creative from the line drawer if it belongs to one.',
@@ -224,7 +233,7 @@ function grid(rows, date, mode, state, rerender) {
     el('thead', {}, el('tr', {},
       el('th', {}, 'Line'),
       el('th', { class: 'num gtyped', title: 'Internal spend as paid to the media owner, in the line’s own currency' },
-        `Spend · ${dateAu(date)}`),
+        `Total to ${dateAu(date)}`),
       el('th', { class: 'num gtyped' }, 'Impressions'),
       el('th', { class: 'num gtyped' }, 'Clicks'),
       ...counters.map((d) => el('th', { class: 'num gtyped', title: kpiFormula(d, defs) }, d.name)),
@@ -294,38 +303,94 @@ const lineLabel = (m) =>
  * Images are not in the boot read, so the first render of a split line asks
  * for them and repaints once they land.
  */
-/* Roughly what the enlarged copy needs: 220px of image, its padding and
-   border, plus the 6px gap. Measuring the popup itself would mean rendering it
-   first, which is the flicker this design exists to avoid. */
-const POP_CLEARANCE = 250;
-
 /**
- * Decide which way the enlarged copy opens, at the moment it is asked for.
+ * The enlarged preview.
  *
- * It defaults to opening upwards, which is right for most of a long table but
- * wrong for the first rows: there the popup rides up over the sticky header and
- * the panel title, and reads as a rendering fault rather than as a preview.
- * The ceiling is the header's own bottom edge, not the viewport top, because
- * the header is what it would cover.
+ * It lives on <body>, not inside the row, and that is the whole point. Two
+ * ancestors clip anything positioned inside the table — .tablewrap scrolls
+ * (overflow: auto) and .panel hides its own overflow — so an absolutely
+ * positioned copy was cut off wherever it reached past either of them: at the
+ * top of the panel, at the bottom, and sideways once the table was scrolled.
+ * A fixed layer on the body has no such ancestor, so the picture can float
+ * over the table the way a preview should, covering whatever is underneath.
+ *
+ * One layer, reused. It never takes the pointer, so hovering it cannot change
+ * what is hovered — the flicker loop that an enlarge-in-place version caused.
  */
-function placePop(host) {
-  const box = host.getBoundingClientRect();
-  const head = host.closest('table')?.querySelector('thead');
-  /* Two ceilings, whichever is lower down the page: the pinned header, and the
-     top of the window itself. The header sticks inside .tablewrap rather than
-     to the viewport, so once that whole panel scrolls away its bottom edge goes
-     negative — trusting it alone put the popup off the top of the screen. */
-  const ceiling = Math.max(0, head ? head.getBoundingClientRect().bottom : 0);
-  const above = box.top - ceiling;
-  const under = window.innerHeight - box.bottom;
-  /* Flip only when there is genuinely more room the other way, so a window too
-     short for either side still picks the better of the two. */
-  host.classList.toggle('below', above < POP_CLEARANCE && under > above);
-  /* Same question sideways: anchored left, flipped when it would run off the
-     right edge. */
-  host.classList.toggle('leftward', box.left + 350 > window.innerWidth);
+const POP_GAP = 8;
+const POP_EDGE = 10;                 // keep this clear of the window edges
+let popLayer = null;
+let popOwner = null;
+let popThumb = null;
+
+function popHost() {
+  if (!popLayer) {
+    popLayer = el('div', { class: 'crpop', 'aria-hidden': 'true' });
+    document.body.appendChild(popLayer);
+    /* Positioned against the viewport, so a scroll moves the row out from
+       under it. Follow the thumbnail rather than vanishing — scrolling a long
+       table while looking at a picture is a normal thing to do. */
+    addEventListener('scroll', trackPop, true);
+    addEventListener('resize', trackPop);
+  }
+  return popLayer;
 }
 
+function hidePop() {
+  if (popLayer) popLayer.classList.remove('on');
+  popThumb = null;
+}
+
+/** Keep the preview with its thumbnail, and drop it once that leaves. */
+function trackPop() {
+  if (!popThumb || !popLayer?.classList.contains('on')) return;
+  const box = popThumb.getBoundingClientRect();
+  if (!popThumb.isConnected || box.bottom < 0 || box.top > innerHeight) { hidePop(); return; }
+  place(popThumb);
+}
+
+function showPop(thumb, src) {
+  const layer = popHost();
+  if (popOwner !== src) { fill(layer, el('img', { src, alt: '' })); popOwner = src; }
+  popThumb = thumb;
+  layer.classList.add('on');
+  place(thumb);
+}
+
+function place(thumb) {
+  const layer = popLayer;
+  const box = thumb.getBoundingClientRect();
+  const pop = layer.getBoundingClientRect();
+  const vw = innerWidth;
+  const vh = innerHeight;
+
+  /* The header is sticky inside the table, so it is what a preview would cover
+     first — clear it, and the top of the window, whichever is lower down. */
+  const head = thumb.closest('table')?.querySelector('thead');
+  const ceiling = Math.max(POP_EDGE, head ? head.getBoundingClientRect().bottom : 0);
+
+  const above = box.top - ceiling - POP_GAP;
+  const under = vh - box.bottom - POP_GAP - POP_EDGE;
+  /* Above by preference, below when there is more room there, and clamped into
+     the window when neither side can hold it. */
+  let top = above >= pop.height || above >= under
+    ? box.top - POP_GAP - pop.height
+    : box.bottom + POP_GAP;
+  top = Math.min(Math.max(top, ceiling), vh - pop.height - POP_EDGE);
+
+  const left = Math.min(Math.max(box.left, POP_EDGE), vw - pop.width - POP_EDGE);
+
+  layer.style.top = `${Math.round(top)}px`;
+  layer.style.left = `${Math.round(left)}px`;
+}
+
+
+/**
+ * A creative's own artwork, inline in its row.
+ *
+ * Images are not in the boot read, so the first render of a split line asks
+ * for them and repaints once they land.
+ */
 function creativeThumb(c, refresh) {
   if (c.preview_image === undefined) {
     /* Repaint only if the fetch actually settled something — an unconditional
@@ -334,18 +399,18 @@ function creativeThumb(c, refresh) {
     return null;
   }
   if (!c.preview_image) return null;
-  /* Two copies on purpose. Enlarging the inline image itself would take it out
-     of flow, collapse its container, drop the :hover that caused it, and snap
-     back — a flicker loop. The small one never moves; a second, larger copy is
-     layered over the grid and ignores the pointer entirely. */
-  return el('span', {
+
+  const thumb = el('span', {
     class: 'crthumb', tabindex: '0',
-    onpointerenter: (e) => placePop(e.currentTarget),
-    onfocus: (e) => placePop(e.currentTarget),
-  },
-  el('img', { class: 'crthumb-sm', src: c.preview_image, alt: `${c.name || 'Creative'} artwork`, loading: 'lazy' }),
-  el('span', { class: 'crthumb-pop', 'aria-hidden': 'true' },
-    el('img', { src: c.preview_image, alt: '' })));
+    onpointerenter: () => showPop(thumb, c.preview_image),
+    onpointerleave: hidePop,
+    onfocus: () => showPop(thumb, c.preview_image),
+    onblur: hidePop,
+  }, el('img', {
+    class: 'crthumb-sm', src: c.preview_image,
+    alt: `${c.name || 'Creative'} artwork`, loading: 'lazy',
+  }));
+  return thumb;
 }
 
 /* ------------------------------------------------------- creative rows */
@@ -374,14 +439,19 @@ function creativeRow(m, label, figures, opts = {}) {
         ? el('div', { class: 'derived' }, money2(figures.spend, m.ccy))
         : el('input', {
           class: 'cellinput', type: 'number', step: '0.01',
-          value: figures.spend || '', placeholder: '0',
-          'aria-label': `Spend for ${label}`, 'data-focus': `${focusBase}|s`,
-          onchange: (e) => onSpend(Number(e.target.value) || 0),
-        })),
+          value: figures.typed ? figures.typed.spend : '',
+          placeholder: figures.at ? '' : '0',
+          'aria-label': `Running total for ${label}`, 'data-focus': `${focusBase}|s`,
+          onchange: (e) => confirmRise(e.target, figures, m, (v) => onSpend(v)),
+        }),
+      readonly ? null : carriedNote(figures, m, opts.date)),
 
-    countCell(readonly, figures.imp, 'Impressions', onImp, `${focusBase}|i`),
-    countCell(readonly, figures.clicks, 'Clicks', onClicks, `${focusBase}|c`),
-    ...counters.map((d) => countCell(readonly, figures.extra?.[d.id], d.name, (v) => onExtra(d.id, v), `${focusBase}|${d.id}`)),
+    countCell(readonly, figures.imp, figures.typed?.imp ?? null,
+      'Impressions', onImp, `${focusBase}|i`),
+    countCell(readonly, figures.clicks, figures.typed?.clicks ?? null,
+      'Clicks', onClicks, `${focusBase}|c`),
+    ...counters.map((d) => countCell(readonly, figures.extra?.[d.id],
+      figures.typed?.extra?.[d.id] ?? null, d.name, (v) => onExtra(d.id, v), `${focusBase}|${d.id}`)),
 
     el('td', { class: 'num muted' }, money(figures.spend / m.rate)),
     el('td', { class: 'num muted' }, m.billable
@@ -487,19 +557,79 @@ function addColumnDialog(rerender) {
 }
 
 /** Impressions / clicks: an input, or the derived sum when the row is a total. */
-function countCell(derived, value, label, onChange, focusKey) {
+/**
+ * A counter cell: running total in, running total out.
+ *
+ * `carried` is what the line already reports; `typed` is what was entered on
+ * the day in view. The box holds the typed figure so an empty box means
+ * "nobody recorded this today", and the carried figure sits behind it as the
+ * placeholder so the number to check against is on screen either way.
+ */
+function countCell(derived, carried, typed, label, onChange, focusKey) {
   if (derived) {
     return el('td', { class: 'num' },
-      el('div', { class: 'derived' }, value ? int(value) : '—'));
+      el('div', { class: 'derived' }, carried ? int(carried) : '—'));
   }
   return el('td', { class: 'num' }, el('input', {
-    class: 'cellinput', type: 'number', step: '1', value: value || '',
+    class: 'cellinput', type: 'number', step: '1',
+    value: typed == null ? '' : typed,
+    placeholder: carried ? String(Math.round(carried)) : '',   // counters have no note of their own
+    title: carried && typed == null
+      ? `Carried forward: ${int(carried)}. Type today's running total to move it.`
+      : label,
     'aria-label': label, 'data-focus': focusKey,
     onchange: (e) => onChange(Number(e.target.value) || null),
   }));
 }
 
 /** The currency caption under the spend cell, plus the finished-flight note. */
+/**
+ * What the line already reports, and as at when.
+ *
+ * The box holds what was typed on the day in view, which is empty until
+ * somebody types — so without this there is no way to tell "nobody has
+ * recorded anything" from "the total is zero", and no way to sanity-check a
+ * new figure against the last one. It also answers the month-end question:
+ * a July column settled to the 28th is not a full month, and says so.
+ */
+function carriedNote(bucket, m, date) {
+  if (!bucket.at || bucket.typed) return null;
+  return el('div', {
+    class: 'muted', style: { fontSize: '11px', paddingRight: '7px' },
+    title: `Nothing recorded on ${dateAu(date)}. This is the running total carried `
+      + `forward from ${dateAu(bucket.at)}.`,
+  }, `${money2(bucket.spend, m.ccy)} at ${dateAu(bucket.at)}`);
+}
+
+/**
+ * A running total that goes backwards, questioned but not forbidden.
+ *
+ * Cumulative figures normally only rise. One that falls means either a typo
+ * now or a wrong number earlier — and the earlier one is the more likely, so
+ * blocking outright would trap somebody who is in the middle of fixing it.
+ * Ask, name both figures, and let them through.
+ */
+function confirmRise(input, bucket, m, commit) {
+  const typed = Number(input.value) || 0;
+  const previous = bucket.at && !bucket.typed ? bucket.spend : null;
+  if (previous == null || typed >= previous || !typed) { commit(typed); return; }
+
+  const restore = () => { input.value = bucket.typed ? bucket.typed.spend : ''; };
+  dialog({
+    title: 'That is lower than the last total',
+    sub: `${money2(typed, m.ccy)} is below the ${money2(previous, m.ccy)} recorded on `
+      + `${dateAu(bucket.at)}. A running total does not usually go down.`,
+    content: [el('p', { class: 'hint' },
+      'If the earlier figure was the wrong one, fix that entry rather than this one — '
+      + 'otherwise every month in between is computed from it. If this is a correction '
+      + 'the platform itself made, carry on.')],
+    actions: [
+      { label: 'Leave it as it was', onClick: restore },
+      { label: 'Save it anyway', primary: true, onClick: () => commit(typed) },
+    ],
+  });
+}
+
 function flightNote(m, r, day) {
   if (day.split) {
     return el('div', { class: 'muted', style: { fontSize: '11px', paddingRight: '7px' } },

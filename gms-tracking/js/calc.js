@@ -39,6 +39,151 @@ export const overlap = (a1, a2, b1, b2) => {
   return s <= e ? { start: s, end: e } : null;
 };
 
+/* ------------------------------------------------------------- cumulative
+ *
+ * Every spend row is a SNAPSHOT: the running total for that line (or that
+ * creative) from the day it went live up to the date on the row. It is not
+ * that day's spend.
+ *
+ * This is how the media back-ends report — WeChat, RED and Baidu all show a
+ * total consumed, not a daily delta — and it is what makes a missed day
+ * harmless: skip three days and the next number you copy across is still
+ * right, where a daily-delta model would have a hole in it.
+ *
+ * Two rules follow, and everything in this file obeys them:
+ *
+ *   · a figure "as at" a date is the LATEST snapshot on or before it,
+ *     never a sum
+ *   · spend across a period is the difference between two snapshots,
+ *     `as at end` minus `as at the day before start`
+ *
+ * A line split by creative keeps one running total per creative, so the
+ * line's figure is the sum of each creative's own latest snapshot. A creative
+ * that stopped running keeps contributing its final total, which is correct:
+ * the money was spent and did not go away.
+ */
+
+const dayBefore = (isoDate) => iso(new Date(Date.parse(isoDate) - DAY_MS));
+
+/** The last snapshot in `rows` dated on or before `upTo` (all of them if not given). */
+function latestAt(rows, upTo) {
+  let best = null;
+  for (const s of rows) {
+    if (upTo && s.date > upTo) continue;
+    /* Same date twice should not happen — the entry screen writes one row per
+       line, creative and date — but tie-break anyway so the answer is stable. */
+    if (!best || s.date > best.date || (s.date === best.date && String(s.id) > String(best.id))) {
+      best = s;
+    }
+  }
+  return best;
+}
+
+const zero = () => ({ spend: 0, imp: 0, clicks: 0, extra: {}, at: null, row: null });
+
+const FIELDS = [['spend', 'spend_internal'], ['imp', 'imp'], ['clicks', 'clicks']];
+const filled = (v) => v != null && v !== '';
+
+/**
+ * Read one bucket of snapshots as at a date — resolving EACH metric on its own.
+ *
+ * Not simply "the latest row". A tracker who fills spend today but leaves H5
+ * clicks blank has not reported zero H5 clicks; the counter has not moved. So
+ * every figure carries forward from the most recent snapshot that actually
+ * carried it, and a blank is silence rather than a reading of nought.
+ *
+ * Partial entry is the normal case, not the edge case — the numbers live on
+ * different screens in the media back-end and get copied across at different
+ * times — so this is the difference between a dashboard that reads correctly
+ * on a busy Tuesday and one that quietly zeroes a column.
+ */
+function resolveAt(rows, upTo) {
+  const inRange = rows
+    .filter((r) => !upTo || r.date <= upTo)
+    .sort((a, b) => String(a.date).localeCompare(String(b.date))
+      || String(a.id).localeCompare(String(b.id)));
+  if (!inRange.length) return null;
+
+  const out = zero();
+  let touched = false;
+  for (const r of inRange) {
+    for (const [key, field] of FIELDS) {
+      if (!filled(r[field])) continue;
+      out[key] = num(r[field]); out.at = r.date; out.row = r; touched = true;
+    }
+    for (const [name, v] of Object.entries(r.extra || {})) {
+      if (!filled(v)) continue;
+      out.extra[name] = num(v); out.at = r.date; out.row = r; touched = true;
+    }
+  }
+  /* Rows exist but every figure on them is blank: the line has been visited
+     and reports nothing, which is not the same as never visited. */
+  if (!touched) { out.row = inRange.at(-1); out.at = out.row.date; }
+  return out;
+}
+
+/**
+ * What a line reports as at `upTo`, and how that breaks down by creative.
+ *
+ * @param {array} spends  every spend row for the line, unfiltered by date
+ * @param {string} [upTo] yyyy-mm-dd; omit for "whatever is the latest"
+ * @returns {{spend, imp, clicks, extra, at, parts: Map<string, object>}}
+ *   `parts` is keyed by creative id, with '' for figures recorded against the
+ *   line itself. `at` is the most recent date that contributed — the line is
+ *   settled to there.
+ */
+export function cumulative(spends, upTo) {
+  const buckets = new Map();
+  for (const s of spends) {
+    const k = s.creative_id || '';
+    if (!buckets.has(k)) buckets.set(k, []);
+    buckets.get(k).push(s);
+  }
+
+  const out = { ...zero(), parts: new Map() };
+  for (const [k, rows] of buckets) {
+    const part = resolveAt(rows, upTo);
+    if (!part) continue;
+    out.parts.set(k, part);
+    out.spend += part.spend;
+    out.imp += part.imp;
+    out.clicks += part.clicks;
+    for (const [name, v] of Object.entries(part.extra)) {
+      out.extra[name] = (out.extra[name] || 0) + num(v);
+    }
+    /* The latest date anything was recorded. Creatives can be settled to
+       different days — one that finished in June keeps its June figure — so
+       this is "the newest information we have", not "every part agrees". */
+    if (!out.at || part.at > out.at) out.at = part.at;
+  }
+  return out;
+}
+
+/**
+ * Spend between two dates inclusive: the snapshot at the end, minus the
+ * snapshot the day before the start.
+ *
+ * A creative created inside the window contributes nothing to the opening
+ * snapshot, which is right — it had spent nothing before it existed.
+ */
+export function periodSpend(spends, start, end) {
+  const to = cumulative(spends, end);
+  const from = cumulative(spends, dayBefore(start));
+  const extra = {};
+  for (const k of new Set([...Object.keys(to.extra), ...Object.keys(from.extra)])) {
+    extra[k] = (to.extra[k] || 0) - (from.extra[k] || 0);
+  }
+  return {
+    spend: to.spend - from.spend,
+    imp: to.imp - from.imp,
+    clicks: to.clicks - from.clicks,
+    extra,
+    at: to.at,                       // the date this period is settled to
+    opening: from,
+    closing: to,
+  };
+}
+
 /* --------------------------------------------------------------------- fx */
 
 /** 1 AUD = perAud <ccy>, so converting to AUD is always a division. */
@@ -107,17 +252,30 @@ export function lineMetrics(line, campaign, months, spends, ctx) {
   if (!bookedUnits && !ym) bookedUnits = num(line.booked_units);
   if (!budgetClient && budgetInternal) budgetClient = grossUp(budgetInternal, margin);
 
-  /* ---- actuals */
-  let spendCcy = 0, imp = 0, clicks = 0, days = 0;
-  const extra = {};                        // custom KPI counters, summed
-  for (const s of spends) {
-    spendCcy += num(s.spend_internal);
-    imp += num(s.imp);
-    clicks += num(s.clicks);
-    if (num(s.spend_internal)) days++;
-    for (const [k, v] of Object.entries(s.extra || {})) extra[k] = (extra[k] || 0) + num(v);
-  }
+  /* ---- actuals, read as snapshots rather than summed.
+     `spends` arrives UNFILTERED by date — a period figure is the difference
+     between two snapshots, so the one before the window opens is needed as
+     much as the one that closes it. Filtering upstream, as an earlier version
+     did, threw away the opening balance and made every month read as its own
+     running total. */
+  const window = ym ? monthBounds(ym) : null;
+  const asAt = window ? (window.end < today ? window.end : today) : today;
+  const view = window
+    ? periodSpend(spends, window.start, asAt)
+    : cumulative(spends, asAt);
+  const spendCcy = view.spend;
+  const imp = view.imp;
+  const clicks = view.clicks;
+  const extra = view.extra;
+  /* The date the figures are settled to: the last day anyone recorded a
+     number. A month with no entry on its final day is settled to whatever the
+     last entry was, and says so rather than pretending to be complete. */
+  const settledAt = view.at || null;
   const spendInternal = spendCcy / rate;
+
+  /* Life-to-date is always the whole flight, whatever month is on screen —
+     "spent to date" means exactly that. */
+  const lifetime = cumulative(spends, today);
 
   /* ---- client-facing.
      The headline client figure is the pro-rata one: internal spend grossed up
@@ -151,7 +309,11 @@ export function lineMetrics(line, campaign, months, spends, ctx) {
     clientCapped,                        // what a fixed-fee contract would allow
     clientProrata, overspend,
     effMargin: effectiveMargin(spendInternal, clientProrata),
-    imp, clicks, extra, activeDays: days,
+    imp, clicks, extra,
+    settledAt,
+    lifetimeCcy: lifetime.spend,
+    lifetimeInternal: lifetime.spend / rate,
+    lifetimeAt: lifetime.at || null,
     flight, totalDays, elapsedDays: elapsed, remainingDays: remaining, live,
     timePct: totalDays ? Math.min(1, elapsed / totalDays) : null,
   };
@@ -199,56 +361,82 @@ export function pacingFlag(index, billable = true) {
 }
 
 /**
- * One line's figures for one date, split the way the entry grid shows them.
+ * What each creative reports as at one date, for the entry screen.
  *
- * The invariant this exists to guarantee: **a split line's own number is the
- * sum of its creatives, never a separately typed figure.** Downstream maths
- * already sums every spend row on a line regardless of creative_id, so the
- * arithmetic was never in question — what was missing was an entry surface
- * that made the line total *derived* instead of independently editable.
+ * Two figures per creative, and the difference matters:
  *
- * `loose` is spend that belongs to the line but to none of its creatives —
- * almost always money typed before anyone added a creative. It still counts
- * toward the total, so it is returned separately rather than folded in
- * silently: money that stops being visible but keeps being counted is how a
- * reconciliation goes unexplained.
+ *   · `carried` — the running total as at this date, which is the latest
+ *     snapshot on or before it. This is what the line is worth.
+ *   · `typed`   — the snapshot recorded on THIS date exactly, or null.
+ *
+ * The entry screen puts `typed` in the box and `carried` beside it. Showing
+ * the carried figure in the box instead would read as "recorded today" when
+ * nobody had touched it, which is exactly the thing a month-end settlement
+ * needs to be able to see.
  *
  * @param {array} creatives  the line's creatives
- * @param {array} spends     the line's spend rows (any dates)
+ * @param {array} spends     the line's spend rows, unfiltered by date
  * @param {string} date      yyyy-mm-dd
  */
 export function daySplit(creatives, spends, date) {
   const known = new Set(creatives.map((c) => c.id));
-  const onDay = spends.filter((s) => s.date === date);
-  const bucket = (rows) => {
-    const b = { spend: 0, imp: 0, clicks: 0, extra: {} };
-    for (const s of rows) {
-      b.spend += num(s.spend_internal);
-      b.imp += num(s.imp);
-      b.clicks += num(s.clicks);
-      for (const [k, v] of Object.entries(s.extra || {})) {
-        b.extra[k] = (b.extra[k] || 0) + num(v);
-      }
-    }
-    return b;
+  const rowsFor = (match) => spends.filter(match);
+  const blank = { spend: 0, imp: 0, clicks: 0, extra: {} };
+
+  const read = (rows) => {
+    const carried = resolveAt(rows, date) || { ...blank, at: null, row: null };
+    const typedRow = rows.find((s) => s.date === date) || null;
+    return {
+      ...carried,
+      /* What was written on this date exactly, so the box shows what was
+         entered rather than what was carried forward into it. */
+      typed: typedRow ? {
+        spend: num(typedRow.spend_internal), imp: num(typedRow.imp),
+        clicks: num(typedRow.clicks), extra: { ...(typedRow.extra || {}) },
+        raw: typedRow,
+      } : null,
+    };
   };
 
   const parts = creatives.map((c) => ({
-    creative: c, ...bucket(onDay.filter((s) => s.creative_id === c.id)),
+    creative: c, ...read(rowsFor((s) => s.creative_id === c.id)),
   }));
   /* A creative_id pointing at something that no longer exists counts as loose,
-     not as lost. */
-  const loose = bucket(onDay.filter((s) => !s.creative_id || !known.has(s.creative_id)));
+     not as lost — but it keeps its OWN running total. Merging it with the
+     line-level rows into one timeline and taking the latest would drop
+     whichever was older, which is money quietly disappearing. Each orphan is
+     resolved on its own and the results add. */
+  const looseRows = rowsFor((s) => !s.creative_id || !known.has(s.creative_id));
+  const looseBuckets = new Map();
+  for (const r of looseRows) {
+    const k = r.creative_id || '';
+    if (!looseBuckets.has(k)) looseBuckets.set(k, []);
+    looseBuckets.get(k).push(r);
+  }
+  const loose = { ...blank, extra: {}, at: null, row: null, typed: null };
+  for (const rows of looseBuckets.values()) {
+    const part = read(rows);
+    loose.spend += part.spend; loose.imp += part.imp; loose.clicks += part.clicks;
+    for (const [k, v] of Object.entries(part.extra)) loose.extra[k] = (loose.extra[k] || 0) + num(v);
+    if (part.at && (!loose.at || part.at > loose.at)) { loose.at = part.at; loose.row = part.row; }
+    /* Only line-level rows are editable on the entry screen; an orphan's
+       figure is history, shown but not typed into. */
+    if (part.typed && !rows[0].creative_id) loose.typed = part.typed;
+  }
 
   const add = (k) => parts.reduce((a, p) => a + p[k], 0) + loose[k];
   const extra = {};
   for (const src of [...parts.map((p) => p.extra), loose.extra]) {
-    for (const [k, v] of Object.entries(src)) extra[k] = (extra[k] || 0) + v;
+    for (const [k, v] of Object.entries(src)) extra[k] = (extra[k] || 0) + num(v);
   }
+  /* The line's own settlement date is the newest of its parts'. */
+  const at = [...parts.map((p) => p.at), loose.at].filter(Boolean).sort().at(-1) || null;
+
   return {
     split: creatives.length > 0,
     parts,
     loose,
+    at,
     total: { spend: add('spend'), imp: add('imp'), clicks: add('clicks'), extra },
   };
 }
@@ -305,12 +493,27 @@ export function kpiValue(def, t) {
   return (n / den) * (def.per || 1);
 }
 
-/** Spend on a line that belongs to no creative, across every date. */
+/**
+ * The running total recorded against the line itself rather than any creative.
+ *
+ * Snapshots, so this is the latest such row — not a sum. Used when splitting a
+ * line, to say how much money is already on it and has to go somewhere.
+ */
 export function looseSpendTotal(creatives, spends) {
   const known = new Set(creatives.map((c) => c.id));
-  return spends
-    .filter((s) => !s.creative_id || !known.has(s.creative_id))
-    .reduce((a, s) => a + num(s.spend_internal), 0);
+  const buckets = new Map();
+  for (const s of spends) {
+    if (s.creative_id && known.has(s.creative_id)) continue;
+    const k = s.creative_id || '';
+    if (!buckets.has(k)) buckets.set(k, []);
+    buckets.get(k).push(s);
+  }
+  let total = 0;
+  for (const rows of buckets.values()) {
+    const row = latestAt(rows);
+    if (row) total += num(row.spend_internal);
+  }
+  return total;
 }
 
 /**
@@ -391,7 +594,8 @@ export function repace(line, campaign, months, spends, { fx, today = todayIso(),
   }
   due = Math.min(due, total);
 
-  const spentLocal = spends.reduce((a, s) => a + num(s.spend_internal), 0);
+  /* Snapshots, so the figure is the latest one, not the sum of them. */
+  const spentLocal = cumulative(spends, today).spend;
   const spent = toClient(spentLocal / rate);
 
   const variance = spent - due;                 // negative = behind

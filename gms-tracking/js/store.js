@@ -116,9 +116,15 @@ async function flush() {
     state.status = 'synced';
     state.error = '';
   } catch (e) {
-    state.status = 'offline';
-    state.error = e.message || String(e);
-    console.warn('[store]', e);
+    if (isAuthFailure(e)) {
+      state.status = 'locked';
+      state.error = 'Your sign-in expired. Enter the team password again — '
+        + 'your queued changes are kept and will send once you are back in.';
+    } else {
+      state.status = 'offline';
+      state.error = e.message || String(e);
+    }
+    console.warn('[store] flush', e);
   }
   flushing = false;
   emit();
@@ -375,12 +381,33 @@ const SELECT_COLS = {
   creative: 'id,line_id,name,live_from,live_to,preview_url,status,note,updated_at',
 };
 
+/**
+ * Is this failure "the sign-in is no longer good" rather than "the network is
+ * down"?
+ *
+ * The two need different words and different buttons. An expired refresh token
+ * still hands back a session object, so the app looks signed in, and every
+ * query then comes back 401 — which surfaced as "Offline", a word that tells
+ * you to wait when what you have to do is sign in again.
+ */
+function isAuthFailure(e) {
+  const code = String(e?.code || e?.status || '');
+  const msg = String(e?.message || e || '');
+  return code === '401' || code === 'PGRST301' || code === 'PGRST302'
+    || /\bJWT\b|jwt expired|invalid token|not authenticated|refresh_token/i.test(msg);
+}
+
 async function fetchAll(t) {
   const rows = [];
   for (let from = 0; ; from += PAGE) {
     const { data, error } = await sb.from(t).select(SELECT_COLS[t] || '*')
       .range(from, from + PAGE - 1);
-    if (error) throw error;
+    /* Say which table, or a failure reads as "something, somewhere". */
+    if (error) {
+      const e = new Error(`${t}: ${error.message || error}`);
+      e.code = error.code; e.status = error.status;
+      throw e;
+    }
     rows.push(...(data || []));
     if (!data || data.length < PAGE) break;
   }
@@ -458,8 +485,18 @@ async function loadRemote() {
     if (typeof sb.channel === 'function') subscribe();
     flush();
   } catch (e) {
-    state.status = 'offline';
-    state.error = e.message || String(e);
+    /* A dead session is not an outage. Drop it and show the gate, so the fix
+       is the one thing that actually works: sign in again. */
+    if (isAuthFailure(e)) {
+      try { await sb.auth.signOut(); } catch { /* already gone */ }
+      state.status = 'locked';
+      state.error = 'Your sign-in expired. Enter the team password again — '
+        + 'nothing you typed has been lost.';
+    } else {
+      state.status = 'offline';
+      state.error = e.message || String(e);
+    }
+    console.warn('[store] loadRemote', e);
   }
   emit();
 }

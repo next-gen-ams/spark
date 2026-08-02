@@ -86,28 +86,32 @@ body { padding-top: 6px; }
   display: block; height: 22px; width: auto; max-width: 90px; object-fit: contain;
   border: 1px solid var(--line); border-radius: 3px; background: var(--surface);
 }
-/* The enlarged copy is a separate layer that never touches layout, so hovering
-   it cannot move the thing being hovered — the flicker loop that an
-   enlarge-in-place version produced. */
-/* Opens upward by default; view-spend flips these when there is no room above
-   (the first rows of the table, where it would cover the sticky header) or no
-   room to the right. */
-.crthumb.below .crthumb-pop { bottom: auto; top: calc(100% + 6px); }
-.crthumb.leftward .crthumb-pop { left: auto; right: 0; }
 .crthumb:focus-visible { outline: 2px solid var(--orange); outline-offset: 2px; border-radius: 3px; }
-.crthumb-pop {
-  position: absolute; left: 0; bottom: calc(100% + 6px); z-index: 40;
-  display: none; pointer-events: none;
+
+/* The enlarged copy lives on <body>, positioned in viewport coordinates by
+   view-spend. Inside the table it was clipped by .tablewrap (which scrolls)
+   and by .panel (which hides its overflow), so it lost its top, its bottom or
+   its side depending where the row sat. Out here nothing can clip it, and it
+   is meant to cover the table — that is what a preview is for.
+
+   pointer-events: none keeps it from ever becoming the hovered element, which
+   is the flicker loop an enlarge-in-place version produced. */
+.crpop {
+  position: fixed; z-index: 90; display: none; pointer-events: none;
   padding: 5px; background: var(--surface);
   border: 1px solid var(--line-2); border-radius: var(--radius-s);
   box-shadow: var(--shadow-lg);
 }
-.crthumb-pop img { display: block; max-width: 340px; max-height: 220px; border-radius: 3px; }
-.crthumb:hover .crthumb-pop, .crthumb:focus-within .crthumb-pop { display: block; }
-table.data tbody tr.crrow td:first-child { overflow: visible; }
+.crpop.on { display: block; }
+.crpop img { display: block; max-width: 360px; max-height: 300px; border-radius: 3px; }
 
 /* A button that reads as a link: used inside a hint line, where a real button
    would carry more weight than the action deserves. */
+/* The status chip is a button now — it has to look like one can be pressed. */
+.chip[role="button"] { cursor: pointer; }
+.chip[role="button"]:hover { border-color: var(--ink-3); }
+.chip[role="button"]:focus-visible { outline: 2px solid var(--orange); outline-offset: 2px; }
+
 .linkish {
   background: none; border: 0; padding: 0; font: inherit; color: var(--orange);
   cursor: pointer; text-decoration: underline; text-underline-offset: 2px;

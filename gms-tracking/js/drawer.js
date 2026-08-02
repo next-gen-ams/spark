@@ -5,7 +5,7 @@ import { el, fill, money, money2, int, pct, monthLabel, toast, selectOrNew, show
 import { put, where, newId, vocab, addVocab, fxMap, loadCreativeImages, deleteCascade, deleteCreative } from './store.js';
 import { imageField } from './paste-image.js';
 import { dialog, confirmDanger } from './modal.js';
-import { grossUp, num, perAud, effectiveStatus } from './calc.js';
+import { grossUp, num, perAud, effectiveStatus, cumulative} from './calc.js';
 import { exportBackup } from './exportxlsx.js';
 
 let host = null;
@@ -329,8 +329,8 @@ function pasteDialog(c, refresh) {
 function creatives(line, refresh) {
   const list = where('creative', (c) => c.line_id === line.id);
   const spend = where('spend', (s) => s.line_id === line.id);
-  const spendOf = (cid) => spend.filter((s) => s.creative_id === cid)
-    .reduce((a, s) => a + num(s.spend_internal), 0);
+  /* Snapshots: a creative's figure is its latest one, not the sum of them. */
+  const spendOf = (cid) => cumulative(spend.filter((s) => s.creative_id === cid)).spend;
 
   const body = el('tbody', {}, ...list.map((c) => el('tr', {},
     el('td', { class: 'wrap' }, el('input', {
