@@ -15,7 +15,7 @@
 import { el, money, money2, int, pct, monthLabel, dateAu, toast } from './dom.js';
 import { put, remove, where, byId, newId, fxMap } from './store.js';
 import { dialog, closeDialog, textField, choiceField, errorLine } from './modal.js';
-import { monthBounds, grossUp, repace, repaceAdvice, todayIso, daySplit, looseSpendTotal, kpiValue } from './calc.js';
+import { monthBounds, grossUp, repace, repaceAdvice, todayIso, daySplit, looseSpendTotal, kpiValue, spendForSide } from './calc.js';
 import { kpiDefs, addKpi, removeKpi, PRESETS, hasPreset, companionsFor, kpiFormula, formatKpi } from './kpis.js';
 import { resizable, forgetWidths } from './resizable.js';
 
@@ -93,7 +93,12 @@ function grid(rows, date, mode, state, rerender) {
   const fx = fxMap();
   const today = todayIso();
   const side = state.view;
-  const defs = kpiDefs();
+  /* Typed columns first, computed after — mirroring the header's two blocks:
+     everything you enter sits together, everything the app derives follows. */
+  const all_ = kpiDefs();
+  const counters = all_.filter((d) => d.kind === 'counter');
+  const ratesK = all_.filter((d) => d.kind !== 'counter');
+  const defs = [...counters, ...ratesK];
 
   const body = el('tbody');
   for (const m of rows) {
@@ -123,9 +128,12 @@ function grid(rows, date, mode, state, rerender) {
       const existing = byId('spend', spendId(m.line.id, creativeId, date));
       write(creativeId, { extra: { ...(existing?.extra || {}), [defId]: v } });
     };
+    /* Rates follow the Internal ⇄ Client-facing toggle: same counters, the
+       money side the viewer chose. spendForSide returns null for a
+       non-billable line on the client side, which kpiValue turns into "—". */
     const lineTotals = () => ({
-      spend: day.total.spend / m.rate, imp: day.total.imp,
-      clicks: day.total.clicks, extra: day.total.extra,
+      spend: spendForSide(day.total.spend / m.rate, side, m.margin, m.billable),
+      imp: day.total.imp, clicks: day.total.clicks, extra: day.total.extra,
     });
 
     /* ---- the line's own row. Editable only while nothing is split off it. */
@@ -147,18 +155,18 @@ function grid(rows, date, mode, state, rerender) {
           }),
         flightNote(m, r, day)),
 
-      /* (2) the two derived figures, back where they were asked for: this is
-         where you see the margin actually doing something. */
+      /* --- the rest of the typed block: what you enter sits together. */
+      countCell(day.split, day.total.imp, 'Impressions', (v) => write(null, { imp: v })),
+      countCell(day.split, day.total.clicks, 'Clicks', (v) => write(null, { clicks: v })),
+      ...counters.map((d) =>
+        countCell(day.split, day.total.extra[d.id], d.name, (v) => writeExtra(null, d.id, v))),
+
+      /* --- the computed block: the margin doing something, then the rates. */
       el('td', { class: 'num muted' }, money(day.total.spend / m.rate)),
       el('td', { class: 'num' }, m.billable
         ? el('b', {}, money(grossUp(day.total.spend / m.rate, m.margin)))
         : el('span', { class: 'muted' }, 'n/a')),
-
-      countCell(day.split, day.total.imp, 'Impressions', (v) => write(null, { imp: v })),
-      countCell(day.split, day.total.clicks, 'Clicks', (v) => write(null, { clicks: v })),
-      ...defs.map((d) => d.kind === 'counter'
-        ? countCell(day.split, day.total.extra[d.id], d.name, (v) => writeExtra(null, d.id, v))
-        : rateCell(d, lineTotals())),
+      ...ratesK.map((d) => rateCell(d, lineTotals())),
 
       /* --- running position across the whole flight --- */
       el('td', { class: 'num' }, r ? money(r.spent) : '—',
@@ -187,7 +195,7 @@ function grid(rows, date, mode, state, rerender) {
     if (!day.split) continue;
     for (const p of day.parts) {
       body.appendChild(creativeRow(m, p.creative.name || 'Creative', p, {
-        defs,
+        side, counters, rates: ratesK,
         onSpend: (v) => write(p.creative.id, { spend_internal: v }),
         onImp: (v) => write(p.creative.id, { imp: v }),
         onClicks: (v) => write(p.creative.id, { clicks: v }),
@@ -197,7 +205,7 @@ function grid(rows, date, mode, state, rerender) {
     if (day.loose.spend || day.loose.imp || day.loose.clicks
       || Object.values(day.loose.extra).some(Boolean)) {
       body.appendChild(creativeRow(m, 'Not attributed to a creative', day.loose, {
-        defs, readonly: true,
+        side, counters, rates: ratesK, readonly: true,
         note: 'Typed before this line was split. It still counts toward the line total — '
           + 'move it onto a creative from the line drawer if it belongs to one.',
       }));
@@ -209,13 +217,17 @@ function grid(rows, date, mode, state, rerender) {
       el('th', {}, 'Line'),
       el('th', { class: 'num', title: 'Internal spend as paid to the media owner, in the line’s own currency' },
         `Spend · ${dateAu(date)}`),
+      el('th', { class: 'num' }, 'Impressions'),
+      el('th', { class: 'num' }, 'Clicks'),
+      ...counters.map((d) => el('th', { class: 'num', title: kpiFormula(d, defs) }, d.name)),
       el('th', { class: 'num', title: 'The same figure converted to AUD at this campaign’s rate' },
         'Internal AUD'),
       el('th', { class: 'num', title: 'What the client is billed for it — internal ÷ (1 − margin)' },
         'Client AUD'),
-      el('th', { class: 'num' }, 'Impressions'),
-      el('th', { class: 'num' }, 'Clicks'),
-      ...defs.map((d) => el('th', { class: 'num', title: kpiFormula(d, defs) }, d.name)),
+      ...ratesK.map((d) => el('th', {
+        class: 'num',
+        title: `${kpiFormula(d, defs)}${d.num === 'spend' ? ' · follows the Internal / Client-facing toggle' : ''}`,
+      }, d.name)),
       el('th', { class: 'num', title: 'Total spent on this line across the whole flight' }, 'Spent to date'),
       el('th', { class: 'num', title: 'What the plan’s schedule says should have been spent by today' }, 'Should be'),
       el('th', { class: 'num', title: 'Spent minus scheduled. Negative means the money is still owed to the campaign.' }, 'Variance'),
@@ -223,8 +235,11 @@ function grid(rows, date, mode, state, rerender) {
       el('th', {}, 'What to do'),
       el('th', { class: 'num' }, 'Margin'))),
     /* Width memory is keyed by column count, so a saved layout from before a
-       column was added or removed never lands on the wrong columns. */
-    body), `tracking-entry-${defs.length}`, [...COLW.slice(0, 6), ...defs.map(() => 96), ...COLW.slice(6)]);
+       column was added or removed never lands on the wrong columns. (The v2
+       prefix retired layouts saved under the pre-reorder column order.) */
+    body), `tracking-entry2-${counters.length}c${ratesK.length}r`, [
+      COLW[0], COLW[1], COLW[4], COLW[5], ...counters.map(() => 96),
+      COLW[2], COLW[3], ...ratesK.map(() => 96), ...COLW.slice(6)]);
 }
 
 /* Line and What-to-do carry sentences; the rest are figures and only need
@@ -270,7 +285,7 @@ const lineLabel = (m) =>
  * three creative rows reads as three different positions.
  */
 function creativeRow(m, label, figures, opts = {}) {
-  const { readonly, note, defs = [], onSpend, onImp, onClicks, onExtra } = opts;
+  const { readonly, note, side = 'internal', counters = [], rates = [], onSpend, onImp, onClicks, onExtra } = opts;
   /* Built fresh each time rather than cloned — el() is the app's own node
      factory and cloneNode is not part of that contract. */
   const dim = () => el('td', { class: 'num muted' }, '');
@@ -290,15 +305,17 @@ function creativeRow(m, label, figures, opts = {}) {
           onchange: (e) => onSpend(Number(e.target.value) || 0),
         })),
 
+    countCell(readonly, figures.imp, 'Impressions', onImp),
+    countCell(readonly, figures.clicks, 'Clicks', onClicks),
+    ...counters.map((d) => countCell(readonly, figures.extra?.[d.id], d.name, (v) => onExtra(d.id, v))),
+
     el('td', { class: 'num muted' }, money(figures.spend / m.rate)),
     el('td', { class: 'num muted' }, m.billable
       ? money(grossUp(figures.spend / m.rate, m.margin)) : 'n/a'),
-
-    countCell(readonly, figures.imp, 'Impressions', onImp),
-    countCell(readonly, figures.clicks, 'Clicks', onClicks),
-    ...defs.map((d) => d.kind === 'counter'
-      ? countCell(readonly, figures.extra?.[d.id], d.name, (v) => onExtra(d.id, v))
-      : rateCell(d, { spend: figures.spend / m.rate, imp: figures.imp, clicks: figures.clicks, extra: figures.extra })),
+    ...rates.map((d) => rateCell(d, {
+      spend: spendForSide(figures.spend / m.rate, side, m.margin, m.billable),
+      imp: figures.imp, clicks: figures.clicks, extra: figures.extra,
+    })),
 
     dim(), dim(), dim(), dim(),
     el('td', { class: 'wrap prose muted' }, ''),

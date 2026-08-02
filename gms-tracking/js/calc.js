@@ -272,16 +272,37 @@ export function daySplit(creatives, spends, date) {
  * @returns {number|null} null when the denominator is 0 — "no data yet",
  *                      which is not the same thing as a rate of zero
  */
+/**
+ * The spend figure a rate should divide by, for the side being viewed.
+ *
+ * Every money-based rate exists twice: what it costs GMS (internal) and what
+ * it costs the client (internal grossed up at the line margin). A cost-per
+ * that ignores the Internal ⇄ Client-facing toggle is quietly showing the
+ * internal figure on a client-facing screen — the exact mix-up the two-sided
+ * design exists to prevent.
+ *
+ * A non-billable line has no client-facing money at all, so its client-side
+ * spend is null (renders as —), not zero — zero would read as "free".
+ */
+export function spendForSide(audInternal, side, margin, billable = true) {
+  if (side !== 'client') return audInternal;
+  if (!billable) return null;
+  return grossUp(audInternal, margin);
+}
+
 export function kpiValue(def, t) {
   const pick = (ref) =>
-    ref === 'spend' ? num(t.spend)
+    ref === 'spend' ? (t.spend == null ? null : num(t.spend))
       : ref === 'imp' ? num(t.imp)
         : ref === 'clicks' ? num(t.clicks)
           : num(t.extra?.[ref]);
   if (def.kind === 'counter') return pick(def.id);
   const den = pick(def.den);
-  if (!den) return null;
-  return (pick(def.num) / den) * (def.per || 1);
+  const n = pick(def.num);
+  /* A null spend (no client-facing money on this side) poisons the whole
+     rate — "—", never a phantom $0.00. */
+  if (!den || n == null || den == null) return null;
+  return (n / den) * (def.per || 1);
 }
 
 /** Spend on a line that belongs to no creative, across every date. */
