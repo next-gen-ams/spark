@@ -46,7 +46,11 @@ export const money = (v, ccy = 'AUD', dp = 0) => {
   return (sym ? sym : ccy + ' ') + nf(dp, dp).format(Number(v));
 };
 
-export const money2 = (v, ccy = 'AUD') => money(v, ccy, 2);
+/* On screen, money is whole dollars — decimals are visual noise at dashboard
+   distance (Coco, 2026-08-02). The cents still exist: storage is untouched
+   and the Excel exports print two decimals throughout. The name money2 is
+   kept so every call site keeps declaring "this is a money figure". */
+export const money2 = (v, ccy = 'AUD') => money(v, ccy, 0);
 
 export const int = (v) => (v == null || !Number.isFinite(Number(v)) ? '—' : nf(0, 0).format(Number(v)));
 

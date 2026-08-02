@@ -97,7 +97,10 @@ export function kpiFormula(def, defs = kpiDefs()) {
 export function formatKpi(def, v, { money, int, pct }) {
   if (v == null) return '—';
   if (def.kind === 'counter') return int(v);
-  if (def.format === 'money') return money(v, 'AUD', v < 100 ? 2 : 0);
+  /* Screen money is whole dollars — with one carve-out: a unit rate under
+     $10 (a CPC of $0.45, a CPM of $3.20) rounds to nothing at 0dp, and a
+     column of $0s reads as "free". Below $10 the cents ARE the number. */
+  if (def.format === 'money') return money(v, 'AUD', v < 10 ? 2 : 0);
   if (def.format === 'pct') return pct(v, 2);
   return int(v);
 }

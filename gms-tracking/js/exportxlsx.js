@@ -29,10 +29,15 @@ const BAND     = 'FFFAF8F5';
 const HAIRLINE = 'FFE4DFD8';
 const WHITE    = 'FFFFFFFF';
 
+/* Excel keeps two decimals on every money and percentage figure (Coco,
+   2026-08-02) — a file is worked in at arm's length, and reconciliation
+   happens to the cent. The screen is where decimals are dropped, not here.
+   MONEY0/PCT/PCT1 stay as names so column definitions keep reading naturally,
+   but they all resolve to two decimals now. */
 const MONEY = '"$"#,##0.00';
-const MONEY0 = '"$"#,##0';
-const PCT = '0%';
-const PCT1 = '0.0%';
+const MONEY0 = MONEY;
+const PCT = '0.00%';
+const PCT1 = '0.00%';
 const PCT2 = '0.00%';
 const INTF = '#,##0';
 const NUM0 = '0';
