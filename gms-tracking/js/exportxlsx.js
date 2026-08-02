@@ -178,6 +178,20 @@ function kpiCells(defs, t, { ratesToo = true } = {}) {
   return out;
 }
 
+/**
+ * Drop optional columns that are blank on every row.
+ *
+ * "Live from" and "Preview" are per-creative notes nobody is obliged to fill,
+ * and a column of nothing in a client report does not read as "not applicable"
+ * — it reads as unfinished work. Only columns marked `opt` are ever dropped;
+ * every money column stays put whatever its values, so the file's financial
+ * shape never changes between exports.
+ */
+function pruneEmpty(cols, data) {
+  return cols.filter((c) => !c.opt
+    || data.some((r) => r[c.k] !== null && r[c.k] !== undefined && r[c.k] !== ''));
+}
+
 /** Sum the custom counters across a set of metric rows. */
 function sumExtras(rows) {
   const extra = {};
@@ -217,7 +231,7 @@ const COLS = {
     { h: 'Platform', k: 'platform', w: 12 },
     { h: 'Objective', k: 'objective', w: 14 },
     { h: 'Line', k: 'line', w: 34 },
-    { h: 'Market', k: 'market', w: 12 },
+    { h: 'Market', k: 'market', w: 12, opt: true },
     { h: 'Buy method', k: 'buy', w: 11 },
     { h: 'Budget internal (AUD)', k: 'bi', w: 18, fmt: MONEY0 },
     { h: 'Budget internal (local)', k: 'bl', w: 18, fmt: MONEY0 },
@@ -239,7 +253,7 @@ const COLS = {
     { h: 'Pacing', k: 'pc', w: 10, fmt: PCT },
     { h: 'Billable', k: 'nb', w: 10 },
     { h: 'Status', k: 'status', w: 12 },
-    { h: 'Note', k: 'note', w: 34 },
+    { h: 'Note', k: 'note', w: 34, opt: true },
   ],
   linesClient: [
     { h: 'Month', k: 'month', w: 13 },
@@ -247,7 +261,7 @@ const COLS = {
     { h: 'Platform', k: 'platform', w: 12 },
     { h: 'Objective', k: 'objective', w: 14 },
     { h: 'Line', k: 'line', w: 38 },
-    { h: 'Market', k: 'market', w: 12 },
+    { h: 'Market', k: 'market', w: 12, opt: true },
     { h: 'Flight', k: 'flight', w: 22 },
     { h: 'Buy method', k: 'buy', w: 11 },
     { h: 'Budget', k: 'bc', w: 14, fmt: MONEY0 },
@@ -265,12 +279,12 @@ const COLS = {
     { h: 'Campaign', k: 'campaign', w: 26 },
     { h: 'Platform', k: 'platform', w: 12 },
     { h: 'Creative', k: 'creative', w: 32 },
-    { h: 'Live from', k: 'from', w: 12 },
+    { h: 'Live from', k: 'from', w: 12, opt: true },
     { h: 'Spend', k: 'spend', w: 14, fmt: MONEY },
     { h: 'Impressions', k: 'imp', w: 13, fmt: INTF },
     { h: 'Clicks', k: 'clk', w: 11, fmt: INTF },
     { h: 'CTR', k: 'ctr', w: 10, fmt: PCT1 },
-    { h: 'Preview', k: 'url', w: 36 },
+    { h: 'Preview', k: 'url', w: 36, opt: true },
   ],
   spendlog: [
     { h: 'Date', k: 'date', w: 12 },
@@ -283,7 +297,7 @@ const COLS = {
     { h: 'Spend internal', k: 'sp', w: 15, fmt: MONEY },
     { h: 'Impressions', k: 'imp', w: 13, fmt: INTF },
     { h: 'Clicks', k: 'clk', w: 11, fmt: INTF },
-    { h: 'Note', k: 'note', w: 30 },
+    { h: 'Note', k: 'note', w: 30, opt: true },
   ],
 };
 
@@ -395,8 +409,6 @@ function sheetLines(wb, rows, { isClient, title, subtitle }) {
      conversion, not internal). */
   const defs = kpiDefs();
   const lineBase = isClient ? COLS.linesClient : COLS.linesInternal;
-  const cols = [...lineBase, ...kpiColumns(defs, { base: lineBase })];
-  layout(ws, { title: `${title} — ${isClient ? 'Performance' : 'Line detail'}`, subtitle, cols });
 
   const data = rows.map((m) => ({
     ...kpiCells(defs, {
@@ -423,6 +435,8 @@ function sheetLines(wb, rows, { isClient, title, subtitle }) {
     nb: m.billable ? 'Yes' : 'No',
     status: effectiveStatus(m.line, m.campaign), note: m.line.note || '',
   }));
+  const cols = pruneEmpty([...lineBase, ...kpiColumns(defs, { base: lineBase })], data);
+  layout(ws, { title: `${title} — ${isClient ? 'Performance' : 'Line detail'}`, subtitle, cols });
   finish(ws, writeRows(ws, cols, data), cols.length);
 }
 
@@ -484,19 +498,13 @@ function sheetCreative(wb, rows, { isClient, title, subtitle }) {
   if (!data.length) return;               // no creatives with spend — no sheet
   const ws = wb.addWorksheet('Creative breakdown');
   const base = isClient ? COLS.creative.filter((c) => c.k !== 'client') : COLS.creative;
-  const cols = [...base, ...kpiColumns(defs, { base })];
+  const cols = pruneEmpty([...base, ...kpiColumns(defs, { base })], data);
   layout(ws, { title: `${title} — Creative`, subtitle, cols });
   finish(ws, writeRows(ws, cols, data), cols.length);
 }
 
 function sheetSpendLog(wb, rows, { title, subtitle }) {
-  const ws = wb.addWorksheet('Spend log');
   const defs = kpiDefs();
-  /* Counters only: this sheet is every daily entry exactly as typed, and a
-     rate is a property of a set of rows rather than of one day. */
-  const cols = [...COLS.spendlog, ...kpiColumns(defs, { ratesToo: false, base: COLS.spendlog })];
-  layout(ws, { title: `${title} — Spend log`, subtitle, cols });
-
   const seen = new Set();
   const data = [];
   for (const m of rows) {
@@ -515,6 +523,15 @@ function sheetSpendLog(wb, rows, { title, subtitle }) {
     }
   }
   data.sort((a, b) => (a.date || '').localeCompare(b.date || ''));
+
+  /* Columns are settled after the data exists, so an all-blank optional one
+     can be left out rather than shipped empty. */
+  const ws = wb.addWorksheet('Spend log');
+  /* Counters only: this sheet is every daily entry exactly as typed, and a
+     rate is a property of a set of rows rather than of one day. */
+  const cols = pruneEmpty(
+    [...COLS.spendlog, ...kpiColumns(defs, { ratesToo: false, base: COLS.spendlog })], data);
+  layout(ws, { title: `${title} — Spend log`, subtitle, cols });
   finish(ws, writeRows(ws, cols, data), cols.length);
 }
 
