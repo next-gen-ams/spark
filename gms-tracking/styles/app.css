@@ -356,7 +356,9 @@ table.data[style*="fixed"] th {
   overflow-wrap: normal;
   overflow: visible;
   text-overflow: clip;
-  vertical-align: bottom;
+  /* Middle, since the labels went centre-aligned: bottom-alignment made the
+     one-line labels hang off the band's lower edge next to two-line ones. */
+  vertical-align: middle;
 }
 table.data[style*="fixed"] td.wrap,
 table.data[style*="fixed"] td.prose {
