@@ -331,6 +331,10 @@ const COLS = {
     { h: 'Campaign', k: 'campaign', w: 26 },
     { h: 'Applies to', k: 'scope', w: 30 },
     { h: 'Entry', k: 'body', w: 78 },
+    /* Both optional, and both internal-only. The byline names a GMS colleague,
+       which is ours to know and not the client's — it is dropped from the
+       client report the same way Visibility is. */
+    { h: 'Added by', k: 'author', w: 16, opt: true },
     { h: 'Visibility', k: 'vis', w: 15, opt: true },
   ],
   spendlog: [
@@ -591,6 +595,7 @@ function sheetActivity(wb, rows, { isClient, title, subtitle }) {
         date: n.date || '', client: m.clientName, campaign: m.campaignName,
         scope: n.line_id ? lineName(n.line_id) : 'Whole campaign',
         body: n.body || '',
+        author: isClient ? '' : (n.author || ''),
         vis: isClient ? '' : (n.shared ? 'Shared with client' : 'Internal only'),
       });
     }

@@ -22,6 +22,7 @@ import { el, fill, dateAu, shown } from './dom.js';
 import { all, put, remove, newId, where } from './store.js';
 import { todayIso } from './calc.js';
 import { dialog, textField, errorLine } from './modal.js';
+import { whoAmI, setWhoAmI } from './who.js';
 
 /** Entries for a campaign, newest first. `lineId` narrows to one line. */
 export function notesFor({ campaignId, lineId } = {}) {
@@ -69,6 +70,24 @@ export function openLog(m, rerender) {
       `This line only — ${shown(m.line.placement) || shown(m.line.platform) || 'this line'}`));
   const shared = el('input', { type: 'checkbox' });
 
+  /* Asked once per browser, then out of the way. A name box on every entry
+     would be a field to skip; a line saying who you are is a fact to correct. */
+  let author = whoAmI();
+  const nameField = textField('Your name', {
+    value: author,
+    placeholder: 'so the team knows who to ask',
+    hint: 'Kept in this browser only, and stamped on the entries you add.',
+  });
+  const nameLine = el('div', { class: 'hint', style: { marginTop: '-8px', marginBottom: '14px' } });
+  const paintName = () => {
+    nameField.style.display = author ? 'none' : '';
+    fill(nameLine, author ? `Logging as ${author}. ` : '',
+      author ? el('button', {
+        class: 'linkish',
+        onclick: () => { author = setWhoAmI(''); nameField.set(''); paintName(); nameField.focus(); },
+      }, 'Not you?') : null);
+  };
+
   const list = el('div', { class: 'loglist' });
   const logLabel = el('label', {}, 'Logged so far');
 
@@ -87,6 +106,7 @@ export function openLog(m, rerender) {
     fill(list, ...rows.slice().reverse().map((n) => el('div', { class: 'logitem' },
       el('div', { class: 'loghead' },
         el('b', {}, n.date ? dateAu(n.date) : '—'),
+        n.author ? el('span', { class: 'muted', style: { fontSize: '11.5px' } }, n.author) : null,
         el('span', { class: 'tag' + (n.shared ? ' good' : '') },
           n.shared ? 'Shared with client' : 'Internal only'),
         n.line_id ? el('span', { class: 'muted', style: { fontSize: '11px' } }, 'this line') : null,
@@ -107,12 +127,22 @@ export function openLog(m, rerender) {
   const add = () => {
     const text = body.value.trim();
     if (!text) { err.say('Write the entry first — an empty log line helps nobody.'); return false; }
+    if (!author) {
+      author = setWhoAmI(nameField.value());
+      if (!author) {
+        err.say('Put your name in first, so the team knows who to ask about this.');
+        nameField.focus();
+        return false;
+      }
+      paintName();
+    }
     put('note', {
       id: newId('nt'),
       campaign_id: campaignId || null,
       line_id: scope.value === 'line' ? lineId : null,
       date: date.value || todayIso(),
       body: text,
+      author,
       shared: shared.checked === true,
     });
     body.value = ''; shared.checked = false; err.say('');
@@ -122,6 +152,7 @@ export function openLog(m, rerender) {
   };
 
   paint();
+  paintName();
   dialog({
     title: 'Tracking log',
     sub: 'What happened, in the team’s own words, so a number nobody can explain six weeks later has an explanation attached.',
@@ -131,6 +162,8 @@ export function openLog(m, rerender) {
       el('div', { class: 'row2' },
         el('div', { class: 'field' }, el('label', {}, 'Date'), date),
         el('div', { class: 'field' }, el('label', {}, 'Applies to'), scope)),
+      nameField,
+      nameLine,
       el('label', { class: 'choice', style: { alignItems: 'center', marginBottom: '4px' } },
         shared,
         el('span', {},

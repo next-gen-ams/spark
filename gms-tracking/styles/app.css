@@ -106,6 +106,14 @@ body { padding-top: 6px; }
 .crthumb:hover .crthumb-pop, .crthumb:focus-within .crthumb-pop { display: block; }
 table.data tbody tr.crrow td:first-child { overflow: visible; }
 
+/* A button that reads as a link: used inside a hint line, where a real button
+   would carry more weight than the action deserves. */
+.linkish {
+  background: none; border: 0; padding: 0; font: inherit; color: var(--orange);
+  cursor: pointer; text-decoration: underline; text-underline-offset: 2px;
+}
+.linkish:hover { color: var(--ink); }
+
 /* Tracking log. The visibility tag is the thing to read first, so it sits on
    the same line as the date rather than under the text. */
 /* Tall enough for four or five entries, then it scrolls — a campaign logged

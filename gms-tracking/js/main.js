@@ -36,11 +36,50 @@ const root = document.getElementById('root');
 
 /* ------------------------------------------------------------------ boot */
 
+/* --------------------------------------------------- someone else's edit */
+
+/**
+ * A colleague's change lands in the store but not on the screen: the only
+ * store listener used to repaint the sync chip and nothing else, so two people
+ * tracking at once each saw their own stale numbers until they happened to
+ * click something. Now a remote change repaints the page — carefully.
+ *
+ * Carefully, because a rebuild replaces every input. render() restores scroll
+ * and focus, but a value typed and not yet committed (onchange fires on blur
+ * or Enter) lives only in the DOM node being thrown away. So a repaint waits
+ * while the cursor is in a field, and runs when it leaves.
+ */
+const REMOTE_SETTLE_MS = 400;   // a colleague's save arrives as a burst of rows
+let remoteDirty = false;
+let remoteTimer = null;
+
+const isTyping = () => {
+  const el = document.activeElement;
+  return !!el && (el.tagName === 'INPUT' || el.tagName === 'TEXTAREA' || el.isContentEditable);
+};
+
+function flushRemote() {
+  if (!remoteDirty || isTyping()) return;
+  remoteDirty = false;
+  render();
+}
+
+function noteRemoteChange() {
+  remoteDirty = true;
+  clearTimeout(remoteTimer);
+  remoteTimer = setTimeout(flushRemote, REMOTE_SETTLE_MS);
+}
+
+/* Leaving a field is the moment a deferred repaint becomes safe. The small
+   delay lets the field's own onchange commit first, so its write is in the
+   store before the page is rebuilt from it. */
+document.addEventListener('focusout', () => setTimeout(flushRemote, 80));
+
 (async function boot() {
   if (state.theme) document.documentElement.dataset.theme = state.theme;
   readUrl();
   await store.init();
-  store.onChange(() => { paintStatus(); });
+  store.onChange((info) => { paintStatus(); if (info?.remote) noteRemoteChange(); });
   render();
 }());
 

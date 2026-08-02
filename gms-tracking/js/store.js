@@ -24,8 +24,16 @@ export const db = Object.fromEntries(TABLES.map((t) => [t, []]));
 let sb = null;                       // supabase client, when configured
 const listeners = new Set();
 
+/**
+ * @param {(info: {remote?: boolean}) => void} fn
+ *
+ * `remote` marks a change that arrived from Postgres — a colleague's edit on
+ * another machine — as opposed to one this browser just made. The distinction
+ * is load-bearing: the page has to repaint for the first, and must not repaint
+ * on every keystroke of the second.
+ */
 export const onChange = (fn) => { listeners.add(fn); return () => listeners.delete(fn); };
-const emit = () => listeners.forEach((fn) => fn());
+const emit = (info) => listeners.forEach((fn) => fn(info || {}));
 
 export const state = { mode: 'local', status: 'ready', error: '', pending: 0 };
 
@@ -465,22 +473,33 @@ export const _sync = {
   flush,
   loadRemote,
   loadOutbox,
+  applyRemote,
 };
+
+/**
+ * Fold one Postgres change into the local copy.
+ *
+ * Named and exported through `_sync` so the suite can drive it directly: a
+ * realtime payload is otherwise unreachable without a live socket, and the
+ * question it answers — does a colleague's edit reach the screen — is the
+ * whole reason the subscription exists.
+ */
+function applyRemote(p) {
+  const t = p.table;
+  if (!db[t]) return;
+  const pk = pkOf(t);
+  if (p.eventType === 'DELETE') db[t] = db[t].filter((r) => r[pk] !== p.old[pk]);
+  else {
+    const i = db[t].findIndex((r) => r[pk] === p.new[pk]);
+    if (i >= 0) db[t][i] = p.new; else db[t].push(p.new);
+  }
+  saveLocal();
+  emit({ remote: true });
+}
 
 function subscribe() {
   sb.channel('tracking')
-    .on('postgres_changes', { event: '*', schema: SUPABASE.schema || 'public' }, (p) => {
-      const t = p.table;
-      if (!db[t]) return;
-      const pk = pkOf(t);
-      if (p.eventType === 'DELETE') db[t] = db[t].filter((r) => r[pk] !== p.old[pk]);
-      else {
-        const i = db[t].findIndex((r) => r[pk] === p.new[pk]);
-        if (i >= 0) db[t][i] = p.new; else db[t].push(p.new);
-      }
-      saveLocal();
-      emit();
-    })
+    .on('postgres_changes', { event: '*', schema: SUPABASE.schema || 'public' }, applyRemote)
     .subscribe();
 }
 

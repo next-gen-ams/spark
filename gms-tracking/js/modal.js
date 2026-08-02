@@ -92,6 +92,7 @@ export function textField(label, { value = '', placeholder = '', hint, onEnter }
     el('label', {}, label), input,
     hint ? el('div', { class: 'hint' }, hint) : null);
   node.value = () => input.value.trim();
+  node.set = (v) => { input.value = v == null ? '' : String(v); };
   node.focus = () => input.focus();
   return node;
 }
