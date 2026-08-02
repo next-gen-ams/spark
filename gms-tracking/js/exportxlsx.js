@@ -15,7 +15,7 @@
 
 import { download, toast, monthLabel, money } from './dom.js';
 import { all, where, byId } from './store.js';
-import { totals, byPlatform, num, effectiveStatus } from './calc.js';
+import { totals, byPlatform, num, effectiveStatus, looseSpendTotal } from './calc.js';
 import { fileName } from './view-export.js';
 import { GMS_LOGO_B64 } from './logo-b64.js';
 
@@ -351,7 +351,26 @@ function sheetLines(wb, rows, { isClient, title, subtitle }) {
 function sheetCreative(wb, rows, { isClient, title, subtitle }) {
   const data = [];
   const seen = new Set();
+  const seenLines = new Set();
   for (const m of rows) {
+    /* A split line whose spend predates the split would make this sheet add up
+       to less than the same line does everywhere else. The gap gets its own
+       row rather than being left for someone to find. */
+    if (!seenLines.has(m.line.id)) {
+      seenLines.add(m.line.id);
+      const crs = where('creative', (x) => x.line_id === m.line.id);
+      const loose = crs.length
+        ? looseSpendTotal(crs, where('spend', (s) => s.line_id === m.line.id)) / m.rate
+        : 0;
+      if (loose > 0.005) {
+        data.push({
+          client: m.clientName, campaign: m.campaignName, platform: m.line.platform,
+          creative: 'Not attributed to a creative', from: '',
+          spend: isClient ? loose / (1 - (m.margin || 0)) : loose,
+          imp: null, clk: null, ctr: null, url: '',
+        });
+      }
+    }
     for (const c of where('creative', (x) => x.line_id === m.line.id)) {
       if (seen.has(c.id)) continue;
       seen.add(c.id);

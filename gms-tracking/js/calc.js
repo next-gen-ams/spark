@@ -197,6 +197,58 @@ export function pacingFlag(index, billable = true) {
 }
 
 /**
+ * One line's figures for one date, split the way the entry grid shows them.
+ *
+ * The invariant this exists to guarantee: **a split line's own number is the
+ * sum of its creatives, never a separately typed figure.** Downstream maths
+ * already sums every spend row on a line regardless of creative_id, so the
+ * arithmetic was never in question — what was missing was an entry surface
+ * that made the line total *derived* instead of independently editable.
+ *
+ * `loose` is spend that belongs to the line but to none of its creatives —
+ * almost always money typed before anyone added a creative. It still counts
+ * toward the total, so it is returned separately rather than folded in
+ * silently: money that stops being visible but keeps being counted is how a
+ * reconciliation goes unexplained.
+ *
+ * @param {array} creatives  the line's creatives
+ * @param {array} spends     the line's spend rows (any dates)
+ * @param {string} date      yyyy-mm-dd
+ */
+export function daySplit(creatives, spends, date) {
+  const known = new Set(creatives.map((c) => c.id));
+  const onDay = spends.filter((s) => s.date === date);
+  const bucket = (rows) => ({
+    spend: rows.reduce((a, s) => a + num(s.spend_internal), 0),
+    imp: rows.reduce((a, s) => a + num(s.imp), 0),
+    clicks: rows.reduce((a, s) => a + num(s.clicks), 0),
+  });
+
+  const parts = creatives.map((c) => ({
+    creative: c, ...bucket(onDay.filter((s) => s.creative_id === c.id)),
+  }));
+  /* A creative_id pointing at something that no longer exists counts as loose,
+     not as lost. */
+  const loose = bucket(onDay.filter((s) => !s.creative_id || !known.has(s.creative_id)));
+
+  const add = (k) => parts.reduce((a, p) => a + p[k], 0) + loose[k];
+  return {
+    split: creatives.length > 0,
+    parts,
+    loose,
+    total: { spend: add('spend'), imp: add('imp'), clicks: add('clicks') },
+  };
+}
+
+/** Spend on a line that belongs to no creative, across every date. */
+export function looseSpendTotal(creatives, spends) {
+  const known = new Set(creatives.map((c) => c.id));
+  return spends
+    .filter((s) => !s.creative_id || !known.has(s.creative_id))
+    .reduce((a, s) => a + num(s.spend_internal), 0);
+}
+
+/**
  * The status a line should *display* — derived from its flight, not from the
  * label alone.
  *

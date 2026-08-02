@@ -12,9 +12,9 @@
  * forward instead of quietly losing it at month end.
  */
 
-import { el, money, int, pct, monthLabel, dateAu } from './dom.js';
-import { put, where, byId, fxMap } from './store.js';
-import { monthBounds, num, grossUp, repace, repaceAdvice, todayIso } from './calc.js';
+import { el, money, money2, int, pct, monthLabel, dateAu } from './dom.js';
+import { put, where, newId, fxMap } from './store.js';
+import { monthBounds, grossUp, repace, repaceAdvice, todayIso, daySplit, looseSpendTotal } from './calc.js';
 import { resizable, forgetWidths } from './resizable.js';
 
 const spendId = (lineId, creativeId, date) => `${lineId}|${creativeId || '_'}|${date}`;
@@ -89,92 +89,94 @@ function grid(rows, date, mode, state, rerender) {
 
   const body = el('tbody');
   for (const m of rows) {
-    for (const tgt of spendTargets(m)) {
-      /* Exactly one row per line per day — no aggregation to unpick. */
-      const existing = byId('spend', spendId(m.line.id, tgt.creativeId, date));
-      const cell = num(existing?.spend_internal);
-      const impT = num(existing?.imp);
-      const clkT = num(existing?.clicks);
+    const creatives = where('creative', (c) => c.line_id === m.line.id);
+    const spends = where('spend', (x) => x.line_id === m.line.id);
+    const day = daySplit(creatives, spends, date);
 
-      const write = (patch) => {
-        put('spend', {
-          id: spendId(m.line.id, tgt.creativeId, date),
-          line_id: m.line.id, creative_id: tgt.creativeId || null, date, ...patch,
-        });
-        rerender();
-      };
+    /* Pacing belongs to the whole line, so it reads every month and every
+       spend row — not the single cell being typed into. It is also computed
+       once per line, not once per creative: three creatives do not mean three
+       different pacing positions. */
+    const r = repace(m.line, m.campaign,
+      where('line_month', (x) => x.line_id === m.line.id), spends,
+      { fx, today, side });
+    const advice = repaceAdvice(r);
 
-      /* Pacing belongs to the whole line, so it reads every month and every
-         spend row — not the single cell being typed into. */
-      const r = repace(m.line, m.campaign,
-        where('line_month', (x) => x.line_id === m.line.id),
-        where('spend', (x) => x.line_id === m.line.id),
-        { fx, today, side });
-      const advice = repaceAdvice(r);
+    const write = (creativeId, patch) => {
+      put('spend', {
+        id: spendId(m.line.id, creativeId, date),
+        line_id: m.line.id, creative_id: creativeId || null, date, ...patch,
+      });
+      rerender();
+    };
 
-      body.appendChild(el('tr', { class: m.billable ? '' : 'nb' },
-        el('td', { class: 'wrap' }, m.clientName,
-          el('div', { class: 'muted', style: { fontSize: '11px' } },
-            `${m.line.platform || '—'} · ${tgt.label}`)),
+    /* ---- the line's own row. Editable only while nothing is split off it. */
+    body.appendChild(el('tr', { class: m.billable ? '' : 'nb' },
+      el('td', { class: 'wrap' }, m.clientName,
+        el('div', { class: 'muted', style: { fontSize: '11px' } },
+          `${m.line.platform || '—'} · ${lineLabel(m)}`),
+        creativeControl(m, creatives, spends, rerender)),
 
-        el('td', { class: 'num' },
-          el('input', {
-            class: 'cellinput', type: 'number', step: '0.01', value: cell || '',
-            placeholder: '0', 'aria-label': `Spend for ${tgt.label}`,
-            onchange: (e) => write({ spend_internal: Number(e.target.value) || 0 }),
+      el('td', { class: 'num' },
+        day.split
+          ? el('div', { class: 'derived', title: `Sum of ${day.parts.length} creative${day.parts.length === 1 ? '' : 's'} below — type into those, not here.` },
+            money2(day.total.spend, m.ccy))
+          : el('input', {
+            class: 'cellinput', type: 'number', step: '0.01',
+            value: day.loose.spend || '', placeholder: '0',
+            'aria-label': `Spend for ${lineLabel(m)}`,
+            onchange: (e) => write(null, { spend_internal: Number(e.target.value) || 0 }),
           }),
-          /* A finished flight still accepts entries — a late invoice is real
-             money — but it should never accept them *unremarked*. */
-          r?.finished
-            ? el('div', {
-              class: 'muted',
-              style: { fontSize: '11px', paddingRight: '7px', color: 'var(--warn)' },
-              title: m.campaign.end_date
-                ? `This flight ended ${dateAu(m.campaign.end_date)}. An entry here is a late actual — it lands in the flight's history, not in a running month.`
-                : 'This flight has ended. An entry here is a late actual.',
-            }, `${m.ccy} · flight ended`)
-            : el('div', { class: 'muted', style: { fontSize: '11px', paddingRight: '7px' } }, m.ccy)),
+        flightNote(m, r, day)),
 
-        /* (2) the two derived figures, back where they were asked for: this is
-           where you see the margin actually doing something. */
-        el('td', { class: 'num muted' }, money(cell / m.rate)),
-        el('td', { class: 'num' }, m.billable
-          ? el('b', {}, money(grossUp(cell / m.rate, m.margin)))
-          : el('span', { class: 'muted' }, 'n/a')),
+      /* (2) the two derived figures, back where they were asked for: this is
+         where you see the margin actually doing something. */
+      el('td', { class: 'num muted' }, money(day.total.spend / m.rate)),
+      el('td', { class: 'num' }, m.billable
+        ? el('b', {}, money(grossUp(day.total.spend / m.rate, m.margin)))
+        : el('span', { class: 'muted' }, 'n/a')),
 
-        el('td', { class: 'num' }, el('input', {
-          class: 'cellinput', type: 'number', step: '1', value: impT || '',
-          'aria-label': 'Impressions',
-          onchange: (e) => write({ imp: Number(e.target.value) || null }),
-        })),
-        el('td', { class: 'num' }, el('input', {
-          class: 'cellinput', type: 'number', step: '1', value: clkT || '',
-          'aria-label': 'Clicks',
-          onchange: (e) => write({ clicks: Number(e.target.value) || null }),
-        })),
+      countCell(day.split, day.total.imp, 'Impressions', (v) => write(null, { imp: v })),
+      countCell(day.split, day.total.clicks, 'Clicks', (v) => write(null, { clicks: v })),
 
-        /* --- running position across the whole flight --- */
-        el('td', { class: 'num' }, r ? money(r.spent) : '—',
-          r ? el('div', { class: 'muted', style: { fontSize: '11px' } }, `of ${money(r.total)}`) : null),
-        el('td', { class: 'num muted' }, r ? money(r.due) : '—'),
-        el('td', { class: 'num' }, r ? varianceCell(r) : '—'),
-        el('td', { class: 'num' }, r && !r.finished
-          ? el('div', {}, el('b', {}, money(r.suggestedDaily)),
-            el('div', { class: 'muted', style: { fontSize: '11px' } },
-              `${r.daysLeft} day${r.daysLeft === 1 ? '' : 's'} left`))
-          : el('span', { class: 'muted' }, '—')),
-        el('td', { class: 'wrap prose' }, advice
-          ? el('span', { class: 'advice ' + (advice.kind === 'ok' ? 'good' : advice.kind) }, advice.text)
-          : el('span', { class: 'muted' }, 'no flight dates')),
+      /* --- running position across the whole flight --- */
+      el('td', { class: 'num' }, r ? money(r.spent) : '—',
+        r ? el('div', { class: 'muted', style: { fontSize: '11px' } }, `of ${money(r.total)}`) : null),
+      el('td', { class: 'num muted' }, r ? money(r.due) : '—'),
+      el('td', { class: 'num' }, r ? varianceCell(r) : '—'),
+      el('td', { class: 'num' }, r && !r.finished
+        ? el('div', {}, el('b', {}, money(r.suggestedDaily)),
+          el('div', { class: 'muted', style: { fontSize: '11px' } },
+            `${r.daysLeft} day${r.daysLeft === 1 ? '' : 's'} left`))
+        : el('span', { class: 'muted' }, '—')),
+      el('td', { class: 'wrap prose' }, advice
+        ? el('span', { class: 'advice ' + (advice.kind === 'ok' ? 'good' : advice.kind) }, advice.text)
+        : el('span', { class: 'muted' }, 'no flight dates')),
 
-        el('td', { class: 'num' }, m.billable
-          ? el('span', {
-            class: 'tag' + (m.margin > 0 ? '' : ' crit'),
-            title: m.margin > 0
-              ? `Client = internal ÷ FX ÷ (1 − ${(m.margin * 100).toFixed(1)}%)`
-              : 'No margin on this line — set it in the line drawer.',
-          }, m.margin > 0 ? pct(m.margin, 1) : 'not set')
-          : el('span', { class: 'muted' }, '—'))));
+      el('td', { class: 'num' }, m.billable
+        ? el('span', {
+          class: 'tag' + (m.margin > 0 ? '' : ' crit'),
+          title: m.margin > 0
+            ? `Client = internal ÷ FX ÷ (1 − ${(m.margin * 100).toFixed(1)}%)`
+            : 'No margin on this line — set it in the line drawer.',
+        }, m.margin > 0 ? pct(m.margin, 1) : 'not set')
+        : el('span', { class: 'muted' }, '—'))));
+
+    /* ---- one row per creative, and one for anything attributed to none. */
+    if (!day.split) continue;
+    for (const p of day.parts) {
+      body.appendChild(creativeRow(m, p.creative.name || 'Creative', p, {
+        onSpend: (v) => write(p.creative.id, { spend_internal: v }),
+        onImp: (v) => write(p.creative.id, { imp: v }),
+        onClicks: (v) => write(p.creative.id, { clicks: v }),
+      }));
+    }
+    if (day.loose.spend || day.loose.imp || day.loose.clicks) {
+      body.appendChild(creativeRow(m, 'Not attributed to a creative', day.loose, {
+        readonly: true,
+        note: 'Typed before this line was split. It still counts toward the line total — '
+          + 'move it onto a creative from the line drawer if it belongs to one.',
+      }));
     }
   }
 
@@ -229,12 +231,132 @@ function varianceCell(r) {
     `${behind ? '−' : '+'}${money(Math.abs(r.variance))}`);
 }
 
-/** A line with creatives is entered per creative; otherwise at line level. */
-function spendTargets(m) {
-  const crs = where('creative', (c) => c.line_id === m.line.id);
-  const label = m.line.placement || m.line.supplier || m.line.objective || 'Line';
-  if (!crs.length) return [{ creativeId: null, label }];
-  return crs.map((c) => ({ creativeId: c.id, label: c.name || 'Creative' }));
+const lineLabel = (m) =>
+  m.line.placement || m.line.supplier || m.line.objective || 'Line';
+
+/* ------------------------------------------------------- creative rows */
+
+/**
+ * A creative's own row: indented under its line, and the only place its
+ * numbers can be typed. The pacing columns stay empty here on purpose —
+ * pacing is a property of the line, and repeating one line's position across
+ * three creative rows reads as three different positions.
+ */
+function creativeRow(m, label, figures, opts = {}) {
+  const { readonly, note, onSpend, onImp, onClicks } = opts;
+  /* Built fresh each time rather than cloned — el() is the app's own node
+     factory and cloneNode is not part of that contract. */
+  const dim = () => el('td', { class: 'num muted' }, '');
+
+  return el('tr', { class: 'crrow' + (m.billable ? '' : ' nb') },
+    el('td', { class: 'wrap' },
+      el('span', { class: 'crname' }, label),
+      note ? el('div', { class: 'muted', style: { fontSize: '11px', color: 'var(--warn)' } }, note) : null),
+
+    el('td', { class: 'num' },
+      readonly
+        ? el('div', { class: 'derived' }, money2(figures.spend, m.ccy))
+        : el('input', {
+          class: 'cellinput', type: 'number', step: '0.01',
+          value: figures.spend || '', placeholder: '0',
+          'aria-label': `Spend for ${label}`,
+          onchange: (e) => onSpend(Number(e.target.value) || 0),
+        })),
+
+    el('td', { class: 'num muted' }, money(figures.spend / m.rate)),
+    el('td', { class: 'num muted' }, m.billable
+      ? money(grossUp(figures.spend / m.rate, m.margin)) : 'n/a'),
+
+    countCell(readonly, figures.imp, 'Impressions', onImp),
+    countCell(readonly, figures.clicks, 'Clicks', onClicks),
+
+    dim(), dim(), dim(), dim(),
+    el('td', { class: 'wrap prose muted' }, ''),
+    dim());
+}
+
+/** Impressions / clicks: an input, or the derived sum when the row is a total. */
+function countCell(derived, value, label, onChange) {
+  if (derived) {
+    return el('td', { class: 'num' },
+      el('div', { class: 'derived' }, value ? int(value) : '—'));
+  }
+  return el('td', { class: 'num' }, el('input', {
+    class: 'cellinput', type: 'number', step: '1', value: value || '',
+    'aria-label': label,
+    onchange: (e) => onChange(Number(e.target.value) || null),
+  }));
+}
+
+/** The currency caption under the spend cell, plus the finished-flight note. */
+function flightNote(m, r, day) {
+  if (day.split) {
+    return el('div', { class: 'muted', style: { fontSize: '11px', paddingRight: '7px' } },
+      `${m.ccy} · ${day.parts.length} creative${day.parts.length === 1 ? '' : 's'}`);
+  }
+  /* A finished flight still accepts entries — a late invoice is real money —
+     but it should never accept them *unremarked*. */
+  if (r?.finished) {
+    return el('div', {
+      class: 'muted',
+      style: { fontSize: '11px', paddingRight: '7px', color: 'var(--warn)' },
+      title: m.campaign.end_date
+        ? `This flight ended ${dateAu(m.campaign.end_date)}. An entry here is a late actual — it lands in the flight's history, not in a running month.`
+        : 'This flight has ended. An entry here is a late actual.',
+    }, `${m.ccy} · flight ended`);
+  }
+  return el('div', { class: 'muted', style: { fontSize: '11px', paddingRight: '7px' } }, m.ccy);
+}
+
+/**
+ * The opt-in: split a line into creatives, or add another one.
+ *
+ * Splitting is offered, never imposed — a line with no creatives is tracked
+ * whole, which is what most lines want. But the moment one exists, the line's
+ * own figure stops being typeable and starts being the sum, so the first split
+ * has to deal honestly with money that was already entered at line level.
+ */
+function creativeControl(m, creatives, spends, rerender) {
+  const add = (name, adopt) => {
+    const id = newId('cr');
+    put('creative', { id, line_id: m.line.id, name, live_from: '', status: 'Live' });
+    if (adopt) {
+      for (const s of spends.filter((x) => !x.creative_id)) {
+        put('spend', { ...s, creative_id: id });
+      }
+    }
+    rerender();
+  };
+
+  if (!creatives.length) {
+    const loose = looseSpendTotal(creatives, spends);
+    return el('button', {
+      class: 'btn ghost sm splitbtn',
+      title: 'Track this line as separate creatives. The line total becomes the sum of them.',
+      onclick: () => {
+        const name = (prompt('Name of the first creative on this line:', 'Creative A') || '').trim();
+        if (!name) return;
+        /* Money already typed against the line belongs somewhere. Asking is
+           the only honest option: silently adopting it would rewrite history,
+           silently stranding it would leave a total nobody can explain. */
+        const adopt = loose > 0.005
+          ? confirm(`This line already has ${money2(loose, m.ccy)} of spend entered before any creative existed.\n\n`
+            + `OK — move it onto “${name}”.\n`
+            + 'Cancel — leave it unattributed. It still counts toward the line total and stays visible as its own row.')
+          : false;
+        add(name, adopt);
+      },
+    }, '+ Split by creative');
+  }
+
+  return el('button', {
+    class: 'btn ghost sm splitbtn',
+    title: 'Add another creative to this line',
+    onclick: () => {
+      const name = (prompt('Name of the new creative:', `Creative ${String.fromCharCode(65 + creatives.length)}`) || '').trim();
+      if (name) add(name, false);
+    },
+  }, '+ Creative');
 }
 
 
