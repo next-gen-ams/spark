@@ -15,6 +15,7 @@
 import { el, money, money2, int, pct, monthLabel, dateAu, toast } from './dom.js';
 import { put, remove, where, byId, newId, fxMap } from './store.js';
 import { dialog, closeDialog, textField, choiceField, errorLine } from './modal.js';
+import { imageField } from './paste-image.js';
 import { monthBounds, grossUp, repace, repaceAdvice, todayIso, daySplit, looseSpendTotal, kpiValue, spendForSide } from './calc.js';
 import { kpiDefs, addKpi, removeKpi, PRESETS, hasPreset, companionsFor, kpiFormula, formatKpi } from './kpis.js';
 import { resizable, forgetWidths } from './resizable.js';
@@ -459,9 +460,9 @@ function flightNote(m, r, day) {
  * has to deal honestly with money that was already entered at line level.
  */
 function creativeControl(m, creatives, spends, date, rerender) {
-  const create = (name) => {
+  const create = (fields) => {
     const id = newId('cr');
-    put('creative', { id, line_id: m.line.id, name, live_from: '', status: 'Live' });
+    put('creative', { id, line_id: m.line.id, status: 'Live', live_from: '', ...fields });
     return id;
   };
 
@@ -470,7 +471,7 @@ function creativeControl(m, creatives, spends, date, rerender) {
     return el('button', {
       class: 'btn chip', title: 'Add another creative to this line',
       onclick: () => nameDialog('Add a creative', `Creative ${String.fromCharCode(65 + creatives.length)}`,
-        (name) => { create(name); rerender(); }),
+        (fields) => { create(fields); rerender(); }),
     }, '+ Creative');
   }
 
@@ -488,8 +489,8 @@ function creativeControl(m, creatives, spends, date, rerender) {
   return el('button', {
     class: 'btn chip',
     title: 'Track this line as separate creatives. The line total becomes the sum of them.',
-    onclick: () => splitDialog(m, { looseTotal, loose, thisMonth, thisMonthTotal, date }, (name, choice) => {
-      const id = create(name);
+    onclick: () => splitDialog(m, { looseTotal, loose, thisMonth, thisMonthTotal, date }, (fields, choice) => {
+      const id = create(fields);
       if (choice === 'adopt') {
         for (const s of loose) put('spend', { ...s, creative_id: id });
       } else if (choice === 'clear') {
@@ -503,29 +504,59 @@ function creativeControl(m, creatives, spends, date, rerender) {
   }, '+ Split by creative');
 }
 
-/** Name-only dialog, for every creative after the first. */
-function nameDialog(title, suggested, done) {
-  const err = errorLine();
+/**
+ * Naming a creative, plus the two things that make it recognisable months
+ * later: when it went live, and what it looked like. Both optional — an
+ * unfilled one simply never reaches the report, since empty columns are
+ * pruned from exports.
+ */
+function creativeFields(suggested) {
   const name = textField('Creative name', {
     value: suggested, placeholder: 'e.g. H5 banner – Parents',
-    onEnter: () => submit(),
   });
-  let box;
+  const from = el('input', { type: 'date' });
+  const live = el('div', { class: 'field' },
+    el('label', {}, 'Live from — optional'), from,
+    el('div', { class: 'hint' }, 'The day this creative started running. Lets a report show one creative handing over to the next.'));
+  live.value = () => from.value;
+
+  const url = textField('Preview link — optional', {
+    placeholder: 'https://…',
+    hint: 'Where the artwork lives, if it lives somewhere.',
+  });
+  const shot = imageField('Screenshot — optional', {
+    hint: 'Click the box then ⌘V. Shrunk to 480px wide before it is stored, so it stays a few tens of KB and rides along in the Excel export.',
+  });
+  return { name, live, url, shot,
+    nodes: [name, live, url, shot],
+    values: () => ({
+      name: name.value(),
+      live_from: live.value() || '',
+      preview_url: url.value(),
+      preview_image: shot.value() || null,
+    }) };
+}
+
+/** Dialog for every creative after the first. */
+function nameDialog(title, suggested, done) {
+  const err = errorLine();
+  const f = creativeFields(suggested);
   const submit = () => {
-    if (!name.value()) { err.say('Give it a name so it can be told apart on the report.'); return false; }
-    done(name.value());
+    if (!f.name.value()) { err.say('Give it a name so it can be told apart on the report.'); return false; }
+    done(f.values());
     return true;
   };
-  box = dialog({
+  const box = dialog({
     title,
     sub: 'Creatives are entered separately; the line’s own figure becomes their sum.',
-    content: [name, err],
+    width: '520px',
+    content: [...f.nodes, err],
     actions: [
       { label: 'Cancel' },
       { label: 'Add creative', primary: true, onClick: () => (submit() ? undefined : false) },
     ],
   });
-  setTimeout(() => name.focus(), 30);
+  setTimeout(() => f.name.focus(), 30);
   return box;
 }
 
@@ -533,9 +564,8 @@ function nameDialog(title, suggested, done) {
 function splitDialog(m, ctx, done) {
   const { looseTotal, loose, thisMonth, thisMonthTotal, date } = ctx;
   const err = errorLine();
-  const name = textField('Name of the first creative', {
-    value: 'Creative A', placeholder: 'e.g. H5 banner – Parents',
-  });
+  const f = creativeFields('Creative A');
+  const name = f.name;
 
   const has = looseTotal > 0.005;
   const choices = [
@@ -567,7 +597,7 @@ function splitDialog(m, ctx, done) {
     title: 'Split this line by creative',
     sub: 'From here, the creatives are the only editable figures — the line’s own number becomes their sum.',
     width: '520px',
-    content: has ? [name, choice, err] : [name, err],
+    content: has ? [...f.nodes, choice, err] : [...f.nodes, err],
     actions: [
       { label: 'Cancel' },
       {
@@ -575,7 +605,7 @@ function splitDialog(m, ctx, done) {
         primary: true,
         onClick: () => {
           if (!name.value()) { err.say('Give the creative a name first.'); return false; }
-          done(name.value(), has ? choice.value() : 'keep');
+          done(f.values(), has ? choice.value() : 'keep');
           return undefined;
         },
       },

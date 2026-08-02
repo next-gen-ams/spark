@@ -2,7 +2,9 @@
    number was derived, and manage its creatives. */
 
 import { el, fill, money, money2, int, pct, dateAu, monthLabel, toast, selectOrNew } from './dom.js';
-import { put, remove, where, newId, vocab, addVocab, fxMap } from './store.js';
+import { put, remove, where, newId, vocab, addVocab, fxMap, loadCreativeImages } from './store.js';
+import { imageField } from './paste-image.js';
+import { dialog } from './modal.js';
 import { grossUp, num, perAud, effectiveStatus } from './calc.js';
 
 let host = null;
@@ -256,6 +258,58 @@ function refreshDrawer() { if (reopen) reopen(); }
 
 /* ------------------------------------------------------------- creatives */
 
+/**
+ * The thumbnail cell: shows what is stored, or offers to take a paste.
+ *
+ * Images are not part of the boot read — they are fetched the first time a
+ * drawer wants them, so opening the dashboard never pays for pictures nobody
+ * asked to see. `undefined` means "not fetched yet", `null` means "fetched,
+ * there is none"; the two must stay distinguishable or this re-fetches
+ * forever.
+ */
+function thumbCell(c, refresh) {
+  if (c.preview_image === undefined) {
+    loadCreativeImages([c.id]).then(refresh);
+    return el('span', { class: 'muted', style: { fontSize: '11px' } }, 'loading…');
+  }
+  if (c.preview_image) {
+    return el('div', { class: 'shotprev', style: { maxWidth: '120px' } },
+      el('img', { src: c.preview_image, alt: `${c.name || 'Creative'} preview` }),
+      el('button', {
+        class: 'btn ghost sm', title: 'Remove this screenshot',
+        onclick: () => { put('creative', { id: c.id, preview_image: null }); refresh(); },
+      }, '✕'));
+  }
+  return el('button', {
+    class: 'btn chip', style: { marginTop: 0 },
+    title: 'Paste a screenshot of this creative',
+    onclick: () => pasteDialog(c, refresh),
+  }, '+ Paste');
+}
+
+function pasteDialog(c, refresh) {
+  const shot = imageField('Screenshot', {
+    hint: 'Click the box then ⌘V. Shrunk to 480px wide before storing.',
+  });
+  dialog({
+    title: `Screenshot — ${c.name || 'creative'}`,
+    sub: 'Rides along in the Creative breakdown sheet of the Excel export.',
+    content: [shot],
+    actions: [
+      { label: 'Cancel' },
+      {
+        label: 'Save', primary: true,
+        onClick: () => {
+          if (!shot.value()) return false;
+          put('creative', { id: c.id, preview_image: shot.value() });
+          refresh();
+          return undefined;
+        },
+      },
+    ],
+  });
+}
+
 function creatives(line, refresh) {
   const list = where('creative', (c) => c.line_id === line.id);
   const spend = where('spend', (s) => s.line_id === line.id);
@@ -277,6 +331,7 @@ function creatives(line, refresh) {
       value: c.preview_url || '',
       onchange: (e) => put('creative', { id: c.id, preview_url: e.target.value }),
     })),
+    el('td', {}, thumbCell(c, refresh)),
     el('td', {}, el('button', {
       class: 'btn ghost sm', title: 'Remove creative',
       onclick: () => {
@@ -294,7 +349,8 @@ function creatives(line, refresh) {
       ? el('div', { class: 'tablewrap' }, el('table', { class: 'data' },
         el('thead', {}, el('tr', {},
           el('th', {}, 'Creative'), el('th', {}, 'Live from'),
-          el('th', { class: 'num' }, 'Spend'), el('th', {}, 'Preview'), el('th', {}))),
+          el('th', { class: 'num' }, 'Spend'), el('th', {}, 'Preview'),
+          el('th', {}, 'Screenshot'), el('th', {}))),
         body))
       : el('div', { class: 'hint' }, 'No creatives on this line. Line-level spend is tracked either way — add creatives only when you want the breakdown.'),
     el('button', {

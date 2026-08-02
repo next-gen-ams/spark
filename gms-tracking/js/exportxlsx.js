@@ -14,7 +14,7 @@
  */
 
 import { download, toast, monthLabel, money } from './dom.js';
-import { all, where, byId } from './store.js';
+import { all, where, byId, loadCreativeImages } from './store.js';
 import { totals, byPlatform, num, effectiveStatus, looseSpendTotal, kpiValue } from './calc.js';
 import { kpiDefs } from './kpis.js';
 import { fileName } from './view-export.js';
@@ -103,7 +103,9 @@ function writeRows(ws, cols, data) {
     const banded = (r - 6) % 2 === 1;
     cols.forEach((c, i) => {
       const cell = row.getCell(i + 1);
-      cell.value = rec[c.k] ?? null;
+      /* An image column's value is a data URL — the picture is anchored over
+         the cell afterwards; printing the URL as text would be gibberish. */
+      cell.value = c.image ? null : (rec[c.k] ?? null);
       if (c.fmt) cell.numFmt = c.fmt;
       cell.font = { size: 10, color: { argb: CHARCOAL } };
       cell.alignment = { vertical: 'top', wrapText: (c.w || 14) > 26 };
@@ -190,6 +192,30 @@ function kpiCells(defs, t, { ratesToo = true } = {}) {
 function pruneEmpty(cols, data) {
   return cols.filter((c) => !c.opt
     || data.some((r) => r[c.k] !== null && r[c.k] !== undefined && r[c.k] !== ''));
+}
+
+/**
+ * Anchor the stored thumbnails over their cells and give those rows room.
+ *
+ * Excel images float above the grid rather than living in a cell, so the row
+ * has to be made tall enough by hand or the picture spills over its
+ * neighbours. Sized to fit the column at its natural aspect ratio.
+ */
+function placeThumbnails(ws, wb, cols, data) {
+  const ci = cols.findIndex((c) => c.image);
+  if (ci < 0) return;
+  const colWidthPx = (cols[ci].w || 26) * 7;          // Excel width unit ≈ 7px
+  data.forEach((rec, i) => {
+    const url = rec[cols[ci].k];
+    if (!url) return;
+    const m = /^data:image\/(png|jpeg|jpg);base64,(.+)$/i.exec(url);
+    if (!m) return;
+    const id = wb.addImage({ base64: m[2], extension: m[1] === 'jpg' ? 'jpeg' : m[1] });
+    const w = colWidthPx - 8;
+    const h = Math.round(w * (rec.__shotAr || 0.56));  // 16:9-ish unless told
+    ws.getRow(6 + i).height = Math.max(ws.getRow(6 + i).height || 0, h * 0.78);
+    ws.addImage(id, { tl: { col: ci + 0.06, row: 6 + i - 1 + 0.06 }, ext: { width: w, height: h } });
+  });
 }
 
 /** Sum the custom counters across a set of metric rows. */
@@ -285,6 +311,7 @@ const COLS = {
     { h: 'Clicks', k: 'clk', w: 11, fmt: INTF },
     { h: 'CTR', k: 'ctr', w: 10, fmt: PCT1 },
     { h: 'Preview', k: 'url', w: 36, opt: true },
+    { h: 'Screenshot', k: 'shot', w: 26, opt: true, image: true },
   ],
   spendlog: [
     { h: 'Date', k: 'date', w: 12 },
@@ -323,6 +350,15 @@ export async function exportWorkbook(cfg) {
     : (cfg.includeNonBillable ? cfg.rows : cfg.rows.filter((m) => m.billable));
 
   if (!rows.length) { toast('Nothing to export in that selection', 'bad'); return; }
+
+  /* Thumbnails are not part of the boot read, so fetch the ones this export
+     will need before building the workbook — otherwise the Creative sheet
+     would quietly ship without pictures that do exist. */
+  if (cfg.sheets.creative) {
+    const ids = [...new Set(rows.flatMap((m) =>
+      where('creative', (c) => c.line_id === m.line.id).map((c) => c.id)))];
+    if (ids.length) await loadCreativeImages(ids);
+  }
 
   const wb = new window.ExcelJS.Workbook();
   wb.creator = isClient ? 'Global Media Solutions' : 'GMS Digital — Tracking Dashboard';
@@ -491,6 +527,11 @@ function sheetCreative(wb, rows, { isClient, title, subtitle }) {
         imp: imp || null, clk: clk || null,
         ctr: imp > 0 ? clk / imp : null,
         url: c.preview_url || '',
+        /* Marker only — the picture is placed after the rows are written,
+           because a floating image is anchored to a cell, not written into
+           one. Kept as a value so pruneEmpty can drop the whole column when
+           no creative has a screenshot. */
+        shot: c.preview_image || '',
         ...kpiCells(defs, { spend: spendSide, imp, clicks: clk, extra }),
       });
     }
@@ -500,7 +541,9 @@ function sheetCreative(wb, rows, { isClient, title, subtitle }) {
   const base = isClient ? COLS.creative.filter((c) => c.k !== 'client') : COLS.creative;
   const cols = pruneEmpty([...base, ...kpiColumns(defs, { base })], data);
   layout(ws, { title: `${title} — Creative`, subtitle, cols });
-  finish(ws, writeRows(ws, cols, data), cols.length);
+  const end = writeRows(ws, cols, data);
+  placeThumbnails(ws, wb, cols, data);
+  finish(ws, end, cols.length);
 }
 
 function sheetSpendLog(wb, rows, { title, subtitle }) {

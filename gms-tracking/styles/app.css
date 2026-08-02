@@ -77,6 +77,28 @@ body { padding-top: 6px; }
 .dialogbox .field { margin-bottom: 16px; }
 .derr { font-size: 12px; color: var(--crit); min-height: 16px; }
 
+/* Paste-a-screenshot target. Focusable because ⌘V needs somewhere to land. */
+.pastezone {
+  border: 1.5px dashed var(--line-2); border-radius: var(--radius-s);
+  background: var(--surface-2); min-height: 78px; padding: 10px;
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer; outline: none; text-align: center;
+}
+.pastezone:hover, .pastezone.over { border-color: var(--orange); background: var(--orange-soft); }
+.pastezone:focus-visible { border-color: var(--blue); box-shadow: 0 0 0 3px var(--blue-soft); }
+.pastehint b { display: block; font-size: 12.5px; color: var(--ink-2); }
+.pastehint span { display: block; font-size: 11px; color: var(--ink-3); margin-top: 3px; }
+.shotprev { position: relative; display: inline-block; max-width: 100%; }
+.shotprev img {
+  display: block; max-width: 100%; max-height: 160px; border-radius: var(--radius-xs);
+  border: 1px solid var(--line);
+}
+.shotprev button {
+  position: absolute; top: 4px; right: 4px; background: var(--surface);
+  border: 1px solid var(--line); border-radius: 50%; width: 22px; height: 22px;
+  padding: 0; line-height: 1; box-shadow: var(--shadow);
+}
+
 /* Choices whose options differ in consequence, not in degree — each carries
    the number at stake, so the decision cannot be made by button position. */
 .choices { display: flex; flex-direction: column; gap: 8px; }

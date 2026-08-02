@@ -320,15 +320,54 @@ export async function signOut() {
    local copy with the truncated snapshot. Every table is paged to the end. */
 const PAGE = 1000;
 
+/* Columns deliberately left out of the boot read.
+ *
+ * creative.preview_image holds a pasted screenshot. Even downscaled it is tens
+ * of kilobytes, and `select('*')` would drag every image down on every page
+ * load for a thumbnail almost nobody is looking at right then. It is fetched
+ * on demand instead — when a drawer opens, or when an export needs it. */
+const SELECT_COLS = {
+  creative: 'id,line_id,name,live_from,live_to,preview_url,status,note,updated_at',
+};
+
 async function fetchAll(t) {
   const rows = [];
   for (let from = 0; ; from += PAGE) {
-    const { data, error } = await sb.from(t).select('*').range(from, from + PAGE - 1);
+    const { data, error } = await sb.from(t).select(SELECT_COLS[t] || '*')
+      .range(from, from + PAGE - 1);
     if (error) throw error;
     rows.push(...(data || []));
     if (!data || data.length < PAGE) break;
   }
   return rows;
+}
+
+/**
+ * Pull the pasted thumbnails for a set of creatives and merge them into the
+ * local rows. Safe to call repeatedly: anything already loaded is skipped, and
+ * in local mode the images are in the row already so it is a no-op.
+ * @param {string[]} ids
+ */
+export async function loadCreativeImages(ids) {
+  const want = [...new Set(ids)].filter((id) => {
+    const c = byId('creative', id);
+    return c && c.preview_image === undefined;
+  });
+  if (!sb || !want.length) return;
+  for (let i = 0; i < want.length; i += 50) {
+    const chunk = want.slice(i, i + 50);
+    const { data, error } = await sb.from('creative')
+      .select('id,preview_image').in('id', chunk);
+    if (error) { console.warn('[store] thumbnails unavailable', error); return; }
+    for (const row of data || []) {
+      const c = byId('creative', row.id);
+      /* null, not undefined — "asked and there is none" must be
+         distinguishable from "never asked", or every render re-fetches. */
+      if (c) c.preview_image = row.preview_image ?? null;
+    }
+  }
+  saveLocal();
+  emit();
 }
 
 async function loadRemote() {
