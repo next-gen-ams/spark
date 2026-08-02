@@ -428,7 +428,7 @@ export function repaceAdvice(r) {
 
   if (r.finished) {
     if (r.variance < -1) {
-      return { kind: 'crit', text: `Finished with ${$(r.variance)} unspent — that budget was never placed.` };
+      return { kind: 'crit', text: `Finished with ${$(r.variance)} unspent. That budget was never placed.` };
     }
     /* Overspend on a finished flight was falling through to "Finished on
        budget" — the one state where the commercial call (pro-rata vs capped)
@@ -436,7 +436,7 @@ export function repaceAdvice(r) {
     if (r.variance > 1) {
       return {
         kind: r.variance / Math.max(r.total, 1) > 0.05 ? 'crit' : 'warn',
-        text: `Finished ${$(r.variance)} over budget — open the line for the capped vs pro-rata client figures.`,
+        text: `Finished ${$(r.variance)} over budget. Open the line for the capped vs pro-rata client figures.`,
       };
     }
     return { kind: 'ok', text: 'Finished on budget.' };
@@ -445,12 +445,12 @@ export function repaceAdvice(r) {
   if (r.variance < 0) {
     return {
       kind: Math.abs(off) > 0.25 ? 'crit' : 'warn',
-      text: `${$(r.variance)} behind — lift to ${$(r.suggestedDaily)}/day over the last ${days(r.daysLeft)} to land on budget.`,
+      text: `${$(r.variance)} behind. Lift to ${$(r.suggestedDaily)}/day over the last ${days(r.daysLeft)} to land on budget.`,
     };
   }
   return {
     kind: off > 0.25 ? 'crit' : 'warn',
-    text: `${$(r.variance)} ahead — ease to ${$(r.suggestedDaily)}/day over the last ${days(r.daysLeft)}.`,
+    text: `${$(r.variance)} ahead. Ease to ${$(r.suggestedDaily)}/day over the last ${days(r.daysLeft)}.`,
   };
 }
 

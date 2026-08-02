@@ -137,7 +137,7 @@ export function imageField(label, { value = '', hint, onChange } = {}) {
 
   const zone = el('div', {
     class: 'pastezone', tabindex: '0',
-    role: 'button', 'aria-label': `${label} — paste or choose an image`,
+    role: 'button', 'aria-label': `${label}. Paste or choose an image.`,
     onclick: () => { if (!current) file.click(); },
     onpaste: (e) => {
       const f = imageFromClipboard(e);

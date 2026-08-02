@@ -282,7 +282,7 @@ function saveLocal() {
   try {
     localStorage.setItem(LS_KEY, JSON.stringify(db));
   } catch (e) {
-    state.error = 'Local storage is full — export a backup and clear old campaigns.';
+    state.error = 'Local storage is full. Export a backup and clear old campaigns.';
     console.warn(e);
   }
 }

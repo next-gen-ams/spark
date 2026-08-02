@@ -528,7 +528,7 @@ function parseSheet(ws, headerRow, fileName, { memory = {}, overrides = {} } = {
     }
   }
   const skipped = raw.filter((x) => x.kind === 'rollup').length;
-  if (skipped) warnings.push(`${skipped} Subtotal / Total row${skipped > 1 ? 's' : ''} skipped — they restate money already on the lines above.`);
+  if (skipped) warnings.push(`${skipped} Subtotal / Total row${skipped > 1 ? 's' : ''} skipped: they restate money already on the lines above.`);
 
   /* Does the monthly split add back up to the line totals? If it doesn't, the
      column groups were read wrong and the monthly budgets can't be trusted. */
@@ -599,7 +599,7 @@ function assignRuns(runs, raw, warnings) {
   if (roles.every((r) => !r) && runs.length) {
     const order = runs.length >= 3 ? ['units', 'media', 'client'] : ['media', 'client'];
     order.forEach((r, i) => { if (i < runs.length) roles[i] = r; });
-    warnings.push('Monthly booking columns could not be verified against the line totals — assigned by position. Check the monthly budgets after import.');
+    warnings.push('Monthly booking columns could not be verified against the line totals, so they were assigned by position. Check the monthly budgets after import.');
   }
   const unresolved = roles.filter((r) => !r).length;
   if (unresolved) warnings.push(`${unresolved} monthly column group ignored (did not match units, media cost or client cost).`);

@@ -8,7 +8,7 @@
 
 import { el, money, pct, monthLabel, dateAu, tag } from './dom.js';
 import { PLATFORM_COLOR } from './config.js';
-import { all, where, fxMap } from './store.js';
+import { all, where, byId, fxMap } from './store.js';
 import { lineMetrics, totals, todayIso, num, effectiveStatus } from './calc.js';
 import { openLine } from './drawer.js';
 import { resizable } from './resizable.js';
@@ -121,6 +121,10 @@ function buildCampaign(campaign, { fx, today, state }) {
     .map((l) => {
       const m = lineMetrics(l, campaign, monthsBy.get(l.id) || [], spendBy.get(l.id) || [],
         { fx, ym: null, today });
+      /* Both names, not just the campaign. The drawer header prints
+         `clientName — campaignName`, so a model missing one renders the word
+         "undefined" to the user. */
+      m.clientName = byId('client', campaign.client_id)?.name || '—';
       m.campaignName = campaign.name || '—';
       return m;
     });

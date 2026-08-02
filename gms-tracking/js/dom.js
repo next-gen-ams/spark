@@ -60,6 +60,19 @@ export const pct = (v, dp = 0) =>
 export const rate = (v, ccy = 'AUD') =>
   (v == null || !Number.isFinite(Number(v)) ? '—' : money(v, ccy, Number(v) < 10 ? 2 : 2));
 
+/**
+ * A value fit to show, or ''.
+ *
+ * Media plans write "-" or "N/A" in a cell that is simply empty. Those are
+ * truthy strings, so every `a || b || 'fallback'` chain picked them over the
+ * next candidate and they reached the screen verbatim — a scope dropdown
+ * reading "This line only — -", a row labelled "— · Campaign Implement".
+ */
+export const shown = (v) => {
+  const t = String(v ?? '').trim();
+  return /^(-+|–|—|n\.?\s*a\.?|n\/a|none|null|undefined)$/i.test(t) ? '' : t;
+};
+
 export const dateAu = (isoStr) => {
   if (!isoStr) return '—';
   const [y, m, d] = isoStr.split('-');

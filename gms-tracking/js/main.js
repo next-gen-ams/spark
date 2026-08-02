@@ -238,7 +238,7 @@ function topbar() {
       }, 'Internal'),
       el('button', {
         class: 'client', 'aria-pressed': state.view === 'client',
-        title: 'What the client is billed — internal spend grossed up at the plan margin',
+        title: 'What the client is billed: internal spend grossed up at the plan margin',
         onclick: () => { state.view = 'client'; render(); },
       }, 'Client-facing')),
 
@@ -370,7 +370,7 @@ function confidBand() {
   if (APP.confidential && state.view === 'internal') {
     bands.push(el('div', { class: 'confid' },
       el('strong', {}, 'INTERNAL'),
-      el('span', {}, 'This page shows margin and internal media cost. Do not share the link or a screenshot with a client — use Export ▸ Client report instead.')));
+      el('span', {}, 'This page shows margin and internal media cost. Do not share the link or a screenshot with a client. Use Export ▸ Client report instead.')));
   }
 
   if (staleNotice) {
@@ -383,7 +383,7 @@ function confidBand() {
   if (store.isDemo()) {
     bands.push(el('div', { class: 'confid demo' },
       el('strong', {}, 'SAMPLE DATA'),
-      el('span', {}, 'Anonymised sample built from three real media plans — client names, IO numbers and every margin have been replaced, and spend is invented. Structure and arithmetic are genuine; the numbers are not. Clear it before entering anything real.'),
+      el('span', {}, 'Anonymised sample built from three real media plans. Client names, IO numbers and every margin have been replaced, and spend is invented. Structure and arithmetic are genuine; the numbers are not. Clear it before entering anything real.'),
       el('button', {
         class: 'btn sm', style: { marginLeft: 'auto' },
         onclick: () => goTo('admin'),

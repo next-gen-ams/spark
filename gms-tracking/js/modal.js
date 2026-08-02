@@ -178,7 +178,7 @@ export function confirmDanger({ title, detail, confirmLabel, onConfirm, typeToCo
     content: [
       el('p', {}, detail),
       el('p', { class: 'hint' },
-        'This cannot be undone. The backup is the whole dashboard as one .json — '
+        'This cannot be undone. The backup is the whole dashboard as one .json; '
         + 'restore it from Settings ▸ Data.'),
       gate,
     ].filter(Boolean),

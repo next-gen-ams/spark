@@ -1,7 +1,7 @@
 /* Line drawer — edit a media-plan line, see exactly how its client-facing
    number was derived, and manage its creatives. */
 
-import { el, fill, money, money2, int, pct, monthLabel, toast, selectOrNew } from './dom.js';
+import { el, fill, money, money2, int, pct, monthLabel, toast, selectOrNew, shown } from './dom.js';
 import { put, where, newId, vocab, addVocab, fxMap, loadCreativeImages, deleteCascade, deleteCreative } from './store.js';
 import { imageField } from './paste-image.js';
 import { dialog, confirmDanger } from './modal.js';
@@ -35,9 +35,11 @@ export function openLine(m, rerender) {
   h.appendChild(el('aside', { class: 'drawer', role: 'dialog', 'aria-label': 'Line item' },
     el('header', {},
       el('div', { style: { flex: 1 } },
-        el('h3', {}, line.platform || 'Line item',
-          line.placement ? el('span', { class: 'muted' }, ' · ' + line.placement) : null),
-        el('p', {}, `${m.clientName} — ${m.campaignName}`,
+        el('h3', {}, shown(line.platform) || 'Line item',
+          shown(line.placement) ? el('span', { class: 'muted' }, ' · ' + shown(line.placement)) : null),
+        /* Defensive: a row model built outside model.js may not carry the
+           names. Better a thin header than the word "undefined". */
+        el('p', {}, [m.clientName, m.campaignName].filter(Boolean).join(' · ') || 'Line item',
           m.campaign.io_number ? ` · ${m.campaign.io_number}` : '')),
       el('button', { class: 'btn ghost', onclick: closeDrawer, 'aria-label': 'Close' }, '✕')),
 
@@ -66,7 +68,7 @@ export function openLine(m, rerender) {
         ].filter(Boolean);
         confirmDanger({
           title: 'Delete this line?',
-          detail: `${line.supplier || 'This line'} — ${line.placement || 'no placement'}`
+          detail: `${shown(line.supplier) || 'This line'} · ${shown(line.placement) || 'no placement recorded'}`
             + (also.length ? `. This also deletes ${also.join(' and ')}.` : '.'),
           confirmLabel: 'Delete line',
           onBackup: exportBackup,
@@ -109,7 +111,7 @@ function derivation(m) {
       m.overspend > 0.5
         ? el('div', { class: 'hint', style: { marginTop: '8px', color: 'var(--warn)' } },
           `This line has run ${money2(m.overspend)} past what it booked. A fixed-fee `
-          + `contract would cap it at ${money2(m.clientCapped)} — the difference is GMS's `
+          + `contract would cap it at ${money2(m.clientCapped)}; the difference is GMS's `
           + 'to absorb or to raise with the client.')
         : null,
       !m.billable
@@ -373,7 +375,7 @@ function creatives(line, refresh) {
           el('th', { class: 'num' }, 'Spend'), el('th', {}, 'Preview'),
           el('th', {}, 'Screenshot'), el('th', {}))),
         body))
-      : el('div', { class: 'hint' }, 'No creatives on this line. Line-level spend is tracked either way — add creatives only when you want the breakdown.'),
+      : el('div', { class: 'hint' }, 'No creatives on this line. Line-level spend is tracked either way; add creatives only when you want the breakdown.'),
     el('button', {
       class: 'btn sm', style: { marginTop: '8px' },
       onclick: () => {

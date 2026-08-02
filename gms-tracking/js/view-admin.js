@@ -125,7 +125,7 @@ function campaigns(rerender) {
     ended.length
       ? el('div', { class: 'body', style: { display: 'flex', gap: '10px', alignItems: 'center' } },
         el('span', { class: 'hint', style: { flex: 1 } },
-          `${ended.length} campaign${ended.length > 1 ? 's have' : ' has'} finished. Removing them keeps the dashboard to what is actually running — export a backup first if you want the history.`),
+          `${ended.length} campaign${ended.length > 1 ? 's have' : ' has'} finished. Removing them keeps the dashboard to what is actually running. Export a backup first if you want the history.`),
         el('button', {
           class: 'btn sm',
           onclick: () => confirmDanger({
@@ -271,7 +271,7 @@ function data(rerender) {
     },
   });
 
-  return panel('Data', 'Local backups. Keep one before any big import — this build stores data in your browser.',
+  return panel('Data', 'Local backups. Keep one before any big import. This build stores data in your browser.',
     el('div', { class: 'body', style: { display: 'flex', gap: '8px', flexWrap: 'wrap', alignItems: 'center' } },
       el('button', { class: 'btn', onclick: exportBackup }, 'Download backup (.json)'),
       el('label', { class: 'btn' }, 'Restore backup', file),
@@ -305,8 +305,8 @@ function data(rerender) {
        no such button; Coco asked for it back for the go-live reset, guarded.) */
     el('div', { class: 'body', style: { paddingTop: 0, display: 'flex', gap: '12px', alignItems: 'center' } },
       el('div', { class: 'hint', style: { flex: 1 } },
-        'Going live? Delete all data clears every client, campaign, line and spend row — here and, '
-        + 'when signed in, in the shared database — so real tracking starts from a clean sheet. '
+        'Going live? Delete all data clears every client, campaign, line and spend row, both '
+        + 'here and, when signed in, in the shared database, so real tracking starts clean. '
         + 'FX rates, dropdown lists and column mappings are kept.'),
       el('button', {
         class: 'btn sm',
@@ -315,7 +315,7 @@ function data(rerender) {
           confirmDanger({
             onBackup: exportBackup,
             title: 'Delete all data?',
-            detail: `${n.client} clients, ${n.campaign} campaigns, ${n.line} lines and ${n.spend} spend rows — everywhere this dashboard stores them. FX rates, dropdown lists and column mappings stay.`,
+            detail: `${n.client} clients, ${n.campaign} campaigns, ${n.line} lines and ${n.spend} spend rows, everywhere this dashboard stores them. FX rates, dropdown lists and column mappings stay.`,
             confirmLabel: 'Delete all data',
             typeToConfirm: 'DELETE',
             onConfirm: () => {

@@ -12,7 +12,7 @@
  * forward instead of quietly losing it at month end.
  */
 
-import { el, money, money2, int, pct, monthLabel, dateAu, toast } from './dom.js';
+import { el, money, money2, int, pct, monthLabel, dateAu, toast, shown } from './dom.js';
 import { put, remove, where, byId, newId, fxMap, loadCreativeImages } from './store.js';
 import { dialog, closeDialog, textField, choiceField, errorLine } from './modal.js';
 import { imageField } from './paste-image.js';
@@ -63,7 +63,7 @@ export function renderSpend(host, ctx) {
       }) : null,
       el('button', {
         class: 'btn chip', style: { marginTop: 0 },
-        title: 'Track another number — a typed counter like H5 clicks, or a computed rate like CTR',
+        title: 'Track another number: a typed counter like H5 clicks, or a computed rate like CTR',
         onclick: () => addColumnDialog(rerender),
       }, '+ Add column'),
       el('button', {
@@ -82,8 +82,8 @@ function segBtn(id, label, mode, state, rerender) {
 
 function modeBlurb(mode, state, date) {
   if (mode === 'today') {
-    return 'Type what each line spent today — it saves as you go, and the pacing on the right '
-      + 'recalculates against the whole flight, not just this month.';
+    return 'Type what each line spent today. It saves as you go, and the pacing on the right '
+      + 'recalculates across the whole flight, not only this month.';
   }
   return `Writing against ${dateAu(date)}. Use this to fill a day that was missed — `
     + 'monthly totals are worked out from the daily figures, never typed in as one number.';
@@ -142,13 +142,13 @@ function grid(rows, date, mode, state, rerender) {
     body.appendChild(el('tr', { class: m.billable ? '' : 'nb' },
       el('td', { class: 'wrap' }, m.clientName,
         el('div', { class: 'muted', style: { fontSize: '11px' } },
-          `${m.line.platform || '—'} · ${lineLabel(m)}`),
+          [shown(m.line.platform), lineLabel(m)].filter(Boolean).join(' · ')),
         creativeControl(m, creatives, spends, date, rerender),
         logControl(m, rerender)),
 
       el('td', { class: 'num' },
         day.split
-          ? el('div', { class: 'derived', title: `Sum of ${day.parts.length} creative${day.parts.length === 1 ? '' : 's'} below — type into those, not here.` },
+          ? el('div', { class: 'derived', title: `Sum of ${day.parts.length} creative${day.parts.length === 1 ? '' : 's'} below. Type into those, not here.` },
             money2(day.total.spend, m.ccy))
           : el('input', {
             class: 'cellinput', type: 'number', step: '0.01',
@@ -230,7 +230,7 @@ function grid(rows, date, mode, state, rerender) {
       ...counters.map((d) => el('th', { class: 'num gtyped', title: kpiFormula(d, defs) }, d.name)),
       el('th', { class: 'num gcalc', title: 'The same figure converted to AUD at this campaign’s rate' },
         'Internal AUD'),
-      el('th', { class: 'num gcalc', title: 'What the client is billed for it — internal ÷ (1 − margin)' },
+      el('th', { class: 'num gcalc', title: 'What the client is billed for it: internal ÷ (1 − margin)' },
         'Client AUD'),
       ...ratesK.map((d) => el('th', {
         class: 'num gcalc',
@@ -239,7 +239,7 @@ function grid(rows, date, mode, state, rerender) {
       el('th', { class: 'num', title: 'Total spent on this line across the whole flight' }, 'Spent to date'),
       el('th', { class: 'num', title: 'What the plan’s schedule says should have been spent by today' }, 'Should be'),
       el('th', { class: 'num', title: 'Spent minus scheduled. Negative means the money is still owed to the campaign.' }, 'Variance'),
-      el('th', { class: 'num', title: 'Everything not yet spent ÷ days left in the flight — carries an underspend forward' }, 'Run at'),
+      el('th', { class: 'num', title: 'Everything not yet spent ÷ days left in the flight. Carries an underspend forward.' }, 'Run at'),
       el('th', {}, 'What to do'),
       el('th', { class: 'num' }, 'Margin'))),
     /* Width memory is keyed by column count, so a saved layout from before a
@@ -282,7 +282,7 @@ function varianceCell(r) {
 }
 
 const lineLabel = (m) =>
-  m.line.placement || m.line.supplier || m.line.objective || 'Line';
+  shown(m.line.placement) || shown(m.line.supplier) || shown(m.line.objective) || 'Line';
 
 /**
  * The creative's own artwork, inline in its row.
@@ -390,8 +390,8 @@ function addColumnDialog(rerender) {
     node.checked = () => input.checked;
     return node;
   };
-  const costPer = cb('Also add “Cost per …”', 'spend ÷ this number — named after what you type above', true);
-  const rateVs = cb('Also add “… rate”', 'this number ÷ clicks, shown as a % — for counters that happen after a click', false);
+  const costPer = cb('Also add “Cost per …”', 'spend ÷ this number, named after what you type above', true);
+  const rateVs = cb('Also add “… rate”', 'this number ÷ clicks, shown as a %. For counters that happen after a click.', false);
 
   const presetRow = el('div', { style: { display: 'flex', gap: '8px', flexWrap: 'wrap', marginBottom: '16px' } },
     ...PRESETS.map((pr) => el('button', {
@@ -433,7 +433,7 @@ function addColumnDialog(rerender) {
           const n = name.value();
           if (!n) { err.say('Name the number first — it becomes the column header.'); return false; }
           if (kpiDefs().some((d) => d.name.toLowerCase() === n.toLowerCase())) {
-            err.say(`“${n}” already exists — remove it below first if you want to redefine it.`);
+            err.say(`“${n}” already exists. Remove it below first if you want to redefine it.`);
             return false;
           }
           const counter = addKpi({ name: n, kind: 'counter' });
@@ -476,7 +476,7 @@ function flightNote(m, r, day) {
       class: 'muted',
       style: { fontSize: '11px', paddingRight: '7px', color: 'var(--warn)' },
       title: m.campaign.end_date
-        ? `This flight ended ${dateAu(m.campaign.end_date)}. An entry here is a late actual — it lands in the flight's history, not in a running month.`
+        ? `This flight ended ${dateAu(m.campaign.end_date)}. An entry here is a late actual: it lands in the flight's history, not in a running month.`
         : 'This flight has ended. An entry here is a late actual.',
     }, `${m.ccy} · flight ended`);
   }
@@ -620,8 +620,8 @@ function splitDialog(m, ctx, done) {
     {
       value: 'adopt',
       label: 'Move all of it onto this creative',
-      note: `Attributes the whole ${money2(looseTotal, m.ccy)} to the creative you are creating — `
-        + 'right when this line only ever ran one creative.',
+      note: `Attributes the whole ${money2(looseTotal, m.ccy)} to the creative you are creating. `
+        + 'Correct when this line only ever ran one creative.',
     },
     {
       value: 'clear',
@@ -637,7 +637,7 @@ function splitDialog(m, ctx, done) {
 
   const box = dialog({
     title: 'Split this line by creative',
-    sub: 'From here, the creatives are the only editable figures — the line’s own number becomes their sum.',
+    sub: 'From here the creatives are the only editable figures. The line’s own number becomes their sum.',
     width: '520px',
     content: has ? [...f.nodes, choice, err] : [...f.nodes, err],
     actions: [

@@ -18,7 +18,7 @@
  * is this for" question, for the same reason.
  */
 
-import { el, fill, dateAu } from './dom.js';
+import { el, fill, dateAu, shown } from './dom.js';
 import { all, put, remove, newId, where } from './store.js';
 import { todayIso } from './calc.js';
 import { dialog, textField, errorLine } from './modal.js';
@@ -66,7 +66,7 @@ export function openLog(m, rerender) {
     el('option', { value: 'campaign', selected: true },
       `Whole campaign — ${m.campaignName || 'campaign'}`),
     el('option', { value: 'line' },
-      `This line only — ${m.line.placement || m.line.platform || 'line'}`));
+      `This line only — ${shown(m.line.placement) || shown(m.line.platform) || 'this line'}`));
   const shared = el('input', { type: 'checkbox' });
 
   const list = el('div', { class: 'loglist' });
@@ -124,7 +124,7 @@ export function openLog(m, rerender) {
   paint();
   dialog({
     title: 'Tracking log',
-    sub: 'What happened, in the team’s own words — so a number nobody can explain six weeks later has an explanation attached.',
+    sub: 'What happened, in the team’s own words, so a number nobody can explain six weeks later has an explanation attached.',
     width: '600px',
     content: [
       el('div', { class: 'field' }, el('label', {}, 'New entry'), body),
@@ -136,7 +136,7 @@ export function openLog(m, rerender) {
         el('span', {},
           el('b', {}, 'Share this entry with the client'),
           el('span', { class: 'cnote' },
-            'Off by default. Only shared entries reach a client report — everything else stays inside GMS.'))),
+            'Off by default. Only shared entries reach a client report. Everything else stays inside GMS.'))),
       err,
       el('div', { class: 'field' }, logLabel, list),
     ],

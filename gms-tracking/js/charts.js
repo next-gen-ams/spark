@@ -5,7 +5,7 @@
  * means they inherit the theme tokens and stay crisp at any width.
  */
 
-import { el, money, pct, monthLabel } from './dom.js';
+import { el, money, pct, monthLabel , shown } from './dom.js';
 import { PLATFORM_COLOR } from './config.js';
 import { resizable } from './resizable.js';
 
@@ -176,9 +176,9 @@ export function pacingAlerts(rows, side, onPick) {
       const over = idx > 1;
       return el('tr', { style: { cursor: 'pointer' }, onclick: () => onPick && onPick(m) },
         el('td', { class: 'wrap' }, m.clientName),
-        el('td', { class: 'wrap' }, m.line.placement || m.line.supplier || m.line.objective || '—',
+        el('td', { class: 'wrap' }, shown(m.line.placement) || shown(m.line.supplier) || shown(m.line.objective) || '—',
           el('div', { class: 'muted', style: { fontSize: '11px' } },
-            `${m.line.platform || ''}${m.line.objective ? ' · ' + m.line.objective : ''}`)),
+            `${shown(m.line.platform)}${shown(m.line.objective) ? ' · ' + shown(m.line.objective) : ''}`)),
         el('td', { class: 'num' }, money(m[side].spend)),
         el('td', { class: 'num' }, pct(m[side].pacingPct, 0)),
         el('td', { class: 'num muted' }, pct(m.timePct, 0)),
@@ -195,7 +195,7 @@ export function pacingAlerts(rows, side, onPick) {
   flagged.length > LIMIT
     ? el('tfoot', {}, el('tr', {}, el('td', {
       colspan: 7, class: 'muted', style: { fontSize: '11.5px' },
-    }, `…and ${flagged.length - LIMIT} more off pace — filter by client or platform to see them.`)))
+    }, `…and ${flagged.length - LIMIT} more off pace. Filter by client or platform to see them.`)))
     : null), 'overview-alerts', [170, 260, 105, 100, 110, 120, 200]));
 }
 

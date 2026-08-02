@@ -133,7 +133,7 @@ function dropZone(rerender) {
   });
   const zone = el('div', { class: 'drop' },
     el('strong', {}, 'Drop a media plan here'),
-    el('div', {}, 'GMS QUOTATION / IO workbook (.xlsx) — the INT_ version, so margin comes across.'),
+    el('div', {}, 'GMS QUOTATION / IO workbook (.xlsx). Use the INT_ version, so margin comes across.'),
     el('div', { style: { marginTop: '14px' } },
       el('button', { class: 'btn primary', onclick: () => input.click() }, 'Choose file'), input));
 
@@ -152,7 +152,7 @@ function dropZone(rerender) {
     el('div', { class: 'body' }, zone,
       el('div', { class: 'hint', style: { marginTop: '14px', textAlign: 'center' } },
         'Nothing is saved until you press Import. Subtotal rows, top-up rows and fee lines are '
-        + 'handled for you — you will see exactly what was skipped and why.')));
+        + 'handled for you, and you will see exactly what was skipped and why.')));
 }
 
 async function load(file, rerender) {
@@ -385,7 +385,7 @@ function destination(s, rerender) {
           /* Since v3 the currency is decided per line (China platforms → RMB,
              international-rep buys → AUD); this select is only the fallback,
              and the copy has to say so or it reads as though it overrides. */
-          el('div', { class: 'hint' }, 'Fallback only. Lines decide for themselves — a China platform is typed in RMB, an international rep buy in AUD — and this covers lines with neither signal. Every derived figure is AUD.')))));
+          el('div', { class: 'hint' }, 'Fallback only. Lines decide for themselves (a China platform is typed in RMB, an international rep buy in AUD); this covers lines with neither signal. Every derived figure is AUD.')))));
 }
 
 function rowTable(s, rerender) {
@@ -422,7 +422,7 @@ function rowTable(s, rerender) {
       el('div', {},
         el('h3', {}, `${on} lines will be imported`),
         el('p', {}, s.rows.length > on
-          ? `${s.rows.length - on} row${s.rows.length - on > 1 ? 's were' : ' was'} skipped — the reason is on each one. Untick anything else you do not want.`
+          ? `${s.rows.length - on} row${s.rows.length - on > 1 ? 's were' : ' was'} skipped; the reason is on each one. Untick anything else you do not want.`
           : 'Untick anything you do not want tracked. Greyed rows are fee or production lines: tracked, but kept out of pacing and the client report.'))),
     el('div', { class: 'tablewrap' }, el('table', { class: 'data' },
       el('thead', {}, el('tr', {},
@@ -446,7 +446,7 @@ function actions(s, ctx) {
       class: 'btn primary',
       disabled: blocked || !ticked,
       title: blocked
-        ? 'Map the required columns first — importing half a plan puts wrong numbers in front of a client.'
+        ? 'Map the required columns first: importing half a plan puts wrong numbers in front of a client.'
         : '',
       onclick: () => {
         if (s.missing.length) return;

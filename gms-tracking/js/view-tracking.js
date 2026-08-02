@@ -30,7 +30,7 @@ export function renderTracking(host, ctx) {
       ? 'Nothing matches these filters. Clear them, or widen the search.'
       : state.ym
         ? `No media-plan lines or spend fall inside ${monthLabel(state.ym)}. Try “All”, or clear the filters.`
-        : 'Import a media plan to get started — Add New Campaign tab.';
+        : 'Import a media plan to get started, from the Add New Campaign tab.';
     host.appendChild(el('div', { class: 'panel' }, el('div', { class: 'empty' },
       el('strong', {}, filtered ? 'Nothing matches' : 'Nothing booked in this period'),
       el('div', {}, why))));
@@ -58,7 +58,7 @@ export function renderTracking(host, ctx) {
   /* Campaign-level first: an underspent month is a campaign-level decision,
      and it is what the team acts on before drilling into a line. */
   host.appendChild(panel('Campaign pacing',
-    'Spend against the plan’s own schedule, across the whole flight. The tick on each track is where the schedule says you should be — the gap is what is still owed to the campaign.',
+    'Spend against the plan’s own schedule, across the whole flight. The tick on each track is where the schedule says you should be; the gap is what is still owed to the campaign.',
     el('div', { class: 'body' }, campaignPacing(campaignPace(state.filters, side)))));
 
   host.appendChild(panel('Lines needing attention',
