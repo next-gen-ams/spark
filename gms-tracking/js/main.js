@@ -271,7 +271,15 @@ function paintStatus() {
     locked: ['Signed out', 'crit'],
     ready: ['Ready', ''],
   };
-  const [label, kind] = map[store.state.status] || ['Ready', ''];
+  let [label, kind] = map[store.state.status] || ['Ready', ''];
+  /* Queued work is visible work — a count, not a vague "changes queued".
+     Nothing in the outbox is lost on refresh any more, and the chip says so. */
+  const n = store.state.pending || 0;
+  if (store.state.status === 'offline') {
+    label = `Offline — ${n} change${n === 1 ? '' : 's'} queued, kept until synced`;
+  } else if (n > 0) {
+    label += ` · ${n} queued`;
+  }
   statusChip.className = 'chip ' + kind;
   fill(statusChip, el('span', { class: 'dot' }), label);
   statusChip.title = store.state.mode === 'local'

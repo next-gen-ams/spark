@@ -22,13 +22,114 @@ export const pkOf = (table) => PK[table] || 'id';
 export const db = Object.fromEntries(TABLES.map((t) => [t, []]));
 
 let sb = null;                       // supabase client, when configured
-let queue = [];                      // writes waiting on a reconnect
 const listeners = new Set();
 
 export const onChange = (fn) => { listeners.add(fn); return () => listeners.delete(fn); };
 const emit = () => listeners.forEach((fn) => fn());
 
-export const state = { mode: 'local', status: 'ready', error: '' };
+export const state = { mode: 'local', status: 'ready', error: '', pending: 0 };
+
+/* --------------------------------------------------------------- outbox
+ *
+ * Every remote write goes through a durable, strictly-ordered outbox instead
+ * of fire-and-forget upserts. Two real losses forced this design:
+ *
+ *   1. The old retry queue held CLOSURES in memory. A write that failed (say,
+ *      while a migration was missing) waited for a retry that a page refresh
+ *      silently destroyed — together with the user's typing.
+ *   2. Writes raced each other: a creative's insert could still be in flight
+ *      when the spend row referencing it arrived, and the foreign key rejected
+ *      real data for reasons of timing, not truth.
+ *
+ * The outbox is plain data (ops, not closures), saved to localStorage on every
+ * change, replayed in FIFO order — parent before child, always — and reapplied
+ * over the remote snapshot at boot, so pending work survives refreshes,
+ * crashes and offline stretches. state.pending is its length, which the status
+ * chip shows: queued work is visible work.
+ */
+const OUTBOX_KEY = 'gms-tracking-outbox-v1';
+let outbox = [];
+let flushing = false;
+
+function loadOutbox() {
+  try { outbox = JSON.parse(localStorage.getItem(OUTBOX_KEY) || '[]'); }
+  catch { outbox = []; }
+  if (!Array.isArray(outbox)) outbox = [];
+  state.pending = outbox.length;
+}
+
+function saveOutbox() {
+  try { localStorage.setItem(OUTBOX_KEY, JSON.stringify(outbox)); }
+  catch (e) { console.warn('[store] outbox not saved', e); }
+  state.pending = outbox.length;
+}
+
+function enqueue(op) {
+  if (!sb) return;                                   // local mode has no remote
+  /* Rapid retyping of one cell coalesces: if the newest queued op is an upsert
+     of the same row, replace it in place instead of stacking history. */
+  const last = outbox.at(-1);
+  if (op.t === 'up' && last?.t === 'up' && last.table === op.table
+    && last.row[pkOf(op.table)] === op.row[pkOf(op.table)]) {
+    outbox[outbox.length - 1] = op;
+  } else {
+    outbox.push(op);
+  }
+  saveOutbox();
+  flush();
+}
+
+function execOp(op) {
+  if (op.t === 'up') return sb.from(op.table).upsert(op.row);
+  if (op.t === 'upm') return sb.from(op.table).upsert(op.rows);
+  if (op.t === 'del') return sb.from(op.table).delete().eq(pkOf(op.table), op.id);
+  if (op.t === 'delw') return sb.from(op.table).delete().eq(op.key, op.value);
+  if (op.t === 'delall') return sb.from(op.table).delete().not(pkOf(op.table), 'is', null);
+  return Promise.resolve({ error: new Error(`unknown op ${op.t}`) });
+}
+
+/** Drain the outbox head-first. Stops at the first failure so order is never
+    violated — a child row must not slip past its still-unsynced parent. */
+async function flush() {
+  if (!sb || flushing || !outbox.length) return;
+  flushing = true;
+  state.status = 'saving'; emit();
+  try {
+    while (outbox.length) {
+      const { error } = await execOp(outbox[0]);
+      if (error) throw error;
+      outbox.shift();
+      saveOutbox();
+    }
+    state.status = 'synced';
+    state.error = '';
+  } catch (e) {
+    state.status = 'offline';
+    state.error = e.message || String(e);
+    console.warn('[store]', e);
+  }
+  flushing = false;
+  emit();
+}
+
+/** Re-play pending local work over a freshly loaded remote snapshot, so what
+    the user typed while offline is never hidden behind older server rows. */
+function applyOutboxLocally() {
+  for (const op of outbox) {
+    if (op.t === 'up') upsertLocal(op.table, op.row);
+    else if (op.t === 'upm') for (const r of op.rows) upsertLocal(op.table, r);
+    else if (op.t === 'del') db[op.table] = db[op.table].filter((r) => r[pkOf(op.table)] !== op.id);
+    else if (op.t === 'delw') db[op.table] = db[op.table].filter((r) => r[op.key] !== op.value);
+    else if (op.t === 'delall') db[op.table] = [];
+  }
+}
+
+function upsertLocal(table, row) {
+  const pk = pkOf(table);
+  const list = db[table];
+  const i = list.findIndex((r) => r[pk] === row[pk]);
+  if (i >= 0) list[i] = { ...list[i], ...row }; else list.push({ ...row });
+}
 
 /* ------------------------------------------------------------------- read */
 
@@ -75,7 +176,7 @@ export function putMany(table, rows) {
 export function remove(table, id) {
   const pk = pkOf(table);
   db[table] = db[table].filter((r) => r[pk] !== id);
-  if (sb) run(() => sb.from(table).delete().eq(pk, id));
+  enqueue({ t: 'del', table, id });
   saveLocal();
   emit();
 }
@@ -85,7 +186,7 @@ export function remove(table, id) {
 export function removeWhere(table, key, value) {
   const doomed = db[table].filter((r) => r[key] === value).map((r) => r.id);
   db[table] = db[table].filter((r) => r[key] !== value);
-  if (sb) run(() => sb.from(table).delete().eq(key, value));
+  enqueue({ t: 'delw', table, key, value });
   saveLocal();
   emit();
   return doomed;
@@ -111,14 +212,14 @@ export function wipeData() {
     db[t] = [];
     /* One statement per table, not one per row — 1,700 spend rows as
        individual deletes would sit in the queue for minutes. */
-    if (sb) run(() => sb.from(t).delete().not(pkOf(t), 'is', null));
+    enqueue({ t: 'delall', table: t });
   }
   /* The sample-data banner keys off these; data gone means they must go too,
      or an empty dashboard would still claim to be showing the sample. */
   for (const k of ['demo', 'demo_kind']) {
     if (!db.settings.some((s) => s.k === k)) continue;
     db.settings = db.settings.filter((s) => s.k !== k);
-    if (sb) run(() => sb.from('settings').delete().eq('k', k));
+    enqueue({ t: 'del', table: 'settings', id: k });
   }
   saveLocal();
   emit();
@@ -129,16 +230,14 @@ export function wipeData() {
 
 function persist(table, row) {
   saveLocal();
-  if (sb) run(() => sb.from(table).upsert(row));
+  enqueue({ t: 'up', table, row });
 }
 
 function persistMany(table, rows) {
   saveLocal();
-  if (sb && rows.length) {
-    for (let i = 0; i < rows.length; i += 400) {
-      const chunk = rows.slice(i, i + 400);
-      run(() => sb.from(table).upsert(chunk));
-    }
+  if (!rows.length) return;
+  for (let i = 0; i < rows.length; i += 400) {
+    enqueue({ t: 'upm', table, rows: rows.slice(i, i + 400) });
   }
 }
 
@@ -151,26 +250,11 @@ function saveLocal() {
   }
 }
 
-async function run(fn) {
-  state.status = 'saving'; emit();
-  try {
-    const { error } = await fn();
-    if (error) throw error;
-    state.status = 'synced';
-    if (queue.length) { const q = queue; queue = []; for (const f of q) await run(f); }
-  } catch (e) {
-    queue.push(fn);
-    state.status = 'offline';
-    state.error = e.message || String(e);
-    console.warn('[store]', e);
-  }
-  emit();
-}
-
 /* ------------------------------------------------------------------- boot */
 
 export async function init() {
   loadLocal();
+  loadOutbox();
   seed();
 
   /* First run with no backend: load the demo built from the three real media
@@ -229,14 +313,30 @@ export async function signOut() {
   emit();
 }
 
+/* PostgREST caps every query at 1,000 rows and says nothing about it. With
+   1,700 spend rows in production, a plain select('*') silently dropped the
+   newest 700 on every refresh — the user's fresh entries vanished from the
+   screen while sitting safely in Postgres, and saveLocal() then overwrote the
+   local copy with the truncated snapshot. Every table is paged to the end. */
+const PAGE = 1000;
+
+async function fetchAll(t) {
+  const rows = [];
+  for (let from = 0; ; from += PAGE) {
+    const { data, error } = await sb.from(t).select('*').range(from, from + PAGE - 1);
+    if (error) throw error;
+    rows.push(...(data || []));
+    if (!data || data.length < PAGE) break;
+  }
+  return rows;
+}
+
 async function loadRemote() {
   state.status = 'loading'; emit();
   try {
     let received = 0;
     for (const t of TABLES) {
-      const { data, error } = await sb.from(t).select('*');
-      if (error) throw error;
-      db[t] = data || [];
+      db[t] = await fetchAll(t);
       received += db[t].length;
     }
     /* Row-level security denies by returning nothing, not by erroring. An
@@ -246,16 +346,31 @@ async function loadRemote() {
     if (!received && s2?.session && !sessionMatches(s2.session)) {
       throw new Error(`Signed in as ${s2.session.user?.email} — that account cannot read this dashboard.`);
     }
+    /* Anything still in the outbox is newer than the snapshot we just loaded —
+       replay it on top, or the refresh would hide the user's own typing. */
+    applyOutboxLocally();
     seed();
     saveLocal();
     state.status = 'synced';
-    subscribe();
+    if (typeof sb.channel === 'function') subscribe();
+    flush();
   } catch (e) {
     state.status = 'offline';
     state.error = e.message || String(e);
   }
   emit();
 }
+
+/* Test seam: the sync layer is exactly where "works on my machine" hides, so
+   the suite drives it with a scripted client. Not part of the app's API. */
+export const _sync = {
+  setClient: (fake) => { sb = fake; },
+  outbox: () => outbox.map((o) => ({ ...o })),
+  clearOutbox: () => { outbox = []; saveOutbox(); },
+  flush,
+  loadRemote,
+  loadOutbox,
+};
 
 function subscribe() {
   sb.channel('tracking')
