@@ -39,7 +39,9 @@ export function buildRows(state) {
   const monthsBy = index('line_month', 'line_id');
   const spendBy = index('spend', 'line_id');
   const bounds = ym ? monthBounds(ym) : null;
-  const q = filters.q.trim().toLowerCase();
+  /* Defaulting the whole object only guards against it being absent; a caller
+     that passes a partial one still reaches in. Cheap to survive. */
+  const q = (filters.q || '').trim().toLowerCase();
 
   const out = [];
   for (const line of all('line')) {

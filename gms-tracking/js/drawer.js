@@ -235,7 +235,7 @@ function monthly(m) {
   return el('div', { class: 'field' },
     el('label', {}, 'Booked by month — from the media plan'),
     el('div', { class: 'hint', style: { marginTop: 0, marginBottom: '7px' } }, linked
-      ? `Internal and client are locked together at this line's margin of ${pct(margin, 1)} — type either one and the other follows, so they cannot drift apart.`
+      ? `Internal and client are locked together at this line's margin of ${pct(margin, 1)}: type either one and the other follows, so they cannot drift apart.`
       : 'This line has no margin set, so the two columns are independent. Set a margin above to link them.'),
     el('div', { class: 'tablewrap' },
       el('table', { class: 'data' },
