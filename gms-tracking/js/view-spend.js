@@ -294,6 +294,38 @@ const lineLabel = (m) =>
  * Images are not in the boot read, so the first render of a split line asks
  * for them and repaints once they land.
  */
+/* Roughly what the enlarged copy needs: 220px of image, its padding and
+   border, plus the 6px gap. Measuring the popup itself would mean rendering it
+   first, which is the flicker this design exists to avoid. */
+const POP_CLEARANCE = 250;
+
+/**
+ * Decide which way the enlarged copy opens, at the moment it is asked for.
+ *
+ * It defaults to opening upwards, which is right for most of a long table but
+ * wrong for the first rows: there the popup rides up over the sticky header and
+ * the panel title, and reads as a rendering fault rather than as a preview.
+ * The ceiling is the header's own bottom edge, not the viewport top, because
+ * the header is what it would cover.
+ */
+function placePop(host) {
+  const box = host.getBoundingClientRect();
+  const head = host.closest('table')?.querySelector('thead');
+  /* Two ceilings, whichever is lower down the page: the pinned header, and the
+     top of the window itself. The header sticks inside .tablewrap rather than
+     to the viewport, so once that whole panel scrolls away its bottom edge goes
+     negative — trusting it alone put the popup off the top of the screen. */
+  const ceiling = Math.max(0, head ? head.getBoundingClientRect().bottom : 0);
+  const above = box.top - ceiling;
+  const under = window.innerHeight - box.bottom;
+  /* Flip only when there is genuinely more room the other way, so a window too
+     short for either side still picks the better of the two. */
+  host.classList.toggle('below', above < POP_CLEARANCE && under > above);
+  /* Same question sideways: anchored left, flipped when it would run off the
+     right edge. */
+  host.classList.toggle('leftward', box.left + 350 > window.innerWidth);
+}
+
 function creativeThumb(c, refresh) {
   if (c.preview_image === undefined) {
     /* Repaint only if the fetch actually settled something — an unconditional
@@ -306,10 +338,14 @@ function creativeThumb(c, refresh) {
      of flow, collapse its container, drop the :hover that caused it, and snap
      back — a flicker loop. The small one never moves; a second, larger copy is
      layered over the grid and ignores the pointer entirely. */
-  return el('span', { class: 'crthumb' },
-    el('img', { class: 'crthumb-sm', src: c.preview_image, alt: `${c.name || 'Creative'} artwork`, loading: 'lazy' }),
-    el('span', { class: 'crthumb-pop', 'aria-hidden': 'true' },
-      el('img', { src: c.preview_image, alt: '' })));
+  return el('span', {
+    class: 'crthumb', tabindex: '0',
+    onpointerenter: (e) => placePop(e.currentTarget),
+    onfocus: (e) => placePop(e.currentTarget),
+  },
+  el('img', { class: 'crthumb-sm', src: c.preview_image, alt: `${c.name || 'Creative'} artwork`, loading: 'lazy' }),
+  el('span', { class: 'crthumb-pop', 'aria-hidden': 'true' },
+    el('img', { src: c.preview_image, alt: '' })));
 }
 
 /* ------------------------------------------------------- creative rows */

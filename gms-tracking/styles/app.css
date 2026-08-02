@@ -89,6 +89,12 @@ body { padding-top: 6px; }
 /* The enlarged copy is a separate layer that never touches layout, so hovering
    it cannot move the thing being hovered — the flicker loop that an
    enlarge-in-place version produced. */
+/* Opens upward by default; view-spend flips these when there is no room above
+   (the first rows of the table, where it would cover the sticky header) or no
+   room to the right. */
+.crthumb.below .crthumb-pop { bottom: auto; top: calc(100% + 6px); }
+.crthumb.leftward .crthumb-pop { left: auto; right: 0; }
+.crthumb:focus-visible { outline: 2px solid var(--orange); outline-offset: 2px; border-radius: 3px; }
 .crthumb-pop {
   position: absolute; left: 0; bottom: calc(100% + 6px); z-index: 40;
   display: none; pointer-events: none;
