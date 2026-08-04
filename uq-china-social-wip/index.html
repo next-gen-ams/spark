@@ -410,6 +410,19 @@
   .btn.primary { background:var(--orange); color:#fff; }
   .btn.primary:hover { background:var(--orange-deep); }
   .btn.ghost { background:var(--surface-2); color:var(--ink-2); flex:0 0 auto; padding:11px 16px; }
+  .page-modal { position:fixed; inset:0; z-index:95; display:none; align-items:center; justify-content:center; padding:20px; background:rgba(28,24,18,.48); backdrop-filter:blur(2px); }
+  .page-modal.open { display:flex; }
+  .page-dialog { width:min(440px,100%); background:var(--surface); border:1px solid var(--line); border-radius:14px; box-shadow:0 24px 70px rgba(20,14,4,.28); overflow:hidden; }
+  .page-dialog-body { padding:22px 22px 18px; }
+  .page-dialog-icon { width:38px; height:38px; display:flex; align-items:center; justify-content:center; margin-bottom:14px; border-radius:10px; background:var(--orange-soft); color:var(--orange-deep); font-size:20px; font-weight:800; }
+  .page-dialog h2 { margin:0 0 8px; font-size:17px; letter-spacing:-.25px; }
+  .page-dialog p { margin:0; color:var(--ink-2); font-size:13px; line-height:1.55; }
+  .page-dialog .confirm-item { margin:12px 0 0; padding:10px 11px; border:1px solid var(--line); border-left:3px solid var(--confirm-color,var(--orange)); border-radius:9px; background:var(--surface-2); color:var(--ink); font-size:12.5px; font-weight:650; line-height:1.4; }
+  .page-dialog .confirm-note { margin-top:12px; font-size:11.5px; color:var(--ink-3); }
+  .page-dialog-actions { display:flex; justify-content:flex-end; gap:9px; padding:13px 22px; border-top:1px solid var(--line); }
+  .page-dialog-actions .btn { flex:0 0 auto; min-height:42px; padding:10px 17px; cursor:pointer; }
+  .page-dialog-actions .btn:focus-visible { outline:3px solid var(--orange-soft); outline-offset:2px; }
+  @media (max-width:520px){ .page-dialog-actions .btn { flex:1; } }
   .foot { display:flex; flex-direction:column; align-items:center; gap:5px; padding:24px 0 32px; border-top:1px solid var(--line); margin-top:10px; }
   .foot .kmt { height:17px; opacity:.85; margin-bottom:2px; }
   @media (prefers-color-scheme: dark){ .foot .kmt { filter:brightness(0) invert(1); opacity:.7; } }
@@ -568,6 +581,21 @@
 
 <div class="scrim" id="scrim"></div>
 <aside class="drawer" id="drawer"></aside>
+<div class="page-modal" id="confirmLayer" aria-hidden="true">
+  <div class="page-dialog" role="alertdialog" aria-modal="true" aria-labelledby="confirmTitle" aria-describedby="confirmMessage">
+    <div class="page-dialog-body">
+      <div class="page-dialog-icon" aria-hidden="true">↩</div>
+      <h2 id="confirmTitle">Move back to Content Pool?</h2>
+      <p id="confirmMessage">This post will be removed from the Calendar.</p>
+      <div class="confirm-item" id="confirmItem"></div>
+      <p class="confirm-note">Its publishing workflow fields will be preserved and shown again when it is scheduled.</p>
+    </div>
+    <div class="page-dialog-actions">
+      <button class="btn ghost" type="button" id="confirmCancel">Cancel</button>
+      <button class="btn primary" type="button" id="confirmAccept">Move back</button>
+    </div>
+  </div>
+</div>
 <div class="gate" id="gate">
   <div class="gatecard">
     <div class="gmark"><img id="gateLogo" alt="GMS"></div>
@@ -922,9 +950,31 @@ function dropPool(pid,iso){
   saveContent(it);if(it.boostData)saveBoost(it);savePool(p);
   renderAll(); toast(`Scheduled to ${iso} — fill it in`); openDrawer(it);
 }
-function returnContentToPool(cid){
+let confirmResolve=null, confirmPreviousFocus=null;
+function closePageConfirm(result=false){
+  const layer=$("#confirmLayer");
+  if(!layer.classList.contains("open"))return;
+  layer.classList.remove("open");layer.setAttribute("aria-hidden","true");
+  const resolve=confirmResolve;confirmResolve=null;
+  if(confirmPreviousFocus&&document.contains(confirmPreviousFocus))confirmPreviousFocus.focus();
+  confirmPreviousFocus=null;if(resolve)resolve(result);
+}
+function showPageConfirm(d){
+  const layer=$("#confirmLayer"), channel=CH[d.ch]||CH.RED;
+  $("#confirmTitle").textContent=`Move back to ${channel.label} Content Pool?`;
+  $("#confirmMessage").textContent="This post will be removed from its scheduled date in the Calendar.";
+  $("#confirmItem").textContent=d.note;$("#confirmItem").style.setProperty("--confirm-color",channel.raw);
+  confirmPreviousFocus=document.activeElement;
+  layer.classList.add("open");layer.setAttribute("aria-hidden","false");
+  requestAnimationFrame(()=>$("#confirmCancel").focus());
+  return new Promise(resolve=>{confirmResolve=resolve;});
+}
+$("#confirmCancel").onclick=()=>closePageConfirm(false);
+$("#confirmAccept").onclick=()=>closePageConfirm(true);
+$("#confirmLayer").onclick=e=>{if(e.target===$("#confirmLayer"))closePageConfirm(false);};
+async function returnContentToPool(cid){
   const d=SEED.find(x=>x.id===cid);if(!d)return;
-  if(!confirm(`Move “${d.note}” back to the ${CH[d.ch].label} Content Pool?\n\nIts scheduled date will be removed. Publishing workflow fields will be preserved but hidden until it is scheduled again.`))return;
+  if(!await showPageConfirm(d))return;
   let p=POOL.find(x=>x.workflow&&x.workflow.contentId===d.id);
   if(!p){p={id:"p"+Date.now()};POOL.unshift(p);}
   Object.assign(p,{note:d.note,fmt:d.fmt||"Article",sug:d.by||"GMS",ch:d.ch,archived:false,scheduled:false,label:d.label||"Inform",asset:d.asset||"",note2:d.note2||"",
@@ -1091,7 +1141,18 @@ function openDrawer(it,isNew){
 function closeDrawer(){$("#scrim").classList.remove("open");$("#drawer").classList.remove("open"); if(_pendingReload){_pendingReload=false; scheduleReload();}}
 $("#scrim").onclick=closeDrawer;
 // The page behind the drawer stays interactive (no dim/blur), so Esc is the "click outside" of this UI
-document.addEventListener("keydown",e=>{ if(e.key==="Escape"&&$("#drawer").classList.contains("open")) closeDrawer(); });
+document.addEventListener("keydown",e=>{
+  if($("#confirmLayer").classList.contains("open")){
+    if(e.key==="Escape"){e.preventDefault();closePageConfirm(false);return;}
+    if(e.key==="Tab"){
+      const first=$("#confirmCancel"),last=$("#confirmAccept");
+      if(e.shiftKey&&document.activeElement===first){e.preventDefault();last.focus();}
+      else if(!e.shiftKey&&document.activeElement===last){e.preventDefault();first.focus();}
+    }
+    return;
+  }
+  if(e.key==="Escape"&&$("#drawer").classList.contains("open")) closeDrawer();
+});
 
 function renderPaid(){
   // Annual chart: media-plan budget from the DB vs. actual spend from the boost rows — both live.
