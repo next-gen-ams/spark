@@ -881,7 +881,7 @@ function renderPool(){
   $("#poolChannels").innerHTML=`<button class="${poolChannel==='All'?'active':''}" data-ch="All" style="--pc:var(--ink-2)">All</button>`+
     Object.keys(CH).map(k=>`<button class="${poolChannel===k?'active':''}" data-ch="${k}" style="--pc:${CH[k].color}"><span class="dot"></span>${CH[k].label}</button>`).join("");
   $("#poolSearch").placeholder=poolChannel==="All"?"Search all ideas…":`Search ${CH[poolChannel].label} ideas…`;
-  $("#poolSubhead").textContent=archived?"Archived ideas":"Active ideas · automatically carry forward";
+  $("#poolSubhead").textContent=archived?"Archived ideas":"Active ideas";
   $("#poolDragHint").textContent=archived?"Click to review":"Drag → calendar";
   $("#poolBody").innerHTML=rows.length?rows.map(p=>{const w=WHO[p.sug]||WHO.GMS, pc=CH[p.ch]?.color||"var(--ink-3)";
     return `<div class="pool-item ${archived?'archived':''}" draggable="${archived?'false':'true'}" data-id="${p.id}" style="--pc:${pc}"><div class="pt">${esc(p.note)}</div>
