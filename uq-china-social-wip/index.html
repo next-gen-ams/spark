@@ -130,6 +130,8 @@
   .addpop .kdel:hover { border-color:var(--crit); }
   .paddbtn { border:1px solid var(--line); background:var(--surface); color:var(--ink-2); width:20px; height:20px; border-radius:6px; font-size:13px; line-height:1; display:grid; place-items:center; margin-left:8px; }
   .paddbtn:hover { border-color:var(--orange); color:var(--orange); }
+  .add, .paddbtn { display:inline-flex; align-items:center; justify-content:center; padding:0; font-size:0; line-height:1; }
+  .add::before, .paddbtn::before { content:"+"; display:block; font-size:14px; line-height:1; transform:translateY(-.5px); }
 
   .card { border-radius:7px; background:var(--surface); border:1px solid var(--line); border-left:3px solid var(--ch); padding:4px 6px 5px; cursor:pointer; box-shadow:0 1px 1px rgba(40,30,15,.04); transition:transform .1s,box-shadow .1s; position:relative; }
   .card:hover { transform:translateY(-1px); box-shadow:var(--shadow); border-color:var(--line-2); }
