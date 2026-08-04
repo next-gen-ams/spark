@@ -167,7 +167,7 @@ export function pacingAlerts(rows, side, onPick) {
   }
 
   const LIMIT = 12;
-  return el('div', { class: 'tablewrap' }, resizable(el('table', { class: 'data' },
+  return el('div', { class: 'tablewrap' }, resizable(el('table', { class: 'data fill-panel' },
     el('thead', {}, el('tr', {},
       el('th', {}, 'Client'), el('th', {}, 'Line'),
       el('th', { class: 'num' }, 'Spent'), el('th', { class: 'num' }, 'of budget'),

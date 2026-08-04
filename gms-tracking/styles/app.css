@@ -383,6 +383,10 @@ body { padding-top: 6px; }
 }
 .tablewrap::-webkit-scrollbar-thumb:hover { background: var(--ink-2); }
 table.data { border-collapse: separate; border-spacing: 0; width: 100%; font-size: 12.5px; }
+/* A short resizable table otherwise freezes at the sum of its default column
+   widths and leaves a dead strip inside a wider card. Keep those widths as the
+   floor, but let the table consume the whole panel whenever space is available. */
+table.data.fill-panel { min-width: 100%; }
 table.data th {
   background: var(--header); color: var(--header-tx); text-align: left; font-weight: 600;
   padding: 9px 10px; white-space: nowrap; position: sticky; top: 0; z-index: 2;
