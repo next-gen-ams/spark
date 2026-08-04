@@ -17,9 +17,10 @@ import { put, remove, where, byId, newId, fxMap, loadCreativeImages } from './st
 import { dialog, closeDialog, textField, choiceField, errorLine } from './modal.js';
 import { imageField } from './paste-image.js';
 import { openLog, noteCount } from './notes.js';
-import { monthBounds, grossUp, repace, repaceAdvice, todayIso, daySplit, looseSpendTotal, periodSpend, kpiValue, spendForSide } from './calc.js';
+import { monthBounds, grossUp, repace, todayIso, daySplit, looseSpendTotal, periodSpend, kpiValue, spendForSide } from './calc.js';
 import { kpiDefs, addKpi, removeKpi, PRESETS, hasPreset, companionsFor, kpiFormula, formatKpi } from './kpis.js';
 import { resizable, forgetWidths } from './resizable.js';
+import { PLATFORM_COLOR } from './config.js';
 
 const spendId = (lineId, creativeId, date) => `${lineId}|${creativeId || '_'}|${date}`;
 
@@ -117,7 +118,7 @@ function grid(rows, date, mode, state, rerender) {
     const r = repace(m.line, m.campaign,
       where('line_month', (x) => x.line_id === m.line.id), spends,
       { fx, today, side });
-    const advice = repaceAdvice(r);
+    const advice = localPaceAdvice(r, m);
 
     const write = (creativeId, patch) => {
       put('spend', {
@@ -142,9 +143,12 @@ function grid(rows, date, mode, state, rerender) {
 
     /* ---- the line's own row. Editable only while nothing is split off it. */
     body.appendChild(el('tr', { class: m.billable ? '' : 'nb' },
-      el('td', { class: 'wrap' }, m.clientName,
-        el('div', { class: 'muted', style: { fontSize: '11px' } },
-          [shown(m.line.platform), lineLabel(m)].filter(Boolean).join(' · ')),
+      el('td', { class: 'wrap clientcell' }, el('b', {}, m.clientName)),
+      el('td', { class: 'wrap linecell' },
+        platformTag(m.line.platform),
+        m.line.objective ? el('span', { class: 'lineobjective' }, m.line.objective) : null,
+        el('div', { class: 'linename' }, lineLabel(m)),
+        el('div', { class: 'muted linecampaign' }, m.campaignName),
         creativeControl(m, creatives, spends, date, rerender),
         logControl(m, rerender)),
 
@@ -186,12 +190,17 @@ function grid(rows, date, mode, state, rerender) {
       el('td', { class: 'num muted' }, r ? money(r.due) : '—'),
       el('td', { class: 'num' }, r ? varianceCell(r) : '—'),
       el('td', { class: 'num' }, r && !r.finished
-        ? el('div', {}, el('b', {}, money(r.suggestedDaily)),
+        ? el('div', {}, el('b', {}, `${money2(r.localSuggestedDaily, m.ccy)} / day`),
           el('div', { class: 'muted', style: { fontSize: '11px' } },
-            `${r.daysLeft} day${r.daysLeft === 1 ? '' : 's'} left`))
+            `${money2(r.localToMonthTarget, m.ccy)} to month target`),
+          el('div', { class: 'muted', style: { fontSize: '11px' } },
+            `${r.monthDaysLeft} day${r.monthDaysLeft === 1 ? '' : 's'} left this month`))
         : el('span', { class: 'muted' }, '—')),
-      el('td', { class: 'wrap prose' }, advice
-        ? el('span', { class: 'advice ' + (advice.kind === 'ok' ? 'good' : advice.kind) }, advice.text)
+      el('td', { class: 'wrap prose pacecell' }, advice
+        ? el('div', {},
+          el('span', { class: 'advice ' + (advice.kind === 'ok' ? 'good' : advice.kind) }, advice.text),
+          el('div', { class: 'pacebudget muted' },
+            `This month ${money2(r.localMonthBudget, m.ccy)} · cumulative target ${money2(r.localMonthTarget, m.ccy)}`))
         : el('span', { class: 'muted' }, 'no flight dates')),
 
       el('td', { class: 'num' }, m.billable
@@ -231,6 +240,7 @@ function grid(rows, date, mode, state, rerender) {
      grouping so the eye does not have to parse it from column names. */
   return resizable(el('table', { class: 'data' },
     el('thead', {}, el('tr', {},
+      el('th', {}, 'Client'),
       el('th', {}, 'Line'),
       el('th', { class: 'num gtyped', title: 'Internal spend as paid to the media owner, in the line’s own currency' },
         `Total to ${dateAu(date)}`),
@@ -255,7 +265,7 @@ function grid(rows, date, mode, state, rerender) {
        column was added or removed never lands on the wrong columns. (The v2
        prefix retired layouts saved under the pre-reorder column order.) */
     body), `tracking-entry2-${counters.length}c${ratesK.length}r`, [
-      COLW[0], COLW[1], COLW[4], COLW[5], ...counters.map(() => 96),
+      128, COLW[0], COLW[1], COLW[4], COLW[5], ...counters.map(() => 96),
       COLW[2], COLW[3], ...ratesK.map(() => 96), ...COLW.slice(6)]);
 }
 
@@ -277,8 +287,8 @@ const COLW = [
   106,  // Spent to date ("of $15,000" underneath)
   88,   // Should be
   94,   // Variance
-  92,   // Run at
-  220,  // What to do
+  112,  // Run at — daily pace plus the remaining month target
+  260,  // What to do — advice plus monthly and cumulative budgets
   78,   // Margin
 ];
 
@@ -288,6 +298,37 @@ function varianceCell(r) {
   const severity = Math.abs(r.variance) / Math.max(r.due, 1) > 0.25 ? 'crit' : 'warn';
   return el('span', { class: 'tag ' + severity },
     `${behind ? '−' : '+'}${money(Math.abs(r.variance))}`);
+}
+
+function platformTag(platform) {
+  return platform
+    ? el('span', {
+      class: 'tag platformtag',
+      style: { color: PLATFORM_COLOR[platform] || 'var(--ink-2)' },
+    }, el('span', { class: 'pd' }), platform)
+    : el('span', { class: 'tag platformtag muted' }, 'Platform —');
+}
+
+/** Execution advice in the currency the tracker can actually set in-platform. */
+function localPaceAdvice(r, m) {
+  if (!r) return null;
+  const v = r.localVariance;
+  const amount = money2(Math.abs(v), m.ccy);
+  const target = money2(r.localMonthTarget, m.ccy);
+  if (r.finished) {
+    return v < -1
+      ? { kind: 'crit', text: `Finished ${amount} behind the cumulative plan.` }
+      : { kind: v > 1 ? 'warn' : 'ok', text: v > 1
+        ? `Finished ${amount} ahead of the cumulative plan.` : 'Finished on the cumulative plan.' };
+  }
+  if (Math.abs(v) < 1) {
+    return { kind: 'ok', text: `On plan. Hold the displayed daily pace to reach ${target} by month end.` };
+  }
+  if (v < 0) {
+    return { kind: Math.abs(v) / Math.max(r.localDue, 1) > 0.25 ? 'crit' : 'warn',
+      text: `${amount} behind. Lift to the displayed daily pace to reach ${target} by month end.` };
+  }
+  return { kind: 'ok', text: `${amount} ahead. The displayed daily pace has been reduced to land on ${target}.` };
 }
 
 const lineLabel = (m) =>
@@ -429,6 +470,7 @@ function creativeRow(m, label, figures, opts = {}) {
   const dim = () => el('td', { class: 'num muted' }, '');
 
   return el('tr', { class: 'crrow' + (m.billable ? '' : ' nb') },
+    el('td', { class: 'wrap clientcell' }, ''),
     el('td', { class: 'wrap' },
       el('span', { class: 'crname' }, label),
       opts.creative ? creativeThumb(opts.creative, opts.refresh) : null,

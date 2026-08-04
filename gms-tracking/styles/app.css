@@ -483,6 +483,20 @@ table.data[style*="fixed"] td.prose * {
 .advice.good { background: var(--good-soft); color: var(--good); }
 .advice.warn { background: var(--warn-soft); color: var(--warn); }
 .advice.crit { background: var(--crit-soft); color: var(--crit); }
+.pacebudget {
+  margin-top: 5px; font-size: 10.5px; line-height: 1.35;
+}
+table.data[style*="fixed"] td.prose.pacecell > * {
+  display: block; overflow: visible; -webkit-line-clamp: initial;
+}
+.clientcell { min-width: 118px; }
+.linecell { min-width: 220px; }
+.platformtag { margin-right: 7px; vertical-align: middle; }
+.lineobjective {
+  color: var(--ink-2); font-size: 11px; font-weight: 600; vertical-align: middle;
+}
+.linename { margin-top: 6px; font-weight: 650; color: var(--ink); }
+.linecampaign { margin-top: 2px; font-size: 10.5px; }
 
 /* First column is pinned horizontally: at 16 columns you scroll far enough to
    forget whose row you are on. */

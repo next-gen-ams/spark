@@ -610,11 +610,45 @@ export function repace(line, campaign, months, spends, { fx, today = todayIso(),
   const plannedThisMonth = thisMonth ? budgetOf(thisMonth) : 0;
   const allowedThisMonth = Math.max(0, plannedThisMonth - variance);
 
+  /* Tracking Entry is an execution surface, so it also needs the plan in the
+     currency actually paid to the platform. This target deliberately closes
+     at the END OF THIS MONTH: every earlier month's shortfall is carried into
+     the current month, rather than spread invisibly across the whole flight. */
+  const internalBudgetOf = (m) => num(m.budget_media);
+  const monthPlanAud = thisMonth ? internalBudgetOf(thisMonth) : 0;
+  const monthEndPlanAud = months
+    .filter((m) => m.ym && m.ym <= ym)
+    .reduce((a, m) => a + internalBudgetOf(m), 0);
+  let dueInternalAud = 0;
+  for (const m of months) {
+    if (!m.ym || m.ym > ym) continue;
+    if (m.ym < ym) { dueInternalAud += internalBudgetOf(m); continue; }
+    const b = monthBounds(m.ym);
+    const active = overlap(flight.start, flight.end, b.start, b.end);
+    if (!active || today < active.start) continue;
+    const elapsed = daysBetween(active.start, today < active.end ? today : active.end);
+    dueInternalAud += internalBudgetOf(m) * (elapsed / daysBetween(active.start, active.end));
+  }
+  const spentInternalAud = spentLocal / rate;
+  const monthWindow = overlap(flight.start, flight.end,
+    monthBounds(ym).start, monthBounds(ym).end);
+  const monthDaysLeft = !monthWindow || today > monthWindow.end ? 0
+    : daysBetween(today > monthWindow.start ? today : monthWindow.start, monthWindow.end);
+  const toMonthTargetAud = Math.max(0, monthEndPlanAud - spentInternalAud);
+
   return {
     flight, total, due, spent, variance, remaining, daysLeft,
     onTrack: due > 0 ? spent / due : null,       // 1.0 = exactly to schedule
     plannedThisMonth,
     allowedThisMonth,
+    localMonthBudget: monthPlanAud * rate,
+    localMonthTarget: monthEndPlanAud * rate,
+    localDue: dueInternalAud * rate,
+    localSpent: spentLocal,
+    localVariance: (spentInternalAud - dueInternalAud) * rate,
+    localToMonthTarget: toMonthTargetAud * rate,
+    localSuggestedDaily: monthDaysLeft ? (toMonthTargetAud * rate) / monthDaysLeft : 0,
+    monthDaysLeft,
     plannedDaily: total / Math.max(1, daysBetween(flight.start, flight.end)),
     /* The number the team actually needs: what to run per day from here to
        land on budget. */
