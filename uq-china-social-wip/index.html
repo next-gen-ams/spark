@@ -90,12 +90,14 @@
   .chip { border:1px solid var(--line-2); background:var(--surface); color:var(--ink-2); padding:5px 11px; border-radius:20px; font-size:12px; font-weight:600; display:inline-flex; align-items:center; gap:6px; user-select:none; transition:all .12s; }
   .chip .dot { width:8px; height:8px; border-radius:50%; }
   .chip.off { opacity:.38; background:transparent; }
+  .chip.active { color:var(--ink); border-color:var(--chip-color,var(--ink-2)); background:color-mix(in srgb,var(--chip-color,var(--ink)) 8%,var(--surface)); box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--chip-color,var(--ink)) 16%,transparent); }
   .chip:hover { border-color:var(--ink-3); }
   .search { margin-left:auto; display:flex; align-items:center; gap:7px; background:var(--surface); border:1px solid var(--line-2); border-radius:9px; padding:6px 11px; min-width:200px; }
   .search input { border:none; background:transparent; outline:none; color:var(--ink); font-size:13px; width:100%; font-family:inherit; }
 
-  .stage { display:grid; grid-template-columns:1fr 300px; gap:16px; padding:4px 0 30px; align-items:start; }
-  @media (max-width:1120px){ .stage{grid-template-columns:1fr;} .kpis{grid-template-columns:repeat(2,1fr);} }
+  .stage { display:grid; grid-template-columns:300px minmax(0,1fr) 300px; gap:16px; padding:4px 0 30px; align-items:start; }
+  @media (max-width:1380px){ .stage{grid-template-columns:280px minmax(0,1fr);} .stage > .rail{grid-column:1/-1;display:grid;grid-template-columns:1fr 1fr;position:static;} }
+  @media (max-width:900px){ .stage{grid-template-columns:1fr;} .stage > .rail{grid-column:auto;display:flex;} .kpis{grid-template-columns:repeat(2,1fr);} }
 
   .cal { background:var(--surface); border:1px solid var(--line); border-radius:var(--radius); overflow:hidden; box-shadow:var(--shadow); }
   .cal .dow { display:grid; grid-template-columns:repeat(7,1fr); background:var(--header); }
@@ -169,12 +171,31 @@
   .merge-hint.over { color:var(--crit); background:color-mix(in oklab, var(--crit) 11%, transparent); font-weight:600; }
   .quota .slotpip.over { background:var(--crit); border-color:var(--crit); }
 
-  .pool-body { padding:9px; display:flex; flex-direction:column; gap:7px; max-height:300px; overflow-y:auto; }
-  .pool-item { border:1px solid var(--line); border-left:3px solid var(--ink-3); border-radius:7px; padding:7px 9px; background:var(--surface); cursor:grab; transition:all .12s; }
+  .pool-panel { position:sticky; top:116px; min-width:0; overflow:hidden; }
+  .pool-tools { padding:9px 10px 8px; border-bottom:1px solid var(--line); }
+  .pool-scope { display:grid; grid-template-columns:1fr 1fr; padding:2px; border-radius:8px; background:var(--surface-2); margin-bottom:8px; }
+  .pool-scope button { border:0; background:transparent; color:var(--ink-3); border-radius:6px; padding:6px; font-size:11px; font-weight:700; }
+  .pool-scope button.active { color:var(--ink); background:var(--surface); box-shadow:0 1px 3px rgba(0,0,0,.08); }
+  .pool-channels { display:flex; gap:5px; overflow-x:auto; padding-bottom:2px; }
+  .pool-channels button { flex:none; border:1px solid var(--line); background:var(--surface); color:var(--ink-2); border-radius:18px; padding:4px 8px; font-size:10.5px; font-weight:650; }
+  .pool-channels button .dot { display:inline-block; width:7px; height:7px; border-radius:50%; margin-right:5px; background:var(--pc); }
+  .pool-channels button.active { color:var(--ink); border-color:var(--pc,var(--ink-2)); background:color-mix(in srgb,var(--pc,var(--ink)) 8%,var(--surface)); }
+  .pool-search { display:flex; align-items:center; gap:6px; margin-top:8px; border:1px solid var(--line); border-radius:8px; padding:6px 8px; color:var(--ink-3); }
+  .pool-search input { min-width:0; width:100%; border:0; outline:0; background:transparent; color:var(--ink); font:inherit; font-size:11.5px; }
+  .pool-subhead { display:flex; align-items:center; padding:8px 10px; border-bottom:1px solid var(--line); background:var(--surface-2); color:var(--ink-3); font-size:10.5px; }
+  .pool-subhead b { color:var(--ink); }
+  .pool-subhead span { margin-left:auto; }
+  .pool-body { padding:9px; display:flex; flex-direction:column; gap:7px; max-height:520px; overflow-y:auto; }
+  .pool-item { border:1px solid var(--line); border-left:3px solid var(--pc,var(--ink-3)); border-radius:7px; padding:8px 9px; background:var(--surface); cursor:grab; transition:all .12s; }
   .pool-item:hover { border-color:var(--orange); box-shadow:var(--shadow); }
+  .pool-item.archived { cursor:pointer; opacity:.72; border-left-color:var(--ink-3); }
   .pool-item .pt { font-size:12px; font-weight:600; line-height:1.3; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; }
   .pool-item .pm { font-size:10px; color:var(--ink-3); margin-top:3px; display:flex; gap:6px; align-items:center; }
-  .hint { padding:0 14px 12px; font-size:11px; color:var(--ink-3); }
+  .pool-drop { background:var(--orange-soft); box-shadow:inset 0 0 0 2px var(--orange),var(--shadow); }
+  .pool-empty { padding:22px 12px; text-align:center; color:var(--ink-3); font-size:11.5px; }
+  .hint { padding:0 12px 11px; font-size:10.5px; color:var(--ink-3); }
+  .pool-hidden { border:1px dashed var(--line-2); background:var(--surface-2); border-radius:9px; padding:9px 10px; color:var(--ink-3); font-size:11px; line-height:1.45; }
+  .pool-hidden b { display:block; color:var(--ink); margin-bottom:3px; }
   .action { padding:10px 12px; border-bottom:1px solid var(--line); display:flex; gap:9px; align-items:flex-start; }
   .action:last-child { border-bottom:none; }
   .action .idot { width:9px; height:9px; border-radius:50%; margin-top:4px; flex:none; }
@@ -437,6 +458,17 @@
     <div class="search">🔍<input id="search" type="search" name="content-search" placeholder="Search content…" autocomplete="off" autocorrect="off" spellcheck="false" data-lpignore="true" data-1p-ignore data-form-type="other"></div>
   </div>
   <div class="stage" id="stage">
+    <div class="panel pool-panel" id="poolPanel">
+      <h3>Content Pool <span class="count" id="poolCount">0</span><button class="paddbtn" id="poolAdd" title="Add idea to pool">＋</button></h3>
+      <div class="pool-tools">
+        <div class="pool-scope" id="poolScope"><button class="active" data-scope="active">Active ideas</button><button data-scope="archived">Archived</button></div>
+        <div class="pool-channels" id="poolChannels"></div>
+        <label class="pool-search">⌕<input id="poolSearch" type="search" placeholder="Search all ideas…" autocomplete="off"></label>
+      </div>
+      <div class="pool-subhead"><b id="poolSubhead">Active ideas</b><span id="poolDragHint">Drag → calendar</span></div>
+      <div class="pool-body" id="poolBody"></div>
+      <div class="hint">Active ideas automatically carry forward until scheduled or archived.</div>
+    </div>
     <div class="cal">
       <div class="dow"><div>Mon</div><div>Tue</div><div>Wed</div><div>Thu</div><div>Fri</div><div>Sat</div><div>Sun</div></div>
       <div class="grid" id="grid"></div>
@@ -446,11 +478,6 @@
       <div class="panel">
         <h3>WeChat push planner <span class="count">4 / month cap</span></h3>
         <div class="wechat-body" id="wechatBody"></div>
-      </div>
-      <div class="panel">
-        <h3>Content Pool <span class="count" id="poolCount">0</span><button class="paddbtn" id="poolAdd" title="Add idea to pool">＋</button></h3>
-        <div class="pool-body" id="poolBody"></div>
-        <div class="hint">Drag any idea onto a day to schedule it — lands dated as a draft, ready to fill.</div>
       </div>
       <div class="panel">
         <h3>What we need from UQ <span class="count" id="actCount">0</span></h3>
@@ -616,7 +643,7 @@ const POOL = [
   {note:"NAIDOC Week",fmt:"Image",sug:"UQ"},
   {note:"Breakthroughs: how UQ is changing the world",fmt:"Article",sug:"UQ"},
 ];
-POOL.forEach((p,i)=>p.id="p"+i);
+POOL.forEach((p,i)=>{p.id="p"+i;p.ch=p.ch||"All";p.archived=!!p.archived;p.scheduled=!!p.scheduled;p.label=p.label||"Inform";p.asset=p.asset||"";p.note2=p.note2||"";});
 
 // "What we need from UQ" is derived, not maintained by hand: it is exactly the posts
 // whose UQ approval is still Pending this month, so it fills and empties itself.
@@ -665,15 +692,27 @@ function rebuildMonths(){
   if(idx<0) idx=MONTHS.length-1;      // else land on the latest month we have
   mi=idx; _monthsReady=true;
 }
-let mi=2, q="", view="cal", boostFilter="all";
+let mi=2, q="", view="cal", boostFilter="all", chFilter="All";
 // resizable boosting-log column widths (px), persist across re-renders — [Channel, Post, Window, Budget, Spend, CTR, Eng, CPE, Flwr, Cost/Flwr, Status, Note]
 let BCOLW=[78,180,186,58,78,62,90,66,84,78,148,150];
-let chOn={"RED":1,"WeChat":1,"Weibo":1,"Alumni WeChat":1};
 let stOn={"Posted":1,"Scheduled":1,"Approved":1,"Pending":1,"Proposed":1};
+let poolChannel="All", poolScope="active", poolQuery="";
 const WECHAT_CAP=4;  // one WeChat OA: 4 pushes/month total (UQ Central + Alumni combined)
 const KEYDATES={};   // manually added important-date markers, keyed by ISO date
 const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
 const esc=s=>(s||"").replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));
+const POOL_META_PREFIX="@uqpool:";
+function poolFromRow(r){
+  let meta={}; const raw=r.fmt||"";
+  if(raw.startsWith(POOL_META_PREFIX)){ try{ meta=JSON.parse(decodeURIComponent(raw.slice(POOL_META_PREFIX.length)))||{}; }catch(e){ console.warn("Invalid pool metadata",r.id); } }
+  return {id:r.id,note:r.note||"",fmt:meta.fmt||(raw.startsWith(POOL_META_PREFIX)?"Article":raw)||"Article",sug:r.sug||"GMS",
+    ch:CH[meta.ch]?meta.ch:"All",archived:!!meta.archived,scheduled:!!meta.scheduled,label:meta.label||"Inform",asset:meta.asset||"",note2:meta.note2||"",workflow:meta.workflow||null};
+}
+function poolToRow(p){
+  const meta={fmt:p.fmt||"Article",ch:CH[p.ch]?p.ch:"All",archived:!!p.archived,scheduled:!!p.scheduled,label:p.label||"Inform",asset:p.asset||"",note2:p.note2||""};
+  if(p.workflow) meta.workflow=p.workflow;
+  return {id:p.id,note:p.note||"",fmt:POOL_META_PREFIX+encodeURIComponent(JSON.stringify(meta)),sug:p.sug||"GMS"};
+}
 
 function delStatus(d){
   if(d.del==="Posted") return {k:"Posted",l:"Posted",c:"var(--st-posted)"};
@@ -689,7 +728,7 @@ function inMonthISO(iso,M){ return !!iso && /^\d{4}-\d{2}/.test(iso) && +iso.sli
 // not the month the post was published — a Jan post boosted in Feb counts under Feb.
 function monthBoostItems(){ const M=MONTHS[mi];
   return SEED.filter(d=>d.boost).filter(d=> d.boostData ? inMonthISO(d.boostData.start,M) : inMonthISO(d.date,M) ); }
-function visible(d){ if(!chOn[d.ch])return false; if(!stOn[delStatus(d).k])return false;
+function visible(d){ if(chFilter!=="All"&&d.ch!==chFilter)return false; if(!stOn[delStatus(d).k])return false;
   if(q && !(d.note.toLowerCase().includes(q)))return false; return true; }
 
 function renderKPIs(){
@@ -759,10 +798,11 @@ function renderWeChat(){
 }
 
 function renderChips(){
-  $("#chChips").innerHTML=Object.keys(CH).map(k=>`<button class="chip ${chOn[k]?'':'off'}" data-ch="${k}"><span class="dot" style="background:${CH[k].color}"></span>${CH[k].label}</button>`).join("");
+  $("#chChips").innerHTML=`<button class="chip ${chFilter==='All'?'active':''}" data-ch="All" style="--chip-color:var(--ink-2)">All</button>`+
+    Object.keys(CH).map(k=>`<button class="chip ${chFilter===k?'active':''}" data-ch="${k}" style="--chip-color:${CH[k].color}"><span class="dot" style="background:${CH[k].color}"></span>${CH[k].label}</button>`).join("");
   const sts=[["Posted","var(--st-posted)"],["Scheduled","var(--st-sched)"],["Approved","var(--st-appr)"],["Pending","var(--st-wait)"],["Proposed","var(--st-prop)"]];
   $("#stChips").innerHTML=sts.map(([k,c])=>`<button class="chip ${stOn[k]?'':'off'}" data-st="${k}"><span class="dot" style="background:${c}"></span>${k==="Pending"?"Awaiting":k}</button>`).join("");
-  $$("#chChips .chip").forEach(b=>b.onclick=()=>{chOn[b.dataset.ch]^=1;renderChips();renderGrid();});
+  $$("#chChips .chip").forEach(b=>b.onclick=()=>{chFilter=b.dataset.ch;renderChips();renderGrid();});
   $$("#stChips .chip").forEach(b=>b.onclick=()=>{stOn[b.dataset.st]^=1;renderChips();renderGrid();});
 }
 
@@ -806,7 +846,7 @@ function renderGrid(){
 }
 function clearFilters(){
   q=""; if($("#search")) $("#search").value="";
-  Object.keys(chOn).forEach(k=>chOn[k]=1); Object.keys(stOn).forEach(k=>stOn[k]=1);
+  chFilter="All"; Object.keys(stOn).forEach(k=>stOn[k]=1);
   renderChips(); renderGrid(); toast("Filters cleared");
 }
 function wireGrid(){
@@ -832,11 +872,32 @@ function moveContent(cid,iso){
   d.date=iso; saveContent(d); renderAll(); toast("Moved to "+MO[+iso.slice(5,7)-1]+" "+(+iso.slice(-2)));
 }
 function renderPool(){
-  $("#poolCount").textContent=POOL.length;
-  $("#poolBody").innerHTML=POOL.map(p=>{const w=WHO[p.sug]||WHO.GMS;
-    return `<div class="pool-item" draggable="true" data-id="${p.id}"><div class="pt">${esc(p.note)}</div>
-    <div class="pm"><span>${FMT_ICON[p.fmt]||'—'}</span><span class="mini-av" style="background:${w.c}">${w.t}</span><span>${p.sug}</span></div></div>`;}).join("");
-  $$(".pool-item").forEach(el=>el.ondragstart=e=>e.dataTransfer.setData("pid",el.dataset.id));
+  const archived=poolScope==="archived";
+  const rows=POOL.filter(p=>!p.scheduled&&!!p.archived===archived)
+    .filter(p=>poolChannel==="All"||p.ch===poolChannel)
+    .filter(p=>!poolQuery||p.note.toLowerCase().includes(poolQuery));
+  $("#poolCount").textContent=rows.length;
+  $("#poolScope").innerHTML=`<button class="${archived?'':'active'}" data-scope="active">Active ideas</button><button class="${archived?'active':''}" data-scope="archived">Archived · ${POOL.filter(p=>p.archived&&!p.scheduled).length}</button>`;
+  $("#poolChannels").innerHTML=`<button class="${poolChannel==='All'?'active':''}" data-ch="All" style="--pc:var(--ink-2)">All</button>`+
+    Object.keys(CH).map(k=>`<button class="${poolChannel===k?'active':''}" data-ch="${k}" style="--pc:${CH[k].color}"><span class="dot"></span>${CH[k].label}</button>`).join("");
+  $("#poolSearch").placeholder=poolChannel==="All"?"Search all ideas…":`Search ${CH[poolChannel].label} ideas…`;
+  $("#poolSubhead").textContent=archived?"Archived ideas":"Active ideas · automatically carry forward";
+  $("#poolDragHint").textContent=archived?"Click to review":"Drag → calendar";
+  $("#poolBody").innerHTML=rows.length?rows.map(p=>{const w=WHO[p.sug]||WHO.GMS, pc=CH[p.ch]?.color||"var(--ink-3)";
+    return `<div class="pool-item ${archived?'archived':''}" draggable="${archived?'false':'true'}" data-id="${p.id}" style="--pc:${pc}"><div class="pt">${esc(p.note)}</div>
+    <div class="pm"><span>${FMT_ICON[p.fmt]||'—'}</span><span>${p.ch==='All'?'Unassigned':CH[p.ch].label}</span><span class="mini-av" style="background:${w.c}">${w.t}</span></div></div>`;}).join("")
+    :`<div class="pool-empty">No ${archived?'archived':'active'} ideas in this view.</div>`;
+  $$("#poolScope button").forEach(b=>b.onclick=()=>{poolScope=b.dataset.scope;renderPool();});
+  $$("#poolChannels button").forEach(b=>b.onclick=()=>{poolChannel=b.dataset.ch;renderPool();});
+  $$(".pool-item").forEach(el=>{
+    el.onclick=()=>{if(!el._dragged){const p=POOL.find(x=>x.id===el.dataset.id);if(p)openPoolDrawer(p,false);}};
+    el.ondragstart=e=>{e.dataTransfer.setData("pid",el.dataset.id);e.dataTransfer.effectAllowed="move";el._dragged=false;};
+    el.ondrag=()=>{el._dragged=true;}; el.ondragend=()=>setTimeout(()=>el._dragged=false,50);
+  });
+  const panel=$("#poolPanel");
+  panel.ondragover=e=>{if(!Array.from(e.dataTransfer.types).includes("cid"))return;e.preventDefault();panel.classList.add("pool-drop");};
+  panel.ondragleave=e=>{if(!panel.contains(e.relatedTarget))panel.classList.remove("pool-drop");};
+  panel.ondrop=e=>{e.preventDefault();panel.classList.remove("pool-drop");const cid=e.dataTransfer.getData("cid");if(cid)returnContentToPool(cid);};
 }
 function renderActions(){
   const acts=actionItems(), M=MONTHS[mi];
@@ -849,10 +910,24 @@ function renderActions(){
 }
 function dropPool(pid,iso){
   const p=POOL.find(x=>x.id===pid); if(!p)return;
-  const it={id:"c"+Date.now(),ch:"RED",date:iso,note:p.note,label:"Inform",fmt:p.fmt||"Image",appr:"Pending",del:"Draft",boost:false,by:"GMS",url:"",copy:"",back:"",asset:"",preview:""};
-  SEED.push(it); POOL.splice(POOL.indexOf(p),1);
-  saveContent(it); delPool(p.id);
+  if(!CH[p.ch]){toast("Choose a channel before scheduling");openPoolDrawer(p,false);return;}
+  const wf=p.workflow||{};
+  let it=wf.contentId?SEED.find(x=>x.id===wf.contentId):null;
+  if(!it){it={id:wf.contentId||"c"+Date.now()};SEED.push(it);}
+  Object.assign(it,{ch:p.ch,date:iso,note:p.note,label:p.label||"Inform",fmt:p.fmt||"Image",appr:wf.appr||"Pending",del:wf.del||"Draft",boost:!!wf.boost,by:p.sug||"GMS",url:wf.url||"",note2:p.note2||"",copy:"",back:"",asset:p.asset||"",preview:wf.preview||"",wslot:wf.wslot||"",mergedInto:wf.mergedInto||""});
+  if(wf.boostData)it.boostData=wf.boostData;
+  p.scheduled=true;p.archived=false;p.workflow={...wf,contentId:it.id};
+  saveContent(it);if(it.boostData)saveBoost(it);savePool(p);
   renderAll(); toast(`Scheduled to ${iso} — fill it in`); openDrawer(it);
+}
+function returnContentToPool(cid){
+  const d=SEED.find(x=>x.id===cid);if(!d)return;
+  if(!confirm(`Move “${d.note}” back to the ${CH[d.ch].label} Content Pool?\n\nIts scheduled date will be removed. Publishing workflow fields will be preserved but hidden until it is scheduled again.`))return;
+  let p=POOL.find(x=>x.workflow&&x.workflow.contentId===d.id);
+  if(!p){p={id:"p"+Date.now()};POOL.unshift(p);}
+  Object.assign(p,{note:d.note,fmt:d.fmt||"Article",sug:d.by||"GMS",ch:d.ch,archived:false,scheduled:false,label:d.label||"Inform",asset:d.asset||"",note2:d.note2||"",
+    workflow:{contentId:d.id,preview:d.preview||"",appr:d.appr||"Pending",del:d.del||"Draft",url:d.url||"",boost:!!d.boost,boostData:d.boostData||null,wslot:d.wslot||"",mergedInto:d.mergedInto||""}});
+  d.date="";d.boost=false;savePool(p);saveContent(d);renderPool();renderAll();toast(`Moved back to ${CH[d.ch].label} Content Pool`);
 }
 function addNew(iso,ch){
   const it={id:"c"+Date.now(),ch:ch||"RED",date:iso,note:"New post",label:"Inform",fmt:"Image",appr:"Pending",del:"Proposed",boost:false,by:"GMS",url:"",copy:"",back:"",asset:"",preview:""};
@@ -894,25 +969,39 @@ function openAddPop(iso,btn){
 function outsideAdd(e){ if(!e.target.closest("#addpop")&&!e.target.closest(".add")&&!e.target.closest(".paddbtn")) closeAddPop(); }
 function closeAddPop(){ const p=document.getElementById("addpop"); if(p)p.remove(); document.removeEventListener("mousedown",outsideAdd); }
 
-// Content Pool "+" — add an idea to the pool (persists across all months)
-function openPoolPop(btn){
-  closeAddPop();
-  const pop=document.createElement("div"); pop.className="addpop"; pop.id="addpop"; document.body.appendChild(pop);
-  const r=btn.getBoundingClientRect(), pw=212;
-  pop.style.left=Math.max(8,Math.min(r.right-pw, window.innerWidth-pw-8))+"px";
-  pop.style.top=(r.bottom+6)+"px";
-  pop.innerHTML=`<div class="ph">Add to Content Pool</div>
-    <div class="kd"><input id="plInput" placeholder="Content idea…" maxlength="80"></div>
-    <div class="ph" style="margin:9px 2px 6px">Added by</div>
-    <div class="seg" id="plby"><button data-v="GMS" class="on">GMS</button><button data-v="UQ">UQ</button></div>
-    <button class="chbtn" id="plAdd" style="justify-content:center; margin-top:9px; font-weight:700">Add idea</button>`;
-  let by="GMS";
-  pop.querySelectorAll("#plby button").forEach(b=>b.onclick=()=>{by=b.dataset.v;pop.querySelectorAll("#plby button").forEach(x=>x.classList.toggle("on",x===b));});
-  const add=()=>{const v=pop.querySelector("#plInput").value.trim(); if(v){var np={id:"p"+Date.now(),note:v,fmt:"Article",sug:by}; POOL.unshift(np); savePool(np); closeAddPop(); renderPool(); toast("Added to Content Pool");}};
-  pop.querySelector("#plAdd").onclick=add;
-  pop.querySelector("#plInput").onkeydown=e=>{if(e.key==="Enter")add();};
-  pop.querySelector("#plInput").focus();
-  setTimeout(()=>document.addEventListener("mousedown",outsideAdd),0);
+// Content Pool cards use the same base planning fields as calendar content.
+// Publishing workflow fields stay hidden until the card is scheduled.
+let curPool=null;
+function openPoolDrawer(item,isNew){
+  const p=isNew?{id:"p"+Date.now(),note:"New content idea",fmt:"Article",sug:"GMS",ch:poolChannel==="All"?"":poolChannel,archived:false,scheduled:false,label:"Inform",asset:"",note2:""}:item;
+  curPool=p;const tag=CH[p.ch]||{label:"Choose channel",raw:"#8C877E"};
+  $("#drawer").innerHTML=`
+    <div class="dhead"><span class="chtag" style="background:${tag.raw}">${tag.label}</span>
+      <div><h2>${isNew?'New Content Pool idea':'Edit Content Pool idea'}</h2><div class="byline">Pre-planning details · automatically carries forward</div></div>
+      <button class="dclose" id="dclose">✕</button></div>
+    <div class="dbody">
+      <div class="field"><label>Subject line</label><input id="p_note" placeholder="The content idea…" value="${esc(p.note)}"></div>
+      <div class="row2"><div class="field"><label>Channel</label><select id="p_ch"><option value="">Choose a channel…</option>${Object.keys(CH).map(k=>`<option value="${k}" ${k===p.ch?'selected':''}>${CH[k].label}</option>`).join("")}</select></div>
+        <div class="field"><label>Format</label><select id="p_fmt">${["Image","Article","Video","Carousel"].map(k=>`<option ${k===p.fmt?'selected':''}>${k}</option>`).join("")}</select></div></div>
+      <div class="row2"><div class="field"><label>Label</label><select id="p_label">${LABELS.concat(p.label&&LABELS.indexOf(p.label)<0?[p.label]:[]).map(k=>`<option ${k===p.label?'selected':''}>${k}</option>`).join("")}</select></div>
+        <div class="field"><label>Added by</label><div class="seg" id="p_by">${["GMS","UQ"].map(v=>`<button data-v="${v}" class="${p.sug===v?'on':''}">${v}</button>`).join("")}</div></div></div>
+      <div class="field"><label>Asset / resource links <span style="text-transform:none;color:var(--ink-3);font-weight:500">— add as many as needed</span></label><div id="poolAssetList"></div><button type="button" class="linkadd" id="poolAssetAdd">+ Add another link</button></div>
+      <div class="field"><label>Note</label><textarea id="p_note2" placeholder="Working notes for the idea…">${esc(p.note2||"")}</textarea></div>
+      <div class="pool-hidden"><b>Available after scheduling</b>Launch date · Preview Doc Link · Lifecycle (Draft / Scheduled / Posted) · UQ Approval · Post-publish Link · Boost</div>
+    </div>
+    <div class="dfoot">${isNew?'':`<button class="btn ghost" id="p_archive">${p.archived?'Restore':'Archive'}</button>`}<button class="btn primary" id="p_save">${isNew?'Add to Content Pool':'Save'}</button></div>`;
+  $("#scrim").classList.add("open");$("#drawer").classList.add("open");
+  let by=p.sug||"GMS";
+  $$("#p_by button").forEach(b=>b.onclick=()=>{by=b.dataset.v;$$("#p_by button").forEach(x=>x.classList.toggle("on",x===b));});
+  $("#p_ch").onchange=()=>{const c=CH[$("#p_ch").value]||{label:"Choose channel",raw:"#8C877E"};$("#drawer .chtag").textContent=c.label;$("#drawer .chtag").style.background=c.raw;};
+  let links=(p.asset||"").split("\n").map(s=>s.trim()).filter(Boolean).map(line=>{const i=line.indexOf(" | ");return i<0?{t:"",u:line}:{t:line.slice(0,i),u:line.slice(i+3)};});
+  if(!links.length)links=[{t:"",u:""}];
+  const drawLinks=()=>{const box=$("#poolAssetList");box.innerHTML=links.map((v,i)=>`<div class="alrow"><input class="al-t" data-i="${i}" placeholder="What's this? e.g. Source article" value="${esc(v.t)}"><input class="al-u" data-i="${i}" placeholder="https://…" value="${esc(v.u)}">${links.length>1?`<button type="button" class="alrm" data-i="${i}" title="Remove this link">✕</button>`:""}</div>`).join("");
+    box.querySelectorAll(".al-t").forEach(x=>x.oninput=()=>links[+x.dataset.i].t=x.value);box.querySelectorAll(".al-u").forEach(x=>x.oninput=()=>links[+x.dataset.i].u=x.value);box.querySelectorAll(".alrm").forEach(b=>b.onclick=()=>{links.splice(+b.dataset.i,1);if(!links.length)links=[{t:"",u:""}];drawLinks();});};
+  drawLinks();$("#poolAssetAdd").onclick=()=>{links.push({t:"",u:""});drawLinks();const ins=$("#poolAssetList").querySelectorAll(".al-t");ins[ins.length-1].focus();};
+  $("#dclose").onclick=closeDrawer;
+  if($("#p_archive"))$("#p_archive").onclick=()=>{p.archived=!p.archived;p.scheduled=false;savePool(p);closeDrawer();renderPool();toast(p.archived?"Idea archived":"Idea restored");};
+  $("#p_save").onclick=()=>{const ch=$("#p_ch").value;if(!CH[ch]){toast("Choose a channel");$("#p_ch").focus();return;}Object.assign(p,{note:$("#p_note").value.trim()||"Untitled",ch,fmt:$("#p_fmt").value,label:$("#p_label").value,sug:by,note2:$("#p_note2").value,asset:links.map(v=>({t:v.t.trim(),u:v.u.trim()})).filter(v=>v.t||v.u).map(v=>v.t?`${v.t} | ${v.u}`:v.u).join("\n")});if(isNew)POOL.unshift(p);savePool(p);poolChannel=ch;poolScope="active";closeDrawer();renderPool();toast(isNew?`Added to ${CH[ch].label} Content Pool`:"Content Pool idea saved");};
 }
 
 let cur=null;
@@ -1510,7 +1599,8 @@ $("#search").oninput=e=>{
   if(!searchTouched){ e.target.value=""; return; }   // typing always focuses first — this is autofill
   q=e.target.value.toLowerCase(); renderGrid(); };
 $("#export").onclick=e=>{ e.stopPropagation(); $("#xpop")?closeXPop():openExportPop(e.currentTarget); };
-$("#poolAdd").onclick=e=>{e.stopPropagation();openPoolPop(e.currentTarget);};
+$("#poolAdd").onclick=e=>{e.stopPropagation();openPoolDrawer(null,true);};
+$("#poolSearch").oninput=e=>{poolQuery=e.target.value.trim().toLowerCase();renderPool();};
 $("#statusFilter").onchange=e=>{boostFilter=e.target.value;renderPaid();};
 $$("#tabs button").forEach(b=>b.onclick=()=>{view=b.dataset.view;$$("#tabs button").forEach(x=>x.classList.toggle("active",x===b));
   const monthly=(view==="cal"||view==="paid");   // Year view and WIP aren't scoped to a month
@@ -1553,7 +1643,7 @@ async function loadAll(){
   SEED.length=0; (c.data||[]).forEach(function(r){ SEED.push(rowToContent(r)); });
   var bmap={}; (bo.data||[]).forEach(function(r){ bmap[r.id]=rowToBoost(r); });
   SEED.forEach(function(d){ if(bmap[d.id]) d.boostData=bmap[d.id]; });
-  POOL.length=0; (po.data||[]).forEach(function(r){ POOL.push({id:r.id,note:r.note||"",fmt:r.fmt||"",sug:r.sug||"GMS"}); });
+  POOL.length=0; (po.data||[]).forEach(function(r){ POOL.push(poolFromRow(r)); });
   WIP.length=0; (wi.data||[]).forEach(function(r){ WIP.push({id:r.id,stage:r.stage||"todo",item:r.item||"",cat:r.cat||"",by:r.by||"",due:r.due||"",note:r.note||"",link:r.link||""}); });
   for(var k in KEYDATES) delete KEYDATES[k]; (kd.data||[]).forEach(function(r){ KEYDATES[r.iso]=r.label; });
   for(var k2 in BUDGETPLAN) delete BUDGETPLAN[k2];
@@ -1584,7 +1674,7 @@ async function flush(){
 function saveContent(d){ up("content",contentToRow(d)); }
 function saveBoost(d){ if(d && d.boostData) up("boosting",boostToRow(d.id,d.boostData)); }
 function delContent(id){ delRow("content","id",id); delRow("boosting","id",id); }
-function savePool(p){ up("pool",{id:p.id,note:p.note,fmt:p.fmt||"",sug:p.sug||""}); }
+function savePool(p){ up("pool",poolToRow(p)); }
 function delPool(id){ delRow("pool","id",id); }
 function saveWip(w){ up("wip",{id:w.id,stage:w.stage,item:w.item,cat:w.cat||"",by:w.by||"",due:w.due||"",note:w.note||"",link:w.link||""}); }
 function delWip(id){ delRow("wip","id",id); }
