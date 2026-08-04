@@ -166,37 +166,63 @@ export function pacingAlerts(rows, side, onPick) {
       el('div', {}, 'No line is more than 15% ahead of or behind its time elapsed.'));
   }
 
-  const LIMIT = 12;
-  return el('div', { class: 'tablewrap' }, resizable(el('table', { class: 'data fill-panel' },
+  const PAGE_SIZE = 12;
+  let page = 0;
+
+  const row = ({ m, idx }) => {
+    const over = idx > 1;
+    return el('tr', { style: { cursor: 'pointer' }, onclick: () => onPick && onPick(m) },
+      el('td', { class: 'wrap' }, m.clientName),
+      el('td', { class: 'wrap' }, shown(m.line.placement) || shown(m.line.supplier) || shown(m.line.objective) || '—',
+        el('div', { class: 'muted', style: { fontSize: '11px' } },
+          `${shown(m.line.platform)}${shown(m.line.objective) ? ' · ' + shown(m.line.objective) : ''}`)),
+      el('td', { class: 'num' }, money(m[side].spend)),
+      el('td', { class: 'num' }, pct(m[side].pacingPct, 0)),
+      el('td', { class: 'num muted' }, pct(m.timePct, 0)),
+      el('td', {}, el('span', { class: 'tag ' + (over ? 'crit' : 'warn') },
+        over ? `${pct(idx - 1, 0)} ahead` : `${pct(1 - idx, 0)} behind`)),
+      el('td', { class: 'wrap prose muted', style: { fontSize: '11px' } },
+        over
+          ? `will overspend by ~${money(m[side].budget * (idx - 1))}`
+          : `~${money(m[side].budget - m[side].spend)} still to place`));
+  };
+
+  const body = el('tbody');
+  const table = resizable(el('table', { class: 'data fill-panel' },
     el('thead', {}, el('tr', {},
       el('th', {}, 'Client'), el('th', {}, 'Line'),
       el('th', { class: 'num' }, 'Spent'), el('th', { class: 'num' }, 'of budget'),
       el('th', { class: 'num' }, 'Time elapsed'), el('th', {}, ''), el('th', {}, ''))),
-    el('tbody', {}, ...flagged.slice(0, LIMIT).map(({ m, idx }) => {
-      const over = idx > 1;
-      return el('tr', { style: { cursor: 'pointer' }, onclick: () => onPick && onPick(m) },
-        el('td', { class: 'wrap' }, m.clientName),
-        el('td', { class: 'wrap' }, shown(m.line.placement) || shown(m.line.supplier) || shown(m.line.objective) || '—',
-          el('div', { class: 'muted', style: { fontSize: '11px' } },
-            `${shown(m.line.platform)}${shown(m.line.objective) ? ' · ' + shown(m.line.objective) : ''}`)),
-        el('td', { class: 'num' }, money(m[side].spend)),
-        el('td', { class: 'num' }, pct(m[side].pacingPct, 0)),
-        el('td', { class: 'num muted' }, pct(m.timePct, 0)),
-        el('td', {}, el('span', { class: 'tag ' + (over ? 'crit' : 'warn') },
-          over ? `${pct(idx - 1, 0)} ahead` : `${pct(1 - idx, 0)} behind`)),
-        el('td', { class: 'wrap prose muted', style: { fontSize: '11px' } },
-          over
-            ? `will overspend by ~${money(m[side].budget * (idx - 1))}`
-            : `~${money(m[side].budget - m[side].spend)} still to place`));
-    })),
-  /* The list is capped to keep the panel readable, but a silent cap reads as
-     "that's all of them" — which is exactly wrong when the worst 12 are shown
-     and more are hiding behind them. */
-  flagged.length > LIMIT
-    ? el('tfoot', {}, el('tr', {}, el('td', {
-      colspan: 7, class: 'muted', style: { fontSize: '11.5px' },
-    }, `…and ${flagged.length - LIMIT} more off pace. Filter by client or platform to see them.`)))
-    : null), 'overview-alerts', [170, 260, 105, 100, 110, 120, 200]));
+    body), 'overview-alerts', [170, 260, 105, 100, 110, 120, 200]);
+
+  const pageCount = Math.ceil(flagged.length / PAGE_SIZE);
+  const range = el('span', { class: 'muted', 'aria-live': 'polite' });
+  const pageLabel = el('span', { class: 'pagerlabel', 'aria-live': 'polite' });
+  const previous = el('button', {
+    class: 'btn ghost sm', type: 'button', 'data-page': 'previous',
+    'aria-label': 'Previous page', onclick: () => show(page - 1),
+  }, 'Previous');
+  const next = el('button', {
+    class: 'btn ghost sm', type: 'button', 'data-page': 'next',
+    'aria-label': 'Next page', onclick: () => show(page + 1),
+  }, 'Next');
+
+  function show(nextPage) {
+    page = Math.max(0, Math.min(pageCount - 1, nextPage));
+    const start = page * PAGE_SIZE;
+    const end = Math.min(start + PAGE_SIZE, flagged.length);
+    body.replaceChildren(...flagged.slice(start, end).map(row));
+    range.textContent = `${start + 1}–${end} of ${flagged.length} lines`;
+    pageLabel.textContent = `Page ${page + 1} of ${pageCount}`;
+    previous.disabled = page === 0;
+    next.disabled = page === pageCount - 1;
+  }
+
+  show(0);
+  return el('div', { class: 'alerttable' },
+    el('div', { class: 'tablewrap' }, table),
+    pageCount > 1 ? el('div', { class: 'tablepager' }, range,
+      el('div', { class: 'pageractions' }, previous, pageLabel, next)) : null);
 }
 
 /* --------------------------------------------------- campaign re-pacing */
