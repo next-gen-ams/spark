@@ -1205,22 +1205,22 @@ function renderPaid(){
   $$("#budgetLegend button").forEach(btn=>btn.onclick=()=>{const k=btn.dataset.series;
     if(budgetSeriesOn[k]&&Object.values(budgetSeriesOn).filter(Boolean).length===1){toast("Keep at least one chart series visible");return;}
     budgetSeriesOn[k]=budgetSeriesOn[k]?0:1;renderPaid();});
-  // Channel split — budget + LIVE actual spend, derived from this month's boosted posts
+  // Channel split — booked amount + LIVE actual spend, derived from this month's boosted posts
   const M=MONTHS[mi];
   const chColor={RED:"var(--ch-red)",WeChat:"var(--ch-wechat)",Weibo:"var(--ch-weibo)","Alumni WeChat":"var(--ch-alumni)"};
   const byCh={}, spentCh={};
   monthBoostItems().forEach(d=>{const bd=d.boostData||{}; const bud=budgetOf(d);
     byCh[d.ch]=(byCh[d.ch]||0)+bud; spentCh[d.ch]=(spentCh[d.ch]||0)+(parseFloat(bd.spend)||0);});
   const sp=Object.keys(byCh).map(n=>[n,byCh[n],spentCh[n]||0,chColor[n]||"var(--ink-3)"]).sort((a,b)=>b[1]-a[1]);
-  $("#splitSub").textContent=`${M.key} · budget vs. actual spend (live)`;
+  $("#splitSub").textContent=`${M.key} · booked vs. actual spend (live)`;
   const totB=sp.reduce((a,x)=>a+x[1],0), totS=sp.reduce((a,x)=>a+x[2],0);
   $("#splitBody").innerHTML=(sp.length?sp.map(([n,bud,spent,c])=>{const pct=bud?Math.round(spent/bud*100):0;
-    return `<div style="margin-bottom:14px" data-tip="${n} · Spent $${Math.round(spent).toLocaleString()} of $${bud.toLocaleString()} budget (${pct}%)">
+    return `<div style="margin-bottom:14px" data-tip="${n} · Spent $${Math.round(spent).toLocaleString()} of $${bud.toLocaleString()} booked (${pct}%)">
     <div style="display:flex;justify-content:space-between;font-size:12.5px;font-weight:600;margin-bottom:5px">
     <span class="chip" style="pointer-events:none;padding:2px 9px"><span class="dot" style="background:${c}"></span>${n}</span>
     <span class="tnum"><b>$${Math.round(spent).toLocaleString()}</b> <span style="color:var(--ink-3);font-weight:500">/ $${bud.toLocaleString()}</span></span></div>
     <div class="bar" style="height:9px"><i style="width:${Math.min(100,pct)}%;background:${pct>100?'var(--crit)':c}"></i></div></div>`;}).join("")
-    +`<div style="margin-top:18px;padding-top:14px;border-top:1px solid var(--line);display:flex;justify-content:space-between;font-weight:800"><span>Total spent / budget</span><span class="tnum"><span style="color:var(--orange)">$${Math.round(totS).toLocaleString()}</span> <span style="color:var(--ink-3);font-weight:600">/ $${totB.toLocaleString()}</span></span></div>`
+    +`<div style="margin-top:18px;padding-top:14px;border-top:1px solid var(--line);display:flex;justify-content:space-between;font-weight:800"><span>Total spent / booked</span><span class="tnum"><span style="color:var(--orange)">$${Math.round(totS).toLocaleString()}</span> <span style="color:var(--ink-3);font-weight:600">/ $${totB.toLocaleString()}</span></span></div>`
     :`<div style="font-size:12px;color:var(--ink-3);padding:10px 0">No boosted posts this month yet — toggle Boost on a post in the calendar and it appears here.</div>`);
   // ---- Boosting: THIS MONTH only, derived from boosted posts, editable ----
   const monthBoosts=monthBoostItems().sort((a,b)=>(a.boostData?.start||a.date).localeCompare(b.boostData?.start||b.date));
