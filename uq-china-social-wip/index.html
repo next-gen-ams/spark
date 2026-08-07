@@ -251,6 +251,16 @@
   .chartcard { background:var(--surface); border:1px solid var(--line); border-radius:var(--radius); padding:16px 18px; box-shadow:var(--shadow); }
   .chartcard h3 { margin:0 0 3px; font-size:14px; font-weight:700; }
   .chartcard .csub { font-size:12px; color:var(--ink-3); margin-bottom:16px; }
+  .annual-totals { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); margin:0 0 14px; border:1px solid var(--line); border-radius:9px; background:var(--surface-2); }
+  .annual-total { min-width:0; padding:10px 12px; }
+  .annual-total + .annual-total { border-left:1px solid var(--line); }
+  .annual-total dt { display:flex; align-items:center; gap:7px; margin:0 0 3px; color:var(--ink-3); font-size:10.5px; font-weight:700; text-transform:uppercase; letter-spacing:.35px; }
+  .annual-total dt i { width:10px; height:10px; border-radius:3px; flex:none; }
+  .annual-total dd { margin:0; color:var(--ink); font-size:18px; font-weight:780; letter-spacing:-.3px; }
+  @media (max-width:520px){
+    .annual-totals { grid-template-columns:1fr; }
+    .annual-total + .annual-total { border-left:0; border-top:1px solid var(--line); }
+  }
   .chart { display:flex; align-items:flex-end; gap:14px; height:190px; padding-top:10px; border-bottom:1px solid var(--line); }
   .colgrp { flex:1; display:flex; flex-direction:column; align-items:center; gap:6px; height:100%; justify-content:flex-end; }
   .cols { display:flex; align-items:flex-end; gap:4px; height:100%; width:100%; justify-content:center; }
@@ -510,6 +520,7 @@
     <div class="chartcard">
       <h3>Budgeted vs. Booked vs. Actual by month</h3>
       <div class="csub">Combined RED + WeChat · AUD · original media plan vs. current bookings vs. actual spend</div>
+      <dl class="annual-totals" id="budgetTotals" aria-label="Annual paid totals"></dl>
       <div class="chart" id="chart"></div>
       <div class="legend" id="budgetLegend" role="group" aria-label="Chart series filters"></div>
     </div>
@@ -1190,6 +1201,14 @@ function renderPaid(){
   if(budgetSeriesOn.actual)shown.push(...spendByM);
   const max=Math.max(1,...shown);
   const barH=v=>v?Math.max(3,Math.round(v/max*160)):2;
+  const annualBudgeted=planByM.reduce((a,v)=>a+v,0);
+  const annualBooked=bookedByM.reduce((a,v)=>a+v,0);
+  const annualActual=spendByM.reduce((a,v)=>a+v,0);
+  $("#budgetTotals").innerHTML=[
+    ["budgeted","Total Budgeted",annualBudgeted,"var(--surface)","1px solid var(--line-2)"],
+    ["booked","Total Booked",annualBooked,"var(--blue)","none"],
+    ["actual","Total Actual",annualActual,"var(--orange)","none"]
+  ].map(([k,label,value,color,border])=>`<div class="annual-total" data-total="${k}"><dt><i style="background:${color};border:${border}"></i>${label}</dt><dd class="tnum">$${Math.round(value).toLocaleString()}</dd></div>`).join("");
   $("#chart").innerHTML=MO.map((m,i)=>{const b=planByM[i],k=bookedByM[i],s=spendByM[i],planned=hasPlan(yr,i);
     const actualOver=(s>k)||(planned&&s>b);
     const actualWhy=[s>k?"booked":"",planned&&s>b?"plan":""].filter(Boolean).join(" and ");
