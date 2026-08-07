@@ -256,12 +256,15 @@
   .cols { display:flex; align-items:flex-end; gap:4px; height:100%; width:100%; justify-content:center; }
   .col { width:22px; border-radius:4px 4px 0 0; transition:height .4s cubic-bezier(.16,1,.3,1); }
   .col.budget { background:var(--surface-2); border:1px solid var(--line-2); }
+  .col.booked { background:var(--blue); }
   .col.spend { background:var(--orange); }
   .col.over { background:var(--crit); }
   .col:hover { filter:brightness(.95); }
   .colgrp .xlab { font-size:11px; font-weight:700; color:var(--ink-2); }
   .legend { display:flex; gap:16px; margin-top:12px; font-size:11.5px; color:var(--ink-2); font-weight:600; }
-  .legend span { display:inline-flex; align-items:center; gap:6px; }
+  .legend button { display:inline-flex; align-items:center; gap:6px; border:1px solid var(--line); border-radius:7px; padding:5px 8px; background:var(--surface); color:var(--ink-2); font:inherit; font-weight:600; opacity:.42; }
+  .legend button.on { opacity:1; border-color:var(--line-2); box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--ink-3) 12%,transparent); }
+  .legend button:not(.on):hover { opacity:.72; }
   .legend i { width:12px; height:12px; border-radius:3px; display:inline-block; }
   table.boost { min-width:100%; border-collapse:collapse; font-size:12px; table-layout:fixed; }
   table.boost th { position:relative; text-align:left; padding:9px 12px 9px 10px; color:var(--header-tx); background:var(--header); font-weight:600; font-size:11px; text-transform:uppercase; letter-spacing:.4px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
@@ -505,10 +508,10 @@
 <div class="paid" id="paidView">
   <div class="paidgrid">
     <div class="chartcard">
-      <h3>Budget vs. Spend by month</h3>
-      <div class="csub">Combined RED + WeChat · AUD · media-plan budget vs. actual spend</div>
+      <h3>Budgeted vs. Booked vs. Actual by month</h3>
+      <div class="csub">Combined RED + WeChat · AUD · original media plan vs. current bookings vs. actual spend</div>
       <div class="chart" id="chart"></div>
-      <div class="legend"><span><i style="background:var(--surface-2);border:1px solid var(--line-2)"></i>Budgeted</span><span><i style="background:var(--orange)"></i>Actual spend</span></div>
+      <div class="legend" id="budgetLegend" role="group" aria-label="Chart series filters"></div>
     </div>
     <div class="chartcard">
       <h3>Channel split · this month</h3>
@@ -723,6 +726,7 @@ function rebuildMonths(){
   mi=idx; _monthsReady=true;
 }
 let mi=2, q="", view="cal", boostFilter="all", chFilter="All";
+let budgetSeriesOn={budgeted:1,booked:1,actual:1};
 // resizable boosting-log column widths (px), persist across re-renders — [Channel, Post, Window, Budget, Spend, CTR, Eng, CPE, Flwr, Cost/Flwr, Status, Note]
 let BCOLW=[78,180,186,58,78,62,90,66,84,78,148,150];
 let stOn={"Posted":1,"Scheduled":1,"Approved":1,"Pending":1,"Proposed":1};
@@ -1174,17 +1178,33 @@ document.addEventListener("keydown",e=>{
 });
 
 function renderPaid(){
-  // Annual chart: media-plan budget from the DB vs. actual spend from the boost rows — both live.
+  // Monthly chart: original media plan vs. the boosts currently booked vs. actual spend.
   const yr=MONTHS[mi].y;
-  const spendByM=new Array(12).fill(0);
+  const bookedByM=new Array(12).fill(0), spendByM=new Array(12).fill(0);
   SEED.filter(d=>d.boost&&d.boostData).forEach(d=>{ const s=String(d.boostData.start||d.date);
-    if(+s.slice(0,4)===yr) spendByM[+s.slice(5,7)-1]+=parseFloat(d.boostData.spend)||0; });
+    if(+s.slice(0,4)===yr){ const m=+s.slice(5,7)-1; bookedByM[m]+=budgetOf(d); spendByM[m]+=parseFloat(d.boostData.spend)||0; } });
   const planByM=MO.map((_,m)=>planMonth(yr,m));
-  const max=Math.max(1,...planByM,...spendByM);
-  $("#chart").innerHTML=MO.map((m,i)=>{const b=planByM[i],s=spendByM[i];
+  const shown=[];
+  if(budgetSeriesOn.budgeted)shown.push(...planByM);
+  if(budgetSeriesOn.booked)shown.push(...bookedByM);
+  if(budgetSeriesOn.actual)shown.push(...spendByM);
+  const max=Math.max(1,...shown);
+  const barH=v=>v?Math.max(3,Math.round(v/max*160)):2;
+  $("#chart").innerHTML=MO.map((m,i)=>{const b=planByM[i],k=bookedByM[i],s=spendByM[i],planned=hasPlan(yr,i);
+    const actualOver=(s>k)||(planned&&s>b);
+    const actualWhy=[s>k?"booked":"",planned&&s>b?"plan":""].filter(Boolean).join(" and ");
     return `<div class="colgrp"><div class="cols">
-      <div class="col budget" style="height:${b?Math.max(3,Math.round(b/max*160)):2}px" data-tip="${m} ${yr} · Planned  $${b.toLocaleString()}"></div>
-      ${s?`<div class="col ${s>b?'over':'spend'}" style="height:${Math.max(3,Math.round(s/max*160))}px" data-tip="${m} ${yr} · Actual spend  $${Math.round(s).toLocaleString()}${s>b?'  (over plan)':''}"></div>`:''}</div><span class="xlab">${m}</span></div>`;}).join("");
+      ${budgetSeriesOn.budgeted&&planned?`<div class="col budget" data-series="budgeted" style="height:${barH(b)}px" data-tip="${m} ${yr} · Budgeted  $${b.toLocaleString()} · original media plan"></div>`:""}
+      ${budgetSeriesOn.booked&&k?`<div class="col ${planned&&k>b?'over':'booked'}" data-series="booked" style="height:${barH(k)}px" data-tip="${m} ${yr} · Booked  $${k.toLocaleString()}${planned&&k>b?'  (over plan)':''}"></div>`:""}
+      ${budgetSeriesOn.actual&&s?`<div class="col ${actualOver?'over':'spend'}" data-series="actual" style="height:${barH(s)}px" data-tip="${m} ${yr} · Actual  $${Math.round(s).toLocaleString()}${actualOver?'  (over '+actualWhy+')':''}"></div>`:""}</div><span class="xlab">${m}</span></div>`;}).join("");
+  const filters=[
+    ["budgeted","Budgeted","var(--surface-2)","1px solid var(--line-2)"],
+    ["booked","Booked","var(--blue)","none"],
+    ["actual","Actual","var(--orange)","none"]];
+  $("#budgetLegend").innerHTML=filters.map(([k,l,c,b])=>`<button class="${budgetSeriesOn[k]?'on':''}" data-series="${k}" aria-pressed="${!!budgetSeriesOn[k]}"><i style="background:${c};border:${b}"></i>${l}</button>`).join("");
+  $$("#budgetLegend button").forEach(btn=>btn.onclick=()=>{const k=btn.dataset.series;
+    if(budgetSeriesOn[k]&&Object.values(budgetSeriesOn).filter(Boolean).length===1){toast("Keep at least one chart series visible");return;}
+    budgetSeriesOn[k]=budgetSeriesOn[k]?0:1;renderPaid();});
   // Channel split — budget + LIVE actual spend, derived from this month's boosted posts
   const M=MONTHS[mi];
   const chColor={RED:"var(--ch-red)",WeChat:"var(--ch-wechat)",Weibo:"var(--ch-weibo)","Alumni WeChat":"var(--ch-alumni)"};
