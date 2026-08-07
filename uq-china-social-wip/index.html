@@ -1195,8 +1195,8 @@ function renderPaid(){
     const actualWhy=[s>k?"booked":"",planned&&s>b?"plan":""].filter(Boolean).join(" and ");
     return `<div class="colgrp"><div class="cols">
       ${budgetSeriesOn.budgeted&&planned?`<div class="col budget" data-series="budgeted" style="height:${barH(b)}px" data-tip="${m} ${yr} · Budgeted  $${b.toLocaleString()} · original media plan"></div>`:""}
-      ${budgetSeriesOn.booked&&k?`<div class="col ${planned&&k>b?'over':'booked'}" data-series="booked" style="height:${barH(k)}px" data-tip="${m} ${yr} · Booked  $${k.toLocaleString()}${planned&&k>b?'  (over plan)':''}"></div>`:""}
-      ${budgetSeriesOn.actual&&s?`<div class="col ${actualOver?'over':'spend'}" data-series="actual" style="height:${barH(s)}px" data-tip="${m} ${yr} · Actual  $${Math.round(s).toLocaleString()}${actualOver?'  (over '+actualWhy+')':''}"></div>`:""}</div><span class="xlab">${m}</span></div>`;}).join("");
+      ${budgetSeriesOn.booked&&k?`<div class="col booked" data-series="booked" style="height:${barH(k)}px" data-tip="${m} ${yr} · Booked  $${k.toLocaleString()}${planned&&k>b?'  (over plan)':''}"></div>`:""}
+      ${budgetSeriesOn.actual&&s?`<div class="col spend" data-series="actual" style="height:${barH(s)}px" data-tip="${m} ${yr} · Actual  $${Math.round(s).toLocaleString()}${actualOver?'  (over '+actualWhy+')':''}"></div>`:""}</div><span class="xlab">${m}</span></div>`;}).join("");
   const filters=[
     ["budgeted","Budgeted","var(--surface-2)","1px solid var(--line-2)"],
     ["booked","Booked","var(--blue)","none"],
