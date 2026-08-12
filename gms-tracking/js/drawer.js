@@ -4,7 +4,7 @@
 import { el, fill, money, money2, int, pct, monthLabel, toast, selectOrNew, shown } from './dom.js';
 import { put, where, newId, vocab, addVocab, fxMap, loadCreativeImages, deleteCascade, deleteCreative } from './store.js';
 import { imageField } from './paste-image.js';
-import { dialog, confirmDanger } from './modal.js';
+import { dialog, confirmDanger, errorLine } from './modal.js';
 import { grossUp, num, perAud, effectiveStatus, cumulative} from './calc.js';
 import { exportBackup } from './exportxlsx.js';
 
@@ -48,7 +48,7 @@ export function openLine(m, rerender) {
       identity(line, save, m.campaign),
       commercials(line, save, m),
       monthly(m),
-      creatives(line, refresh),
+      creatives(line, refresh, m),
       el('div', { class: 'field' },
         el('label', {}, 'Note'),
         el('textarea', {
@@ -326,7 +326,7 @@ function pasteDialog(c, refresh) {
   });
 }
 
-function creatives(line, refresh) {
+function creatives(line, refresh, m) {
   const list = where('creative', (c) => c.line_id === line.id);
   const spend = where('spend', (s) => s.line_id === line.id);
   /* Snapshots: a creative's figure is its latest one, not the sum of them. */
@@ -338,8 +338,19 @@ function creatives(line, refresh) {
       onchange: (e) => put('creative', { id: c.id, name: e.target.value }),
     })),
     el('td', {}, el('input', {
-      class: 'cellinput', type: 'date', value: c.live_from || '',
+      class: 'cellinput', type: 'date', value: c.live_from || m.campaign.start_date || '',
       onchange: (e) => put('creative', { id: c.id, live_from: e.target.value }),
+    })),
+    el('td', {}, el('input', {
+      class: 'cellinput', type: 'date', value: c.live_to || m.campaign.end_date || '',
+      onchange: (e) => put('creative', { id: c.id, live_to: e.target.value }),
+    })),
+    el('td', { class: 'num' }, el('input', {
+      class: 'cellinput', type: 'number', min: '0', step: '0.01',
+      value: c.target_budget ?? '',
+      onchange: (e) => put('creative', {
+        id: c.id, target_budget: e.target.value === '' ? null : Number(e.target.value),
+      }),
     })),
     el('td', { class: 'num' }, money(spendOf(c.id), line.currency || 'AUD', 0)),
     el('td', {}, el('input', {
@@ -352,15 +363,18 @@ function creatives(line, refresh) {
       class: 'btn ghost sm', title: 'Remove creative',
       onclick: () => {
         const owned = where('spend', (x) => x.creative_id === c.id).length;
+        const impact = spendOf(c.id);
         dialog({
-          title: `Remove ${c.name || 'this creative'}?`,
+          title: `Delete ${c.name || 'this creative'}?`,
           sub: owned
-            ? `Its ${owned} spend ${owned === 1 ? 'entry stays' : 'entries stay'} on the line, `
-              + 'no longer attributed to a creative. No money is lost.'
-            : 'It has no spend against it yet.',
+            ? `This permanently deletes ${owned} cumulative ${owned === 1 ? 'snapshot' : 'snapshots'}. `
+              + `The line and campaign totals will decrease by ${money(impact, line.currency || 'AUD', 0)}.`
+            : 'This creative has no tracked snapshots yet.',
+          content: [el('p', { class: 'hint' },
+            'If it has simply finished running, set its end date instead so historical spend stays in the totals.')],
           actions: [
             { label: 'Cancel' },
-            { label: 'Remove', danger: true, onClick: () => { deleteCreative(c.id); refresh(); } },
+            { label: 'Delete creative and data', danger: true, onClick: () => { deleteCreative(c.id); refresh(); } },
           ],
         });
       },
@@ -368,22 +382,76 @@ function creatives(line, refresh) {
 
   return el('div', { class: 'field' },
     el('label', {}, `Creatives — optional (${list.length})`),
+    creativeAllocation(line, list, m),
     list.length
       ? el('div', { class: 'tablewrap' }, el('table', { class: 'data' },
         el('thead', {}, el('tr', {},
-          el('th', {}, 'Creative'), el('th', {}, 'Live from'),
+          el('th', {}, 'Creative'), el('th', {}, 'Start'), el('th', {}, 'End'),
+          el('th', { class: 'num' }, `Target · ${line.currency || 'AUD'}`),
           el('th', { class: 'num' }, 'Spend'), el('th', {}, 'Preview'),
           el('th', {}, 'Screenshot'), el('th', {}))),
         body))
       : el('div', { class: 'hint' }, 'No creatives on this line. Line-level spend is tracked either way; add creatives only when you want the breakdown.'),
     el('button', {
       class: 'btn sm', style: { marginTop: '8px' },
-      onclick: () => {
+      onclick: () => addCreativeDialog(line, m, refresh),
+    }, '+ Add creative'));
+}
+
+function addCreativeDialog(line, m, refresh) {
+  const name = el('input', { value: 'New creative', placeholder: 'Creative name' });
+  const from = el('input', { type: 'date', value: m.campaign.start_date || '' });
+  const to = el('input', { type: 'date', value: m.campaign.end_date || '' });
+  const target = el('input', { type: 'number', min: '0', step: '0.01', placeholder: '0' });
+  const err = errorLine();
+  dialog({
+    title: 'Add a creative',
+    sub: 'Dates decide when it appears in Tracking Entry. Target budget drives its evenly paced monthly progress.',
+    content: [
+      el('div', { class: 'field' }, el('label', {}, 'Creative name'), name),
+      el('div', { class: 'row2' },
+        el('div', { class: 'field' }, el('label', {}, 'Start date'), from),
+        el('div', { class: 'field' }, el('label', {}, 'End date'), to)),
+      el('div', { class: 'field' }, el('label', {}, `Target budget · ${line.currency || 'AUD'}`), target),
+      err,
+    ],
+    actions: [
+      { label: 'Cancel' },
+      { label: 'Add creative', primary: true, onClick: () => {
+        const creativeName = name.value.trim();
+        if (!creativeName) { err.say('Give the creative a name.'); return false; }
+        if (!from.value || !to.value) { err.say('Set both the start and end date.'); return false; }
+        if (from.value > to.value) { err.say('The end date must be on or after the start date.'); return false; }
+        if ((m.campaign.start_date && from.value < m.campaign.start_date)
+          || (m.campaign.end_date && to.value > m.campaign.end_date)) {
+          err.say('Keep the creative dates inside the campaign flight.'); return false;
+        }
+        const budget = Number(target.value);
+        if (!(budget > 0)) { err.say(`Set a target budget in ${line.currency || 'AUD'}.`); return false; }
         put('creative', {
-          id: newId('cr'), line_id: line.id, name: 'New creative',
-          live_from: '', status: 'Live',
+          id: newId('cr'), line_id: line.id, name: creativeName,
+          live_from: from.value, live_to: to.value,
+          target_budget: budget, status: 'Live',
         });
         refresh();
-      },
-    }, '+ Add creative'));
+        return undefined;
+      } },
+    ],
+  });
+  setTimeout(() => name.select(), 30);
+}
+
+function creativeAllocation(line, list, m) {
+  if (!list.length) return null;
+  const lineBudget = Number(line.cost_media || 0) * m.rate;
+  if (!lineBudget) return null;
+  const allocated = list.reduce((a, c) => a + Number(c.target_budget || 0), 0);
+  const gap = lineBudget - allocated;
+  const text = Math.abs(gap) < 1
+    ? `Allocated creative budgets match the ${money(lineBudget, line.currency || 'AUD', 0)} line budget.`
+    : `${money(Math.abs(gap), line.currency || 'AUD', 0)} ${gap < 0 ? 'over allocated' : 'unallocated'} across creatives. This is a warning only; saving is not blocked.`;
+  return el('div', {
+    class: `hint allocation ${Math.abs(gap) < 1 ? 'ok' : gap < 0 ? 'over' : 'under'}`,
+    style: { marginTop: 0, marginBottom: '7px' },
+  }, text);
 }

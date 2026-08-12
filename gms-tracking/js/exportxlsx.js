@@ -15,7 +15,7 @@
 
 import { download, toast, monthLabel, money } from './dom.js';
 import { all, where, byId, loadCreativeImages } from './store.js';
-import { totals, byPlatform, num, effectiveStatus, looseSpendTotal, kpiValue, cumulative} from './calc.js';
+import { totals, byPlatform, num, effectiveStatus, looseSpendTotal, kpiValue, cumulative, grossUp } from './calc.js';
 import { kpiDefs } from './kpis.js';
 import { campaignLog } from './notes.js';
 import { fileName } from './view-export.js';
@@ -318,6 +318,8 @@ const COLS = {
     { h: 'Platform', k: 'platform', w: 12 },
     { h: 'Creative', k: 'creative', w: 32 },
     { h: 'Live from', k: 'from', w: 12, opt: true },
+    { h: 'Live to', k: 'to', w: 12, opt: true },
+    { h: 'Target budget', k: 'target', w: 15, fmt: MONEY },
     { h: 'Spend', k: 'spend', w: 14, fmt: MONEY },
     { h: 'Impressions', k: 'imp', w: 13, fmt: INTF },
     { h: 'Clicks', k: 'clk', w: 11, fmt: INTF },
@@ -530,10 +532,10 @@ function sheetCreative(wb, rows, { isClient, title, subtitle }) {
         const known = new Set(crs.map((c) => c.id));
         const looseRows = where('spend', (x) => x.line_id === m.line.id
           && (!x.creative_id || !known.has(x.creative_id)));
-        const spendSide = isClient ? loose / (1 - (m.margin || 0)) : loose;
+        const spendSide = isClient ? grossUp(loose, m.margin) : loose;
         data.push({
           client: m.clientName, campaign: m.campaignName, platform: m.line.platform,
-          creative: 'Not attributed to a creative', from: '',
+          creative: 'Not attributed to a creative', from: '', to: '', target: null,
           spend: spendSide,
           imp: null, clk: null, ctr: null, url: '',
           ...kpiCells(defs, { spend: spendSide, imp: 0, clicks: 0, extra: sumRows(looseRows) }),
@@ -552,10 +554,13 @@ function sheetCreative(wb, rows, { isClient, title, subtitle }) {
       const clk = at.clicks;
       const extra = at.extra;
       if (!internal && !imp && !clk && !Object.values(extra).some(Boolean)) continue;
-      const spendSide = isClient ? internal / (1 - (m.margin || 0)) : internal;
+      const spendSide = isClient ? grossUp(internal, m.margin) : internal;
+      const targetInternal = num(c.target_budget) / m.rate;
+      const targetSide = isClient ? grossUp(targetInternal, m.margin) : targetInternal;
       data.push({
         client: m.clientName, campaign: m.campaignName, platform: m.line.platform,
-        creative: c.name || '', from: c.live_from || '',
+        creative: c.name || '', from: c.live_from || '', to: c.live_to || '',
+        target: targetSide || null,
         spend: spendSide,
         imp: imp || null, clk: clk || null,
         ctr: imp > 0 ? clk / imp : null,

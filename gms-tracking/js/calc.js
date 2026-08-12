@@ -39,6 +39,56 @@ export const overlap = (a1, a2, b1, b2) => {
   return s <= e ? { start: s, end: e } : null;
 };
 
+/** Effective creative flight. Older creatives inherit the campaign dates until
+ * someone records their own, so introducing date-aware rows does not make
+ * existing work disappear overnight. */
+export function creativeWindow(creative, campaign) {
+  const start = creative?.live_from || campaign?.start_date || '';
+  const end = creative?.live_to || campaign?.end_date || '';
+  return start && end && start <= end ? { start, end } : null;
+}
+
+/** Whether a creative belongs on the entry screen for the date being entered. */
+export function creativeActive(creative, campaign, date) {
+  const flight = creativeWindow(creative, campaign);
+  return !flight || (date >= flight.start && date <= flight.end);
+}
+
+/**
+ * A creative's current-month position, in the line's spend currency.
+ *
+ * `target_budget` is the whole creative-flight target. Even pacing assigns the
+ * same amount to every active day, so a cross-month creative automatically
+ * gets the correct share in whichever month the entry screen is showing.
+ */
+export function creativePace(creative, spends, date, campaign) {
+  const flight = creativeWindow(creative, campaign);
+  const total = num(creative?.target_budget);
+  if (!flight || total <= 0 || !date || date < flight.start || date > flight.end) return null;
+
+  const bounds = monthBounds(ymOf(date));
+  const month = overlap(flight.start, flight.end, bounds.start, bounds.end);
+  if (!month) return null;
+
+  const totalDays = daysBetween(flight.start, flight.end);
+  const monthDays = daysBetween(month.start, month.end);
+  const elapsedDays = daysBetween(month.start, date);
+  const monthBudget = total * monthDays / totalDays;
+  const expected = total * elapsedDays / totalDays;
+  const monthSpent = periodSpend(spends, month.start, date).spend;
+  const variance = monthSpent - expected;
+  const daysLeft = daysBetween(date, month.end);
+  const remaining = Math.max(0, monthBudget - monthSpent);
+
+  return {
+    flight, total, totalDays, month, monthDays, elapsedDays,
+    monthBudget, monthSpent, expected, variance, remaining, daysLeft,
+    timePct: elapsedDays / monthDays,
+    spendPct: monthBudget > 0 ? monthSpent / monthBudget : null,
+    suggestedDaily: daysLeft > 0 ? remaining / daysLeft : 0,
+  };
+}
+
 /* ------------------------------------------------------------- cumulative
  *
  * Every spend row is a SNAPSHOT: the running total for that line (or that

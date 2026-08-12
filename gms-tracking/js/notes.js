@@ -24,11 +24,12 @@ import { todayIso } from './calc.js';
 import { dialog, textField, errorLine } from './modal.js';
 import { whoAmI, setWhoAmI } from './who.js';
 
-/** Entries for a campaign, newest first. `lineId` narrows to one line. */
+/** Entries visible from one line: campaign-wide entries plus that line's own.
+ * A line-scoped entry must never appear under a sibling line. */
 export function notesFor({ campaignId, lineId } = {}) {
-  return where('note', (n) => (lineId
-    ? n.line_id === lineId
-    : n.campaign_id === campaignId))
+  return where('note', (n) => lineId
+    ? (n.line_id === lineId || (n.campaign_id === campaignId && !n.line_id))
+    : (n.campaign_id === campaignId && !n.line_id))
     .sort((a, b) => String(b.date || '').localeCompare(String(a.date || ''))
       || String(b.id).localeCompare(String(a.id)));
 }
@@ -42,7 +43,7 @@ export function campaignLog(campaignId, { sharedOnly = false } = {}) {
     .sort((a, b) => String(a.date || '').localeCompare(String(b.date || '')));
 }
 
-export const noteCount = (campaignId) => campaignLog(campaignId).length;
+export const noteCount = (campaignId, lineId) => notesFor({ campaignId, lineId }).length;
 
 /* --------------------------------------------------------------------- UI */
 
@@ -92,7 +93,7 @@ export function openLog(m, rerender) {
   const logLabel = el('label', {}, 'Logged so far');
 
   const paint = () => {
-    const rows = campaignLog(campaignId);
+    const rows = notesFor({ campaignId, lineId });
     /* Say how many and in what order — otherwise a list that scrolls looks
        like a list that ends, and the older entries are never found. */
     fill(logLabel, rows.length
@@ -103,7 +104,7 @@ export function openLog(m, rerender) {
         'Nothing logged for this campaign yet. The first entry is usually the most useful one.'));
       return;
     }
-    fill(list, ...rows.slice().reverse().map((n) => el('div', { class: 'logitem' },
+    fill(list, ...rows.map((n) => el('div', { class: 'logitem' },
       el('div', { class: 'loghead' },
         el('b', {}, n.date ? dateAu(n.date) : '—'),
         n.author ? el('span', { class: 'muted', style: { fontSize: '11.5px' } }, n.author) : null,

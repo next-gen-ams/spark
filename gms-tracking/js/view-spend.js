@@ -13,16 +13,37 @@
  */
 
 import { el, fill, money, money2, int, pct, monthLabel, dateAu, toast, shown } from './dom.js';
-import { put, remove, where, byId, newId, fxMap, loadCreativeImages } from './store.js';
+import { put, remove, where, byId, newId, fxMap, loadCreativeImages, deleteCreative } from './store.js';
 import { dialog, closeDialog, textField, choiceField, errorLine } from './modal.js';
 import { imageField } from './paste-image.js';
 import { openLog, noteCount } from './notes.js';
-import { monthBounds, grossUp, repace, todayIso, daySplit, looseSpendTotal, periodSpend, kpiValue, spendForSide } from './calc.js';
+import { monthBounds, grossUp, repace, todayIso, daySplit, looseSpendTotal, periodSpend,
+  cumulative, creativeActive, creativePace, kpiValue, spendForSide } from './calc.js';
 import { kpiDefs, addKpi, removeKpi, PRESETS, hasPreset, companionsFor, kpiFormula, formatKpi } from './kpis.js';
 import { resizable, forgetWidths } from './resizable.js';
 import { PLATFORM_COLOR } from './config.js';
 
 const spendId = (lineId, creativeId, date) => `${lineId}|${creativeId || '_'}|${date}`;
+const ENTRY_COLUMNS_KEY = 'gms-tracking-entry-columns-v1';
+
+function entryColumns() {
+  try {
+    return { internalAud: false, clientAud: false,
+      ...JSON.parse(localStorage.getItem(ENTRY_COLUMNS_KEY) || '{}') };
+  } catch { return { internalAud: false, clientAud: false }; }
+}
+
+function saveEntryColumns(value) {
+  try { localStorage.setItem(ENTRY_COLUMNS_KEY, JSON.stringify(value)); } catch { /* preference only */ }
+}
+
+function entryWidthKey() {
+  const defs = kpiDefs();
+  const counters = defs.filter((d) => d.kind === 'counter').length;
+  const rates = defs.length - counters;
+  const cols = entryColumns();
+  return `tracking-entry3-${counters}c${rates}r-${cols.internalAud ? 'i' : ''}${cols.clientAud ? 'c' : ''}`;
+}
 
 export function renderSpend(host, ctx) {
   const { rows, state, rerender } = ctx;
@@ -68,8 +89,12 @@ export function renderSpend(host, ctx) {
         onclick: () => addColumnDialog(rerender),
       }, '+ Add column'),
       el('button', {
+        class: 'btn ghost sm', title: 'Show or hide the two calculated AUD columns',
+        onclick: () => entryColumnsDialog(rerender),
+      }, 'Columns'),
+      el('button', {
         class: 'btn ghost sm', title: 'Put every column back to its default width',
-        onclick: () => { forgetWidths('tracking-entry'); rerender(); },
+        onclick: () => { forgetWidths(entryWidthKey()); rerender(); },
       }, 'Reset columns')),
     el('div', { class: 'tablewrap' }, grid(rows, date, mode, state, rerender))));
 }
@@ -92,12 +117,36 @@ function modeBlurb(mode, state, date) {
     + 'you did not get to.';
 }
 
+function entryColumnsDialog(rerender) {
+  const current = entryColumns();
+  const internal = el('input', { type: 'checkbox', checked: current.internalAud });
+  const client = el('input', { type: 'checkbox', checked: current.clientAud });
+  dialog({
+    title: 'Tracking Entry columns',
+    sub: 'These are calculated reference figures. Hiding them changes only this browser’s table, never the data or exports.',
+    content: [
+      el('label', { class: 'choice' }, internal,
+        el('span', {}, el('b', {}, 'Internal AUD'), el('span', { class: 'cnote' }, 'Spend converted from the platform currency to AUD.'))),
+      el('label', { class: 'choice' }, client,
+        el('span', {}, el('b', {}, 'Client AUD'), el('span', { class: 'cnote' }, 'Internal AUD grossed up at the line margin.'))),
+    ],
+    actions: [
+      { label: 'Cancel' },
+      { label: 'Apply', primary: true, onClick: () => {
+        saveEntryColumns({ internalAud: internal.checked, clientAud: client.checked });
+        rerender();
+      } },
+    ],
+  });
+}
+
 /* ------------------------------------------------------------------ grid */
 
 function grid(rows, date, mode, state, rerender) {
   const fx = fxMap();
   const today = todayIso();
   const side = state.view;
+  const audColumns = entryColumns();
   /* Typed columns first, computed after — mirroring the header's two blocks:
      everything you enter sits together, everything the app derives follows. */
   const all_ = kpiDefs();
@@ -110,6 +159,7 @@ function grid(rows, date, mode, state, rerender) {
     const creatives = where('creative', (c) => c.line_id === m.line.id);
     const spends = where('spend', (x) => x.line_id === m.line.id);
     const day = daySplit(creatives, spends, date);
+    const activeParts = day.parts.filter((p) => creativeActive(p.creative, m.campaign, date));
 
     /* Pacing belongs to the whole line, so it reads every month and every
        spend row — not the single cell being typed into. It is also computed
@@ -165,7 +215,7 @@ function grid(rows, date, mode, state, rerender) {
             onchange: (e) => confirmRise(e.target, day.loose, m,
               (v) => write(null, { spend_internal: v })),
           }),
-        flightNote(m, r, day),
+        flightNote(m, r, day, activeParts.length),
         carriedNote(day.loose, m, date)),
 
       /* --- the rest of the typed block: what you enter sits together. */
@@ -178,10 +228,10 @@ function grid(rows, date, mode, state, rerender) {
           d.name, (v) => writeExtra(null, d.id, v), `${m.line.id}|_|${d.id}`)),
 
       /* --- the computed block: the margin doing something, then the rates. */
-      el('td', { class: 'num muted' }, money(day.total.spend / m.rate)),
-      el('td', { class: 'num' }, m.billable
+      audColumns.internalAud ? el('td', { class: 'num muted' }, money(day.total.spend / m.rate)) : null,
+      audColumns.clientAud ? el('td', { class: 'num' }, m.billable
         ? el('b', {}, money(grossUp(day.total.spend / m.rate, m.margin)))
-        : el('span', { class: 'muted' }, 'n/a')),
+        : el('span', { class: 'muted' }, 'n/a')) : null,
       ...ratesK.map((d) => rateCell(d, lineTotals())),
 
       /* --- running position across the whole flight --- */
@@ -200,7 +250,7 @@ function grid(rows, date, mode, state, rerender) {
         ? el('div', {},
           el('span', { class: 'advice ' + (advice.kind === 'ok' ? 'good' : advice.kind) }, advice.text),
           el('div', { class: 'pacebudget muted' },
-            `This month ${money2(r.localMonthBudget, m.ccy)} · cumulative target ${money2(r.localMonthTarget, m.ccy)}`))
+            `This Month ${money2(r.localMonthBudget, m.ccy)} · Accumulated target ${money2(r.localMonthTarget, m.ccy)}`))
         : el('span', { class: 'muted' }, 'no flight dates')),
 
       el('td', { class: 'num' }, m.billable
@@ -214,10 +264,14 @@ function grid(rows, date, mode, state, rerender) {
 
     /* ---- one row per creative, and one for anything attributed to none. */
     if (!day.split) continue;
-    for (const p of day.parts) {
+    for (const p of activeParts) {
+      const creativeSpends = spends.filter((s) => s.creative_id === p.creative.id);
       body.appendChild(creativeRow(m, p.creative.name || 'Creative', p, {
-        side, counters, rates: ratesK, focusBase: `${m.line.id}|${p.creative.id}`,
+        side, counters, rates: ratesK, audColumns,
+        focusBase: `${m.line.id}|${p.creative.id}`,
         creative: p.creative, refresh: rerender, date,
+        pace: creativePace(p.creative, creativeSpends, date, m.campaign),
+        onDelete: () => deleteCreativeDialog(m, p.creative, creativeSpends, rerender),
         onSpend: (v) => write(p.creative.id, { spend_internal: v }),
         onImp: (v) => write(p.creative.id, { imp: v }),
         onClicks: (v) => write(p.creative.id, { clicks: v }),
@@ -228,7 +282,7 @@ function grid(rows, date, mode, state, rerender) {
       || Object.values(day.loose.extra).some(Boolean)) {
       body.appendChild(creativeRow(m, 'Not attributed to a creative', day.loose, {
         date,
-        side, counters, rates: ratesK, readonly: true,
+        side, counters, rates: ratesK, audColumns, readonly: true,
         note: 'Typed before this line was split. It still counts toward the line total — '
           + 'move it onto a creative from the line drawer if it belongs to one.',
       }));
@@ -247,10 +301,10 @@ function grid(rows, date, mode, state, rerender) {
       el('th', { class: 'num gtyped' }, 'Impressions'),
       el('th', { class: 'num gtyped' }, 'Clicks'),
       ...counters.map((d) => el('th', { class: 'num gtyped', title: kpiFormula(d, defs) }, d.name)),
-      el('th', { class: 'num gcalc', title: 'The same figure converted to AUD at this campaign’s rate' },
-        'Internal AUD'),
-      el('th', { class: 'num gcalc', title: 'What the client is billed for it: internal ÷ (1 − margin)' },
-        'Client AUD'),
+      audColumns.internalAud ? el('th', { class: 'num gcalc', title: 'The same figure converted to AUD at this campaign’s rate' },
+        'Internal AUD') : null,
+      audColumns.clientAud ? el('th', { class: 'num gcalc', title: 'What the client is billed for it: internal ÷ (1 − margin)' },
+        'Client AUD') : null,
       ...ratesK.map((d) => el('th', {
         class: 'num gcalc',
         title: `${kpiFormula(d, defs)}${d.num === 'spend' ? ' · follows the Internal / Client-facing toggle' : ''}`,
@@ -264,9 +318,11 @@ function grid(rows, date, mode, state, rerender) {
     /* Width memory is keyed by column count, so a saved layout from before a
        column was added or removed never lands on the wrong columns. (The v2
        prefix retired layouts saved under the pre-reorder column order.) */
-    body), `tracking-entry2-${counters.length}c${ratesK.length}r`, [
+    body), entryWidthKey(), [
       128, COLW[0], COLW[1], COLW[4], COLW[5], ...counters.map(() => 96),
-      COLW[2], COLW[3], ...ratesK.map(() => 96), ...COLW.slice(6)]);
+      ...(audColumns.internalAud ? [COLW[2]] : []),
+      ...(audColumns.clientAud ? [COLW[3]] : []),
+      ...ratesK.map(() => 96), ...COLW.slice(6)]);
 }
 
 /* Line and What-to-do carry sentences; the rest are figures and only need
@@ -289,7 +345,7 @@ const COLW = [
   94,   // Variance
   112,  // Run at — daily pace plus the remaining month target
   260,  // What to do — advice plus monthly and cumulative budgets
-  78,   // Margin
+  96,   // Margin — 100.0% plus the tag's horizontal padding
 ];
 
 function varianceCell(r) {
@@ -314,21 +370,20 @@ function localPaceAdvice(r, m) {
   if (!r) return null;
   const v = r.localVariance;
   const amount = money2(Math.abs(v), m.ccy);
-  const target = money2(r.localMonthTarget, m.ccy);
   if (r.finished) {
     return v < -1
-      ? { kind: 'crit', text: `Finished ${amount} behind the cumulative plan.` }
+      ? { kind: 'crit', text: `${amount} behind` }
       : { kind: v > 1 ? 'warn' : 'ok', text: v > 1
-        ? `Finished ${amount} ahead of the cumulative plan.` : 'Finished on the cumulative plan.' };
+        ? `${amount} ahead` : 'On plan' };
   }
   if (Math.abs(v) < 1) {
-    return { kind: 'ok', text: `On plan. Hold the displayed daily pace to reach ${target} by month end.` };
+    return { kind: 'ok', text: 'On plan' };
   }
   if (v < 0) {
     return { kind: Math.abs(v) / Math.max(r.localDue, 1) > 0.25 ? 'crit' : 'warn',
-      text: `${amount} behind. Lift to the displayed daily pace to reach ${target} by month end.` };
+      text: `${amount} behind` };
   }
-  return { kind: 'ok', text: `${amount} ahead. The displayed daily pace has been reduced to land on ${target}.` };
+  return { kind: 'ok', text: `${amount} ahead` };
 }
 
 const lineLabel = (m) =>
@@ -458,13 +513,13 @@ function creativeThumb(c, refresh) {
 
 /**
  * A creative's own row: indented under its line, and the only place its
- * numbers can be typed. The pacing columns stay empty here on purpose —
- * pacing is a property of the line, and repeating one line's position across
- * three creative rows reads as three different positions.
+ * numbers can be typed. Its pacing cells are monthly and creative-specific;
+ * the parent row above keeps the whole line's flight position.
  */
 function creativeRow(m, label, figures, opts = {}) {
   const { readonly, note, side = 'internal', counters = [], rates = [],
-    focusBase = '', onSpend, onImp, onClicks, onExtra } = opts;
+    audColumns = { internalAud: true, clientAud: true }, focusBase = '',
+    onSpend, onImp, onClicks, onExtra } = opts;
   /* Built fresh each time rather than cloned — el() is the app's own node
      factory and cloneNode is not part of that contract. */
   const dim = () => el('td', { class: 'num muted' }, '');
@@ -474,6 +529,10 @@ function creativeRow(m, label, figures, opts = {}) {
     el('td', { class: 'wrap' },
       el('span', { class: 'crname' }, label),
       opts.creative ? creativeThumb(opts.creative, opts.refresh) : null,
+      opts.onDelete ? el('button', {
+        class: 'btn ghost sm crdelete', title: `Delete ${label}`,
+        onclick: opts.onDelete,
+      }, 'Delete') : null,
       note ? el('div', { class: 'muted', style: { fontSize: '11px', color: 'var(--warn)' } }, note) : null),
 
     el('td', { class: 'num' },
@@ -495,17 +554,71 @@ function creativeRow(m, label, figures, opts = {}) {
     ...counters.map((d) => countCell(readonly, figures.extra?.[d.id],
       figures.typed?.extra?.[d.id] ?? null, d.name, (v) => onExtra(d.id, v), `${focusBase}|${d.id}`)),
 
-    el('td', { class: 'num muted' }, money(figures.spend / m.rate)),
-    el('td', { class: 'num muted' }, m.billable
-      ? money(grossUp(figures.spend / m.rate, m.margin)) : 'n/a'),
+    audColumns.internalAud ? el('td', { class: 'num muted' }, money(figures.spend / m.rate)) : null,
+    audColumns.clientAud ? el('td', { class: 'num muted' }, m.billable
+      ? money(grossUp(figures.spend / m.rate, m.margin)) : 'n/a') : null,
     ...rates.map((d) => rateCell(d, {
       spend: spendForSide(figures.spend / m.rate, side, m.margin, m.billable),
       imp: figures.imp, clicks: figures.clicks, extra: figures.extra,
     })),
 
-    dim(), dim(), dim(), dim(),
-    el('td', { class: 'wrap prose muted' }, ''),
+    creativePaceCells(m, opts.pace, dim),
     dim());
+}
+
+function creativePaceCells(m, pace, dim) {
+  if (!pace) {
+    return [dim(), dim(), dim(), dim(),
+      el('td', { class: 'wrap prose muted' }, 'Set dates and target budget')];
+  }
+  const behind = pace.variance < 0;
+  const severity = Math.abs(pace.variance) / Math.max(pace.expected, 1) > 0.25 ? 'crit' : 'warn';
+  const variance = Math.abs(pace.variance) < 1
+    ? el('span', { class: 'tag good' }, 'on plan')
+    : el('span', { class: `tag ${severity}` },
+      `${behind ? '−' : '+'}${money2(Math.abs(pace.variance), m.ccy)}`);
+  const spendPct = Math.min(1, Math.max(0, pace.spendPct || 0));
+  const timePct = Math.min(1, Math.max(0, pace.timePct || 0));
+  const meterKind = (pace.spendPct || 0) > timePct * 1.15 ? 'over'
+    : (pace.spendPct || 0) < timePct * 0.85 ? 'under' : '';
+
+  return [
+    el('td', { class: 'num' }, money2(pace.monthSpent, m.ccy),
+      el('div', { class: 'muted', style: { fontSize: '11px' } },
+        `of ${money2(pace.monthBudget, m.ccy)} this month`)),
+    el('td', { class: 'num muted' }, money2(pace.expected, m.ccy)),
+    el('td', { class: 'num' }, variance),
+    el('td', { class: 'num' },
+      el('b', {}, `${money2(pace.suggestedDaily, m.ccy)} / day`),
+      el('div', { class: 'muted', style: { fontSize: '11px' } }, `${pace.daysLeft} days left`)),
+    el('td', { class: 'wrap prose' },
+      el('div', { class: 'crpacecopy' },
+        `This Month ${money2(pace.monthSpent, m.ccy)} of ${money2(pace.monthBudget, m.ccy)}`),
+      el('div', { class: 'meter crmeter', title: 'Fill = spend progress · tick = time progress' },
+        el('i', { class: meterKind, style: { width: `${spendPct * 100}%` } }),
+        el('u', { style: { left: `${timePct * 100}%` } }))),
+  ];
+}
+
+function deleteCreativeDialog(m, creative, spends, rerender) {
+  const impact = cumulative(spends).spend;
+  dialog({
+    title: `Delete ${creative.name || 'this creative'}?`,
+    sub: spends.length
+      ? `This permanently deletes ${spends.length} cumulative ${spends.length === 1 ? 'snapshot' : 'snapshots'}. `
+        + `The line and campaign totals will decrease by ${money2(impact, m.ccy)}.`
+      : 'This creative has no tracked snapshots yet.',
+    content: [el('p', { class: 'hint' },
+      'If the creative has simply finished running, set its end date instead. It will leave today’s Tracking Entry while its historical spend stays in the totals.')],
+    actions: [
+      { label: 'Cancel' },
+      { label: 'Delete creative and data', danger: true, onClick: () => {
+        deleteCreative(creative.id);
+        rerender();
+        toast(`${creative.name || 'Creative'} deleted${impact ? ` · totals reduced by ${money2(impact, m.ccy)}` : ''}`);
+      } },
+    ],
+  });
 }
 
 /** A computed KPI cell. Never an input at any level — see calc.kpiValue. */
@@ -672,10 +785,10 @@ function confirmRise(input, bucket, m, commit) {
   });
 }
 
-function flightNote(m, r, day) {
+function flightNote(m, r, day, activeCount = day.parts.length) {
   if (day.split) {
     return el('div', { class: 'muted', style: { fontSize: '11px', paddingRight: '7px' } },
-      `${m.ccy} · ${day.parts.length} creative${day.parts.length === 1 ? '' : 's'}`);
+      `${m.ccy} · ${activeCount} active${activeCount !== day.parts.length ? ` · ${day.parts.length} total` : ''}`);
   }
   /* A finished flight still accepts entries — a late invoice is real money —
      but it should never accept them *unremarked*. */
@@ -708,11 +821,13 @@ function creativeControl(m, creatives, spends, date, rerender) {
 
   /* --- adding a second, third… creative: nothing to decide. */
   if (creatives.length) {
-    return el('button', {
-      class: 'btn chip', title: 'Add another creative to this line',
-      onclick: () => nameDialog('Add a creative', `Creative ${String.fromCharCode(65 + creatives.length)}`,
-        (fields) => { create(fields); rerender(); }),
-    }, '+ Creative');
+    return el('div', { class: 'creativecontrols' },
+      el('button', {
+        class: 'btn chip', title: 'Add another creative to this line',
+        onclick: () => nameDialog(m, 'Add a creative', `Creative ${String.fromCharCode(65 + creatives.length)}`,
+          (fields) => { create(fields); rerender(); }),
+      }, '+ Creative'),
+      allocationWarning(m, creatives));
   }
 
   /* --- the first split. Money already on the line has to go somewhere, and
@@ -748,21 +863,36 @@ function creativeControl(m, creatives, spends, date, rerender) {
   }, '+ Split by creative');
 }
 
+function allocationWarning(m, creatives) {
+  const lineBudget = Number(m.line.cost_media || 0) * m.rate;
+  if (!lineBudget || !creatives.length) return null;
+  const allocated = creatives.reduce((a, c) => a + Number(c.target_budget || 0), 0);
+  const gap = lineBudget - allocated;
+  if (Math.abs(gap) < 1) return el('span', { class: 'allocation ok' }, 'Budget allocated');
+  return el('span', { class: `allocation ${gap < 0 ? 'over' : 'under'}` },
+    `${money2(Math.abs(gap), m.ccy)} ${gap < 0 ? 'over allocated' : 'unallocated'}`);
+}
+
 /**
- * Naming a creative, plus the two things that make it recognisable months
- * later: when it went live, and what it looked like. Both optional — an
- * unfilled one simply never reaches the report, since empty columns are
- * pruned from exports.
+ * Name, flight dates and target budget are required because they drive the
+ * monthly pacing row. Artwork references remain optional.
  */
-function creativeFields(suggested) {
+function creativeFields(suggested, m) {
   const name = textField('Creative name', {
     value: suggested, placeholder: 'e.g. H5 banner – Parents',
   });
-  const from = el('input', { type: 'date' });
-  const live = el('div', { class: 'field' },
-    el('label', {}, 'Live from — optional'), from,
-    el('div', { class: 'hint' }, 'The day this creative started running. Lets a report show one creative handing over to the next.'));
-  live.value = () => from.value;
+  const from = el('input', { type: 'date', value: m.campaign.start_date || '' });
+  const to = el('input', { type: 'date', value: m.campaign.end_date || '' });
+  const live = el('div', { class: 'row2' },
+    el('div', { class: 'field' }, el('label', {}, 'Start date'), from),
+    el('div', { class: 'field' }, el('label', {}, 'End date'), to));
+  live.value = () => ({ from: from.value, to: to.value });
+
+  const targetInput = el('input', { type: 'number', min: '0', step: '0.01', placeholder: '0' });
+  const target = el('div', { class: 'field' },
+    el('label', {}, `Target budget · ${m.ccy}`), targetInput,
+    el('div', { class: 'hint' }, 'Whole-flight creative target. The monthly share is spread evenly across its active days.'));
+  target.value = () => Number(targetInput.value) || 0;
 
   const url = textField('Preview link — optional', {
     placeholder: 'https://…',
@@ -771,11 +901,13 @@ function creativeFields(suggested) {
   const shot = imageField('Screenshot — optional', {
     hint: 'Click the box then ⌘V. Shrunk to 480px wide before it is stored, so it stays a few tens of KB and rides along in the Excel export.',
   });
-  return { name, live, url, shot,
-    nodes: [name, live, url, shot],
+  return { name, live, target, url, shot,
+    nodes: [name, live, target, url, shot],
     values: () => ({
       name: name.value(),
-      live_from: live.value() || '',
+      live_from: live.value().from,
+      live_to: live.value().to,
+      target_budget: target.value(),
       preview_url: url.value(),
       preview_image: shot.value() || null,
     }) };
@@ -783,7 +915,7 @@ function creativeFields(suggested) {
 
 /** The log button, with a count so a campaign with history says so. */
 function logControl(m, rerender) {
-  const n = noteCount(m.campaign?.id);
+  const n = noteCount(m.campaign?.id, m.line?.id);
   return el('button', {
     class: 'btn chip logchip', style: { marginLeft: '6px' },
     title: 'What happened on this campaign, in the team’s own words',
@@ -792,11 +924,19 @@ function logControl(m, rerender) {
 }
 
 /** Dialog for every creative after the first. */
-function nameDialog(title, suggested, done) {
+function nameDialog(m, title, suggested, done) {
   const err = errorLine();
-  const f = creativeFields(suggested);
+  const f = creativeFields(suggested, m);
   const submit = () => {
     if (!f.name.value()) { err.say('Give it a name so it can be told apart on the report.'); return false; }
+    const dates = f.live.value();
+    if (!dates.from || !dates.to) { err.say('Set both the start and end date.'); return false; }
+    if (dates.from > dates.to) { err.say('The end date must be on or after the start date.'); return false; }
+    if ((m.campaign.start_date && dates.from < m.campaign.start_date)
+      || (m.campaign.end_date && dates.to > m.campaign.end_date)) {
+      err.say('Keep the creative dates inside the campaign flight.'); return false;
+    }
+    if (f.target.value() <= 0) { err.say(`Set a target budget in ${m.ccy}.`); return false; }
     done(f.values());
     return true;
   };
@@ -818,7 +958,7 @@ function nameDialog(title, suggested, done) {
 function splitDialog(m, ctx, done) {
   const { looseTotal, loose, thisMonth, thisMonthTotal, date } = ctx;
   const err = errorLine();
-  const f = creativeFields('Creative A');
+  const f = creativeFields('Creative A', m);
   const name = f.name;
 
   const has = looseTotal > 0.005;
@@ -859,6 +999,14 @@ function splitDialog(m, ctx, done) {
         primary: true,
         onClick: () => {
           if (!name.value()) { err.say('Give the creative a name first.'); return false; }
+          const dates = f.live.value();
+          if (!dates.from || !dates.to) { err.say('Set both the start and end date.'); return false; }
+          if (dates.from > dates.to) { err.say('The end date must be on or after the start date.'); return false; }
+          if ((m.campaign.start_date && dates.from < m.campaign.start_date)
+            || (m.campaign.end_date && dates.to > m.campaign.end_date)) {
+            err.say('Keep the creative dates inside the campaign flight.'); return false;
+          }
+          if (f.target.value() <= 0) { err.say(`Set a target budget in ${m.ccy}.`); return false; }
           done(f.values(), has ? choice.value() : 'keep');
           return undefined;
         },

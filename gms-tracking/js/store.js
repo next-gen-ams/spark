@@ -218,7 +218,7 @@ const CHILDREN = {
   campaign: [['line', 'campaign_id'], ['note', 'campaign_id']],
   line: [['spend', 'line_id'], ['creative', 'line_id'],
     ['line_month', 'line_id'], ['note', 'line_id']],
-  creative: [],                        // spend rows survive; see deleteCreative
+  creative: [['spend', 'creative_id']],
 };
 
 /** Delete a row and everything that hangs off it, depth-first. */
@@ -231,16 +231,10 @@ export function deleteCascade(table, id) {
   remove(table, id);
 }
 
-/**
- * Removing a creative keeps its spend — the money was real whatever it was
- * attributed to. The rows fall back to the line, where the entry grid shows
- * them as "Not attributed to a creative" rather than letting them vanish.
- */
+/** Permanently remove a creative and its tracked snapshots. Ending normal
+ * delivery is represented by live_to; deletion is deliberately destructive. */
 export function deleteCreative(id) {
-  for (const s of db.spend.filter((r) => r.creative_id === id)) {
-    put('spend', { ...s, creative_id: null });
-  }
-  remove('creative', id);
+  deleteCascade('creative', id);
 }
 
 /* The tables wipeData() empties — the *data*, as opposed to the *setup*.
@@ -378,7 +372,7 @@ const PAGE = 1000;
  * load for a thumbnail almost nobody is looking at right then. It is fetched
  * on demand instead — when a drawer opens, or when an export needs it. */
 const SELECT_COLS = {
-  creative: 'id,line_id,name,live_from,live_to,preview_url,status,note,updated_at',
+  creative: 'id,line_id,name,live_from,live_to,target_budget,preview_url,status,note,updated_at',
 };
 
 /**
