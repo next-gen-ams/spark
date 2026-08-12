@@ -28,9 +28,11 @@ const ENTRY_COLUMNS_KEY = 'gms-tracking-entry-columns-v1';
 
 function entryColumns() {
   try {
-    return { internalAud: false, clientAud: false,
+    return { impressions: false, clicks: false, internalAud: false, clientAud: false,
       ...JSON.parse(localStorage.getItem(ENTRY_COLUMNS_KEY) || '{}') };
-  } catch { return { internalAud: false, clientAud: false }; }
+  } catch {
+    return { impressions: false, clicks: false, internalAud: false, clientAud: false };
+  }
 }
 
 function saveEntryColumns(value) {
@@ -42,7 +44,7 @@ function entryWidthKey() {
   const counters = defs.filter((d) => d.kind === 'counter').length;
   const rates = defs.length - counters;
   const cols = entryColumns();
-  return `tracking-entry4-${counters}c${rates}r-${cols.internalAud ? 'i' : ''}${cols.clientAud ? 'c' : ''}`;
+  return `tracking-entry5-${counters}c${rates}r-${cols.impressions ? 'm' : ''}${cols.clicks ? 'k' : ''}${cols.internalAud ? 'i' : ''}${cols.clientAud ? 'c' : ''}`;
 }
 
 export function renderSpend(host, ctx) {
@@ -89,7 +91,7 @@ export function renderSpend(host, ctx) {
         onclick: () => addColumnDialog(rerender),
       }, '+ Add column'),
       el('button', {
-        class: 'btn ghost sm', title: 'Show or hide the two calculated AUD columns',
+        class: 'btn ghost sm', title: 'Choose which optional Tracking Entry columns are visible',
         onclick: () => entryColumnsDialog(rerender),
       }, 'Columns'),
       el('button', {
@@ -119,12 +121,18 @@ function modeBlurb(mode, state, date) {
 
 function entryColumnsDialog(rerender) {
   const current = entryColumns();
+  const impressions = el('input', { type: 'checkbox', checked: current.impressions });
+  const clicks = el('input', { type: 'checkbox', checked: current.clicks });
   const internal = el('input', { type: 'checkbox', checked: current.internalAud });
   const client = el('input', { type: 'checkbox', checked: current.clientAud });
   dialog({
     title: 'Tracking Entry columns',
-    sub: 'These are calculated reference figures. Hiding them changes only this browser’s table, never the data or exports.',
+    sub: 'Optional columns are hidden by default so Actions stays within easier reach. This changes only this browser’s table, never the data or exports.',
     content: [
+      el('label', { class: 'choice' }, impressions,
+        el('span', {}, el('b', {}, 'Impressions'), el('span', { class: 'cnote' }, 'Show the cumulative impression entry column.'))),
+      el('label', { class: 'choice' }, clicks,
+        el('span', {}, el('b', {}, 'Clicks'), el('span', { class: 'cnote' }, 'Show the cumulative click entry column.'))),
       el('label', { class: 'choice' }, internal,
         el('span', {}, el('b', {}, 'Internal AUD'), el('span', { class: 'cnote' }, 'Spend converted from the platform currency to AUD.'))),
       el('label', { class: 'choice' }, client,
@@ -133,7 +141,10 @@ function entryColumnsDialog(rerender) {
     actions: [
       { label: 'Cancel' },
       { label: 'Apply', primary: true, onClick: () => {
-        saveEntryColumns({ internalAud: internal.checked, clientAud: client.checked });
+        saveEntryColumns({
+          impressions: impressions.checked, clicks: clicks.checked,
+          internalAud: internal.checked, clientAud: client.checked,
+        });
         rerender();
       } },
     ],
@@ -219,10 +230,10 @@ function grid(rows, date, mode, state, rerender) {
         carriedNote(day.loose, m, date)),
 
       /* --- the rest of the typed block: what you enter sits together. */
-      countCell(day.split, day.total.imp, day.loose.typed?.imp ?? null,
-        'Impressions', (v) => write(null, { imp: v }), `${m.line.id}|_|i`),
-      countCell(day.split, day.total.clicks, day.loose.typed?.clicks ?? null,
-        'Clicks', (v) => write(null, { clicks: v }), `${m.line.id}|_|c`),
+      audColumns.impressions ? countCell(day.split, day.total.imp, day.loose.typed?.imp ?? null,
+        'Impressions', (v) => write(null, { imp: v }), `${m.line.id}|_|i`) : null,
+      audColumns.clicks ? countCell(day.split, day.total.clicks, day.loose.typed?.clicks ?? null,
+        'Clicks', (v) => write(null, { clicks: v }), `${m.line.id}|_|c`) : null,
       ...counters.map((d) =>
         countCell(day.split, day.total.extra[d.id], day.loose.typed?.extra?.[d.id] ?? null,
           d.name, (v) => writeExtra(null, d.id, v), `${m.line.id}|_|${d.id}`)),
@@ -300,8 +311,8 @@ function grid(rows, date, mode, state, rerender) {
       el('th', {}, 'Line'),
       el('th', { class: 'num gtyped', title: 'Internal spend as paid to the media owner, in the line’s own currency' },
         `Total to ${dateAu(date)}`),
-      el('th', { class: 'num gtyped' }, 'Impressions'),
-      el('th', { class: 'num gtyped' }, 'Clicks'),
+      audColumns.impressions ? el('th', { class: 'num gtyped' }, 'Impressions') : null,
+      audColumns.clicks ? el('th', { class: 'num gtyped' }, 'Clicks') : null,
       ...counters.map((d) => el('th', { class: 'num gtyped', title: kpiFormula(d, defs) }, d.name)),
       audColumns.internalAud ? el('th', { class: 'num gcalc', title: 'The same figure converted to AUD at this campaign’s rate' },
         'Internal AUD') : null,
@@ -322,7 +333,10 @@ function grid(rows, date, mode, state, rerender) {
        column was added or removed never lands on the wrong columns. (The v2
        prefix retired layouts saved under the pre-reorder column order.) */
     body), entryWidthKey(), [
-      128, COLW[0], COLW[1], COLW[4], COLW[5], ...counters.map(() => 96),
+      128, COLW[0], COLW[1],
+      ...(audColumns.impressions ? [COLW[4]] : []),
+      ...(audColumns.clicks ? [COLW[5]] : []),
+      ...counters.map(() => 96),
       ...(audColumns.internalAud ? [COLW[2]] : []),
       ...(audColumns.clientAud ? [COLW[3]] : []),
       ...ratesK.map(() => 96), ...COLW.slice(6)]);
@@ -347,7 +361,7 @@ const COLW = [
   88,   // Should be
   94,   // Variance
   112,  // Run at — daily pace plus the remaining month target
-  260,  // What to do — advice plus monthly and cumulative budgets
+  220,  // What to do — concise advice plus monthly and cumulative budgets
   96,   // Margin — 100.0% plus the tag's horizontal padding
   144,  // Actions — Edit and Delete buttons plus cell padding
 ];
@@ -547,10 +561,10 @@ function creativeRow(m, label, figures, opts = {}) {
         }),
       readonly ? null : carriedNote(figures, m, opts.date)),
 
-    countCell(readonly, figures.imp, figures.typed?.imp ?? null,
-      'Impressions', onImp, `${focusBase}|i`),
-    countCell(readonly, figures.clicks, figures.typed?.clicks ?? null,
-      'Clicks', onClicks, `${focusBase}|c`),
+    audColumns.impressions ? countCell(readonly, figures.imp, figures.typed?.imp ?? null,
+      'Impressions', onImp, `${focusBase}|i`) : null,
+    audColumns.clicks ? countCell(readonly, figures.clicks, figures.typed?.clicks ?? null,
+      'Clicks', onClicks, `${focusBase}|c`) : null,
     ...counters.map((d) => countCell(readonly, figures.extra?.[d.id],
       figures.typed?.extra?.[d.id] ?? null, d.name, (v) => onExtra(d.id, v), `${focusBase}|${d.id}`)),
 
