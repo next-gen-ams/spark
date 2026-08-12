@@ -596,6 +596,7 @@
 
   <div class="view-section-head month">
     <div><h2>Month View</h2><p id="paidMonthSub">Boosting activity for the selected month.</p></div>
+    <div class="month-nav"><button id="prevPaidM" aria-label="Previous month">‹</button><div class="mlabel" id="paidMLabel">Mar 2026</div><button id="nextPaidM" aria-label="Next month">›</button></div>
   </div>
   <div class="month-paid-grid">
     <div class="chartcard">
@@ -1723,7 +1724,7 @@ function openWipDrawer(w,isNew){
 
 function renderAll(){ renderKPIs(); renderWeChat(); renderActions(); renderGrid(); if(view==="paid")renderPaid(); if(view==="wip")renderWIP(); if(view==="history")renderHistory(); }
 const MOFULL=["January","February","March","April","May","June","July","August","September","October","November","December"];
-function setMonth(){const M=MONTHS[mi]; $("#mlabel").textContent=M.key;
+function setMonth(){const M=MONTHS[mi]; $("#mlabel").textContent=M.key; $("#paidMLabel").textContent=M.key;
   $("#monthband").innerHTML=`${MOFULL[M.m].toUpperCase()} <span>${M.y}</span>`; renderAll();}
 // stepping past either end creates that month, so you can plan a month before it has any content
 function stepMonth(dir){
@@ -1733,8 +1734,11 @@ function stepMonth(dir){
   if(dir<0){ MONTHS.unshift(e); return 0; }
   MONTHS.push(e); return MONTHS.length-1;
 }
-$("#prevM").onclick=()=>{mi=stepMonth(-1);setMonth();};
-$("#nextM").onclick=()=>{mi=stepMonth(1);setMonth();};
+function stepDisplayedMonth(d){mi=stepMonth(d);setMonth();}
+$("#prevM").onclick=()=>stepDisplayedMonth(-1);
+$("#nextM").onclick=()=>stepDisplayedMonth(1);
+$("#prevPaidM").onclick=()=>stepDisplayedMonth(-1);
+$("#nextPaidM").onclick=()=>stepDisplayedMonth(1);
 // Belt and braces against browser autofill: anything that lands in the search box without
 // the user ever touching it is not a search — drop it rather than silently filtering the month.
 var searchTouched=false;
@@ -1750,11 +1754,10 @@ $("#poolAdd").onclick=e=>{e.stopPropagation();openPoolDrawer(null,true);};
 $("#poolSearch").oninput=e=>{poolQuery=e.target.value.trim().toLowerCase();renderPool();};
 $("#statusFilter").onchange=e=>{boostFilter=e.target.value;renderPaid();};
 $$("#tabs button").forEach(b=>b.onclick=()=>{view=b.dataset.view;$$("#tabs button").forEach(x=>x.classList.toggle("active",x===b));
-  const monthly=(view==="cal"||view==="paid");
   $("#calView").style.display=view==="cal"?"":"none";
   $("#kpis").style.display=view==="cal"?"grid":"none";
   $("#monthband").style.display=view==="cal"?"block":"none";
-  $(".tabbar .month-nav").style.display=monthly?"flex":"none";
+  $(".tabbar .month-nav").style.display=view==="cal"?"flex":"none";
   $("#paidView").classList.toggle("show",view==="paid");
   $("#wipView").classList.toggle("show",view==="wip");
   $("#historyView").classList.toggle("show",view==="history");
