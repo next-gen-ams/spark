@@ -25,13 +25,14 @@ import { PLATFORM_COLOR } from './config.js';
 
 const spendId = (lineId, creativeId, date) => `${lineId}|${creativeId || '_'}|${date}`;
 const ENTRY_COLUMNS_KEY = 'gms-tracking-entry-columns-v1';
+const isCtr = (def) => def?.id === 'ctr' || String(def?.name || '').trim().toLowerCase() === 'ctr';
 
 function entryColumns() {
   try {
-    return { impressions: false, clicks: false, internalAud: false, clientAud: false,
+    return { impressions: false, clicks: false, ctr: false, internalAud: false, clientAud: false,
       ...JSON.parse(localStorage.getItem(ENTRY_COLUMNS_KEY) || '{}') };
   } catch {
-    return { impressions: false, clicks: false, internalAud: false, clientAud: false };
+    return { impressions: false, clicks: false, ctr: false, internalAud: false, clientAud: false };
   }
 }
 
@@ -44,7 +45,7 @@ function entryWidthKey() {
   const counters = defs.filter((d) => d.kind === 'counter').length;
   const rates = defs.length - counters;
   const cols = entryColumns();
-  return `tracking-entry5-${counters}c${rates}r-${cols.impressions ? 'm' : ''}${cols.clicks ? 'k' : ''}${cols.internalAud ? 'i' : ''}${cols.clientAud ? 'c' : ''}`;
+  return `tracking-entry6-${counters}c${rates}r-${cols.impressions ? 'm' : ''}${cols.clicks ? 'k' : ''}${cols.ctr ? 't' : ''}${cols.internalAud ? 'i' : ''}${cols.clientAud ? 'c' : ''}`;
 }
 
 export function renderSpend(host, ctx) {
@@ -71,33 +72,27 @@ export function renderSpend(host, ctx) {
   }
 
   host.appendChild(el('div', { class: 'panel' },
-    el('header', {},
-      el('div', {},
-        el('h3', {}, mode === 'today' ? `Today’s numbers · ${dateAu(today)}` : 'Enter internal spend'),
-        el('p', {}, modeBlurb(mode, state, date))),
-      el('div', { style: { flex: 1 } }),
-      el('div', { class: 'seg' },
-        segBtn('today', 'Today', mode, state, rerender),
-        segBtn('day', 'Another day', mode, state, rerender)),
-      mode === 'day' ? el('input', {
-        type: 'date', class: 'pill-sel', value: date,
-        min: bounds ? bounds.start : null,
-        max: bounds && bounds.end < today ? bounds.end : today,
-        onchange: (e) => { state.spendDate = e.target.value; rerender(); },
-      }) : null,
-      el('button', {
-        class: 'btn chip', style: { marginTop: 0 },
-        title: 'Track another number: a typed counter like H5 clicks, or a computed rate like CTR',
-        onclick: () => addColumnDialog(rerender),
-      }, '+ Add column'),
-      el('button', {
-        class: 'btn ghost sm', title: 'Choose which optional Tracking Entry columns are visible',
-        onclick: () => entryColumnsDialog(rerender),
-      }, 'Columns'),
-      el('button', {
-        class: 'btn ghost sm', title: 'Put every column back to its default width',
-        onclick: () => { forgetWidths(entryWidthKey()); rerender(); },
-      }, 'Reset columns')),
+    el('header', { class: 'entryhead' },
+      el('h3', {}, mode === 'today' ? `Today’s numbers · ${dateAu(today)}` : 'Enter internal spend'),
+      el('div', { class: 'entrytools' },
+        el('div', { class: 'seg' },
+          segBtn('today', 'Today', mode, state, rerender),
+          segBtn('day', 'Another day', mode, state, rerender)),
+        mode === 'day' ? el('input', {
+          type: 'date', class: 'pill-sel', value: date,
+          min: bounds ? bounds.start : null,
+          max: bounds && bounds.end < today ? bounds.end : today,
+          onchange: (e) => { state.spendDate = e.target.value; rerender(); },
+        }) : null,
+        el('button', {
+          class: 'btn chip managecolumns', style: { marginTop: 0 },
+          title: 'Choose visible columns and add or remove custom metrics',
+          onclick: () => manageColumnsDialog(rerender),
+        }, 'Manage columns'),
+        el('button', {
+          class: 'btn ghost sm', title: 'Put every column back to its default width',
+          onclick: () => { forgetWidths(entryWidthKey()); rerender(); },
+        }, 'Reset columns'))),
     el('div', { class: 'tablewrap' }, grid(rows, date, mode, state, rerender))));
 }
 
@@ -108,41 +103,37 @@ function segBtn(id, label, mode, state, rerender) {
   }, label);
 }
 
-function modeBlurb(mode, state, date) {
-  if (mode === 'today') {
-    return 'Type each line’s running total as the platform reports it today — '
-      + 'everything spent since it went live, not just today’s share. Miss a few days and '
-      + 'the next total you copy across is still right.';
-  }
-  return `Writing the running total as at ${dateAu(date)}. Use this to close off a month `
-    + '(a figure dated the 31st settles that month) or to record a total you read on a day '
-    + 'you did not get to.';
-}
-
-function entryColumnsDialog(rerender) {
+function manageColumnsDialog(rerender) {
   const current = entryColumns();
   const impressions = el('input', { type: 'checkbox', checked: current.impressions });
   const clicks = el('input', { type: 'checkbox', checked: current.clicks });
+  const ctr = el('input', { type: 'checkbox', checked: current.ctr });
   const internal = el('input', { type: 'checkbox', checked: current.internalAud });
   const client = el('input', { type: 'checkbox', checked: current.clientAud });
   dialog({
-    title: 'Tracking Entry columns',
+    title: 'Manage Tracking Entry columns',
     sub: 'Optional columns are hidden by default so Actions stays within easier reach. This changes only this browser’s table, never the data or exports.',
     content: [
       el('label', { class: 'choice' }, impressions,
         el('span', {}, el('b', {}, 'Impressions'), el('span', { class: 'cnote' }, 'Show the cumulative impression entry column.'))),
       el('label', { class: 'choice' }, clicks,
         el('span', {}, el('b', {}, 'Clicks'), el('span', { class: 'cnote' }, 'Show the cumulative click entry column.'))),
+      el('label', { class: 'choice' }, ctr,
+        el('span', {}, el('b', {}, 'CTR'), el('span', { class: 'cnote' }, 'Show CTR when that metric has been added.'))),
       el('label', { class: 'choice' }, internal,
         el('span', {}, el('b', {}, 'Internal AUD'), el('span', { class: 'cnote' }, 'Spend converted from the platform currency to AUD.'))),
       el('label', { class: 'choice' }, client,
         el('span', {}, el('b', {}, 'Client AUD'), el('span', { class: 'cnote' }, 'Internal AUD grossed up at the line margin.'))),
+      el('button', {
+        class: 'btn sm', style: { marginTop: '4px' },
+        onclick: () => { closeDialog(); addColumnDialog(rerender); },
+      }, '+ Add or remove custom metrics'),
     ],
     actions: [
       { label: 'Cancel' },
       { label: 'Apply', primary: true, onClick: () => {
         saveEntryColumns({
-          impressions: impressions.checked, clicks: clicks.checked,
+          impressions: impressions.checked, clicks: clicks.checked, ctr: ctr.checked,
           internalAud: internal.checked, clientAud: client.checked,
         });
         rerender();
@@ -163,6 +154,7 @@ function grid(rows, date, mode, state, rerender) {
   const all_ = kpiDefs();
   const counters = all_.filter((d) => d.kind === 'counter');
   const ratesK = all_.filter((d) => d.kind !== 'counter');
+  const visibleRatesK = ratesK.filter((d) => !isCtr(d) || audColumns.ctr);
   const defs = [...counters, ...ratesK];
 
   const body = el('tbody');
@@ -210,8 +202,7 @@ function grid(rows, date, mode, state, rerender) {
         m.line.objective ? el('span', { class: 'lineobjective' }, m.line.objective) : null,
         el('div', { class: 'linename' }, lineLabel(m)),
         el('div', { class: 'muted linecampaign' }, m.campaignName),
-        creativeControl(m, creatives, spends, date, rerender),
-        logControl(m, rerender)),
+        lineControls(m, creatives, spends, date, rerender)),
 
       el('td', { class: 'num' },
         day.split
@@ -243,7 +234,7 @@ function grid(rows, date, mode, state, rerender) {
       audColumns.clientAud ? el('td', { class: 'num' }, m.billable
         ? el('b', {}, money(grossUp(day.total.spend / m.rate, m.margin)))
         : el('span', { class: 'muted' }, 'n/a')) : null,
-      ...ratesK.map((d) => rateCell(d, lineTotals())),
+      ...visibleRatesK.map((d) => rateCell(d, lineTotals())),
 
       /* --- running position across the whole flight --- */
       el('td', { class: 'num' }, r ? money(r.spent) : '—',
@@ -279,7 +270,7 @@ function grid(rows, date, mode, state, rerender) {
     for (const p of activeParts) {
       const creativeSpends = spends.filter((s) => s.creative_id === p.creative.id);
       body.appendChild(creativeRow(m, p.creative.name || 'Creative', p, {
-        side, counters, rates: ratesK, audColumns,
+        side, counters, rates: visibleRatesK, audColumns,
         focusBase: `${m.line.id}|${p.creative.id}`,
         creative: p.creative, refresh: rerender, date,
         pace: creativePace(p.creative, creativeSpends, date, m.campaign),
@@ -295,7 +286,7 @@ function grid(rows, date, mode, state, rerender) {
       || Object.values(day.loose.extra).some(Boolean)) {
       body.appendChild(creativeRow(m, 'Not attributed to a creative', day.loose, {
         date,
-        side, counters, rates: ratesK, audColumns, readonly: true,
+        side, counters, rates: visibleRatesK, audColumns, readonly: true,
         note: 'Typed before this line was split. It still counts toward the line total — '
           + 'move it onto a creative from the line drawer if it belongs to one.',
       }));
@@ -305,7 +296,7 @@ function grid(rows, date, mode, state, rerender) {
   /* Three header tints, one per block: warm for what you type, blue for what
      the app computes, neutral for the flight position. The colour carries the
      grouping so the eye does not have to parse it from column names. */
-  return resizable(el('table', { class: 'data' },
+  const table = resizable(el('table', { class: 'data fill-panel' },
     el('thead', {}, el('tr', {},
       el('th', {}, 'Client'),
       el('th', {}, 'Line'),
@@ -318,7 +309,7 @@ function grid(rows, date, mode, state, rerender) {
         'Internal AUD') : null,
       audColumns.clientAud ? el('th', { class: 'num gcalc', title: 'What the client is billed for it: internal ÷ (1 − margin)' },
         'Client AUD') : null,
-      ...ratesK.map((d) => el('th', {
+      ...visibleRatesK.map((d) => el('th', {
         class: 'num gcalc',
         title: `${kpiFormula(d, defs)}${d.num === 'spend' ? ' · follows the Internal / Client-facing toggle' : ''}`,
       }, d.name)),
@@ -339,7 +330,22 @@ function grid(rows, date, mode, state, rerender) {
       ...counters.map(() => 96),
       ...(audColumns.internalAud ? [COLW[2]] : []),
       ...(audColumns.clientAud ? [COLW[3]] : []),
-      ...ratesK.map(() => 96), ...COLW.slice(6)]);
+      ...visibleRatesK.map(() => 96), ...COLW.slice(6)]);
+  /* Fixed-layout tables normally scale every column when min-width:100% adds
+     spare room. Put that spare room into Line instead, so What to do keeps its
+     deliberate 220px width while the table still reaches both card edges. */
+  requestAnimationFrame(() => {
+    const group = table.querySelector('colgroup.rz');
+    const wrap = table.closest('.tablewrap');
+    if (!group || !wrap || group.children.length < 2) return;
+    const widths = [...group.children].map((c) => parseFloat(c.style.width || 0));
+    const total = widths.reduce((a, b) => a + b, 0);
+    const slack = wrap.clientWidth - total;
+    if (slack <= 1) return;
+    group.children[1].style.width = `${widths[1] + slack}px`;
+    table.style.width = `${wrap.clientWidth}px`;
+  });
+  return table;
 }
 
 /* Line and What-to-do carry sentences; the rest are figures and only need
@@ -898,13 +904,11 @@ function creativeControl(m, creatives, spends, date, rerender) {
 
   /* --- adding a second, third… creative: nothing to decide. */
   if (creatives.length) {
-    return el('div', { class: 'creativecontrols' },
-      el('button', {
-        class: 'btn chip', title: 'Add another creative to this line',
-        onclick: () => nameDialog(m, 'Add a creative', `Creative ${String.fromCharCode(65 + creatives.length)}`,
-          (fields) => { create(fields); rerender(); }),
-      }, '+ Creative'),
-      allocationWarning(m, creatives));
+    return el('button', {
+      class: 'btn chip', title: 'Add another creative to this line',
+      onclick: () => nameDialog(m, 'Add a creative', `Creative ${String.fromCharCode(65 + creatives.length)}`,
+        (fields) => { create(fields); rerender(); }),
+    }, '+ Creative');
   }
 
   /* --- the first split. Money already on the line has to go somewhere, and
@@ -940,14 +944,29 @@ function creativeControl(m, creatives, spends, date, rerender) {
   }, '+ Split by creative');
 }
 
+function lineControls(m, creatives, spends, date, rerender) {
+  return el('div', { class: 'linecontrols' },
+    el('div', { class: 'linebuttons' },
+      creativeControl(m, creatives, spends, date, rerender),
+      logControl(m, rerender)),
+    creatives.length ? allocationWarning(m, creatives) : null);
+}
+
 function allocationWarning(m, creatives) {
   const lineBudget = Number(m.line.cost_media || 0) * m.rate;
   if (!lineBudget || !creatives.length) return null;
   const allocated = creatives.reduce((a, c) => a + Number(c.target_budget || 0), 0);
   const gap = lineBudget - allocated;
-  if (Math.abs(gap) < 1) return el('span', { class: 'allocation ok' }, 'Budget allocated');
-  return el('span', { class: `allocation ${gap < 0 ? 'over' : 'under'}` },
-    `${money2(Math.abs(gap), m.ccy)} ${gap < 0 ? 'over allocated' : 'unallocated'}`);
+  if (Math.abs(gap) < 1) return el('span', {
+    class: 'allocation ok',
+    title: `Creative target budgets total ${money2(allocated, m.ccy)} and match the line budget of ${money2(lineBudget, m.ccy)}.`,
+  }, 'Budget allocated');
+  const state = gap < 0 ? 'over allocated' : 'unallocated';
+  return el('span', {
+    class: `allocation ${gap < 0 ? 'over' : 'under'}`,
+    title: `Creative target budgets total ${money2(allocated, m.ccy)} against the line budget of ${money2(lineBudget, m.ccy)}. The ${money2(Math.abs(gap), m.ccy)} difference is ${state}. This is a warning only and does not block saving.`,
+  },
+    `${money2(Math.abs(gap), m.ccy)} ${state}`);
 }
 
 /**
@@ -994,7 +1013,7 @@ function creativeFields(suggested, m) {
 function logControl(m, rerender) {
   const n = noteCount(m.campaign?.id, m.line?.id);
   return el('button', {
-    class: 'btn chip logchip', style: { marginLeft: '6px' },
+    class: 'btn chip logchip',
     title: 'What happened on this campaign, in the team’s own words',
     onclick: () => openLog(m, rerender),
   }, n ? `Log · ${n}` : '+ Log');

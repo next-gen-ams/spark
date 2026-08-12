@@ -344,6 +344,16 @@ body { padding-top: 6px; }
 .panel > header h3 { margin: 0; font-size: 14.5px; font-weight: 650; letter-spacing: -.01em; }
 .panel > header p { margin: 2px 0 0; font-size: 12px; color: var(--ink-3); }
 .panel .body { padding: 14px 16px; }
+.panel > header.entryhead { flex-wrap: nowrap; }
+.entrytools {
+  margin-left: auto; display: flex; align-items: center; justify-content: flex-end;
+  gap: 10px; flex-wrap: nowrap; white-space: nowrap;
+}
+.managecolumns { font-weight: 650; }
+@media (max-width: 760px) {
+  .panel > header.entryhead { align-items: flex-start; flex-wrap: wrap; }
+  .entrytools { margin-left: 0; width: 100%; justify-content: flex-start; flex-wrap: wrap; }
+}
 
 /* ----------------------------------------------------------------- table */
 
@@ -570,8 +580,13 @@ table.data tbody tr.crrow td:first-child { background: var(--surface-2); padding
 .crdelete:hover { color: #fff; background: var(--crit); border-color: var(--crit); }
 .crpacecopy { font-size: 11px; margin-bottom: 6px; }
 .crmeter { min-width: 110px; }
-.creativecontrols { display: flex; align-items: center; gap: 7px; flex-wrap: wrap; }
-.allocation { font-size: 10.5px; font-weight: 600; }
+.linecontrols { margin-top: 6px; }
+.linebuttons { display: flex; align-items: center; gap: 7px; flex-wrap: wrap; }
+.allocation {
+  display: inline-flex; width: fit-content; margin-top: 5px;
+  font-size: 10.5px; line-height: 1.3; font-weight: 600; cursor: help;
+  text-decoration: underline dotted; text-underline-offset: 2px;
+}
 .allocation.ok { color: var(--good); }
 .allocation.under { color: var(--warn); }
 .allocation.over { color: var(--crit); }
