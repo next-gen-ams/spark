@@ -214,10 +214,16 @@
   .view-section-head.month { margin-top:28px; padding-top:20px; border-top:1px solid var(--line); }
   .annual-kpis { display:grid; grid-template-columns:1fr 1fr; gap:14px; margin-bottom:16px; }
   .annual-kpis .kpi { min-height:116px; }
-  .annual-channel { margin-bottom:16px; padding:0; overflow:hidden; }
+  .annual-detail-grid { display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1fr); gap:16px; align-items:start; }
+  .annual-detail-grid > .chartcard { min-width:0; }
+  .annual-detail-grid #chart { gap:4px; }
+  .annual-detail-grid #chart .cols { gap:1px; }
+  .annual-detail-grid #chart .col { width:clamp(4px,.9vw,12px); }
+  .annual-channel { padding:0; overflow:hidden; }
   .annual-channel .section-copy { padding:16px 18px 10px; }
   .month-paid-grid { display:grid; grid-template-columns:minmax(280px,.72fr) minmax(0,1.55fr); gap:16px; align-items:stretch; }
   .month-paid-grid > .chartcard { min-width:0; }
+  @media (max-width:1180px){ .annual-detail-grid{grid-template-columns:1fr;} }
   @media (max-width:1120px){ .month-paid-grid{grid-template-columns:1fr;} }
   @media (max-width:680px){
     .app { padding-left:14px; padding-right:14px; overflow-x:hidden; }
@@ -567,17 +573,19 @@
     <div class="month-nav"><button id="prevPaidY" aria-label="Previous year">‹</button><div class="mlabel" id="paidYLabel">2026</div><button id="nextPaidY" aria-label="Next year">›</button></div>
   </div>
   <div class="annual-kpis" id="paidAnnualKpis"></div>
-  <div class="chartcard annual-channel">
-    <div class="section-copy"><h3>Channel performance · full year</h3>
-      <div class="csub" style="margin:0">Boosted posts and paid performance by channel.</div></div>
-    <div style="overflow-x:auto"><table class="ytable" id="paidChannels"></table></div>
-  </div>
-  <div class="chartcard">
-    <h3>Budgeted vs. Booked vs. Actual by month</h3>
-    <div class="csub">Combined RED + WeChat · AUD · original media plan vs. current bookings vs. actual spend</div>
-    <dl class="annual-totals" id="budgetTotals" aria-label="Annual paid totals"></dl>
-    <div class="chart" id="chart"></div>
-    <div class="legend" id="budgetLegend" role="group" aria-label="Chart series filters"></div>
+  <div class="annual-detail-grid">
+    <div class="chartcard annual-channel">
+      <div class="section-copy"><h3>Channel performance · full year</h3>
+        <div class="csub" style="margin:0">Boosted posts and paid performance by channel.</div></div>
+      <div style="overflow-x:auto"><table class="ytable" id="paidChannels"></table></div>
+    </div>
+    <div class="chartcard">
+      <h3>Budgeted vs. Booked vs. Actual by month</h3>
+      <div class="csub">Combined RED + WeChat · AUD · original media plan vs. current bookings vs. actual spend</div>
+      <dl class="annual-totals" id="budgetTotals" aria-label="Annual paid totals"></dl>
+      <div class="chart" id="chart"></div>
+      <div class="legend" id="budgetLegend" role="group" aria-label="Chart series filters"></div>
+    </div>
   </div>
 
   <div class="view-section-head month">
