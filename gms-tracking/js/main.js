@@ -106,6 +106,7 @@ function writeUrl() {
 /* ---------------------------------------------------------------- render */
 
 let rows = [];
+let renderedTab = null;
 
 function render() {
   if (store.state.status === 'locked') { renderGate(); return; }
@@ -117,7 +118,11 @@ function render() {
      rebuild; inputs carry a stable data-focus key so "the same cell" survives
      its own DOM being replaced. */
   const scrollY = window.scrollY;
-  const panes = [...document.querySelectorAll('.tablewrap')].map((w) => w.scrollLeft);
+  /* A horizontal position belongs to one view. Carrying Tracking Entry's
+     far-right Actions position into Overview shifts its first table sideways. */
+  const panes = renderedTab === state.tab
+    ? [...document.querySelectorAll('.tablewrap')].map((w) => w.scrollLeft)
+    : [];
   const focusKey = document.activeElement?.dataset?.focus;
   /* Where the focused cell sat in the viewport — restoring THIS, rather than
      the page offset, is what makes the browser's "reveal the focused element"
@@ -150,6 +155,7 @@ function render() {
   else if (state.tab === 'spend') renderSpend(view, ctx);
   else if (state.tab === 'import') renderImport(view, ctx);
   else renderAdmin(view, ctx);
+  renderedTab = state.tab;
 
   app.appendChild(footer());
 

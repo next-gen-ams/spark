@@ -42,7 +42,7 @@ function entryWidthKey() {
   const counters = defs.filter((d) => d.kind === 'counter').length;
   const rates = defs.length - counters;
   const cols = entryColumns();
-  return `tracking-entry3-${counters}c${rates}r-${cols.internalAud ? 'i' : ''}${cols.clientAud ? 'c' : ''}`;
+  return `tracking-entry4-${counters}c${rates}r-${cols.internalAud ? 'i' : ''}${cols.clientAud ? 'c' : ''}`;
 }
 
 export function renderSpend(host, ctx) {
@@ -260,7 +260,8 @@ function grid(rows, date, mode, state, rerender) {
             ? `Client = internal ÷ FX ÷ (1 − ${(m.margin * 100).toFixed(1)}%)`
             : 'No margin on this line — set it in the line drawer.',
         }, m.margin > 0 ? pct(m.margin, 1) : 'not set')
-        : el('span', { class: 'muted' }, '—'))));
+        : el('span', { class: 'muted' }, '—')),
+      el('td', { class: 'cractions' }, '')));
 
     /* ---- one row per creative, and one for anything attributed to none. */
     if (!day.split) continue;
@@ -271,6 +272,7 @@ function grid(rows, date, mode, state, rerender) {
         focusBase: `${m.line.id}|${p.creative.id}`,
         creative: p.creative, refresh: rerender, date,
         pace: creativePace(p.creative, creativeSpends, date, m.campaign),
+        onEdit: () => editCreativeDialog(m, p.creative, rerender),
         onDelete: () => deleteCreativeDialog(m, p.creative, creativeSpends, rerender),
         onSpend: (v) => write(p.creative.id, { spend_internal: v }),
         onImp: (v) => write(p.creative.id, { imp: v }),
@@ -314,7 +316,8 @@ function grid(rows, date, mode, state, rerender) {
       el('th', { class: 'num', title: 'Spent minus scheduled. Negative means the money is still owed to the campaign.' }, 'Variance'),
       el('th', { class: 'num', title: 'Everything not yet spent ÷ days left in the flight. Carries an underspend forward.' }, 'Run at'),
       el('th', {}, 'What to do'),
-      el('th', { class: 'num' }, 'Margin'))),
+      el('th', { class: 'num' }, 'Margin'),
+      el('th', {}, 'Actions'))),
     /* Width memory is keyed by column count, so a saved layout from before a
        column was added or removed never lands on the wrong columns. (The v2
        prefix retired layouts saved under the pre-reorder column order.) */
@@ -346,6 +349,7 @@ const COLW = [
   112,  // Run at — daily pace plus the remaining month target
   260,  // What to do — advice plus monthly and cumulative budgets
   96,   // Margin — 100.0% plus the tag's horizontal padding
+  144,  // Actions — Edit and Delete buttons plus cell padding
 ];
 
 function varianceCell(r) {
@@ -529,10 +533,6 @@ function creativeRow(m, label, figures, opts = {}) {
     el('td', { class: 'wrap' },
       el('span', { class: 'crname' }, label),
       opts.creative ? creativeThumb(opts.creative, opts.refresh) : null,
-      opts.onDelete ? el('button', {
-        class: 'btn ghost sm crdelete', title: `Delete ${label}`,
-        onclick: opts.onDelete,
-      }, 'Delete') : null,
       note ? el('div', { class: 'muted', style: { fontSize: '11px', color: 'var(--warn)' } }, note) : null),
 
     el('td', { class: 'num' },
@@ -563,7 +563,16 @@ function creativeRow(m, label, figures, opts = {}) {
     })),
 
     creativePaceCells(m, opts.pace, dim),
-    dim());
+    dim(),
+    el('td', { class: 'cractions' },
+      opts.onEdit ? el('button', {
+        class: 'btn sm credit', title: `Edit ${label}`,
+        onclick: opts.onEdit,
+      }, 'Edit') : null,
+      opts.onDelete ? el('button', {
+        class: 'btn sm crdelete', title: `Delete ${label}`,
+        onclick: opts.onDelete,
+      }, 'Delete') : null));
 }
 
 function creativePaceCells(m, pace, dim) {
@@ -619,6 +628,60 @@ function deleteCreativeDialog(m, creative, spends, rerender) {
       } },
     ],
   });
+}
+
+function editCreativeDialog(m, creative, rerender) {
+  const name = el('input', { value: creative.name || '', placeholder: 'Creative name' });
+  const from = el('input', {
+    type: 'date', value: creative.live_from || m.campaign.start_date || '',
+  });
+  const to = el('input', {
+    type: 'date', value: creative.live_to || m.campaign.end_date || '',
+  });
+  const target = el('input', {
+    type: 'number', min: '0', step: '0.01', value: creative.target_budget ?? '',
+    placeholder: '0',
+  });
+  const err = errorLine();
+  dialog({
+    title: `Edit ${creative.name || 'creative'}`,
+    sub: 'Dates decide when this row appears. The whole-flight target budget drives its evenly paced monthly tracking bar.',
+    width: '520px',
+    content: [
+      el('div', { class: 'field' }, el('label', {}, 'Creative name'), name),
+      el('div', { class: 'row2' },
+        el('div', { class: 'field' }, el('label', {}, 'Start date'), from),
+        el('div', { class: 'field' }, el('label', {}, 'End date'), to)),
+      el('div', { class: 'field' },
+        el('label', {}, `Target budget · ${m.ccy}`), target,
+        el('div', { class: 'hint' },
+          'Enter the whole creative budget. Cross-month targets are split evenly across active days.')),
+      err,
+    ],
+    actions: [
+      { label: 'Cancel' },
+      { label: 'Save changes', primary: true, onClick: () => {
+        const creativeName = name.value.trim();
+        if (!creativeName) { err.say('Give the creative a name.'); return false; }
+        if (!from.value || !to.value) { err.say('Set both the start and end date.'); return false; }
+        if (from.value > to.value) { err.say('The end date must be on or after the start date.'); return false; }
+        if ((m.campaign.start_date && from.value < m.campaign.start_date)
+          || (m.campaign.end_date && to.value > m.campaign.end_date)) {
+          err.say('Keep the creative dates inside the campaign flight.'); return false;
+        }
+        const budget = Number(target.value);
+        if (!(budget > 0)) { err.say(`Set a target budget in ${m.ccy}.`); return false; }
+        put('creative', {
+          id: creative.id, name: creativeName,
+          live_from: from.value, live_to: to.value, target_budget: budget,
+        });
+        rerender();
+        toast(`${creativeName} updated`);
+        return undefined;
+      } },
+    ],
+  });
+  setTimeout(() => name.select(), 30);
 }
 
 /** A computed KPI cell. Never an input at any level — see calc.kpiValue. */
