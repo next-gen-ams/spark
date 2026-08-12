@@ -319,7 +319,7 @@ const COLS = {
     { h: 'Creative', k: 'creative', w: 32 },
     { h: 'Live from', k: 'from', w: 12, opt: true },
     { h: 'Live to', k: 'to', w: 12, opt: true },
-    { h: 'Target budget', k: 'target', w: 15, fmt: MONEY },
+    { h: 'Booking budget', k: 'target', w: 16, fmt: MONEY },
     { h: 'Spend', k: 'spend', w: 14, fmt: MONEY },
     { h: 'Impressions', k: 'imp', w: 13, fmt: INTF },
     { h: 'Clicks', k: 'clk', w: 11, fmt: INTF },

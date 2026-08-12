@@ -270,7 +270,7 @@ function grid(rows, date, mode, state, rerender) {
         ? el('div', {},
           el('span', { class: 'advice ' + (advice.kind === 'ok' ? 'good' : advice.kind) }, advice.text),
           el('div', { class: 'pacebudget muted' },
-            `This Month ${money2(r.localMonthBudget, m.ccy)} · Accumulated target ${money2(r.localMonthTarget, m.ccy)}`))
+            `This Month ${money2(r.localMonthBudget, m.ccy)} · Accumulated booking budget ${money2(r.localMonthTarget, m.ccy)}`))
         : el('span', { class: 'muted' }, 'no flight dates')),
 
       el('td', { class: 'num' }, m.billable
@@ -319,7 +319,7 @@ function grid(rows, date, mode, state, rerender) {
       el('th', {}, 'Client'),
       el('th', {}, 'Line'),
       el('th', { class: 'num gtyped', title: 'Internal spend as paid to the media owner, in the line’s own currency' },
-        `Total to ${dateAu(date)}`),
+        `Actual to ${dateAu(date)}`),
       audColumns.impressions ? el('th', { class: 'num gtyped' }, 'Impressions') : null,
       audColumns.clicks ? el('th', { class: 'num gtyped' }, 'Clicks') : null,
       ...counters.map((d) => el('th', { class: 'num gtyped', title: kpiFormula(d, defs) }, d.name)),
@@ -611,7 +611,7 @@ function creativeRow(m, label, figures, opts = {}) {
 function creativePaceCells(m, pace, dim) {
   if (!pace) {
     return [dim(), dim(), dim(), dim(),
-      el('td', { class: 'wrap prose muted' }, 'Set dates and target budget')];
+      el('td', { class: 'wrap prose muted' }, 'Set dates and booking budget')];
   }
   const behind = pace.variance < 0;
   const severity = Math.abs(pace.variance) / Math.max(pace.expected, 1) > 0.25 ? 'crit' : 'warn';
@@ -678,7 +678,7 @@ function editCreativeDialog(m, creative, rerender) {
   const err = errorLine();
   dialog({
     title: `Edit ${creative.name || 'creative'}`,
-    sub: 'Dates decide when this row appears. The whole-flight target budget drives its evenly paced monthly tracking bar.',
+    sub: 'Dates decide when this row appears. The whole-flight booking budget drives its evenly paced monthly tracking bar.',
     width: '520px',
     content: [
       el('div', { class: 'field' }, el('label', {}, 'Creative name'), name),
@@ -686,9 +686,9 @@ function editCreativeDialog(m, creative, rerender) {
         el('div', { class: 'field' }, el('label', {}, 'Start date'), from),
         el('div', { class: 'field' }, el('label', {}, 'End date'), to)),
       el('div', { class: 'field' },
-        el('label', {}, `Target budget · ${m.ccy}`), target,
+        el('label', {}, `Booking budget · ${m.ccy}`), target,
         el('div', { class: 'hint' },
-          'Enter the whole creative budget. Cross-month targets are split evenly across active days.')),
+          'Enter the whole creative booking budget. Cross-month budgets are split evenly across active days.')),
       err,
     ],
     actions: [
@@ -703,7 +703,7 @@ function editCreativeDialog(m, creative, rerender) {
           err.say('Keep the creative dates inside the campaign flight.'); return false;
         }
         const budget = Number(target.value);
-        if (!(budget > 0)) { err.say(`Set a target budget in ${m.ccy}.`); return false; }
+        if (!(budget > 0)) { err.say(`Set a booking budget in ${m.ccy}.`); return false; }
         put('creative', {
           id: creative.id, name: creativeName,
           live_from: from.value, live_to: to.value, target_budget: budget,
@@ -1051,15 +1051,15 @@ function allocationWarning(m, creatives) {
   const allocated = creatives.reduce((a, c) => a + Number(c.target_budget || 0), 0);
   const gap = lineBudget - allocated;
   if (Math.abs(gap) < 1) return allocationLabel('allocation ok', 'Budget allocated',
-    `Creative target budgets total ${money2(allocated, m.ccy)} and match the line budget of ${money2(lineBudget, m.ccy)}.`);
+    `Creative booking budgets total ${money2(allocated, m.ccy)} and match the line budget of ${money2(lineBudget, m.ccy)}.`);
   const state = gap < 0 ? 'over allocated' : 'unallocated';
   return allocationLabel(`allocation ${gap < 0 ? 'over' : 'under'}`,
     `${money2(Math.abs(gap), m.ccy)} ${state}`,
-    `Creative target budgets total ${money2(allocated, m.ccy)} against the line budget of ${money2(lineBudget, m.ccy)}. The ${money2(Math.abs(gap), m.ccy)} difference is ${state}. This is a warning only and does not block saving.`);
+    `Creative booking budgets total ${money2(allocated, m.ccy)} against the line budget of ${money2(lineBudget, m.ccy)}. The ${money2(Math.abs(gap), m.ccy)} difference is ${state}. This is a warning only and does not block saving.`);
 }
 
 /**
- * Name, flight dates and target budget are required because they drive the
+ * Name, flight dates and booking budget are required because they drive the
  * monthly pacing row. Artwork references remain optional.
  */
 function creativeFields(suggested, m) {
@@ -1075,8 +1075,8 @@ function creativeFields(suggested, m) {
 
   const targetInput = el('input', { type: 'number', min: '0', step: '0.01', placeholder: '0' });
   const target = el('div', { class: 'field' },
-    el('label', {}, `Target budget · ${m.ccy}`), targetInput,
-    el('div', { class: 'hint' }, 'Whole-flight creative target. The monthly share is spread evenly across its active days.'));
+    el('label', {}, `Booking budget · ${m.ccy}`), targetInput,
+    el('div', { class: 'hint' }, 'Whole-flight creative booking budget. The monthly share is spread evenly across its active days.'));
   target.value = () => Number(targetInput.value) || 0;
 
   const url = textField('Preview link — optional', {
@@ -1121,7 +1121,7 @@ function nameDialog(m, title, suggested, done) {
       || (m.campaign.end_date && dates.to > m.campaign.end_date)) {
       err.say('Keep the creative dates inside the campaign flight.'); return false;
     }
-    if (f.target.value() <= 0) { err.say(`Set a target budget in ${m.ccy}.`); return false; }
+    if (f.target.value() <= 0) { err.say(`Set a booking budget in ${m.ccy}.`); return false; }
     done(f.values());
     return true;
   };
@@ -1191,7 +1191,7 @@ function splitDialog(m, ctx, done) {
             || (m.campaign.end_date && dates.to > m.campaign.end_date)) {
             err.say('Keep the creative dates inside the campaign flight.'); return false;
           }
-          if (f.target.value() <= 0) { err.say(`Set a target budget in ${m.ccy}.`); return false; }
+          if (f.target.value() <= 0) { err.say(`Set a booking budget in ${m.ccy}.`); return false; }
           done(f.values(), has ? choice.value() : 'keep');
           return undefined;
         },

@@ -387,7 +387,7 @@ function creatives(line, refresh, m) {
       ? el('div', { class: 'tablewrap' }, el('table', { class: 'data' },
         el('thead', {}, el('tr', {},
           el('th', {}, 'Creative'), el('th', {}, 'Start'), el('th', {}, 'End'),
-          el('th', { class: 'num' }, `Target · ${line.currency || 'AUD'}`),
+          el('th', { class: 'num' }, `Booking budget · ${line.currency || 'AUD'}`),
           el('th', { class: 'num' }, 'Spend'), el('th', {}, 'Preview'),
           el('th', {}, 'Screenshot'), el('th', {}))),
         body))
@@ -406,13 +406,13 @@ function addCreativeDialog(line, m, refresh) {
   const err = errorLine();
   dialog({
     title: 'Add a creative',
-    sub: 'Dates decide when it appears in Tracking Entry. Target budget drives its evenly paced monthly progress.',
+    sub: 'Dates decide when it appears in Tracking Entry. Booking budget drives its evenly paced monthly progress.',
     content: [
       el('div', { class: 'field' }, el('label', {}, 'Creative name'), name),
       el('div', { class: 'row2' },
         el('div', { class: 'field' }, el('label', {}, 'Start date'), from),
         el('div', { class: 'field' }, el('label', {}, 'End date'), to)),
-      el('div', { class: 'field' }, el('label', {}, `Target budget · ${line.currency || 'AUD'}`), target),
+      el('div', { class: 'field' }, el('label', {}, `Booking budget · ${line.currency || 'AUD'}`), target),
       err,
     ],
     actions: [
@@ -427,7 +427,7 @@ function addCreativeDialog(line, m, refresh) {
           err.say('Keep the creative dates inside the campaign flight.'); return false;
         }
         const budget = Number(target.value);
-        if (!(budget > 0)) { err.say(`Set a target budget in ${line.currency || 'AUD'}.`); return false; }
+        if (!(budget > 0)) { err.say(`Set a booking budget in ${line.currency || 'AUD'}.`); return false; }
         put('creative', {
           id: newId('cr'), line_id: line.id, name: creativeName,
           live_from: from.value, live_to: to.value,
