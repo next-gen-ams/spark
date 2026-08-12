@@ -26,6 +26,7 @@ import { PLATFORM_COLOR } from './config.js';
 const spendId = (lineId, creativeId, date) => `${lineId}|${creativeId || '_'}|${date}`;
 const ENTRY_COLUMNS_KEY = 'gms-tracking-entry-columns-v1';
 const isCtr = (def) => def?.id === 'ctr' || String(def?.name || '').trim().toLowerCase() === 'ctr';
+let creativeImageLoad = null;
 
 function entryColumns() {
   try {
@@ -71,6 +72,13 @@ export function renderSpend(host, ctx) {
     if (date > today) date = today;
   }
 
+  /* The boot query deliberately leaves artwork out because screenshots are
+     comparatively large. Fetch every visible creative in one request and
+     repaint once. Loading one image per row used to cause one full-page
+     rebuild per creative immediately after refresh, which made the Columns
+     button and ordinary page scrolling feel as though they were dragging. */
+  primeCreativeImages(rows, date, rerender);
+
   host.appendChild(el('div', { class: 'panel' },
     el('header', { class: 'entryhead' },
       el('h3', {}, mode === 'today' ? `Today’s numbers · ${dateAu(today)}` : 'Enter internal spend'),
@@ -94,6 +102,16 @@ export function renderSpend(host, ctx) {
           onclick: () => { forgetWidths(entryWidthKey()); rerender(); },
         }, 'Reset columns'))),
     el('div', { class: 'tablewrap' }, grid(rows, date, mode, state, rerender))));
+}
+
+function primeCreativeImages(rows, date, rerender) {
+  if (creativeImageLoad) return;
+  const ids = rows.flatMap((m) => where('creative', (c) => c.line_id === m.line.id
+    && c.preview_image === undefined && creativeActive(c, m.campaign, date)).map((c) => c.id));
+  if (!ids.length) return;
+  creativeImageLoad = loadCreativeImages(ids)
+    .then((changed) => { if (changed) rerender(); })
+    .finally(() => { creativeImageLoad = null; });
 }
 
 function segBtn(id, label, mode, state, rerender) {
@@ -511,13 +529,8 @@ function place(thumb) {
  * Images are not in the boot read, so the first render of a split line asks
  * for them and repaints once they land.
  */
-function creativeThumb(c, refresh) {
-  if (c.preview_image === undefined) {
-    /* Repaint only if the fetch actually settled something — an unconditional
-       refresh here repaints, re-asks, and repaints again, forever. */
-    loadCreativeImages([c.id]).then((changed) => { if (changed && refresh) refresh(); });
-    return null;
-  }
+function creativeThumb(c) {
+  if (c.preview_image === undefined) return null;
   if (!c.preview_image) return null;
 
   const thumb = el('span', {
@@ -552,7 +565,7 @@ function creativeRow(m, label, figures, opts = {}) {
     el('td', { class: 'wrap clientcell' }, ''),
     el('td', { class: 'wrap' },
       el('span', { class: 'crname' }, label),
-      opts.creative ? creativeThumb(opts.creative, opts.refresh) : null,
+      opts.creative ? creativeThumb(opts.creative) : null,
       note ? el('div', { class: 'muted', style: { fontSize: '11px', color: 'var(--warn)' } }, note) : null),
 
     el('td', { class: 'num' },
@@ -952,21 +965,97 @@ function lineControls(m, creatives, spends, date, rerender) {
     creatives.length ? allocationWarning(m, creatives) : null);
 }
 
+let allocationTip = null;
+let allocationTipAnchor = null;
+let allocationTipFrame = 0;
+
+function allocationTipHost() {
+  if (!allocationTip) {
+    allocationTip = el('div', {
+      id: 'allocation-tooltip', class: 'allocation-tooltip', role: 'tooltip',
+      'aria-hidden': 'true',
+    });
+    document.body.appendChild(allocationTip);
+  }
+  return allocationTip;
+}
+
+function hideAllocationTip() {
+  if (allocationTip) {
+    allocationTip.classList.remove('on');
+    allocationTip.setAttribute('aria-hidden', 'true');
+  }
+  allocationTipAnchor = null;
+  if (allocationTipFrame) cancelAnimationFrame(allocationTipFrame);
+  allocationTipFrame = 0;
+  removeEventListener('scroll', scheduleAllocationTip, true);
+  removeEventListener('resize', scheduleAllocationTip);
+}
+
+function placeAllocationTip() {
+  if (!allocationTipAnchor || !allocationTip?.classList.contains('on')) return;
+  const box = allocationTipAnchor.getBoundingClientRect();
+  if (!allocationTipAnchor.isConnected || box.bottom < 0 || box.top > innerHeight) {
+    hideAllocationTip();
+    return;
+  }
+  const tip = allocationTip;
+  const pop = tip.getBoundingClientRect();
+  const edge = 10;
+  const gap = 7;
+  const roomBelow = innerHeight - box.bottom - edge;
+  const top = roomBelow >= pop.height || roomBelow >= box.top
+    ? box.bottom + gap
+    : box.top - pop.height - gap;
+  const left = Math.min(Math.max(box.left, edge), innerWidth - pop.width - edge);
+  tip.style.top = `${Math.max(edge, Math.round(top))}px`;
+  tip.style.left = `${Math.round(left)}px`;
+}
+
+function scheduleAllocationTip() {
+  if (allocationTipFrame) return;
+  allocationTipFrame = requestAnimationFrame(() => {
+    allocationTipFrame = 0;
+    placeAllocationTip();
+  });
+}
+
+function showAllocationTip(anchor, copy) {
+  const tip = allocationTipHost();
+  allocationTipAnchor = anchor;
+  tip.textContent = copy;
+  tip.classList.add('on');
+  tip.setAttribute('aria-hidden', 'false');
+  placeAllocationTip();
+
+  addEventListener('scroll', scheduleAllocationTip, true);
+  addEventListener('resize', scheduleAllocationTip);
+}
+
+function allocationLabel(className, label, copy) {
+  let anchor;
+  anchor = el('span', {
+    class: className, tabindex: '0', 'aria-describedby': 'allocation-tooltip',
+    onpointerenter: () => showAllocationTip(anchor, copy),
+    onpointerleave: hideAllocationTip,
+    onfocus: () => showAllocationTip(anchor, copy),
+    onblur: hideAllocationTip,
+    onkeydown: (e) => { if (e.key === 'Escape') hideAllocationTip(); },
+  }, label);
+  return anchor;
+}
+
 function allocationWarning(m, creatives) {
   const lineBudget = Number(m.line.cost_media || 0) * m.rate;
   if (!lineBudget || !creatives.length) return null;
   const allocated = creatives.reduce((a, c) => a + Number(c.target_budget || 0), 0);
   const gap = lineBudget - allocated;
-  if (Math.abs(gap) < 1) return el('span', {
-    class: 'allocation ok',
-    title: `Creative target budgets total ${money2(allocated, m.ccy)} and match the line budget of ${money2(lineBudget, m.ccy)}.`,
-  }, 'Budget allocated');
+  if (Math.abs(gap) < 1) return allocationLabel('allocation ok', 'Budget allocated',
+    `Creative target budgets total ${money2(allocated, m.ccy)} and match the line budget of ${money2(lineBudget, m.ccy)}.`);
   const state = gap < 0 ? 'over allocated' : 'unallocated';
-  return el('span', {
-    class: `allocation ${gap < 0 ? 'over' : 'under'}`,
-    title: `Creative target budgets total ${money2(allocated, m.ccy)} against the line budget of ${money2(lineBudget, m.ccy)}. The ${money2(Math.abs(gap), m.ccy)} difference is ${state}. This is a warning only and does not block saving.`,
-  },
-    `${money2(Math.abs(gap), m.ccy)} ${state}`);
+  return allocationLabel(`allocation ${gap < 0 ? 'over' : 'under'}`,
+    `${money2(Math.abs(gap), m.ccy)} ${state}`,
+    `Creative target budgets total ${money2(allocated, m.ccy)} against the line budget of ${money2(lineBudget, m.ccy)}. The ${money2(Math.abs(gap), m.ccy)} difference is ${state}. This is a warning only and does not block saving.`);
 }
 
 /**
