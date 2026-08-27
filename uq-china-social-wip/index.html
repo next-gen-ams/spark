@@ -276,25 +276,60 @@
   .paid.show { display:block; }
   .organic { padding:16px 0 40px; display:none; }
   .organic.show { display:block; }
-  .organic-head { display:flex; align-items:flex-end; gap:16px; margin-bottom:16px; }
+  .organic-head { display:flex; align-items:flex-end; gap:18px; margin-bottom:9px; }
   .organic-head h2 { margin:0; font-size:18px; font-weight:800; letter-spacing:-.35px; }
   .organic-head p { margin:4px 0 0; color:var(--ink-3); font-size:12.5px; }
   .organic-actions { margin-left:auto; display:flex; align-items:center; gap:8px; flex-wrap:wrap; justify-content:flex-end; }
   .organic-actions label { display:flex; align-items:center; gap:6px; color:var(--ink-3); font-size:10.5px; font-weight:700; text-transform:uppercase; letter-spacing:.35px; }
   .organic-actions select { border:1px solid var(--line-2); border-radius:8px; padding:7px 9px; background:var(--surface); color:var(--ink); font:inherit; font-size:12px; font-weight:650; }
-  .organic-sync { border:1px solid var(--line-2); border-radius:8px; padding:8px 12px; background:var(--surface); color:var(--ink); font:inherit; font-size:12px; font-weight:750; }
+  .organic-sync { border:1px solid var(--line-2); border-radius:8px; padding:8px 12px; background:var(--surface); color:var(--ink); font:inherit; font-size:12px; font-weight:750; white-space:nowrap; }
   .organic-sync:hover { border-color:var(--orange); color:var(--orange-deep); }
+  .organic-sync:active { transform:translateY(1px); }
   .organic-sync:disabled { opacity:.55; cursor:wait; }
   .sync-summary { margin:0 0 14px; display:flex; gap:8px 14px; align-items:center; flex-wrap:wrap; color:var(--ink-3); font-size:11.5px; }
   .sync-summary b { color:var(--ink-2); }
-  .organic-kpis { display:grid; grid-template-columns:repeat(5,minmax(0,1fr)); gap:12px; margin-bottom:16px; }
-  .organic-grid { display:grid; grid-template-columns:minmax(0,1.7fr) minmax(280px,.7fr); gap:16px; align-items:start; }
+  .organic-kpis { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:12px; margin-bottom:16px; }
+  .organic-kpis .kpi .val { font-size:27px; }
+  .organic-report-grid { display:grid; grid-template-columns:minmax(0,1.1fr) minmax(360px,.9fr); gap:16px; margin-bottom:16px; align-items:stretch; }
+  .organic-chart-grid { display:grid; grid-template-columns:minmax(0,1.35fr) minmax(340px,.65fr); gap:16px; margin-bottom:16px; align-items:stretch; }
   .organic-card { min-width:0; padding:0; overflow:hidden; }
-  .organic-card-head { padding:15px 17px 12px; border-bottom:1px solid var(--line); }
+  .organic-card-head { display:flex; align-items:flex-end; justify-content:space-between; gap:14px; padding:15px 17px 12px; border-bottom:1px solid var(--line); }
   .organic-card-head h3 { margin:0 0 3px; font-size:14px; }
   .organic-card-head p { margin:0; color:var(--ink-3); font-size:11.5px; }
-  .organic-table-wrap { overflow:auto; max-height:620px; }
-  .organic-table { width:100%; min-width:940px; border-collapse:collapse; font-size:12px; }
+  .organic-card-head .period-chip { flex:none; color:var(--orange-deep); background:var(--orange-soft); padding:3px 8px; border-radius:6px; font-size:10px; font-weight:750; }
+  .platform-overview { padding:0; }
+  .platform-summary { padding:4px 17px 8px; }
+  .platform-summary-row { display:grid; grid-template-columns:minmax(145px,1.05fr) repeat(3,minmax(82px,.72fr)); gap:12px; align-items:center; min-height:82px; border-bottom:1px solid var(--line); }
+  .platform-summary-row:last-child { border-bottom:0; }
+  .platform-identity { min-width:0; display:flex; align-items:center; gap:10px; }
+  .platform-mark { width:36px; height:36px; display:flex; align-items:center; justify-content:center; flex:none; border-radius:10px; background:color-mix(in srgb,var(--pc) 13%,var(--surface)); color:var(--pc); border:1px solid color-mix(in srgb,var(--pc) 24%,var(--line)); font-size:10px; font-weight:850; letter-spacing:.2px; }
+  .platform-identity b { display:block; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-size:13px; }
+  .platform-identity span { display:block; margin-top:3px; color:var(--ink-3); font-size:10.5px; }
+  .platform-metric { min-width:0; }
+  .platform-metric span { display:block; margin-bottom:3px; color:var(--ink-3); font-size:9.5px; font-weight:700; text-transform:uppercase; letter-spacing:.35px; }
+  .platform-metric b { display:block; overflow:hidden; text-overflow:ellipsis; font-size:18px; font-weight:780; font-variant-numeric:tabular-nums; white-space:nowrap; }
+  .platform-metric small { display:block; min-height:14px; margin-top:2px; color:var(--ink-3); font-size:9.5px; white-space:nowrap; }
+  .platform-metric small.up { color:var(--good); }
+  .platform-metric small.down { color:var(--crit); }
+  .organic-chart { min-width:0; padding:0; }
+  .chart-frame { position:relative; height:270px; padding:12px 15px 15px; }
+  .organic-chart-grid .chart-frame { height:292px; }
+  .chart-frame canvas { width:100%!important; height:100%!important; }
+  .organic-top-posts { display:grid; grid-template-columns:repeat(5,minmax(0,1fr)); }
+  .organic-post { min-width:0; padding:14px 15px 15px; border-right:1px solid var(--line); }
+  .organic-post:last-child { border-right:0; }
+  .organic-post .rank { color:var(--ink-3); font-size:9.5px; font-weight:800; text-transform:uppercase; letter-spacing:.4px; }
+  .organic-post a { display:-webkit-box; min-height:36px; margin:7px 0 10px; overflow:hidden; -webkit-line-clamp:2; -webkit-box-orient:vertical; color:var(--ink); font-size:12px; font-weight:700; line-height:1.42; text-decoration:none; }
+  .organic-post a:hover { color:var(--orange-deep); text-decoration:underline; }
+  .organic-post .post-stats { display:flex; flex-wrap:wrap; gap:5px 9px; color:var(--ink-3); font-size:10px; }
+  .organic-post .post-stats b { color:var(--ink-2); font-weight:750; }
+  .organic-details { margin-top:16px; overflow:hidden; background:var(--surface); border:1px solid var(--line); border-radius:var(--radius); box-shadow:var(--shadow); }
+  .organic-details summary { display:flex; align-items:center; justify-content:space-between; gap:12px; padding:14px 17px; color:var(--ink-2); font-size:12px; font-weight:750; cursor:pointer; list-style:none; }
+  .organic-details summary::-webkit-details-marker { display:none; }
+  .organic-details summary::after { content:"+"; color:var(--ink-3); font-size:17px; font-weight:500; }
+  .organic-details[open] summary::after { content:"−"; }
+  .organic-table-wrap { overflow:auto; max-height:560px; border-top:1px solid var(--line); }
+  .organic-table { width:100%; min-width:850px; border-collapse:collapse; font-size:12px; }
   .organic-table th { position:sticky; top:0; z-index:1; padding:9px 10px; text-align:left; background:var(--header); color:var(--header-tx); font-size:10px; text-transform:uppercase; letter-spacing:.35px; white-space:nowrap; }
   .organic-table th.n, .organic-table td.n { text-align:right; }
   .organic-table td { padding:9px 10px; border-bottom:1px solid var(--line); vertical-align:top; }
@@ -303,16 +338,10 @@
   .organic-title a { color:var(--ink); font-weight:700; text-decoration:none; line-height:1.35; }
   .organic-title a:hover { color:var(--orange-deep); text-decoration:underline; }
   .organic-title span { display:block; margin-top:2px; color:var(--ink-3); font-size:10.5px; }
-  .match-pill { display:inline-flex; align-items:center; gap:5px; padding:2px 7px; border-radius:12px; font-size:9.5px; font-weight:750; white-space:nowrap; }
-  .match-pill.matched { color:var(--good); background:color-mix(in srgb,var(--good) 11%,transparent); }
-  .match-pill.unmatched { color:var(--warn); background:color-mix(in srgb,var(--warn) 12%,transparent); }
-  .followers-table { width:100%; border-collapse:collapse; font-size:12px; }
-  .followers-table th { padding:9px 10px; text-align:left; background:var(--header); color:var(--header-tx); font-size:10px; text-transform:uppercase; }
-  .followers-table td { padding:9px 10px; border-bottom:1px solid var(--line); }
-  .followers-table th.n, .followers-table td.n { text-align:right; }
   .organic-empty { padding:36px 18px; text-align:center; color:var(--ink-3); font-size:12.5px; }
-  @media (max-width:1080px){ .organic-grid{grid-template-columns:1fr;} .organic-kpis{grid-template-columns:repeat(3,1fr);} }
-  @media (max-width:680px){ .organic-head{align-items:flex-start;flex-direction:column;} .organic-actions{margin-left:0;justify-content:flex-start;} .organic-kpis{grid-template-columns:repeat(2,1fr);} }
+  @media (max-width:1120px){ .organic-report-grid,.organic-chart-grid{grid-template-columns:1fr;} .organic-top-posts{grid-template-columns:repeat(3,1fr);} .organic-post:nth-child(3){border-right:0;} .organic-post:nth-child(n+4){border-top:1px solid var(--line);} }
+  @media (max-width:760px){ .organic-head{align-items:flex-start;flex-direction:column;} .organic-actions{margin-left:0;justify-content:flex-start;} .organic-kpis{grid-template-columns:repeat(2,1fr);} .platform-summary-row{grid-template-columns:minmax(130px,1.1fr) repeat(2,minmax(74px,.8fr));}.platform-summary-row .platform-metric.engagement{display:none;} .organic-top-posts{grid-template-columns:1fr;} .organic-post{border-right:0;border-bottom:1px solid var(--line);} .organic-post:nth-child(n+4){border-top:0;} .organic-post:last-child{border-bottom:0;} }
+  @media (max-width:480px){ .organic-actions{display:grid;grid-template-columns:1fr 1fr;width:100%;}.organic-actions label{display:block;}.organic-actions select{display:block;width:100%;margin-top:4px;}.organic-sync{grid-column:1/-1;width:max-content;} .platform-summary{padding:2px 12px 7px;}.platform-summary-row{grid-template-columns:minmax(122px,1fr) repeat(2,minmax(68px,.7fr));gap:7px;}.platform-mark{width:31px;height:31px;border-radius:8px;}.platform-metric b{font-size:15px;}.platform-metric small{white-space:normal;}.chart-frame{height:235px;padding:10px 8px 12px;}.organic-chart-grid .chart-frame{height:260px;} }
   .chartcard { background:var(--surface); border:1px solid var(--line); border-radius:var(--radius); padding:16px 18px; box-shadow:var(--shadow); }
   .chartcard h3 { margin:0 0 3px; font-size:14px; font-weight:700; }
   .chartcard .csub { font-size:12px; color:var(--ink-3); margin-bottom:16px; }
@@ -677,25 +706,43 @@
 
 <div class="organic" id="organicView">
   <div class="organic-head">
-    <div><h2>Organic Performance</h2><p>Read-only post performance synced from UQ's Google Sheets raw data.</p></div>
+    <div><h2>Organic Performance</h2><p>A visual monthly summary synced read-only from UQ's Google Sheets data.</p></div>
     <div class="organic-actions">
-      <label>Period <select id="organicPeriod"><option value="all">All time</option></select></label>
+      <label>Period <select id="organicPeriod"><option value="latest">Latest month</option></select></label>
       <label>Channel <select id="organicChannel"><option value="All">All channels</option></select></label>
       <button class="organic-sync" id="syncOrganic" type="button">Sync now</button>
     </div>
   </div>
   <div class="sync-summary" id="organicSyncSummary">No performance sync has run yet.</div>
   <div class="organic-kpis" id="organicKpis"></div>
-  <div class="organic-grid">
-    <section class="chartcard organic-card">
-      <div class="organic-card-head"><h3>Post performance</h3><p id="organicTableSub">All synced organic posts</p></div>
-      <div class="organic-table-wrap"><table class="organic-table" id="organicTable"></table></div>
+  <div class="organic-report-grid">
+    <section class="chartcard organic-card platform-overview">
+      <div class="organic-card-head"><div><h3>Platform overview</h3><p>Monthly output, reads, engagement and audience size.</p></div><span class="period-chip" id="organicOverviewPeriod">Latest month</span></div>
+      <div class="platform-summary" id="organicPlatformOverview"></div>
     </section>
-    <section class="chartcard organic-card">
-      <div class="organic-card-head"><h3>Accumulated followers</h3><p>Month-end totals from the Followers sheet.</p></div>
-      <div style="overflow:auto"><table class="followers-table" id="followersTable"></table></div>
+    <section class="chartcard organic-card organic-chart">
+      <div class="organic-card-head"><div><h3>Reads by platform</h3><p id="organicReadsSub">Share of reads in the selected period.</p></div></div>
+      <div class="chart-frame"><canvas id="organicReadsChart" role="img" aria-label="Reads by platform chart"></canvas></div>
     </section>
   </div>
+  <div class="organic-chart-grid">
+    <section class="chartcard organic-card organic-chart">
+      <div class="organic-card-head"><div><h3>Follower growth trend</h3><p>Month-end accumulated followers, latest eight reporting months.</p></div></div>
+      <div class="chart-frame"><canvas id="organicFollowersChart" role="img" aria-label="Follower growth trend chart"></canvas></div>
+    </section>
+    <section class="chartcard organic-card organic-chart">
+      <div class="organic-card-head"><div><h3>Engagement rate</h3><p>Total engagement as a share of reads.</p></div></div>
+      <div class="chart-frame"><canvas id="organicEngagementChart" role="img" aria-label="Engagement rate by platform chart"></canvas></div>
+    </section>
+  </div>
+  <section class="chartcard organic-card">
+    <div class="organic-card-head"><div><h3>Top posts</h3><p id="organicTopPostsSub">Highest-read posts in the selected period.</p></div></div>
+    <div class="organic-top-posts" id="organicTopPosts"></div>
+  </section>
+  <details class="organic-details" id="organicDetails">
+    <summary id="organicDetailsSummary">View post details</summary>
+    <div class="organic-table-wrap"><table class="organic-table" id="organicTable"></table></div>
+  </details>
 </div>
 
 <div class="wip" id="wipView">
@@ -760,6 +807,7 @@
 <div class="tooltip" id="tooltip"></div>
 <div class="toast" id="toast"><span class="dot"></span><span id="toastMsg">Saved</span></div>
 
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.5.1" integrity="sha384-jb8JQMbMoBUzgWatfe6COACi2ljcDdZQ2OxczGA3bGNeWe+6DChMTBJemed7ZnvJ" crossorigin="anonymous"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
 const CH = {
@@ -869,7 +917,8 @@ function rebuildMonths(){
   mi=idx; _monthsReady=true;
 }
 let mi=2, q="", view="cal", boostFilter="all", chFilter="All";
-let organicPeriod="all", organicChannel="All";
+let organicPeriod="latest", organicChannel="All";
+const ORGANIC_CHARTS={};
 let budgetSeriesOn={budgeted:1,booked:1,actual:1};
 let paidYearY=null;
 // resizable boosting-log column widths (px), persist across re-renders — [Channel, Post, Window, Budget, Spend, CTR, Eng, CPE, Flwr, Cost/Flwr, Status, Note]
@@ -1438,31 +1487,79 @@ function metricPct(v){return v==null||v===""?"—":metricNumber(v).toLocaleStrin
 function organicDate(iso){if(!iso)return "—";return `${+iso.slice(8,10)} ${MO[+iso.slice(5,7)-1]} ${iso.slice(0,4)}`;}
 function organicMonth(iso){if(!iso)return "—";return `${MO[+iso.slice(5,7)-1]} ${iso.slice(0,4)}`;}
 function safePostUrl(url){try{const u=new URL(url);return /^https?:$/.test(u.protocol)?u.href:"#";}catch{return "#";}}
+function compactMetric(value){const n=metricNumber(value),a=Math.abs(n);if(a>=1000000)return (n/1000000).toFixed(a>=10000000?0:1).replace(/\.0$/,"")+"M";if(a>=1000)return (n/1000).toFixed(a>=100000?0:1).replace(/\.0$/,"")+"K";return n.toLocaleString(undefined,{maximumFractionDigits:1});}
+function monthLabel(ym){return ym?`${MO[+ym.slice(5,7)-1]} ${ym.slice(0,4)}`:"No reporting month";}
+const ORGANIC_GROUPS=[
+  {key:"RED",name:"RED",mark:"RED",channels:["RED"],followers:["RED"],color:"#FF2E4D"},
+  {key:"WeChat OA",name:"WeChat OA",mark:"WC",channels:["WeChat","Alumni WeChat"],followers:["WeChat"],color:"#1BB255"},
+  {key:"Weibo",name:"Weibo",mark:"WB",channels:["Weibo"],followers:["Weibo"],color:"#E29A0E"},
+];
+function organicGroups(){
+  if(organicChannel==="All")return ORGANIC_GROUPS;
+  if(organicChannel==="Alumni WeChat")return [{key:"Alumni WeChat",name:"Alumni WeChat",mark:"ALM",channels:["Alumni WeChat"],followers:["WeChat"],color:"#7C9A57",shared:true}];
+  if(organicChannel==="WeChat")return [{key:"WeChat",name:"WeChat",mark:"WC",channels:["WeChat"],followers:["WeChat"],color:"#1BB255"}];
+  const source=ORGANIC_GROUPS.find(g=>g.channels.includes(organicChannel));
+  return source?[{...source,channels:[organicChannel]}]:[];
+}
+function organicAggregate(rows){
+  const total=rows.reduce((a,x)=>{a.reads+=metricNumber(x.reads);a.eng+=metricNumber(x.totalEngagement);a.shares+=metricNumber(x.shares);a.views+=metricNumber(x.followersAfterViewing);if(x.openRatePct!=null&&x.openRatePct!=="")a.open.push(metricNumber(x.openRatePct));return a;},{reads:0,eng:0,shares:0,views:0,open:[]});
+  total.er=total.reads?total.eng/total.reads*100:0;total.openRate=total.open.length?total.open.reduce((a,n)=>a+n,0)/total.open.length:null;return total;
+}
+function groupFollowerAt(group,endMonth){
+  const byMonth={};FOLLOWERS.filter(x=>x.sourcePresent&&group.followers.includes(x.channel)&&(!endMonth||x.month.slice(0,7)<=endMonth)).forEach(x=>{const ym=x.month.slice(0,7);byMonth[ym]=(byMonth[ym]||0)+metricNumber(x.accumulatedFollowers);});
+  const months=Object.keys(byMonth).sort(),last=months[months.length-1],prev=months[months.length-2];
+  return {value:last?byMonth[last]:0,delta:last&&prev?byMonth[last]-byMonth[prev]:null,month:last||""};
+}
+function destroyOrganicCharts(){Object.keys(ORGANIC_CHARTS).forEach(k=>{if(ORGANIC_CHARTS[k])ORGANIC_CHARTS[k].destroy();delete ORGANIC_CHARTS[k];});}
+function organicChartTokens(){const s=getComputedStyle(document.documentElement);return {text:s.getPropertyValue("--ink-2").trim()||"#5f5a54",muted:s.getPropertyValue("--ink-3").trim()||"#8c877e",grid:s.getPropertyValue("--line").trim()||"#e5e1da",surface:s.getPropertyValue("--surface").trim()||"#fff"};}
+function organicBaseChartOptions(tokens){return {responsive:true,maintainAspectRatio:false,animation:false,interaction:{mode:"index",intersect:false},plugins:{legend:{labels:{color:tokens.text,usePointStyle:true,boxWidth:8,boxHeight:8,padding:16,font:{size:11,weight:600}}},tooltip:{backgroundColor:"#26231f",titleColor:"#fff",bodyColor:"#fff",padding:10,cornerRadius:7,displayColors:true}},scales:{x:{grid:{display:false},ticks:{color:tokens.muted,font:{size:10}}},y:{beginAtZero:true,grid:{color:tokens.grid},ticks:{color:tokens.muted,font:{size:10}}}}};}
 function renderOrganic(){
   const current=ORGANIC.filter(x=>x.sourcePresent);
-  const periods=[...new Set(current.map(x=>x.publishDate&&x.publishDate.slice(0,7)).filter(Boolean))].sort().reverse();
+  const periodsAsc=[...new Set(current.map(x=>x.publishDate&&x.publishDate.slice(0,7)).filter(Boolean))].sort();
+  const latest=periodsAsc[periodsAsc.length-1]||"";
+  const periods=[...periodsAsc].reverse();
   const channels=[...new Set(current.map(x=>x.channel).filter(Boolean))].sort();
-  if(organicPeriod!=="all"&&!periods.includes(organicPeriod))organicPeriod="all";
+  if(!["latest","last3","all"].includes(organicPeriod)&&!periods.includes(organicPeriod))organicPeriod="latest";
   if(organicChannel!=="All"&&!channels.includes(organicChannel))organicChannel="All";
-  $("#organicPeriod").innerHTML=`<option value="all">All time</option>`+periods.map(p=>`<option value="${p}" ${p===organicPeriod?'selected':''}>${MO[+p.slice(5,7)-1]} ${p.slice(0,4)}</option>`).join("");
+  $("#organicPeriod").innerHTML=`<option value="latest" ${organicPeriod==="latest"?'selected':''}>Latest month${latest?' ('+monthLabel(latest)+')':''}</option><option value="last3" ${organicPeriod==="last3"?'selected':''}>Last 3 months</option><option value="all" ${organicPeriod==="all"?'selected':''}>All time</option>${periods.map(p=>`<option value="${p}" ${p===organicPeriod?'selected':''}>${monthLabel(p)}</option>`).join("")}`;
   $("#organicChannel").innerHTML=`<option value="All">All channels</option>`+channels.map(ch=>`<option value="${escAttr(ch)}" ${ch===organicChannel?'selected':''}>${esc(ch)}</option>`).join("");
   $("#organicPeriod").onchange=e=>{organicPeriod=e.target.value;renderOrganic();};
   $("#organicChannel").onchange=e=>{organicChannel=e.target.value;renderOrganic();};
-  const rows=current.filter(x=>(organicPeriod==="all"||x.publishDate.startsWith(organicPeriod))&&(organicChannel==="All"||x.channel===organicChannel)).sort((a,b)=>b.publishDate.localeCompare(a.publishDate));
-  const totals=rows.reduce((a,x)=>{a.reads+=metricNumber(x.reads);a.eng+=metricNumber(x.totalEngagement);a.shares+=metricNumber(x.shares);a.followers+=metricNumber(x.followersAfterViewing);return a;},{reads:0,eng:0,shares:0,followers:0});
-  const er=totals.reads?totals.eng/totals.reads*100:0;
+  let reportMonths=periodsAsc;
+  if(organicPeriod==="latest")reportMonths=latest?[latest]:[];
+  else if(organicPeriod==="last3")reportMonths=periodsAsc.slice(-3);
+  else if(organicPeriod!=="all")reportMonths=[organicPeriod];
+  const reportSet=new Set(reportMonths),endMonth=reportMonths[reportMonths.length-1]||latest;
+  const periodText=organicPeriod==="all"?(periodsAsc.length?`${monthLabel(periodsAsc[0])} to ${monthLabel(latest)}`:"All time"):organicPeriod==="last3"?(reportMonths.length?`${monthLabel(reportMonths[0])} to ${monthLabel(endMonth)}`:"Last 3 months"):monthLabel(endMonth);
+  const rows=current.filter(x=>reportSet.has(x.publishDate.slice(0,7))&&(organicChannel==="All"||x.channel===organicChannel)).sort((a,b)=>b.publishDate.localeCompare(a.publishDate));
+  const totals=organicAggregate(rows),groups=organicGroups();
+  const audience=groups.reduce((a,g)=>a+groupFollowerAt(g,endMonth).value,0);
   $("#organicKpis").innerHTML=`
-    <div class="kpi"><div class="rail" style="background:var(--blue)"></div><div class="cap">Organic posts</div><div class="val tnum">${rows.length.toLocaleString()}</div><div class="sub">${rows.filter(x=>x.contentId).length} linked to planner</div></div>
-    <div class="kpi"><div class="rail" style="background:var(--ch-wechat)"></div><div class="cap">Reads</div><div class="val tnum">${totals.reads.toLocaleString()}</div><div class="sub">selected period</div></div>
-    <div class="kpi"><div class="rail" style="background:var(--orange)"></div><div class="cap">Engagement</div><div class="val tnum">${totals.eng.toLocaleString()}</div><div class="sub">${er.toFixed(2)}% of reads</div></div>
-    <div class="kpi"><div class="rail" style="background:var(--ch-red)"></div><div class="cap">Shares</div><div class="val tnum">${totals.shares.toLocaleString()}</div><div class="sub">reported by platform</div></div>
-    <div class="kpi"><div class="rail" style="background:var(--ch-alumni)"></div><div class="cap">Followers gained</div><div class="val tnum">${totals.followers.toLocaleString()}</div><div class="sub">after viewing</div></div>`;
-  $("#organicTableSub").textContent=`${rows.length} synced post${rows.length===1?'':'s'}${organicPeriod!=="all"?' · '+MO[+organicPeriod.slice(5,7)-1]+' '+organicPeriod.slice(0,4):''}`;
-  $("#organicTable").innerHTML=`<thead><tr><th>Date</th><th>Channel</th><th>Post</th><th class="n">Reads</th><th class="n">Eng.</th><th class="n">ER</th><th class="n">Shares</th><th class="n">Followers +</th><th>Planner</th></tr></thead><tbody>${rows.map(x=>{const title=x.headlineEnglish||x.headlineChinese||"Untitled post",url=safePostUrl(x.postUrl),ch=CH[x.channel]||{color:"var(--ink-3)",label:x.channel};return `<tr><td class="tnum">${organicDate(x.publishDate)}</td><td><span class="chip" style="pointer-events:none;padding:2px 8px"><span class="dot" style="background:${ch.color}"></span>${esc(ch.label)}</span></td><td class="organic-title"><a href="${escAttr(url)}" target="_blank" rel="noopener">${esc(title)}</a>${x.headlineEnglish&&x.headlineChinese?`<span>${esc(x.headlineChinese)}</span>`:''}</td><td class="n tnum">${metricText(x.reads)}</td><td class="n tnum">${metricText(x.totalEngagement)}</td><td class="n tnum">${metricPct(x.engagementRatePct)}</td><td class="n tnum">${metricText(x.shares)}</td><td class="n tnum">${metricText(x.followersAfterViewing)}</td><td><span class="match-pill ${x.contentId?'matched':'unmatched'}">${x.contentId?'● Linked':'○ Raw only'}</span></td></tr>`;}).join("")||`<tr><td colspan="9" class="organic-empty">No organic performance rows match this filter.</td></tr>`}</tbody>`;
-  const followerRows=FOLLOWERS.filter(x=>x.sourcePresent&&(organicChannel==="All"||x.channel===organicChannel)&&(organicPeriod==="all"||x.month.startsWith(organicPeriod))).sort((a,b)=>b.month.localeCompare(a.month)||a.channel.localeCompare(b.channel));
-  $("#followersTable").innerHTML=`<thead><tr><th>Month</th><th>Channel</th><th class="n">Followers</th></tr></thead><tbody>${followerRows.map(x=>{const ch=CH[x.channel]||{color:"var(--ink-3)",label:x.channel};return `<tr><td>${organicMonth(x.month)}</td><td><span style="display:inline-flex;align-items:center;gap:6px"><i style="width:8px;height:8px;border-radius:50%;background:${ch.color}"></i>${esc(ch.label)}</span></td><td class="n tnum">${metricText(x.accumulatedFollowers)}</td></tr>`;}).join("")||`<tr><td colspan="3" class="organic-empty">No follower totals match this filter.</td></tr>`}</tbody>`;
+    <div class="kpi"><div class="rail" style="background:var(--blue)"></div><div class="cap">Posts published</div><div class="val tnum">${rows.length.toLocaleString()}</div><div class="sub">${esc(periodText)}</div></div>
+    <div class="kpi"><div class="rail" style="background:var(--ch-wechat)"></div><div class="cap">Reads</div><div class="val tnum">${compactMetric(totals.reads)}</div><div class="sub">${rows.length?compactMetric(totals.reads/rows.length):0} average per post</div></div>
+    <div class="kpi"><div class="rail" style="background:var(--orange)"></div><div class="cap">Total engagement</div><div class="val tnum">${compactMetric(totals.eng)}</div><div class="sub">${totals.er.toFixed(2)}% rate | ${compactMetric(totals.shares)} shares</div></div>
+    <div class="kpi"><div class="rail" style="background:var(--ch-red)"></div><div class="cap">Audience size</div><div class="val tnum">${compactMetric(audience)}</div><div class="sub">Accumulated followers at month end</div></div>`;
+  $("#organicOverviewPeriod").textContent=periodText;
+  $("#organicPlatformOverview").innerHTML=groups.length?groups.map(g=>{const r=organicAggregate(rows.filter(x=>g.channels.includes(x.channel))),f=groupFollowerAt(g,endMonth),delta=f.delta==null?"":`${f.delta>=0?"+":""}${f.delta.toLocaleString()} vs prior month`;return `<div class="platform-summary-row" style="--pc:${g.color}"><div class="platform-identity"><span class="platform-mark">${g.mark}</span><div><b>${esc(g.name)}</b><span>${rows.filter(x=>g.channels.includes(x.channel)).length} post${rows.filter(x=>g.channels.includes(x.channel)).length===1?'':'s'}${g.shared?' | shared OA audience':''}</span></div></div><div class="platform-metric"><span>Reads</span><b>${compactMetric(r.reads)}</b><small>${r.openRate==null?"":r.openRate.toFixed(2)+"% avg. open rate"}</small></div><div class="platform-metric engagement"><span>Engagement</span><b>${compactMetric(r.eng)}</b><small>${r.er.toFixed(2)}% rate</small></div><div class="platform-metric"><span>Followers</span><b>${compactMetric(f.value)}</b><small class="${f.delta>0?'up':f.delta<0?'down':''}">${delta}</small></div></div>`;}).join(""):`<div class="organic-empty">No platform data is available for this selection.</div>`;
+  const top=rows.slice().sort((a,b)=>metricNumber(b.reads)-metricNumber(a.reads)).slice(0,5);
+  $("#organicTopPostsSub").textContent=`Highest-read posts for ${periodText}.`;
+  $("#organicTopPosts").innerHTML=top.length?top.map((x,i)=>{const title=x.headlineEnglish||x.headlineChinese||"Untitled post",ch=CH[x.channel]||{color:"var(--ink-3)",label:x.channel};return `<article class="organic-post"><div class="rank">Top ${i+1}</div><a href="${escAttr(safePostUrl(x.postUrl))}" target="_blank" rel="noopener">${esc(title)}</a><div class="post-stats"><span><i style="display:inline-block;width:7px;height:7px;border-radius:50%;background:${ch.color};margin-right:4px"></i>${esc(ch.label)}</span><span><b>${compactMetric(x.reads)}</b> reads</span><span><b>${metricPct(x.engagementRatePct)}</b> ER</span></div></article>`;}).join(""):`<div class="organic-empty" style="grid-column:1/-1">No posts are available for this selection.</div>`;
+  $("#organicDetailsSummary").textContent=`View ${rows.length} post record${rows.length===1?'':'s'} for ${periodText}`;
+  $("#organicTable").innerHTML=`<thead><tr><th>Date</th><th>Channel</th><th>Post</th><th class="n">Reads</th><th class="n">Eng.</th><th class="n">ER</th><th class="n">Shares</th><th class="n">Followers +</th></tr></thead><tbody>${rows.map(x=>{const title=x.headlineEnglish||x.headlineChinese||"Untitled post",url=safePostUrl(x.postUrl),ch=CH[x.channel]||{color:"var(--ink-3)",label:x.channel};return `<tr><td class="tnum">${organicDate(x.publishDate)}</td><td><span class="chip" style="pointer-events:none;padding:2px 8px"><span class="dot" style="background:${ch.color}"></span>${esc(ch.label)}</span></td><td class="organic-title"><a href="${escAttr(url)}" target="_blank" rel="noopener">${esc(title)}</a>${x.headlineEnglish&&x.headlineChinese?`<span>${esc(x.headlineChinese)}</span>`:''}</td><td class="n tnum">${metricText(x.reads)}</td><td class="n tnum">${metricText(x.totalEngagement)}</td><td class="n tnum">${metricPct(x.engagementRatePct)}</td><td class="n tnum">${metricText(x.shares)}</td><td class="n tnum">${metricText(x.followersAfterViewing)}</td></tr>`;}).join("")||`<tr><td colspan="8" class="organic-empty">No organic performance rows match this filter.</td></tr>`}</tbody>`;
   const run=SYNC_RUNS[0];
-  if(run){const done=run.completed_at||run.started_at,when=new Intl.DateTimeFormat("en-AU",{dateStyle:"medium",timeStyle:"short"}).format(new Date(done));$("#organicSyncSummary").innerHTML=`<span><b>Last sync:</b> ${esc(when)}</span><span><b>Status:</b> ${esc(run.status)}</span><span><b>${run.content_rows||0}</b> posts · <b>${run.matched_rows||0}</b> linked · <b>${run.unmatched_rows||0}</b> raw only</span>`;}else $("#organicSyncSummary").textContent="No performance sync has run yet.";
+  if(run){const done=run.completed_at||run.started_at,when=new Intl.DateTimeFormat("en-AU",{dateStyle:"medium",timeStyle:"short"}).format(new Date(done));$("#organicSyncSummary").innerHTML=`<span><b>Last sync:</b> ${esc(when)}</span><span><b>Status:</b> ${esc(run.status)}</span><span><b>${run.content_rows||0}</b> post records | <b>${run.follower_rows||0}</b> follower records</span>`;}else $("#organicSyncSummary").textContent="No performance sync has run yet.";
+  destroyOrganicCharts();
+  if(typeof Chart!=="undefined"&&groups.length){
+    const tokens=organicChartTokens(),base=organicBaseChartOptions(tokens);
+    const groupStats=groups.map(g=>organicAggregate(rows.filter(x=>g.channels.includes(x.channel))));
+    const readOptions=structuredClone(base);readOptions.indexAxis="y";readOptions.plugins.legend.display=false;readOptions.scales.x.ticks.callback=v=>compactMetric(v);readOptions.scales.y.grid.display=false;
+    ORGANIC_CHARTS.reads=new Chart($("#organicReadsChart"),{type:"bar",data:{labels:groups.map(g=>g.name),datasets:[{data:groupStats.map(x=>x.reads),backgroundColor:groups.map(g=>g.color+"CC"),borderColor:groups.map(g=>g.color),borderWidth:1,borderRadius:6,barThickness:30}]},options:readOptions});
+    const followerMonths=[...new Set(FOLLOWERS.filter(x=>x.sourcePresent&&x.month.slice(0,7)<=endMonth).map(x=>x.month.slice(0,7)))].sort().slice(-8);
+    const followerOptions=structuredClone(base);followerOptions.scales.y.beginAtZero=false;followerOptions.scales.y.ticks.callback=v=>compactMetric(v);followerOptions.plugins.tooltip.callbacks={label:c=>`${c.dataset.label}: ${metricNumber(c.parsed.y).toLocaleString()}`};
+    ORGANIC_CHARTS.followers=new Chart($("#organicFollowersChart"),{type:"line",data:{labels:followerMonths.map(monthLabel),datasets:groups.map(g=>({label:g.name,data:followerMonths.map(ym=>{const row=FOLLOWERS.filter(x=>x.sourcePresent&&g.followers.includes(x.channel)&&x.month.startsWith(ym));return row.length?row.reduce((a,x)=>a+metricNumber(x.accumulatedFollowers),0):null;}),borderColor:g.color,backgroundColor:g.color,pointBackgroundColor:g.color,pointRadius:3,pointHoverRadius:5,borderWidth:2,tension:.3,spanGaps:true}))},options:followerOptions});
+    const engagementOptions=structuredClone(base);engagementOptions.plugins.legend.display=false;engagementOptions.scales.x.grid.display=false;engagementOptions.scales.y.suggestedMax=Math.max(10,...groupStats.map(x=>x.er))*1.15;engagementOptions.scales.y.ticks.callback=v=>v+"%";engagementOptions.plugins.tooltip.callbacks={label:c=>`${metricNumber(c.parsed.y).toFixed(2)}% engagement rate`};
+    ORGANIC_CHARTS.engagement=new Chart($("#organicEngagementChart"),{type:"bar",data:{labels:groups.map(g=>g.name),datasets:[{data:groupStats.map(x=>+x.er.toFixed(2)),backgroundColor:groups.map(g=>g.color+"CC"),borderColor:groups.map(g=>g.color),borderWidth:1,borderRadius:6,barThickness:32}]},options:engagementOptions});
+  }
 }
 async function syncOrganicPerformance(){
   const btn=$("#syncOrganic");btn.disabled=true;btn.textContent="Syncing…";
@@ -1951,7 +2048,7 @@ $$("#tabs button").forEach(b=>b.onclick=()=>{view=b.dataset.view;$$("#tabs butto
   $("#wipView").classList.toggle("show",view==="wip");
   $("#historyView").classList.toggle("show",view==="history");
   if(view==="paid")renderPaid(); if(view==="organic")renderOrganic(); if(view==="wip")renderWIP(); if(view==="history")renderHistory();});
-$("#theme").onclick=()=>{const r=document.documentElement,c=r.getAttribute("data-theme")||(matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light");r.setAttribute("data-theme",c==="dark"?"light":"dark");};
+$("#theme").onclick=()=>{const r=document.documentElement,c=r.getAttribute("data-theme")||(matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light");r.setAttribute("data-theme",c==="dark"?"light":"dark");if(view==="organic")renderOrganic();};
 let tT; function toast(m){$("#toastMsg").textContent=m;$("#toast").classList.add("show");clearTimeout(tT);tT=setTimeout(()=>$("#toast").classList.remove("show"),2400);}
 // global hover tooltip for all charts/flight
 (function(){const tip=$("#tooltip");
