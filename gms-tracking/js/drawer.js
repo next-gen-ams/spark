@@ -293,7 +293,12 @@ function thumbCell(c, refresh) {
       el('img', { src: c.preview_image, alt: `${c.name || 'Creative'} preview` }),
       el('button', {
         class: 'btn ghost sm', title: 'Remove this screenshot',
-        onclick: () => { put('creative', { id: c.id, preview_image: null }); refresh(); },
+        onclick: () => confirmDanger({
+          title: 'Delete this screenshot?',
+          detail: `The saved artwork preview for ${c.name || 'this creative'} will be removed from the dashboard and future exports.`,
+          confirmLabel: 'Delete screenshot',
+          onConfirm: () => { put('creative', { id: c.id, preview_image: null }); refresh(); },
+        }),
       }, '✕'));
   }
   return el('button', {

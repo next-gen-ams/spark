@@ -21,7 +21,7 @@
 import { el, fill, dateAu, shown } from './dom.js';
 import { all, put, remove, newId, where } from './store.js';
 import { todayIso } from './calc.js';
-import { dialog, textField, errorLine } from './modal.js';
+import { dialog, confirmDanger, textField, errorLine } from './modal.js';
 import { whoAmI, setWhoAmI } from './who.js';
 
 /** Entries visible from one line: campaign-wide entries plus that line's own.
@@ -120,7 +120,12 @@ export function openLog(m, rerender) {
         }, n.shared ? 'Unshare' : 'Share'),
         el('button', {
           class: 'btn ghost sm', title: 'Delete this entry',
-          onclick: () => { remove('note', n.id); paint(); rerender && rerender(); },
+          onclick: () => confirmDanger({
+            title: 'Delete tracking log entry?',
+            detail: `${n.date ? dateAu(n.date) : 'No date'} · ${String(n.body || '').slice(0, 120) || 'Empty entry'}`,
+            confirmLabel: 'Delete entry',
+            onConfirm: () => { remove('note', n.id); paint(); rerender && rerender(); },
+          }),
         }, '✕')),
       el('p', {}, n.body || ''))));
   };

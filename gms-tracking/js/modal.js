@@ -20,10 +20,17 @@ import { el, fill, setTextPrompt } from './dom.js';
 
 let host = null;
 let escHandler = null;
+let confirmHost = null;
+let confirmEscHandler = null;
 
 function mount() {
   if (!host) { host = el('div'); document.body.appendChild(host); }
   return host;
+}
+
+function mountConfirm() {
+  if (!confirmHost) { confirmHost = el('div'); document.body.appendChild(confirmHost); }
+  return confirmHost;
 }
 
 export function closeDialog() {
@@ -169,37 +176,66 @@ export function errorLine() {
  * `typeToConfirm` adds a word the user has to type — reserved for the wipe,
  * where one click is not enough consent for every client's numbers.
  */
-export function confirmDanger({ title, detail, confirmLabel, onConfirm, typeToConfirm, onBackup }) {
+export function confirmDanger({ title, detail, confirmLabel, onConfirm, typeToConfirm, onBackup, note }) {
+  if (confirmEscHandler) {
+    document.removeEventListener('keydown', confirmEscHandler, true);
+    confirmEscHandler = null;
+  }
   const gate = typeToConfirm
     ? textField(`Type ${typeToConfirm} to enable`, { placeholder: typeToConfirm })
     : null;
+  const h = fill(mountConfirm());
+  const returnFocus = document.activeElement;
+  const close = () => {
+    if (confirmEscHandler) {
+      document.removeEventListener('keydown', confirmEscHandler, true);
+      confirmEscHandler = null;
+    }
+    fill(h);
+    if (returnFocus?.isConnected && typeof returnFocus.focus === 'function') returnFocus.focus();
+  };
+  const button = (label, { danger = false, onClick } = {}) => el('button', {
+    class: 'btn sm' + (danger ? ' danger' : ''),
+    onclick: () => { if (onClick && onClick() === false) return; close(); },
+  }, label);
+  const explanation = note ?? (onBackup
+    ? 'This cannot be undone. The backup is the whole dashboard as one .json; restore it from Settings ▸ Data.'
+    : 'This cannot be undone.');
 
-  const box = dialog({
-    title,
-    content: [
-      el('p', {}, detail),
-      el('p', { class: 'hint' },
-        'This cannot be undone. The backup is the whole dashboard as one .json; '
-        + 'restore it from Settings ▸ Data.'),
-      gate,
-    ].filter(Boolean),
-    actions: [
-      /* Returning false keeps the box open — downloading a backup is a detour,
-         not an answer. */
-      { label: 'Download backup first', onClick: () => { onBackup && onBackup(); return false; } },
-      { label: 'Cancel' },
-      {
-        label: confirmLabel, danger: true,
-        onClick: () => {
-          if (gate && gate.value() !== typeToConfirm) return false;
-          onConfirm();
-          return undefined;
-        },
+  h.appendChild(el('div', { class: 'scrim', onclick: close }));
+  h.appendChild(el('div', {
+    class: 'dialogbox confirmbox', role: 'dialog', 'aria-modal': 'true', 'aria-label': title,
+  },
+  el('h3', {}, title),
+  el('p', {}, detail),
+  explanation ? el('p', { class: 'hint' }, explanation) : null,
+  gate,
+  el('div', { class: 'drow' },
+    el('div', { style: { flex: 1 } }),
+    onBackup ? button('Download backup first', {
+      onClick: () => { onBackup(); return false; },
+    }) : null,
+    button('Cancel'),
+    button(confirmLabel, {
+      danger: true,
+      onClick: () => {
+        if (gate && gate.value() !== typeToConfirm) return false;
+        return onConfirm();
       },
-    ],
-  });
+    }))));
+
+  /* A confirmation can sit above another form dialog (deleting a tracking-log
+     entry is the real case). Capture Escape before the underlying dialog sees
+     it, or one keypress closes both layers and discards the user's draft. */
+  confirmEscHandler = (e) => {
+    if (e.key !== 'Escape') return;
+    e.preventDefault();
+    e.stopImmediatePropagation();
+    close();
+  };
+  document.addEventListener('keydown', confirmEscHandler, true);
   if (gate) setTimeout(() => gate.focus(), 30);
-  return box;
+  return { close };
 }
 
 /* ------------------------------------------------- one-line text prompt */

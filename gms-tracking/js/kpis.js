@@ -29,8 +29,8 @@ import { all, put, newId } from './store.js';
 
 const KEY = 'kpis';
 
-/** Every defined column, counters first, stable order. */
-export function kpiDefs() {
+/** Every stored definition, including soft-removed columns. */
+function allKpiDefs() {
   try {
     const row = all('settings').find((s) => s.k === KEY);
     const v = row ? JSON.parse(row.v) : [];
@@ -38,21 +38,52 @@ export function kpiDefs() {
   } catch { return []; }
 }
 
+/** Every visible column, counters first, stable order. */
+export function kpiDefs() {
+  return allKpiDefs().filter((d) => d.active !== false);
+}
+
 export function saveKpiDefs(defs) {
   put('settings', { k: KEY, v: JSON.stringify(defs) });
 }
 
+const norm = (v) => String(v || '').trim().toLowerCase();
+const sameDefinition = (a, b) => {
+  if (a.id && b.id && a.id === b.id) return true;
+  if (a.kind !== b.kind) return false;
+  if (a.kind === 'counter') return norm(a.name) === norm(b.name);
+  return a.num === b.num && a.den === b.den
+    && (a.per || 1) === (b.per || 1) && (a.format || '') === (b.format || '');
+};
+
 export function addKpi(def) {
-  const defs = kpiDefs();
-  defs.push({ ...def, id: def.id || newId('k') });
+  const defs = allKpiDefs();
+  const existing = defs.find((d) => sameDefinition(d, def));
+  if (existing) {
+    existing.active = true;
+    delete existing.removedBy;
+    saveKpiDefs(defs);
+    return existing;
+  }
+  defs.push({ ...def, id: def.id || newId('k'), active: true });
   saveKpiDefs(defs);
   return defs.at(-1);
 }
 
-/** Remove the definition only — typed values stay on the spend rows, so
-    re-adding the column later brings the history back. */
+/** Soft-remove the definition. Typed values keep their stable id on spend
+ * rows; re-adding the same definition reactivates that id and its history. */
 export function removeKpi(id) {
-  saveKpiDefs(kpiDefs().filter((d) => d.id !== id && d.den !== id && d.num !== id));
+  const defs = allKpiDefs();
+  for (const d of defs) {
+    if (d.id === id) {
+      d.active = false;
+      delete d.removedBy;
+    } else if (d.active !== false && (d.den === id || d.num === id)) {
+      d.active = false;
+      d.removedBy = id;
+    }
+  }
+  saveKpiDefs(defs);
 }
 
 /* --------------------------------------------------------------- presets */

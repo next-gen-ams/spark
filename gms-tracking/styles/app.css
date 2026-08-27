@@ -518,8 +518,14 @@ table.data[style*="fixed"] td.prose.pacecell > * {
 .lineobjective {
   color: var(--ink-2); font-size: 11px; font-weight: 600; vertical-align: middle;
 }
+.statusbtn {
+  margin-left: 7px; font: inherit; cursor: pointer; vertical-align: middle;
+}
+.statusbtn:hover { border-color: currentColor; }
+.statusbtn:focus-visible { outline: 2px solid var(--orange); outline-offset: 2px; }
 .linename { margin-top: 6px; font-weight: 650; color: var(--ink); }
 .linecampaign { margin-top: 2px; font-size: 10.5px; }
+.deliverypct { margin-top: 2px; font-size: 11px; line-height: 1.25; }
 
 /* First column is pinned horizontally: at 16 columns you scroll far enough to
    forget whose row you are on. */

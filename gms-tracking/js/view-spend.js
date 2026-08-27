@@ -14,11 +14,12 @@
 
 import { el, fill, money, money2, int, pct, monthLabel, dateAu, toast, shown } from './dom.js';
 import { put, remove, where, byId, newId, fxMap, loadCreativeImages, deleteCreative } from './store.js';
-import { dialog, closeDialog, textField, choiceField, errorLine } from './modal.js';
+import { dialog, confirmDanger, closeDialog, textField, choiceField, errorLine } from './modal.js';
 import { imageField } from './paste-image.js';
 import { openLog, noteCount } from './notes.js';
 import { monthBounds, grossUp, repace, todayIso, daySplit, looseSpendTotal, periodSpend,
-  cumulative, creativeActive, creativePace, kpiValue, spendForSide } from './calc.js';
+  cumulative, creativeActive, creativePace, kpiValue, spendForSide, deliveryPct,
+  effectiveStatus } from './calc.js';
 import { kpiDefs, addKpi, removeKpi, PRESETS, hasPreset, companionsFor, kpiFormula, formatKpi } from './kpis.js';
 import { resizable, forgetWidths } from './resizable.js';
 import { PLATFORM_COLOR } from './config.js';
@@ -189,7 +190,10 @@ function grid(rows, date, mode, state, rerender) {
     const r = repace(m.line, m.campaign,
       where('line_month', (x) => x.line_id === m.line.id), spends,
       { fx, today, side });
-    const advice = localPaceAdvice(r, m);
+    const status = effectiveStatus(m.line, m.campaign, today);
+    const advice = localPaceAdvice(r, m, status);
+    const held = status === 'Paused' || status === 'Stopped'
+      || (status === 'Completed' && !r?.finished);
 
     const write = (creativeId, patch) => {
       put('spend', {
@@ -218,6 +222,7 @@ function grid(rows, date, mode, state, rerender) {
       el('td', { class: 'wrap linecell' },
         platformTag(m.line.platform),
         m.line.objective ? el('span', { class: 'lineobjective' }, m.line.objective) : null,
+        statusControl(m, status, state, rerender),
         el('div', { class: 'linename' }, lineLabel(m)),
         el('div', { class: 'muted linecampaign' }, m.campaignName),
         lineControls(m, creatives, spends, date, rerender)),
@@ -256,16 +261,21 @@ function grid(rows, date, mode, state, rerender) {
 
       /* --- running position across the whole flight --- */
       el('td', { class: 'num' }, r ? money(r.spent) : '—',
-        r ? el('div', { class: 'muted', style: { fontSize: '11px' } }, `of ${money(r.total)}`) : null),
+        r ? el('div', {
+          class: 'muted deliverypct',
+          title: mode === 'day'
+            ? `Current delivery as at ${dateAu(today)}. Backfilling ${dateAu(date)} changes history; the execution position stays current.`
+            : `Current spend divided by the whole-flight booked budget as at ${dateAu(today)}.`,
+        }, `of ${money(r.total)} · ${pct(deliveryPct(r), 1)} delivery`) : null),
       el('td', { class: 'num muted' }, r ? money(r.due) : '—'),
       el('td', { class: 'num' }, r ? varianceCell(r) : '—'),
-      el('td', { class: 'num' }, r && !r.finished
+      el('td', { class: 'num' }, r && !r.finished && !held
         ? el('div', {}, el('b', {}, `${money2(r.localSuggestedDaily, m.ccy)} / day`),
           el('div', { class: 'muted', style: { fontSize: '11px' } },
             `${money2(r.localToMonthTarget, m.ccy)} to month target`),
           el('div', { class: 'muted', style: { fontSize: '11px' } },
             `${r.monthDaysLeft} day${r.monthDaysLeft === 1 ? '' : 's'} left this month`))
-        : el('span', { class: 'muted' }, '—')),
+        : el('span', { class: 'muted' }, held ? status.toLowerCase() : '—')),
       el('td', { class: 'wrap prose pacecell' }, advice
         ? el('div', {},
           el('span', { class: 'advice ' + (advice.kind === 'ok' ? 'good' : advice.kind) }, advice.text),
@@ -407,9 +417,72 @@ function platformTag(platform) {
     : el('span', { class: 'tag platformtag muted' }, 'Platform —');
 }
 
+/** The stored value is only an override. Automatic follows the flight dates,
+ * so extending a campaign advances the status without somebody editing every
+ * line. Paused / Stopped / an early Completed are human decisions and stick. */
+function statusControl(m, shownStatus, state, rerender) {
+  const stored = m.line.status || 'Not started';
+  const current = stored === 'Paused' ? 'paused'
+    : stored === 'Stopped' ? 'stopped'
+      : stored === 'Completed' ? 'completed' : 'automatic';
+  const kind = shownStatus === 'Live' ? 'good'
+    : shownStatus === 'Paused' ? 'warn'
+      : shownStatus === 'Stopped' ? 'crit' : '';
+
+  return el('button', {
+    type: 'button', class: `tag statusbtn ${kind}`.trim(),
+    'data-line-status': m.line.id,
+    title: 'Change this line’s operational status',
+    onclick: () => {
+      const status = choiceField('Operational status', [
+        {
+          value: 'automatic', label: `Automatic schedule — currently ${shownStatus}`,
+          note: 'Uses the flight dates: Not started before launch, Live in flight, Completed after it ends.',
+        },
+        {
+          value: 'paused', label: 'Paused',
+          note: 'Keeps the line visible and editable, but removes the instruction to keep spending until resumed.',
+        },
+        {
+          value: 'stopped', label: 'Stopped',
+          note: 'A deliberate early stop. Historical spend stays in every total and report.',
+        },
+        {
+          value: 'completed', label: 'Completed early',
+          note: 'Marks delivery complete before the booked flight end. Historical spend stays.',
+        },
+      ], { value: current });
+      dialog({
+        title: 'Change line status',
+        sub: `${m.clientName} · ${lineLabel(m)}`,
+        content: [status],
+        actions: [
+          { label: 'Cancel' },
+          { label: 'Apply', primary: true, onClick: () => {
+            const next = {
+              automatic: 'Not started', paused: 'Paused', stopped: 'Stopped', completed: 'Completed',
+            }[status.value()];
+            const nextShown = effectiveStatus({ ...m.line, status: next }, m.campaign);
+            put('line', { id: m.line.id, status: next });
+            const filter = state.filters?.status;
+            toast(`Status changed to ${nextShown}${filter && filter !== nextShown
+              ? ` · hidden by the current ${filter} filter` : ''}`, 'ok', 6000);
+            rerender();
+          } },
+        ],
+      });
+    },
+  }, shownStatus);
+}
+
 /** Execution advice in the currency the tracker can actually set in-platform. */
-function localPaceAdvice(r, m) {
+function localPaceAdvice(r, m, status) {
   if (!r) return null;
+  if (status === 'Paused') return { kind: 'warn', text: 'Paused — hold spend until resumed.' };
+  if (status === 'Stopped') return { kind: 'crit', text: 'Stopped — no further spend.' };
+  if (status === 'Completed' && !r.finished) {
+    return { kind: 'ok', text: 'Completed early — no further spend.' };
+  }
   const v = r.localVariance;
   const amount = money2(Math.abs(v), m.ccy);
   if (r.finished) {
@@ -768,8 +841,19 @@ function addColumnDialog(rerender) {
             title: 'Remove the column. Typed values stay on the spend rows, so re-adding it brings them back. Rates built on it go with it.',
             onclick: (e) => {
               e.preventDefault();
-              removeKpi(d.id); rerender();
-              closeDialog(); addColumnDialog(rerender);   // reopen with the list refreshed
+              const linked = existing.filter((x) => x.id !== d.id && (x.den === d.id || x.num === d.id));
+              confirmDanger({
+                title: `Remove “${d.name}” column?`,
+                detail: linked.length
+                  ? `${linked.length} calculated column${linked.length === 1 ? '' : 's'} built on it will be hidden too.`
+                  : 'The column will be hidden from Tracking Entry and exports.',
+                confirmLabel: 'Remove column',
+                note: 'Typed values stay attached to their original id. Re-adding the same column restores its history.',
+                onConfirm: () => {
+                  removeKpi(d.id); rerender();
+                  closeDialog(); addColumnDialog(rerender);
+                },
+              });
             },
           }, '✕')))))
     : null;

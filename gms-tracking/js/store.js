@@ -540,14 +540,7 @@ export async function loadDemo() {
     const res = await fetch('data/demo.json', { cache: 'no-store' });
     if (!res.ok) throw new Error(`demo.json ${res.status}`);
     const parsed = await res.json();
-    for (const t of TABLES) if (Array.isArray(parsed[t])) db[t] = parsed[t];
-    seed();
-    saveLocal();
-    /* With a backend configured, loading the sample must reach it too —
-       otherwise the button appears to work and silently changes nothing for
-       anyone else on the team. */
-    if (sb) for (const t of TABLES) persistMany(t, db[t]);
-    emit();
+    replaceSnapshot(parsed, { seedDefaults: true });
     return true;
   } catch (e) {
     console.warn('[store] demo data unavailable', e);
@@ -604,9 +597,28 @@ export const exportJson = () => JSON.stringify(db, null, 2);
 
 export function importJson(text) {
   const parsed = JSON.parse(text);
-  for (const t of TABLES) if (Array.isArray(parsed[t])) db[t] = parsed[t];
+  replaceSnapshot(parsed);
+}
+
+/** Replace means replace remotely too. Upserting the incoming rows alone
+ * leaves anything absent from the file sitting in Postgres, ready to return
+ * on refresh. Queue a full child-to-parent clear, then rebuild in the normal
+ * parent-to-child table order so foreign keys always have their parent first. */
+function replaceSnapshot(parsed, { seedDefaults = false } = {}) {
+  const required = ['client', 'campaign', 'line', 'line_month', 'spend'];
+  if (!parsed || typeof parsed !== 'object' || required.some((t) => !Array.isArray(parsed[t]))) {
+    throw new Error('Invalid dashboard backup');
+  }
+  for (const t of TABLES) db[t] = Array.isArray(parsed[t]) ? parsed[t] : [];
+  /* A backup is an exact snapshot and must round-trip byte for byte. Demo data
+     may come from an older build without setup rows, so only that path gets
+     the normal first-run defaults filled in. */
+  if (seedDefaults) seed();
   saveLocal();
-  if (sb) for (const t of TABLES) persistMany(t, db[t]);
+  if (sb) {
+    for (const t of TABLES.slice().reverse()) enqueue({ t: 'delall', table: t });
+    for (const t of TABLES) persistMany(t, db[t]);
+  }
   emit();
 }
 

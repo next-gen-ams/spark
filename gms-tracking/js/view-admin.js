@@ -198,21 +198,40 @@ function suppliers(rerender) {
 
 function fxRates(rerender) {
   const list = all('fx').sort((a, b) => String(a.ccy).localeCompare(String(b.ccy)));
+  const campaigns = new Map(all('campaign').map((c) => [c.id, c]));
+  const users = (ccy) => all('line').filter((line) => {
+    if ((line.currency || 'AUD') !== ccy) return false;
+    const campaign = campaigns.get(line.campaign_id);
+    return !(campaign?.fx_ccy === ccy && Number(campaign.fx_rate) > 0);
+  });
   const ccy = el('input', { placeholder: 'CCY', class: 'pill-sel', style: { maxWidth: '80px' } });
   const rate = el('input', { placeholder: 'per 1 AUD', class: 'pill-sel', type: 'number', step: '0.0001', style: { maxWidth: '120px' } });
 
   return panel('Exchange rates', 'Convention: 1 AUD = X foreign. A rate printed on an IO overrides this for that campaign.',
     el('div', { class: 'tablewrap' }, el('table', { class: 'data' },
       el('thead', {}, el('tr', {}, el('th', {}, 'Currency'), el('th', { class: 'num' }, '1 AUD ='), el('th', {}, ''))),
-      el('tbody', {}, ...list.map((f) => el('tr', {},
-        el('td', {}, f.ccy),
-        el('td', { class: 'num' }, el('input', {
-          class: 'cellinput', type: 'number', step: '0.0001', value: f.per_aud ?? '',
-          onchange: (e) => put('fx', { ccy: f.ccy, per_aud: Number(e.target.value) || 1 }),
-        })),
-        el('td', {}, f.ccy === 'AUD' ? null : el('button', {
-          class: 'btn ghost sm', onclick: () => { remove('fx', f.ccy); rerender(); },
-        }, 'Remove')))))),
+      el('tbody', {}, ...list.map((f) => {
+        const used = users(f.ccy);
+        return el('tr', {},
+          el('td', {}, f.ccy),
+          el('td', { class: 'num' }, el('input', {
+            class: 'cellinput', type: 'number', step: '0.0001', value: f.per_aud ?? '',
+            onchange: (e) => put('fx', { ccy: f.ccy, per_aud: Number(e.target.value) || 1 }),
+          })),
+          el('td', {}, f.ccy === 'AUD' ? null : el('button', {
+            class: 'btn ghost sm', disabled: used.length > 0,
+            title: used.length
+              ? `Used by ${used.length} line${used.length === 1 ? '' : 's'}. Change those lines to another currency first.`
+              : `Remove ${f.ccy} from the exchange-rate table`,
+            onclick: () => confirmDanger({
+              title: `Remove ${f.ccy} exchange rate?`,
+              detail: `No current line depends on this global rate. ${f.ccy} will no longer be offered as a spend currency.`,
+              confirmLabel: 'Remove rate',
+              note: 'You can add the currency again later with a new rate.',
+              onConfirm: () => { remove('fx', f.ccy); rerender(); },
+            }),
+          }, used.length ? `In use · ${used.length}` : 'Remove')));
+      }))),
     ),
     el('div', { class: 'body', style: { display: 'flex', gap: '8px' } }, ccy, rate,
       el('button', {
@@ -240,7 +259,18 @@ function vocabs(rerender) {
               el('button', {
                 class: 'btn ghost sm', style: { padding: '0 3px', lineHeight: 1 },
                 title: 'Remove from the list (existing lines keep their value)',
-                onclick: () => { remove('vocab', `${kind}:${v}`); rerender(); },
+                onclick: () => {
+                  const fields = kind === 'status'
+                    ? all('line').filter((line) => line.status === v).length
+                    : all('line').filter((line) => line[kind] === v).length;
+                  confirmDanger({
+                    title: `Remove “${v}” from ${kind.replace('_', ' ')}?`,
+                    detail: `${fields} existing line${fields === 1 ? '' : 's'} keep this value. It disappears only from future dropdown choices.`,
+                    confirmLabel: 'Remove option',
+                    note: 'Adding the same wording later restores it to the list.',
+                    onConfirm: () => { remove('vocab', `${kind}:${v}`); rerender(); },
+                  });
+                },
               }, '✕')))),
           el('div', { style: { display: 'flex', gap: '6px' } }, input,
             el('button', {

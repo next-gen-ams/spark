@@ -707,6 +707,14 @@ export function repace(line, campaign, months, spends, { fx, today = todayIso(),
   };
 }
 
+/** Whole-flight budget used. Kept separate from `onTrack`, which is actual
+ * spend divided by what should have been spent *by now*. The two percentages
+ * answer different questions and must never share a label. */
+export function deliveryPct(pace) {
+  const total = num(pace?.total);
+  return total > 0 ? num(pace?.spent) / total : null;
+}
+
 /** Wording for the carried shortfall — the thing the team acts on. */
 export function repaceAdvice(r) {
   if (!r) return null;
