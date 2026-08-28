@@ -164,6 +164,14 @@
   .panel { background:var(--surface); border:1px solid var(--line); border-radius:var(--radius); box-shadow:var(--shadow); }
   .panel > h3 { margin:0; padding:12px 14px 10px; font-size:12.5px; font-weight:700; display:flex; align-items:center; gap:7px; border-bottom:1px solid var(--line); }
   .panel > h3 .count { margin-left:auto; font-size:11px; color:var(--ink-3); font-weight:700; background:var(--surface-2); padding:1px 7px; border-radius:10px; }
+  .panel-collapse { flex:none; display:grid; place-items:center; width:24px; height:24px; padding:0; border:1px solid var(--line-2); border-radius:7px; background:var(--surface-2); color:var(--ink-2); box-shadow:0 1px 2px rgba(0,0,0,.06); cursor:pointer; transition:border-color .12s,background .12s,color .12s,transform .12s; }
+  .panel-collapse::before { content:""; width:7px; height:7px; border-top:2px solid currentColor; border-left:2px solid currentColor; transform:translateY(2px) rotate(45deg); }
+  .collapsible-panel.collapsed .panel-collapse::before { transform:translateY(-2px) rotate(225deg); }
+  .panel-collapse:hover { border-color:var(--orange); background:var(--orange-soft); color:var(--orange-deep); }
+  .panel-collapse:active { transform:translateY(1px); }
+  .panel-collapse:focus-visible, .collapsible-panel button:focus-visible { outline:none; box-shadow:0 0 0 3px color-mix(in srgb,var(--orange) 24%,transparent); }
+  .collapsible-panel.collapsed > h3 { border-bottom-color:transparent; }
+  .collapsible-panel > [hidden] { display:none !important; }
   .wechat-body { padding:12px 14px; display:flex; flex-direction:column; gap:14px; }
   .acct { }
   .acct .ah { display:flex; align-items:center; justify-content:space-between; font-size:12px; font-weight:700; margin-bottom:6px; }
@@ -188,12 +196,8 @@
   .pool-scope button { border:0; background:transparent; color:var(--ink-3); border-radius:5px; padding:4px; font-size:9px; font-weight:700; line-height:1; white-space:nowrap; }
   .pool-scope button.active { color:var(--ink); background:var(--surface); box-shadow:0 1px 2px rgba(0,0,0,.07); }
   .pool-panel > h3 .paddbtn { flex:none; width:18px; height:18px; margin-left:0; }
-  .pool-collapse { flex:none; display:grid; place-items:center; width:18px; height:18px; padding:0; border:1px solid transparent; border-radius:6px; background:transparent; color:var(--ink-3); cursor:pointer; }
-  .pool-collapse::before { content:"▴"; font-size:10px; line-height:1; }
-  .pool-panel.collapsed .pool-collapse::before { content:"▾"; }
-  .pool-collapse:hover { border-color:var(--line-2); background:var(--surface-2); color:var(--ink); }
-  .pool-collapse:focus-visible, .pool-panel button:focus-visible, .pool-search:focus-within { outline:none; box-shadow:0 0 0 2px color-mix(in srgb,var(--orange) 24%,transparent); }
-  .pool-panel.collapsed > h3 { border-bottom-color:transparent; }
+  .pool-panel > h3 .panel-collapse { width:24px; height:24px; }
+  .pool-search:focus-within { outline:none; box-shadow:0 0 0 2px color-mix(in srgb,var(--orange) 24%,transparent); }
   .pool-content[hidden] { display:none; }
   .pool-tools { display:grid; grid-template-columns:minmax(0,1fr); gap:8px; padding:9px 10px 8px; border-bottom:0; }
   .pool-channels { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:4px; overflow:visible; padding:0; }
@@ -678,9 +682,9 @@
     <div class="search">🔍<input id="search" type="search" name="content-search" placeholder="Search content…" autocomplete="off" autocorrect="off" spellcheck="false" data-lpignore="true" data-1p-ignore data-form-type="other"></div>
   </div>
   <div class="stage" id="stage">
-    <div class="panel pool-panel" id="poolPanel">
-      <h3><span class="pool-title">Content Pool <span class="count" id="poolCount">0</span></span><span class="pool-scope" id="poolScope"><button class="active" data-scope="active">Active</button><button data-scope="archived">Archived</button></span><button class="paddbtn" id="poolAdd" type="button" title="Add idea to pool" aria-label="Add idea to Content Pool">＋</button><button class="pool-collapse" id="poolCollapse" type="button" aria-expanded="true" aria-controls="poolContent" aria-label="Collapse Content Pool ideas" title="Collapse Content Pool ideas"></button></h3>
-      <div class="pool-content" id="poolContent">
+    <div class="panel pool-panel collapsible-panel collapsed" id="poolPanel">
+      <h3><span class="pool-title">Content Pool <span class="count" id="poolCount">0</span></span><span class="pool-scope" id="poolScope"><button class="active" data-scope="active">Active</button><button data-scope="archived">Archived</button></span><button class="paddbtn" id="poolAdd" type="button" title="Add idea to pool" aria-label="Add idea to Content Pool">＋</button><button class="panel-collapse" id="poolCollapse" type="button" aria-expanded="false" aria-controls="poolContent" aria-label="Expand Content Pool ideas" title="Expand Content Pool ideas"></button></h3>
+      <div class="pool-content" id="poolContent" hidden>
         <div class="pool-tools">
           <label class="pool-search">⌕<input id="poolSearch" type="search" placeholder="Search all ideas…" autocomplete="off"></label>
           <div class="pool-channels" id="poolChannels"></div>
@@ -696,13 +700,13 @@
       <div class="emptyfilter" id="emptyFilter"></div>
     </div>
     <div class="rail">
-      <div class="panel">
-        <h3>WeChat push planner <span class="count">4 / month cap</span></h3>
-        <div class="wechat-body" id="wechatBody"></div>
+      <div class="panel collapsible-panel collapsed" id="wechatPanel">
+        <h3>WeChat push planner <span class="count">4 / month cap</span><button class="panel-collapse" id="wechatCollapse" type="button" aria-expanded="false" aria-controls="wechatBody" aria-label="Expand WeChat push planner" title="Expand WeChat push planner"></button></h3>
+        <div class="wechat-body" id="wechatBody" hidden></div>
       </div>
-      <div class="panel">
-        <h3>What we need from UQ <span class="count" id="actCount">0</span></h3>
-        <div id="actBody"></div>
+      <div class="panel collapsible-panel collapsed" id="actionsPanel">
+        <h3>What we need from UQ <span class="count" id="actCount">0</span><button class="panel-collapse" id="actionsCollapse" type="button" aria-expanded="false" aria-controls="actBody" aria-label="Expand What we need from UQ" title="Expand What we need from UQ"></button></h3>
+        <div id="actBody" hidden></div>
       </div>
     </div>
   </div>
@@ -978,9 +982,14 @@ let paidYearY=null;
 // resizable boosting-log column widths (px), persist across re-renders — [Channel, Post, Window, Budget, Spend, CTR, Eng, CPE, Flwr, Cost/Flwr, Status, Note]
 let BCOLW=[78,180,186,58,78,62,90,66,84,78,148,150];
 let stOn={"Posted":1,"Scheduled":1,"Approved":1,"Pending":1,"Proposed":1};
-let poolChannel="All", poolScope="active", poolQuery="", poolCollapsed=false;
-const POOL_COLLAPSE_KEY="uq-content-pool-collapsed-v1";
-try{poolCollapsed=localStorage.getItem(POOL_COLLAPSE_KEY)==="1";}catch(e){}
+let poolChannel="All", poolScope="active", poolQuery="";
+const PANEL_COLLAPSE_CONFIG={
+  pool:{panel:"#poolPanel",content:"#poolContent",button:"#poolCollapse",label:"Content Pool ideas",key:"uq-content-pool-collapsed-v2"},
+  wechat:{panel:"#wechatPanel",content:"#wechatBody",button:"#wechatCollapse",label:"WeChat push planner",key:"uq-wechat-planner-collapsed-v2"},
+  actions:{panel:"#actionsPanel",content:"#actBody",button:"#actionsCollapse",label:"What we need from UQ",key:"uq-actions-panel-collapsed-v2"}
+};
+const panelCollapsed={pool:true,wechat:true,actions:true};
+Object.entries(PANEL_COLLAPSE_CONFIG).forEach(([name,cfg])=>{try{const saved=localStorage.getItem(cfg.key);if(saved!==null)panelCollapsed[name]=saved==="1";}catch(e){}});
 const WECHAT_CAP=4;  // one WeChat OA: 4 pushes/month total (UQ Central + Alumni combined)
 const KEYDATES={};   // manually added important-date markers, keyed by ISO date
 const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
@@ -1091,6 +1100,7 @@ function renderWeChat(){
     +(over?`<div class="merge-hint over">Over the cap — ${n} pushes against ${cap}/month. Fold two of them into one push (Headline + Sub article), or move one to another month.</div>`
       :full?`<div class="merge-hint">At ${cap}/${cap} pushes for the month. To add another WeChat article, fold it into an existing push as a <b>Sub article</b> rather than opening a 5th.</div>`
       :`<div class="merge-hint">Tip: each push = 1 slot but can carry a <b>Headline + Sub article</b>.</div>`);
+  applyPanelCollapsed("wechat");
 }
 
 function renderChips(){
@@ -1168,13 +1178,20 @@ function moveContent(cid,iso){
   const d=SEED.find(x=>x.id===cid); if(!d||d.date===iso) return;
   d.date=iso; saveContent(d); renderAll(); toast("Moved to "+MO[+iso.slice(5,7)-1]+" "+(+iso.slice(-2)));
 }
-function applyPoolCollapsed(){
-  const panel=$("#poolPanel"),content=$("#poolContent"),button=$("#poolCollapse");
-  panel.classList.toggle("collapsed",poolCollapsed);
-  content.hidden=poolCollapsed;
-  button.setAttribute("aria-expanded",String(!poolCollapsed));
-  button.setAttribute("aria-label",poolCollapsed?"Expand Content Pool ideas":"Collapse Content Pool ideas");
-  button.title=poolCollapsed?"Expand Content Pool ideas":"Collapse Content Pool ideas";
+function applyPanelCollapsed(name){
+  const cfg=PANEL_COLLAPSE_CONFIG[name],collapsed=panelCollapsed[name];
+  const panel=$(cfg.panel),content=$(cfg.content),button=$(cfg.button);
+  panel.classList.toggle("collapsed",collapsed);
+  content.hidden=collapsed;
+  button.setAttribute("aria-expanded",String(!collapsed));
+  button.setAttribute("aria-label",`${collapsed?"Expand":"Collapse"} ${cfg.label}`);
+  button.title=`${collapsed?"Expand":"Collapse"} ${cfg.label}`;
+}
+function togglePanelCollapsed(name){
+  const cfg=PANEL_COLLAPSE_CONFIG[name];
+  panelCollapsed[name]=!panelCollapsed[name];
+  try{localStorage.setItem(cfg.key,panelCollapsed[name]?"1":"0");}catch(e){}
+  applyPanelCollapsed(name);
 }
 function renderPool(){
   const archived=poolScope==="archived";
@@ -1204,7 +1221,7 @@ function renderPool(){
   panel.ondragover=e=>{if(!Array.from(e.dataTransfer.types).includes("cid"))return;e.preventDefault();panel.classList.add("pool-drop");};
   panel.ondragleave=e=>{if(!panel.contains(e.relatedTarget))panel.classList.remove("pool-drop");};
   panel.ondrop=e=>{e.preventDefault();panel.classList.remove("pool-drop");const cid=e.dataTransfer.getData("cid");if(cid)returnContentToPool(cid);};
-  applyPoolCollapsed();
+  applyPanelCollapsed("pool");
 }
 function renderActions(){
   const acts=actionItems(), M=MONTHS[mi];
@@ -1214,6 +1231,7 @@ function renderActions(){
       <div><div class="ai">${esc(a.item)}</div><div class="as"><span class="mini-av" style="background:${w.c}">${w.t}</span> approval needed · ${fmtDay(a.date)}${a.sev==="crit"?" · overdue":""}</div></div></div>`;}).join("")
     : `<div class="actempty">Nothing outstanding for ${M.key} ✓<span>Set a post’s UQ approval to “Pending” in its drawer and it appears here automatically.</span></div>`;
   $$("#actBody .action[data-cid]").forEach(el=>el.onclick=()=>{const d=SEED.find(x=>x.id===el.dataset.cid); if(d) openDrawer(d);});
+  applyPanelCollapsed("actions");
 }
 function dropPool(pid,iso){
   const p=POOL.find(x=>x.id===pid); if(!p)return;
@@ -2156,7 +2174,7 @@ $("#search").oninput=e=>{
   q=e.target.value.toLowerCase(); renderGrid(); };
 $("#export").onclick=e=>{ e.stopPropagation(); $("#xpop")?closeXPop():openExportPop(e.currentTarget); };
 $("#poolAdd").onclick=e=>{e.stopPropagation();openPoolDrawer(null,true);};
-$("#poolCollapse").onclick=e=>{e.stopPropagation();poolCollapsed=!poolCollapsed;try{localStorage.setItem(POOL_COLLAPSE_KEY,poolCollapsed?"1":"0");}catch(err){}applyPoolCollapsed();};
+Object.entries(PANEL_COLLAPSE_CONFIG).forEach(([name,cfg])=>{$(cfg.button).onclick=e=>{e.stopPropagation();togglePanelCollapsed(name);};});
 $("#poolSearch").oninput=e=>{poolQuery=e.target.value.trim().toLowerCase();renderPool();};
 $("#statusFilter").onchange=e=>{boostFilter=e.target.value;renderPaid();};
 $("#syncOrganic").onclick=syncOrganicPerformance;
