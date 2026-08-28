@@ -572,13 +572,31 @@
   .field input:focus, .field textarea:focus, .field select:focus { border-color:var(--orange); box-shadow:0 0 0 3px var(--orange-soft); }
   .field textarea { resize:vertical; min-height:58px; line-height:1.5; }
   .row2 { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
-  .platform-picker { display:grid; grid-template-columns:1fr 1fr; gap:7px; }
-  .platform-option { min-width:0; display:flex; align-items:center; gap:8px; border:1px solid var(--line); border-radius:9px; padding:8px 9px; color:var(--ink-2); background:var(--surface); cursor:pointer; font-size:11.5px; font-weight:700; }
-  .platform-option:has(input:checked) { color:var(--ink); border-color:var(--pc); background:color-mix(in srgb,var(--pc) 7%,var(--surface)); box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--pc) 13%,transparent); }
-  .platform-option.locked { cursor:default; }
-  .platform-option input { width:14px; height:14px; margin:0; accent-color:var(--pc); flex:none; }
-  .platform-option .pdot { width:8px; height:8px; border-radius:50%; background:var(--pc); flex:none; }
-  .platform-help { margin-top:6px; color:var(--ink-3); font-size:10.5px; line-height:1.4; }
+  .platform-field-head { display:flex; align-items:center; gap:10px; margin-bottom:6px; }
+  .platform-field-head > label { margin:0; }
+  .platform-selection-count { margin-left:auto; padding:3px 7px; border-radius:10px; background:var(--surface-2); color:var(--ink-2); font-size:9.5px; font-weight:750; letter-spacing:.2px; white-space:nowrap; }
+  .platform-guidance { margin:-1px 0 8px; color:var(--ink-3); font-size:10.5px; line-height:1.35; }
+  .platform-picker { display:grid; grid-template-columns:1fr 1fr; gap:8px; }
+  .platform-option { position:relative; min-width:0; min-height:54px; display:grid; grid-template-columns:20px minmax(0,1fr); align-items:center; gap:9px; margin:0; border:1px solid var(--line); border-radius:10px; padding:8px 10px; color:var(--ink-2); background:var(--surface); cursor:pointer; font-weight:600; text-transform:none; letter-spacing:normal; transition:border-color .12s,background .12s,box-shadow .12s,transform .12s; }
+  .field label.platform-option { display:grid; margin:0; font-weight:600; text-transform:none; letter-spacing:normal; }
+  .platform-option:hover:not(.locked) { border-color:color-mix(in srgb,var(--pc) 58%,var(--line-2)); background:color-mix(in srgb,var(--pc) 3%,var(--surface)); }
+  .platform-option:active:not(.locked) { transform:translateY(1px); }
+  .platform-option:has(input:checked) { color:var(--ink); border-color:var(--pc); background:color-mix(in srgb,var(--pc) 7%,var(--surface)); box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--pc) 12%,transparent); }
+  .platform-option:has(input:focus-visible) { outline:none; box-shadow:0 0 0 3px color-mix(in srgb,var(--pc) 22%,transparent); }
+  .platform-option.locked { cursor:default; background:color-mix(in srgb,var(--pc) 5%,var(--surface-2)); }
+  .platform-option input { position:absolute; inset:0; z-index:1; width:100%; height:100%; margin:0; padding:0; border:0; border-radius:inherit; opacity:0; cursor:inherit; }
+  .platform-check { width:20px; height:20px; display:grid; place-items:center; border:1.5px solid var(--line-2); border-radius:6px; background:var(--surface); color:#fff; transition:border-color .12s,background .12s; }
+  .platform-check::after { content:""; width:5px; height:9px; border-right:2px solid currentColor; border-bottom:2px solid currentColor; opacity:0; transform:translateY(-1px) rotate(45deg); }
+  .platform-option:has(input:checked) .platform-check { border-color:var(--pc); background:var(--pc); }
+  .platform-option:has(input:checked) .platform-check::after { opacity:1; }
+  .platform-copy { min-width:0; display:flex; flex-direction:column; gap:3px; }
+  .platform-copy b { min-width:0; display:flex; align-items:center; gap:6px; color:var(--ink); font-size:11px; font-weight:760; line-height:1.15; letter-spacing:.15px; white-space:normal; }
+  .platform-option .pdot { width:7px; height:7px; border-radius:50%; background:var(--pc); flex:none; }
+  .platform-status { color:var(--ink-3); font-size:9.5px; font-weight:600; line-height:1; }
+  .platform-status::before { content:"Available"; }
+  .platform-option:has(input:checked) .platform-status::before { content:"Selected"; color:var(--pc); }
+  .platform-option.locked .platform-status::before { content:"Existing"; color:var(--ink-3); }
+  .platform-help { margin-top:7px; color:var(--ink-3); font-size:10.5px; line-height:1.4; }
   .alrow { display:flex; gap:6px; align-items:center; margin-bottom:6px; }
   .alrow input { min-width:0; }
   .alrow .al-t { flex:0 0 128px; font-size:12px; }
@@ -1001,7 +1019,7 @@ function groupMembers(d){ const gid=groupIdOf(d); return SEED.filter(x=>groupIdO
 function selectedPlatformNames(){ return $$('#platformPicker input[name="platform"]:checked').map(x=>x.value); }
 function platformPicker(selected,locked){
   const on=new Set(selected||[]), fixed=new Set(locked||[]);
-  return `<div class="platform-picker" id="platformPicker">${Object.keys(CH).map(k=>`<label class="platform-option ${fixed.has(k)?'locked':''}" style="--pc:${CH[k].color}"><input type="checkbox" name="platform" value="${escAttr(k)}" ${on.has(k)?'checked':''} ${fixed.has(k)?'disabled':''}><span class="pdot"></span><b>${CH[k].label}</b>${fixed.has(k)?'<small>Existing</small>':''}</label>`).join("")}</div>`;
+  return `<div class="platform-picker" id="platformPicker">${Object.keys(CH).map(k=>`<label class="platform-option ${fixed.has(k)?'locked':''}" style="--pc:${CH[k].color}"><input type="checkbox" name="platform" value="${escAttr(k)}" ${on.has(k)?'checked':''} ${fixed.has(k)?'disabled':''}><span class="platform-check" aria-hidden="true"></span><span class="platform-copy"><b><span class="pdot"></span>${CH[k].label}</b><span class="platform-status"></span></span></label>`).join("")}</div>`;
 }
 const POOL_META_PREFIX="@uqpool:";
 function poolFromRow(r){
@@ -1444,7 +1462,8 @@ function openDrawer(it,isNew,options={}){
     </div>
     <div class="dbody">
       <div class="field"><label>Subject line</label><input id="f_note" placeholder="The post title…" value="${esc(it.note)}"></div>
-      <div class="field"><label>${isNew?'Publish on':'Platforms in this content group'} <span style="text-transform:none;color:var(--ink-3);font-weight:500">— choose up to all 4 platforms</span></label>
+      <div class="field"><div class="platform-field-head"><label>${isNew?'Publish on':'Platforms in this content group'}</label><span class="platform-selection-count" id="platformSelectionCount" aria-live="polite">${new Set(initialChannels).size} / 4 selected</span></div>
+        <div class="platform-guidance">${isNew?'Select between one and four platforms.':'Existing platforms stay protected; add any missing platform below.'}</div>
         ${platformPicker(initialChannels,lockedChannels)}
         <div class="platform-help">${isNew?'One linked card will be created for each selected platform.':'Existing platforms are protected. Select any missing platform to add a linked card.'}</div></div>
       <div class="field"><label>Launch date</label><input type="date" id="f_date" value="${it.date}"></div>
@@ -1491,6 +1510,7 @@ function openDrawer(it,isNew,options={}){
   $$('#platformPicker input[name="platform"]').forEach(input=>input.onchange=()=>{
     const selected=selectedPlatformNames();
     if(!selected.length){input.checked=true;toast("Choose at least one platform");return;}
+    $("#platformSelectionCount").textContent=`${selected.length} / 4 selected`;
     $("#dsave").textContent=isNew?`Create ${selected.length} card${selected.length===1?'':'s'}`:"Save to plan";
   });
   $("#f_boost_budget").oninput=()=>{
