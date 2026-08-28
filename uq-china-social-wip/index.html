@@ -96,13 +96,16 @@
   @media (max-width:1380px){ .stage{grid-template-columns:280px minmax(0,1fr);} .stage > .rail{grid-column:1/-1;display:grid;grid-template-columns:1fr 1fr;position:static;} }
   @media (max-width:900px){ .stage{grid-template-columns:1fr;} .stage > .rail{grid-column:auto;display:flex;} .kpis{grid-template-columns:repeat(2,1fr);} }
 
-  .cal { display:grid; grid-template-columns:repeat(7,minmax(0,1fr)); background:var(--surface); border:1px solid var(--line); border-radius:var(--radius); overflow:hidden; box-shadow:var(--shadow); }
+  .cal { display:grid; grid-template-columns:repeat(5,minmax(0,1fr)) repeat(2,minmax(0,.58fr)); background:var(--surface); border:1px solid var(--line); border-radius:var(--radius); overflow:hidden; box-shadow:var(--shadow); }
   .cal .dow { display:grid; grid-column:1/-1; grid-template-columns:subgrid; background:var(--header); }
   .cal .dow div { min-width:0; padding:8px 2px; text-align:center; white-space:nowrap; font-size:clamp(8px,.8vw,11px); font-weight:700; color:var(--header-tx); text-transform:uppercase; letter-spacing:clamp(0px,.04vw,.6px); opacity:.92; }
+  .cal .dow div:nth-child(n+6) { background:rgba(255,255,255,.035); color:color-mix(in srgb,var(--header-tx) 70%,transparent); }
   .grid { display:grid; grid-column:1/-1; grid-template-columns:subgrid; }
   .cell { min-width:0; min-height:120px; border-right:1px solid var(--line); border-bottom:1px solid var(--line); padding:6px; position:relative; display:flex; flex-direction:column; gap:4px; }
   .cell:nth-child(7n){ border-right:none; }
   .cell.dim { background:var(--surface-2); }
+  .grid .cell:nth-child(7n+6), .grid .cell:nth-child(7n) { background:color-mix(in srgb,var(--surface-2) 54%,var(--surface)); padding-inline:5px; }
+  .grid .cell.dim:nth-child(7n+6), .grid .cell.dim:nth-child(7n) { background:var(--surface-2); }
   .cell.drop { background:var(--orange-soft); box-shadow:inset 0 0 0 2px var(--orange); }
   .cell .dnum { font-size:11.5px; font-weight:700; color:var(--ink-2); display:flex; justify-content:space-between; align-items:center; gap:4px; }
   .cell .dnum .mo { color:var(--orange-deep); font-weight:800; text-transform:uppercase; letter-spacing:.4px; font-size:10px; margin-right:3px; }
@@ -144,6 +147,12 @@
   .card .boost { font-size:9px; font-weight:800; color:var(--orange); background:var(--orange-soft); padding:1px 4px; border-radius:4px; letter-spacing:.3px; }
   .card .group-link { font-size:9px; font-weight:800; color:var(--blue); background:var(--blue-soft); padding:1px 4px; border-radius:4px; letter-spacing:.2px; }
   .card .who { margin-left:auto; border-radius:5px; padding:1px 5px; color:#fff; font-size:8.5px; font-weight:800; letter-spacing:.3px; }
+  .grid .cell:nth-child(7n+6) .card, .grid .cell:nth-child(7n) .card { padding-inline:5px; }
+  .grid .cell:nth-child(7n+6) .card .t, .grid .cell:nth-child(7n) .card .t { font-size:10.5px; -webkit-line-clamp:3; }
+  .grid .cell:nth-child(7n+6) .card .meta, .grid .cell:nth-child(7n) .card .meta { gap:3px; }
+  .grid .cell:nth-child(7n+6) .card .fmt, .grid .cell:nth-child(7n) .card .fmt,
+  .grid .cell:nth-child(7n+6) .card .slot, .grid .cell:nth-child(7n) .card .slot,
+  .grid .cell:nth-child(7n+6) .card .group-link, .grid .cell:nth-child(7n) .card .group-link { display:none; }
   .card.hide { display:none; }
   .emptyfilter { display:none; grid-column:1/-1; padding:20px 18px; text-align:center; font-size:13px; color:var(--ink-2); border-top:1px solid var(--line); background:var(--surface-2); }
   .emptyfilter.show { display:block; }
@@ -171,31 +180,66 @@
   .merge-hint.over { color:var(--crit); background:color-mix(in oklab, var(--crit) 11%, transparent); font-weight:600; }
   .quota .slotpip.over { background:var(--crit); border-color:var(--crit); }
 
-  .pool-panel { position:sticky; top:116px; min-width:0; overflow:hidden; }
-  .pool-tools { padding:9px 10px 8px; border-bottom:1px solid var(--line); }
-  .pool-scope { display:grid; grid-template-columns:1fr 1fr; padding:2px; border-radius:8px; background:var(--surface-2); margin-bottom:8px; }
-  .pool-scope button { border:0; background:transparent; color:var(--ink-3); border-radius:6px; padding:6px; font-size:11px; font-weight:700; }
-  .pool-scope button.active { color:var(--ink); background:var(--surface); box-shadow:0 1px 3px rgba(0,0,0,.08); }
-  .pool-channels { display:flex; gap:5px; overflow-x:auto; padding-bottom:2px; }
-  .pool-channels button { flex:none; border:1px solid var(--line); background:var(--surface); color:var(--ink-2); border-radius:18px; padding:4px 8px; font-size:10.5px; font-weight:650; }
-  .pool-channels button .dot { display:inline-block; width:7px; height:7px; border-radius:50%; margin-right:5px; background:var(--pc); }
-  .pool-channels button.active { color:var(--ink); border-color:var(--pc,var(--ink-2)); background:color-mix(in srgb,var(--pc,var(--ink)) 8%,var(--surface)); }
-  .pool-search { display:flex; align-items:center; gap:6px; margin-top:8px; border:1px solid var(--line); border-radius:8px; padding:6px 8px; color:var(--ink-3); }
+  .pool-panel { position:sticky; top:116px; min-width:0; overflow:hidden; border-color:color-mix(in srgb,var(--line-2) 72%,var(--line)); }
+  .pool-panel > h3 { min-height:41px; padding:9px; gap:4px; font-size:12px; }
+  .pool-title { display:inline-flex; align-items:center; gap:4px; flex:none; white-space:nowrap; }
+  .pool-title .count { margin-left:0; padding-inline:5px; font-size:9.5px; }
+  .pool-scope { display:inline-flex; align-items:center; gap:2px; flex:none; margin-left:auto; padding:2px; border-radius:7px; background:var(--surface-2); }
+  .pool-scope button { border:0; background:transparent; color:var(--ink-3); border-radius:5px; padding:4px; font-size:9px; font-weight:700; line-height:1; white-space:nowrap; }
+  .pool-scope button.active { color:var(--ink); background:var(--surface); box-shadow:0 1px 2px rgba(0,0,0,.07); }
+  .pool-panel > h3 .paddbtn { flex:none; width:18px; height:18px; margin-left:0; }
+  .pool-collapse { flex:none; display:grid; place-items:center; width:18px; height:18px; padding:0; border:1px solid transparent; border-radius:6px; background:transparent; color:var(--ink-3); cursor:pointer; }
+  .pool-collapse::before { content:"▴"; font-size:10px; line-height:1; }
+  .pool-panel.collapsed .pool-collapse::before { content:"▾"; }
+  .pool-collapse:hover { border-color:var(--line-2); background:var(--surface-2); color:var(--ink); }
+  .pool-collapse:focus-visible, .pool-panel button:focus-visible, .pool-search:focus-within { outline:none; box-shadow:0 0 0 2px color-mix(in srgb,var(--orange) 24%,transparent); }
+  .pool-panel.collapsed > h3 { border-bottom-color:transparent; }
+  .pool-content[hidden] { display:none; }
+  .pool-tools { display:grid; grid-template-columns:minmax(0,1fr); gap:8px; padding:9px 10px 8px; border-bottom:0; }
+  .pool-channels { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:4px; overflow:visible; padding:0; }
+  .pool-channels button { min-width:0; width:100%; display:inline-flex; align-items:center; justify-content:flex-start; gap:5px; border:1px solid var(--line); background:var(--surface); color:var(--ink-2); border-radius:7px; padding:5px 7px; font-size:9.75px; font-weight:680; line-height:1; white-space:nowrap; }
+  .pool-channels button[data-ch="Alumni WeChat"] { grid-column:span 2; }
+  .pool-channels button .dot { display:inline-block; flex:none; width:6px; height:6px; border-radius:50%; margin:0; background:var(--pc); }
+  .pool-channels button.active { color:var(--ink); border-color:var(--pc,var(--ink-2)); background:color-mix(in srgb,var(--pc,var(--ink)) 8%,var(--surface)); box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--pc,var(--ink)) 13%,transparent); }
+  .pool-search { display:flex; align-items:center; gap:6px; height:34px; margin:0; border:1px solid var(--line-2); border-radius:7px; padding:6px 9px; color:var(--ink-3); background:var(--surface-2); }
+  .pool-search:focus-within { border-color:var(--orange); background:var(--surface); }
   .pool-search input { min-width:0; width:100%; border:0; outline:0; background:transparent; color:var(--ink); font:inherit; font-size:11.5px; }
-  .pool-subhead { display:flex; align-items:center; padding:8px 10px; border-bottom:1px solid var(--line); background:var(--surface-2); color:var(--ink-3); font-size:10.5px; }
+  .pool-subhead { display:flex; align-items:center; min-height:28px; padding:4px 12px 7px; border-bottom:1px solid var(--line); background:transparent; color:var(--ink-3); font-size:10.5px; }
   .pool-subhead b { color:var(--ink); }
   .pool-subhead span { margin-left:auto; }
-  .pool-body { padding:9px; display:flex; flex-direction:column; gap:7px; max-height:520px; overflow-y:auto; }
-  .pool-item { border:1px solid var(--line); border-left:3px solid var(--pc,var(--ink-3)); border-radius:7px; padding:8px 9px; background:var(--surface); cursor:grab; transition:all .12s; }
-  .pool-item:hover { border-color:var(--orange); box-shadow:var(--shadow); }
-  .pool-item.archived { cursor:pointer; opacity:.72; border-left-color:var(--ink-3); }
-  .pool-item .pt { font-size:12px; font-weight:600; line-height:1.3; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; }
-  .pool-item .pm { font-size:10px; color:var(--ink-3); margin-top:3px; display:flex; gap:6px; align-items:center; }
+  .pool-body { padding:0 10px; display:flex; flex-direction:column; gap:0; max-height:558px; overflow-y:auto; scrollbar-width:thin; scrollbar-color:transparent transparent; }
+  .pool-body:hover { scrollbar-color:color-mix(in srgb,var(--ink-3) 42%,transparent) transparent; }
+  .pool-body::-webkit-scrollbar { width:5px; }
+  .pool-body::-webkit-scrollbar-track { background:transparent; }
+  .pool-body::-webkit-scrollbar-thumb { border-radius:8px; background:transparent; }
+  .pool-body:hover::-webkit-scrollbar-thumb { background:color-mix(in srgb,var(--ink-3) 42%,transparent); }
+  .pool-item { position:relative; border:0; border-bottom:1px solid var(--line); border-radius:0; padding:10px 20px 9px 10px; background:transparent; cursor:grab; box-shadow:inset 3px 0 0 var(--pc,var(--ink-3)); transition:background .12s; }
+  .pool-item:last-child { border-bottom:0; }
+  .pool-item::after { content:"⋮⋮"; position:absolute; top:50%; right:3px; translate:0 -50%; color:transparent; font-size:9px; letter-spacing:-2px; transition:color .12s; }
+  .pool-item:hover { border-color:var(--line); background:var(--surface-2); box-shadow:inset 3px 0 0 var(--pc,var(--ink-3)); }
+  .pool-item:hover::after { color:var(--ink-3); }
+  .pool-item.archived { cursor:pointer; opacity:.72; box-shadow:inset 3px 0 0 var(--ink-3); }
+  .pool-item .pt { font-size:11.5px; font-weight:600; line-height:1.35; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; }
+  .pool-item .pm { font-size:10px; color:var(--ink-3); margin-top:4px; display:flex; gap:6px; align-items:center; }
   .pool-drop { background:var(--orange-soft); box-shadow:inset 0 0 0 2px var(--orange),var(--shadow); }
   .pool-empty { padding:22px 12px; text-align:center; color:var(--ink-3); font-size:11.5px; }
   .hint { padding:0 12px 11px; font-size:10.5px; color:var(--ink-3); }
+  .pool-panel .hint { margin:0 10px; padding:8px 2px 10px; border-top:1px solid var(--line); line-height:1.35; }
   .pool-hidden { border:1px dashed var(--line-2); background:var(--surface-2); border-radius:9px; padding:9px 10px; color:var(--ink-3); font-size:11px; line-height:1.45; }
   .pool-hidden b { display:block; color:var(--ink); margin-bottom:3px; }
+  @media (max-width:900px){
+    .cal { grid-template-columns:repeat(7,minmax(0,1fr)); }
+    .cal .dow div:nth-child(n+6) { background:transparent; color:var(--header-tx); }
+    .grid .cell:nth-child(7n+6), .grid .cell:nth-child(7n) { background:var(--surface); padding-inline:6px; }
+    .grid .cell.dim:nth-child(7n+6), .grid .cell.dim:nth-child(7n) { background:var(--surface-2); }
+    .grid .cell:nth-child(7n+6) .card, .grid .cell:nth-child(7n) .card { padding-inline:6px; }
+    .grid .cell:nth-child(7n+6) .card .t, .grid .cell:nth-child(7n) .card .t { font-size:11.5px; -webkit-line-clamp:2; }
+    .grid .cell:nth-child(7n+6) .card .meta, .grid .cell:nth-child(7n) .card .meta { gap:5px; }
+    .grid .cell:nth-child(7n+6) .card .fmt, .grid .cell:nth-child(7n) .card .fmt,
+    .grid .cell:nth-child(7n+6) .card .slot, .grid .cell:nth-child(7n) .card .slot,
+    .grid .cell:nth-child(7n+6) .card .group-link, .grid .cell:nth-child(7n) .card .group-link { display:initial; }
+    .pool-panel > h3 { flex-wrap:wrap; }
+  }
   .action { padding:10px 12px; border-bottom:1px solid var(--line); display:flex; gap:9px; align-items:flex-start; }
   .action:last-child { border-bottom:none; }
   .action .idot { width:9px; height:9px; border-radius:50%; margin-top:4px; flex:none; }
@@ -635,15 +679,16 @@
   </div>
   <div class="stage" id="stage">
     <div class="panel pool-panel" id="poolPanel">
-      <h3>Content Pool <span class="count" id="poolCount">0</span><button class="paddbtn" id="poolAdd" title="Add idea to pool">＋</button></h3>
-      <div class="pool-tools">
-        <div class="pool-scope" id="poolScope"><button class="active" data-scope="active">Active ideas</button><button data-scope="archived">Archived</button></div>
-        <div class="pool-channels" id="poolChannels"></div>
-        <label class="pool-search">⌕<input id="poolSearch" type="search" placeholder="Search all ideas…" autocomplete="off"></label>
+      <h3><span class="pool-title">Content Pool <span class="count" id="poolCount">0</span></span><span class="pool-scope" id="poolScope"><button class="active" data-scope="active">Active</button><button data-scope="archived">Archived</button></span><button class="paddbtn" id="poolAdd" type="button" title="Add idea to pool" aria-label="Add idea to Content Pool">＋</button><button class="pool-collapse" id="poolCollapse" type="button" aria-expanded="true" aria-controls="poolContent" aria-label="Collapse Content Pool ideas" title="Collapse Content Pool ideas"></button></h3>
+      <div class="pool-content" id="poolContent">
+        <div class="pool-tools">
+          <label class="pool-search">⌕<input id="poolSearch" type="search" placeholder="Search all ideas…" autocomplete="off"></label>
+          <div class="pool-channels" id="poolChannels"></div>
+        </div>
+        <div class="pool-subhead"><b id="poolSubhead">Active ideas</b><span id="poolDragHint">Drag → calendar</span></div>
+        <div class="pool-body" id="poolBody"></div>
+        <div class="hint">Active ideas automatically carry forward until scheduled or archived.</div>
       </div>
-      <div class="pool-subhead"><b id="poolSubhead">Active ideas</b><span id="poolDragHint">Drag → calendar</span></div>
-      <div class="pool-body" id="poolBody"></div>
-      <div class="hint">Active ideas automatically carry forward until scheduled or archived.</div>
     </div>
     <div class="cal">
       <div class="dow"><div>Monday</div><div>Tuesday</div><div>Wednesday</div><div>Thursday</div><div>Friday</div><div>Saturday</div><div>Sunday</div></div>
@@ -933,7 +978,9 @@ let paidYearY=null;
 // resizable boosting-log column widths (px), persist across re-renders — [Channel, Post, Window, Budget, Spend, CTR, Eng, CPE, Flwr, Cost/Flwr, Status, Note]
 let BCOLW=[78,180,186,58,78,62,90,66,84,78,148,150];
 let stOn={"Posted":1,"Scheduled":1,"Approved":1,"Pending":1,"Proposed":1};
-let poolChannel="All", poolScope="active", poolQuery="";
+let poolChannel="All", poolScope="active", poolQuery="", poolCollapsed=false;
+const POOL_COLLAPSE_KEY="uq-content-pool-collapsed-v1";
+try{poolCollapsed=localStorage.getItem(POOL_COLLAPSE_KEY)==="1";}catch(e){}
 const WECHAT_CAP=4;  // one WeChat OA: 4 pushes/month total (UQ Central + Alumni combined)
 const KEYDATES={};   // manually added important-date markers, keyed by ISO date
 const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
@@ -1121,13 +1168,22 @@ function moveContent(cid,iso){
   const d=SEED.find(x=>x.id===cid); if(!d||d.date===iso) return;
   d.date=iso; saveContent(d); renderAll(); toast("Moved to "+MO[+iso.slice(5,7)-1]+" "+(+iso.slice(-2)));
 }
+function applyPoolCollapsed(){
+  const panel=$("#poolPanel"),content=$("#poolContent"),button=$("#poolCollapse");
+  panel.classList.toggle("collapsed",poolCollapsed);
+  content.hidden=poolCollapsed;
+  button.setAttribute("aria-expanded",String(!poolCollapsed));
+  button.setAttribute("aria-label",poolCollapsed?"Expand Content Pool ideas":"Collapse Content Pool ideas");
+  button.title=poolCollapsed?"Expand Content Pool ideas":"Collapse Content Pool ideas";
+}
 function renderPool(){
   const archived=poolScope==="archived";
   const rows=POOL.filter(p=>!p.scheduled&&!!p.archived===archived)
     .filter(p=>poolChannel==="All"||p.ch===poolChannel)
     .filter(p=>!poolQuery||p.note.toLowerCase().includes(poolQuery));
   $("#poolCount").textContent=rows.length;
-  $("#poolScope").innerHTML=`<button class="${archived?'':'active'}" data-scope="active">Active ideas</button><button class="${archived?'active':''}" data-scope="archived">Archived · ${POOL.filter(p=>p.archived&&!p.scheduled).length}</button>`;
+  const archivedCount=POOL.filter(p=>p.archived&&!p.scheduled).length;
+  $("#poolScope").innerHTML=`<button class="${archived?'':'active'}" data-scope="active" aria-label="Active ideas">Active</button><button class="${archived?'active':''}" data-scope="archived" aria-label="Archived ideas, ${archivedCount}">Archived</button>`;
   $("#poolChannels").innerHTML=`<button class="${poolChannel==='All'?'active':''}" data-ch="All" style="--pc:var(--ink-2)">All</button>`+
     Object.keys(CH).map(k=>`<button class="${poolChannel===k?'active':''}" data-ch="${k}" style="--pc:${CH[k].color}"><span class="dot"></span>${CH[k].label}</button>`).join("");
   $("#poolSearch").placeholder=poolChannel==="All"?"Search all ideas…":`Search ${CH[poolChannel].label} ideas…`;
@@ -1148,6 +1204,7 @@ function renderPool(){
   panel.ondragover=e=>{if(!Array.from(e.dataTransfer.types).includes("cid"))return;e.preventDefault();panel.classList.add("pool-drop");};
   panel.ondragleave=e=>{if(!panel.contains(e.relatedTarget))panel.classList.remove("pool-drop");};
   panel.ondrop=e=>{e.preventDefault();panel.classList.remove("pool-drop");const cid=e.dataTransfer.getData("cid");if(cid)returnContentToPool(cid);};
+  applyPoolCollapsed();
 }
 function renderActions(){
   const acts=actionItems(), M=MONTHS[mi];
@@ -2099,6 +2156,7 @@ $("#search").oninput=e=>{
   q=e.target.value.toLowerCase(); renderGrid(); };
 $("#export").onclick=e=>{ e.stopPropagation(); $("#xpop")?closeXPop():openExportPop(e.currentTarget); };
 $("#poolAdd").onclick=e=>{e.stopPropagation();openPoolDrawer(null,true);};
+$("#poolCollapse").onclick=e=>{e.stopPropagation();poolCollapsed=!poolCollapsed;try{localStorage.setItem(POOL_COLLAPSE_KEY,poolCollapsed?"1":"0");}catch(err){}applyPoolCollapsed();};
 $("#poolSearch").oninput=e=>{poolQuery=e.target.value.trim().toLowerCase();renderPool();};
 $("#statusFilter").onchange=e=>{boostFilter=e.target.value;renderPaid();};
 $("#syncOrganic").onclick=syncOrganicPerformance;
