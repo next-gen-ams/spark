@@ -332,6 +332,13 @@
   .organic-table-wrap { overflow:auto; max-height:560px; border-top:1px solid var(--line); }
   .organic-table { width:100%; min-width:850px; border-collapse:collapse; font-size:12px; }
   .organic-table th { position:sticky; top:0; z-index:1; padding:9px 10px; text-align:left; background:var(--header); color:var(--header-tx); font-size:10px; text-transform:uppercase; letter-spacing:.35px; white-space:nowrap; }
+  .organic-table th.sortable { padding:0; }
+  .organic-sort { display:flex; align-items:center; gap:5px; width:100%; padding:9px 10px; border:0; background:transparent; color:inherit; font:inherit; font-weight:inherit; text-align:left; text-transform:inherit; letter-spacing:inherit; white-space:nowrap; cursor:pointer; }
+  .organic-table th.n .organic-sort { justify-content:flex-end; text-align:right; }
+  .organic-sort:hover { background:rgba(255,255,255,.08); }
+  .organic-sort:focus-visible { outline:2px solid var(--orange); outline-offset:-2px; }
+  .organic-sort .sort-arrow { min-width:9px; color:color-mix(in srgb,var(--header-tx) 58%,transparent); font-size:9px; }
+  .organic-sort.active .sort-arrow { color:var(--orange); }
   .organic-table th.n, .organic-table td.n { text-align:right; }
   .organic-table td { padding:9px 10px; border-bottom:1px solid var(--line); vertical-align:top; }
   .organic-table tbody tr:hover td { background:var(--surface-2); }
@@ -919,6 +926,7 @@ function rebuildMonths(){
 }
 let mi=2, q="", view="cal", boostFilter="all", chFilter="All";
 let organicPeriod="latest", organicChannel="All";
+let organicSort={field:"publishDate",dir:"desc"};
 const ORGANIC_CHARTS={};
 let budgetSeriesOn={budgeted:1,booked:1,actual:1};
 let paidYearY=null;
@@ -1542,6 +1550,32 @@ const organicValueLabels={
     ctx.restore();
   }
 };
+function organicSortValue(row,field){
+  const value=row[field];
+  if(field==="publishDate")return value||"";
+  if(value==null||value==="")return null;
+  const number=Number(value);return Number.isFinite(number)?number:null;
+}
+function organicSortedRows(rows){
+  const {field,dir}=organicSort;
+  return [...rows].sort((a,b)=>{
+    const av=organicSortValue(a,field),bv=organicSortValue(b,field),aMissing=av==null||av==="",bMissing=bv==null||bv==="";
+    if(aMissing!==bMissing)return aMissing?1:-1;
+    let comparison=typeof av==="string"?av.localeCompare(bv):av-bv;
+    if(comparison===0)comparison=(a.publishDate||"").localeCompare(b.publishDate||"");
+    return dir==="asc"?comparison:-comparison;
+  });
+}
+function organicSortHeading(field,label,numeric=false,title=""){
+  const active=organicSort.field===field,dir=active?organicSort.dir:"none",arrow=active?(dir==="asc"?"↑":"↓"):"↕";
+  return `<th class="sortable${numeric?' n':''}" aria-sort="${dir==='none'?'none':dir==='asc'?'ascending':'descending'}"><button type="button" class="organic-sort${active?' active':''}" data-organic-sort="${field}" ${title?`title="${escAttr(title)}"`:''}>${label}<span class="sort-arrow" aria-hidden="true">${arrow}</span></button></th>`;
+}
+function renderOrganicTable(rows,periodText){
+  const sorted=organicSortedRows(rows);
+  $("#organicTable").setAttribute("aria-label",`Organic post records for ${periodText}`);
+  $("#organicTable").innerHTML=`<thead><tr>${organicSortHeading("publishDate","Date")}<th>Channel</th><th>Post</th>${organicSortHeading("reads","Reads",true,"Sort by reads, used here as the reach measure")}${organicSortHeading("totalEngagement","Engagement",true)}${organicSortHeading("engagementRatePct","Engagement rate",true)}${organicSortHeading("shares","Shares",true)}${organicSortHeading("followersAfterViewing","Followers +",true,"Sort by followers gained after viewing")}</tr></thead><tbody>${sorted.map(x=>{const title=x.headlineEnglish||x.headlineChinese||"Untitled post",url=safePostUrl(x.postUrl),ch=CH[x.channel]||{color:"var(--ink-3)",label:x.channel};return `<tr><td class="tnum">${organicDate(x.publishDate)}</td><td><span class="chip" style="pointer-events:none;padding:2px 8px"><span class="dot" style="background:${ch.color}"></span>${esc(ch.label)}</span></td><td class="organic-title"><a href="${escAttr(url)}" target="_blank" rel="noopener">${esc(title)}</a>${x.headlineEnglish&&x.headlineChinese?`<span>${esc(x.headlineChinese)}</span>`:''}</td><td class="n tnum">${metricText(x.reads)}</td><td class="n tnum">${metricText(x.totalEngagement)}</td><td class="n tnum">${metricPct(x.engagementRatePct)}</td><td class="n tnum">${metricText(x.shares)}</td><td class="n tnum">${metricText(x.followersAfterViewing)}</td></tr>`;}).join("")||`<tr><td colspan="8" class="organic-empty">No organic performance rows match this filter.</td></tr>`}</tbody>`;
+  $$('#organicTable [data-organic-sort]').forEach(button=>button.onclick=()=>{const field=button.dataset.organicSort;organicSort=organicSort.field===field?{field,dir:organicSort.dir==="asc"?"desc":"asc"}:{field,dir:"desc"};renderOrganicTable(rows,periodText);});
+}
 function renderOrganic(){
   const current=ORGANIC.filter(x=>x.sourcePresent);
   const periodsAsc=[...new Set(current.map(x=>x.publishDate&&x.publishDate.slice(0,7)).filter(Boolean))].sort();
@@ -1575,7 +1609,7 @@ function renderOrganic(){
   $("#organicTopPostsSub").textContent=`Highest-read posts for ${periodText}.`;
   $("#organicTopPosts").innerHTML=top.length?top.map((x,i)=>{const title=x.headlineEnglish||x.headlineChinese||"Untitled post",ch=CH[x.channel]||{color:"var(--ink-3)",label:x.channel};return `<article class="organic-post"><div class="rank">Top ${i+1}</div><a href="${escAttr(safePostUrl(x.postUrl))}" target="_blank" rel="noopener">${esc(title)}</a><div class="post-stats"><span><i style="display:inline-block;width:7px;height:7px;border-radius:50%;background:${ch.color};margin-right:4px"></i>${esc(ch.label)}</span><span><b>${compactMetric(x.reads)}</b> reads</span><span><b>${metricPct(x.engagementRatePct)}</b> engagement rate</span></div></article>`;}).join(""):`<div class="organic-empty" style="grid-column:1/-1">No posts are available for this selection.</div>`;
   $("#organicDetailsSummary").textContent=`View ${rows.length} post record${rows.length===1?'':'s'} for ${periodText}`;
-  $("#organicTable").innerHTML=`<thead><tr><th>Date</th><th>Channel</th><th>Post</th><th class="n">Reads</th><th class="n">Engagement</th><th class="n">Engagement rate</th><th class="n">Shares</th><th class="n">Followers +</th></tr></thead><tbody>${rows.map(x=>{const title=x.headlineEnglish||x.headlineChinese||"Untitled post",url=safePostUrl(x.postUrl),ch=CH[x.channel]||{color:"var(--ink-3)",label:x.channel};return `<tr><td class="tnum">${organicDate(x.publishDate)}</td><td><span class="chip" style="pointer-events:none;padding:2px 8px"><span class="dot" style="background:${ch.color}"></span>${esc(ch.label)}</span></td><td class="organic-title"><a href="${escAttr(url)}" target="_blank" rel="noopener">${esc(title)}</a>${x.headlineEnglish&&x.headlineChinese?`<span>${esc(x.headlineChinese)}</span>`:''}</td><td class="n tnum">${metricText(x.reads)}</td><td class="n tnum">${metricText(x.totalEngagement)}</td><td class="n tnum">${metricPct(x.engagementRatePct)}</td><td class="n tnum">${metricText(x.shares)}</td><td class="n tnum">${metricText(x.followersAfterViewing)}</td></tr>`;}).join("")||`<tr><td colspan="8" class="organic-empty">No organic performance rows match this filter.</td></tr>`}</tbody>`;
+  renderOrganicTable(rows,periodText);
   const run=SYNC_RUNS[0];
   if(run){const done=run.completed_at||run.started_at,when=new Intl.DateTimeFormat("en-AU",{dateStyle:"medium",timeStyle:"short"}).format(new Date(done));$("#organicSyncSummary").innerHTML=`<span><b>Last sync:</b> ${esc(when)}</span><span><b>Status:</b> ${esc(run.status)}</span><span><b>${run.content_rows||0}</b> post records | <b>${run.follower_rows||0}</b> follower records</span>`;}else $("#organicSyncSummary").textContent="No performance sync has run yet.";
   destroyOrganicCharts();
