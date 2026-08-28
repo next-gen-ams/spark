@@ -114,12 +114,30 @@
   .add { opacity:0; border:1px dashed var(--line-2); background:transparent; color:var(--ink-3); border-radius:6px; height:18px; width:18px; display:grid; place-items:center; font-size:13px; line-height:1; transition:opacity .12s; }
   .cell:hover .add { opacity:1; }
   .add:hover { border-color:var(--orange); color:var(--orange); }
-  .addpop { position:fixed; z-index:70; background:var(--surface); border:1px solid var(--line-2); border-radius:11px; box-shadow:var(--shadow-lg); padding:10px; width:212px; }
-  .addpop .ph { font-size:10px; font-weight:700; color:var(--ink-3); text-transform:uppercase; letter-spacing:.4px; margin:2px 2px 7px; }
-  .addpop .chbtn { display:flex; align-items:center; gap:9px; width:100%; border:1px solid var(--line); background:var(--surface); border-radius:8px; padding:7px 9px; font-size:12.5px; font-weight:600; color:var(--ink); margin-bottom:5px; text-align:left; }
-  .addpop .chbtn:hover { border-color:var(--ink-3); }
-  .addpop .chbtn .dot { width:9px; height:9px; border-radius:50%; flex:none; }
-  .addpop .sep { height:1px; background:var(--line); margin:9px 0 8px; }
+  .addpop { position:fixed; z-index:70; width:252px; padding:12px; border:1px solid var(--line-2); border-radius:12px; background:var(--surface); box-shadow:var(--shadow-lg); }
+  .addpop .ph { display:flex; align-items:center; gap:8px; margin:1px 1px 10px; color:var(--ink); font-size:11px; font-weight:800; letter-spacing:.3px; text-transform:uppercase; }
+  .addpop .ap-count { margin-left:auto; color:var(--ink-3); font-size:10px; font-weight:700; letter-spacing:0; text-transform:none; white-space:nowrap; }
+  .addpop .ap-label { margin:0 1px 6px; color:var(--ink-3); font-size:9.5px; font-weight:700; letter-spacing:.4px; text-transform:uppercase; }
+  .addpop .ap-platforms { display:grid; gap:6px; }
+  .addpop .ap-option { --pc:var(--ink-3); position:relative; display:grid; grid-template-columns:10px minmax(0,1fr) 18px; align-items:center; gap:9px; min-height:40px; margin:0; padding:7px 9px; border:1px solid var(--line); border-radius:9px; background:var(--surface); color:var(--ink); cursor:pointer; font-size:12px; font-weight:700; text-transform:none; letter-spacing:normal; transition:border-color .12s,background .12s,transform .12s; }
+  .addpop .ap-option:hover { border-color:var(--line-2); background:var(--surface-2); }
+  .addpop .ap-option:active { transform:translateY(1px); }
+  .addpop .ap-option:has(input:checked) { border-color:color-mix(in srgb,var(--pc) 72%,var(--line)); background:color-mix(in srgb,var(--pc) 8%,var(--surface)); }
+  .addpop .ap-option .dot { width:9px; height:9px; border-radius:50%; background:var(--pc); }
+  .addpop .ap-option input { position:absolute; width:1px; height:1px; opacity:0; pointer-events:none; }
+  .addpop .ap-check { display:grid; place-items:center; width:18px; height:18px; border:1px solid var(--line-2); border-radius:5px; background:var(--surface); color:#fff; }
+  .addpop .ap-option input:focus-visible + .ap-check { outline:none; box-shadow:0 0 0 3px color-mix(in srgb,var(--orange) 24%,transparent); }
+  .addpop .ap-option input:checked + .ap-check { border-color:var(--pc); background:var(--pc); }
+  .addpop .ap-option input:checked + .ap-check::after { content:""; width:7px; height:4px; border-left:2px solid currentColor; border-bottom:2px solid currentColor; transform:translateY(-1px) rotate(-45deg); }
+  .addpop .ap-footer { display:grid; grid-template-columns:auto 1fr; align-items:center; gap:10px; margin-top:10px; }
+  .addpop .kdopen { display:inline-flex; align-items:center; gap:7px; min-width:0; padding:7px 2px; border:0; background:transparent; color:var(--ink-2); font-size:10.5px; font-weight:700; white-space:nowrap; }
+  .addpop .kdopen::before { content:"+"; display:grid; place-items:center; width:16px; height:16px; border-radius:5px; background:var(--blue-soft); color:var(--blue); font-size:13px; }
+  .addpop .kdopen:hover { color:var(--ink); }
+  .addpop .ap-continue { justify-self:end; min-width:98px; padding:8px 11px; border:1px solid var(--orange); border-radius:8px; background:var(--orange); color:#fff; font-size:11px; font-weight:800; box-shadow:0 2px 5px color-mix(in srgb,var(--orange) 20%,transparent); }
+  .addpop .ap-continue:hover { border-color:var(--orange-deep); background:var(--orange-deep); }
+  .addpop .ap-continue:active { transform:translateY(1px); }
+  .addpop .ap-continue:disabled { border-color:var(--line); background:var(--surface-2); color:var(--ink-3); box-shadow:none; cursor:not-allowed; }
+  .addpop .ap-continue:focus-visible,.addpop .kdopen:focus-visible { outline:none; box-shadow:0 0 0 3px color-mix(in srgb,var(--orange) 24%,transparent); }
   .addpop .kd { display:flex; gap:6px; }
   .addpop .kd input { flex:1; min-width:0; border:1px solid var(--line-2); border-radius:7px; padding:6px 8px; font-size:12px; font-family:inherit; outline:none; background:var(--surface); color:var(--ink); }
   .addpop .kd input:focus { border-color:var(--orange); }
@@ -1340,29 +1358,47 @@ function renderHistory(){
     :`<div class="history-empty"><b>No deleted cards</b><span>Cards deleted from the Calendar will appear here for 30 days.</span></div>`;
   $$("#historyList [data-restore]").forEach(b=>b.onclick=()=>restoreDeleted(b.dataset.restore));
 }
-function addNew(iso,ch){
-  const initial=ch||"RED";
+function addNew(iso,channels){
+  const selected=Array.isArray(channels)?channels.filter(ch=>CH[ch]):[CH[channels]?channels:"RED"];
+  const initial=selected[0]||"RED";
   const it={id:makeId("c_"),groupId:makeId("g_"),ch:initial,date:iso,note:"New post",label:"Inform",fmt:"Image",appr:"Pending",del:"Proposed",boost:false,by:"GMS",url:"",copy:"",back:"",asset:"",preview:"",wslot:initial==="Alumni WeChat"?"Sub article":initial==="WeChat"?"Headline":""};
-  openDrawer(it,true,{selectedChannels:[it.ch],mode:"new"});
+  openDrawer(it,true,{selectedChannels:selected.length?selected:[it.ch],mode:"new"});
 }
-// "+" popover: two panels — pick a channel to add a post, or switch to the key-date panel
+// "+" popover: select one or more platforms, then continue to the content drawer.
 function openAddPop(iso,btn){
   closeAddPop();
   const label=`${MO[+iso.slice(5,7)-1]} ${+iso.slice(-2)}`;
   const pop=document.createElement("div"); pop.className="addpop"; pop.id="addpop";
   document.body.appendChild(pop);
-  const r=btn.getBoundingClientRect(), pw=212;
-  let left=Math.min(r.left, window.innerWidth-pw-8), top=r.bottom+6;
-  if(top+300>window.innerHeight) top=Math.max(8, r.top-306);
-  pop.style.left=Math.max(8,left)+"px"; pop.style.top=top+"px";
+  const r=btn.getBoundingClientRect(), pw=252;
+  const positionPop=()=>{
+    const h=pop.offsetHeight||300;
+    const left=Math.min(r.left,window.innerWidth-pw-8);
+    let top=r.bottom+6;
+    if(top+h>window.innerHeight-8) top=Math.max(8,r.top-h-6);
+    pop.style.left=Math.max(8,left)+"px";
+    pop.style.top=top+"px";
+  };
 
   function postPanel(){
-    pop.innerHTML=`<div class="ph">Add post · ${label}</div>
-      ${Object.keys(CH).map(k=>`<button class="chbtn" data-ch="${k}"><span class="dot" style="background:${CH[k].color}"></span>${CH[k].label}</button>`).join("")}
-      <div class="sep"></div>
-      <button class="chbtn kdopen"><span class="dot" style="background:var(--blue)"></span>＋ Key date${KEYDATES[iso]?" · edit":""}</button>`;
-    pop.querySelectorAll(".chbtn[data-ch]").forEach(b=>b.onclick=()=>{closeAddPop();addNew(iso,b.dataset.ch);});
+    pop.innerHTML=`<div class="ph">Add post · ${label}<span class="ap-count" id="apCount" aria-live="polite">0 selected</span></div>
+      <div class="ap-label" id="apPlatformLabel">To be published on</div>
+      <div class="ap-platforms" role="group" aria-labelledby="apPlatformLabel">
+        ${Object.keys(CH).map(k=>`<label class="ap-option" style="--pc:${CH[k].color}"><span class="dot"></span><span>${CH[k].label}</span><input type="checkbox" name="add-platform" value="${escAttr(k)}"><span class="ap-check" aria-hidden="true"></span></label>`).join("")}
+      </div>
+      <div class="ap-footer"><button class="kdopen" type="button">Key date${KEYDATES[iso]?" · edit":""}</button><button class="ap-continue" id="apContinue" type="button" disabled>Continue (0)</button></div>`;
+    const inputs=[...pop.querySelectorAll('input[name="add-platform"]')], count=pop.querySelector("#apCount"), next=pop.querySelector("#apContinue");
+    const update=()=>{
+      const total=inputs.filter(input=>input.checked).length;
+      count.textContent=`${total} selected`;
+      next.textContent=`Continue (${total})`;
+      next.disabled=total===0;
+    };
+    inputs.forEach(input=>input.onchange=update);
+    next.onclick=()=>{const channels=inputs.filter(input=>input.checked).map(input=>input.value);if(!channels.length)return;closeAddPop();addNew(iso,channels);};
     pop.querySelector(".kdopen").onclick=keyPanel;
+    update();
+    positionPop();
   }
   function keyPanel(){
     pop.innerHTML=`<div class="ph"><button class="kback">‹</button> Key date · ${label}</div>
@@ -1374,6 +1410,7 @@ function openAddPop(iso,btn){
     pop.querySelector("#kdInput").onkeydown=e=>{if(e.key==="Enter")add();};
     pop.querySelector("#kdInput").focus();
     if(pop.querySelector(".kdel")) pop.querySelector(".kdel").onclick=()=>{delete KEYDATES[iso];delKeyDate(iso);closeAddPop();renderGrid();toast("Key date removed");};
+    positionPop();
   }
   postPanel();
   setTimeout(()=>document.addEventListener("mousedown",outsideAdd),0);
