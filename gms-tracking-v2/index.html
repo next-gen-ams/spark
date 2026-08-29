@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex, nofollow">
+  <title>Tracking Dashboard V2 — GMS Digital</title>
+  <!-- The wordmark turned to mush at 16px, so the tab icon is the GMS ball on
+       its own, drawn as vector. Raster sizes follow for anything that ignores
+       SVG icons. -->
+  <link rel="icon" type="image/svg+xml" href="assets/icon.svg">
+  <link rel="icon" type="image/png" sizes="32x32" href="assets/icon-32.png">
+  <link rel="alternate icon" href="assets/favicon.ico">
+  <link rel="apple-touch-icon" href="assets/icon-180.png">
+  <meta name="theme-color" content="#FF6632">
+  <link rel="stylesheet" href="styles/tokens.css">
+  <link rel="stylesheet" href="styles/app.css">
+  <link rel="stylesheet" href="styles/v2.css">
+</head>
+<body>
+  <main id="root">
+    <div class="app">
+      <div class="empty" style="padding-top:120px">Loading…</div>
+    </div>
+  </main>
+
+  <!-- Both libraries are vendored rather than pulled from a CDN — half this
+       team works in China, where CDN reachability is not a given. -->
+  <script src="vendor/supabase.js"></script>
+
+  <!-- ExcelJS is ~950kb and only needed on export / import, so it is loaded on
+       demand rather than blocking first paint. -->
+  <script>
+    window.__loadExcel = function () {
+      if (window.ExcelJS) return Promise.resolve();
+      return new Promise(function (res, rej) {
+        var s = document.createElement('script');
+        s.src = 'vendor/exceljs.min.js';
+        s.onload = res; s.onerror = function () { rej(new Error('Excel library failed to load')); };
+        document.head.appendChild(s);
+      });
+    };
+  </script>
+  <script type="module" src="js/main.js"></script>
+</body>
+</html>

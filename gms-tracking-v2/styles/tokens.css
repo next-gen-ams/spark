@@ -1,0 +1,55 @@
+/* GMS design tokens — orange-primary house theme.
+   Orange = feeling / accent, blue = structure, charcoal = data surfaces.
+   Shared with the UQ Content Command dashboard so both read as one system. */
+
+:root {
+  --orange: #EA6A1E; --orange-deep: #C1531A; --orange-soft: #FCEADD;
+  --blue: #2A6098; --blue-soft: #E9F1F8;
+  --header: #211F1C; --header-tx: #FFFFFF;
+
+  --bg: #F7F6F3; --surface: #FFFFFF; --surface-2: #F2F1ED;
+  --ink: #1C1A17; --ink-2: #57534C; --ink-3: #8C877E;
+  --line: #E6E3DD; --line-2: #D5D1C9;
+
+  --good: #2E9E5B; --warn: #DD8A1E; --crit: #D0453B;
+  --good-soft: #E6F4EC; --warn-soft: #FBF0DD; --crit-soft: #FAE7E5;
+
+  --radius: 12px; --radius-s: 8px; --radius-xs: 6px;
+  --shadow: 0 1px 2px rgba(40,30,15,.05), 0 8px 24px -12px rgba(40,30,15,.18);
+  --shadow-lg: 0 18px 50px -18px rgba(40,30,15,.35);
+  /* Cast inward from the edge of a table that scrolls past its panel. */
+  --edge-shadow: rgba(40,30,15,.15);
+
+  --font: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", system-ui,
+          "PingFang SC", "Microsoft YaHei", sans-serif;
+  --mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, monospace;
+
+  --gap: 18px;
+  --shell: clamp(24px, 3.4vw, 72px);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #15130F; --surface: #1F1C16; --surface-2: #2A2620;
+    --ink: #F1ECE2; --ink-2: #BAB1A2; --ink-3: #847B6D;
+    --line: #322D24; --line-2: #433D31;
+    --orange-soft: #3A2611; --blue-soft: #16283A;
+    --good-soft: #14291D; --warn-soft: #33240E; --crit-soft: #331714;
+    --header: #000000; --header-tx: #F1ECE2;
+    --shadow: 0 1px 2px rgba(0,0,0,.3), 0 8px 24px -12px rgba(0,0,0,.6);
+    --shadow-lg: 0 18px 50px -18px rgba(0,0,0,.7);
+    --edge-shadow: rgba(0,0,0,.55);
+  }
+}
+
+:root[data-theme="dark"] {
+  --bg: #15130F; --surface: #1F1C16; --surface-2: #2A2620;
+  --ink: #F1ECE2; --ink-2: #BAB1A2; --ink-3: #847B6D;
+  --line: #322D24; --line-2: #433D31;
+  --orange-soft: #3A2611; --blue-soft: #16283A;
+  --good-soft: #14291D; --warn-soft: #33240E; --crit-soft: #331714;
+  --header: #000000; --header-tx: #F1ECE2;
+  --shadow: 0 1px 2px rgba(0,0,0,.3), 0 8px 24px -12px rgba(0,0,0,.6);
+  --shadow-lg: 0 18px 50px -18px rgba(0,0,0,.7);
+  --edge-shadow: rgba(0,0,0,.55);
+}

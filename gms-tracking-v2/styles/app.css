@@ -1,0 +1,840 @@
+*, *::before, *::after { box-sizing: border-box; }
+
+/* Nothing may push the page sideways. A 16-column table is wider than most
+   screens; it has to scroll inside its own container, never drag the header,
+   the filters and the page gutter off to the left with it. */
+html, body { max-width: 100%; }
+
+body {
+  margin: 0; font-family: var(--font); font-size: 14px; line-height: 1.45;
+  background: var(--bg); color: var(--ink); -webkit-font-smoothing: antialiased;
+}
+button, input, select, textarea { font-family: inherit; font-size: inherit; color: inherit; }
+button { cursor: pointer; }
+a { color: var(--blue); }
+
+.app { max-width: 1680px; margin: 0 auto; padding: 0 var(--shell); min-width: 0; }
+body { padding-top: 6px; }
+
+/* ------------------------------------------------------------------ shell */
+
+.topbar {
+  position: sticky; top: 0; z-index: 40; background: var(--bg);
+  display: flex; align-items: center; gap: 16px; padding: 16px 0 12px;
+}
+.plate {
+  display: flex; align-items: center; gap: 10px; padding: 7px 12px;
+  background: var(--surface); border: 1px solid var(--line);
+  border-radius: var(--radius-s); box-shadow: var(--shadow);
+}
+.plate img { height: 26px; width: auto; display: block; }
+.plate .rule { width: 1px; height: 22px; background: var(--line-2); }
+.plate .mark { font-weight: 700; letter-spacing: .14em; font-size: 10px; color: var(--ink-3); }
+
+.titles h1 { margin: 0; font-size: 19px; font-weight: 680; letter-spacing: -.01em; }
+.titles p { margin: 1px 0 0; font-size: 12px; color: var(--ink-3); }
+
+.spacer { flex: 1; }
+
+.chip {
+  display: inline-flex; align-items: center; gap: 7px; padding: 6px 11px;
+  border: 1px solid var(--line-2); border-radius: 999px; background: var(--surface);
+  font-size: 12px; color: var(--ink-2); white-space: nowrap;
+}
+.chip .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--good); }
+.chip.warn .dot { background: var(--warn); } .chip.crit .dot { background: var(--crit); }
+
+.btn {
+  border: 1px solid var(--line-2); background: var(--surface); color: var(--ink);
+  border-radius: var(--radius-xs); padding: 7px 13px; font-size: 13px;
+  transition: border-color .15s, background .15s, transform .1s;
+}
+.btn:hover { border-color: var(--ink-3); background: var(--surface-2); }
+.btn:active { transform: translateY(1px); }
+.btn.primary { background: var(--orange); border-color: var(--orange); color: #fff; font-weight: 600; }
+.btn.primary:hover { background: var(--orange-deep); border-color: var(--orange-deep); }
+.btn.ghost { border-color: transparent; background: transparent; color: var(--ink-2); }
+.btn.ghost:hover { background: var(--surface-2); }
+.btn:disabled { opacity: .45; cursor: not-allowed; }
+.btn.sm { padding: 4px 9px; font-size: 12px; }
+.btn.danger { background: var(--crit); border-color: var(--crit); color: #fff; font-weight: 600; }
+.btn.danger:hover { background: color-mix(in oklab, var(--crit) 85%, black); border-color: transparent; }
+
+/* In-app dialog. Replaces prompt()/confirm() — see modal.js for why that
+   mattered beyond looks. Destructive ones keep their mitigation (Download
+   backup) ON the dialog, so following the advice is a detour of one click. */
+.dialogbox, .confirmbox {
+  position: fixed; z-index: 70; left: 50%; top: 50%; transform: translate(-50%, -50%);
+  width: min(470px, calc(100vw - 40px)); max-height: calc(100vh - 60px); overflow-y: auto;
+  background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius);
+  box-shadow: var(--shadow-lg); padding: 20px 22px;
+}
+.dialogbox h3, .confirmbox h3 { margin: 0 0 6px; font-size: 15.5px; font-weight: 700; letter-spacing: -.01em; }
+.dialogbox p, .confirmbox p { margin: 0 0 10px; font-size: 13px; color: var(--ink-2); }
+.dialogbox p.dsub { margin-bottom: 16px; }
+.dialogbox p.hint, .confirmbox p.hint { font-size: 11.5px; color: var(--ink-3); }
+.dialogbox .drow, .confirmbox .row { display: flex; gap: 8px; align-items: center; margin-top: 18px; }
+.dialogbox .field { margin-bottom: 16px; }
+.derr { font-size: 12px; color: var(--crit); min-height: 16px; }
+
+/* The creative's artwork inline in its row: small enough to leave the row's
+   rhythm alone, and it grows on hover so the ad can be read without leaving
+   the grid. The enlarged copy is absolutely positioned and pointer-transparent
+   so it never blocks the cells it covers. */
+.crthumb { display: inline-block; margin-left: 8px; vertical-align: middle; position: relative; }
+.crthumb .crthumb-sm {
+  display: block; height: 22px; width: auto; max-width: 90px; object-fit: contain;
+  border: 1px solid var(--line); border-radius: 3px; background: var(--surface);
+}
+.crthumb:focus-visible { outline: 2px solid var(--orange); outline-offset: 2px; border-radius: 3px; }
+
+/* The enlarged copy lives on <body>, positioned in viewport coordinates by
+   view-spend. Inside the table it was clipped by .tablewrap (which scrolls)
+   and by .panel (which hides its overflow), so it lost its top, its bottom or
+   its side depending where the row sat. Out here nothing can clip it, and it
+   is meant to cover the table — that is what a preview is for.
+
+   pointer-events: none keeps it from ever becoming the hovered element, which
+   is the flicker loop an enlarge-in-place version produced. */
+.crpop {
+  position: fixed; z-index: 90; display: none; pointer-events: none;
+  padding: 5px; background: var(--surface);
+  border: 1px solid var(--line-2); border-radius: var(--radius-s);
+  box-shadow: var(--shadow-lg);
+}
+.crpop.on { display: block; }
+.crpop img { display: block; max-width: 360px; max-height: 300px; border-radius: 3px; }
+
+/* A button that reads as a link: used inside a hint line, where a real button
+   would carry more weight than the action deserves. */
+/* The status chip is a button now — it has to look like one can be pressed. */
+.chip[role="button"] { cursor: pointer; }
+.chip[role="button"]:hover { border-color: var(--ink-3); }
+.chip[role="button"]:focus-visible { outline: 2px solid var(--orange); outline-offset: 2px; }
+
+.linkish {
+  background: none; border: 0; padding: 0; font: inherit; color: var(--orange);
+  cursor: pointer; text-decoration: underline; text-underline-offset: 2px;
+}
+.linkish:hover { color: var(--ink); }
+
+/* Tracking log. The visibility tag is the thing to read first, so it sits on
+   the same line as the date rather than under the text. */
+/* Tall enough for four or five entries, then it scrolls — a campaign logged
+   every other day runs to dozens by the end of a flight. Same reasoning as
+   .tablewrap: styling the scrollbar opts the container out of macOS overlay
+   mode, so the bar is visible before you scroll rather than after. */
+/* Capped against the viewport, not just in pixels. The dialog itself scrolls
+   when it outgrows the screen, and on a 13" laptop that scrolls Add entry out
+   of sight — the button you came here to press. Letting the list shrink keeps
+   the whole dialog on screen instead. */
+.loglist { max-height: min(320px, 28vh); overflow-y: auto; border: 1px solid var(--line);
+  border-radius: var(--radius-s); background: var(--surface-2); padding: 4px;
+  scrollbar-width: thin; scrollbar-color: var(--ink-3) var(--surface-2); }
+.loglist::-webkit-scrollbar { width: 11px; }
+.loglist::-webkit-scrollbar-track { background: var(--surface-2); }
+.loglist::-webkit-scrollbar-thumb {
+  background: var(--ink-3); border-radius: 6px;
+  border: 3px solid var(--surface-2);
+}
+.loglist::-webkit-scrollbar-thumb:hover { background: var(--ink-2); }
+.logitem { background: var(--surface); border: 1px solid var(--line);
+  border-radius: var(--radius-xs); padding: 9px 11px; margin-bottom: 5px; }
+.logitem:last-child { margin-bottom: 0; }
+.loghead { display: flex; gap: 8px; align-items: center; margin-bottom: 5px; }
+.loghead b { font-size: 12px; }
+.logitem p { font-size: 12.5px; color: var(--ink-2); line-height: 1.5; white-space: pre-wrap; }
+.logchip { background: var(--surface-2); color: var(--ink-2); border-color: var(--line-2); }
+.logchip:hover { background: var(--ink-2); border-color: var(--ink-2); color: #fff; }
+
+/* Paste-a-screenshot target. Focusable because ⌘V needs somewhere to land. */
+.pastezone {
+  border: 1.5px dashed var(--line-2); border-radius: var(--radius-s);
+  background: var(--surface-2); min-height: 78px; padding: 10px;
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer; outline: none; text-align: center;
+}
+.pastezone:hover, .pastezone.over { border-color: var(--orange); background: var(--orange-soft); }
+.pastezone:focus-visible { border-color: var(--blue); box-shadow: 0 0 0 3px var(--blue-soft); }
+.pastehint b { display: block; font-size: 12.5px; color: var(--ink-2); }
+.pastehint span { display: block; font-size: 11px; color: var(--ink-3); margin-top: 3px; }
+.shotprev { position: relative; display: inline-block; max-width: 100%; }
+.shotprev img {
+  display: block; max-width: 100%; max-height: 160px; border-radius: var(--radius-xs);
+  border: 1px solid var(--line);
+}
+.shotprev button {
+  position: absolute; top: 4px; right: 4px; background: var(--surface);
+  border: 1px solid var(--line); border-radius: 50%; width: 22px; height: 22px;
+  padding: 0; line-height: 1; box-shadow: var(--shadow);
+}
+
+/* Choices whose options differ in consequence, not in degree — each carries
+   the number at stake, so the decision cannot be made by button position. */
+.choices { display: flex; flex-direction: column; gap: 8px; }
+/* .field label is a small-caps field caption; a .choice is a label too, but a
+   row of content — undo the caption treatment inside it. */
+.field .choices label.choice {
+  display: flex; text-transform: none; letter-spacing: 0;
+  font-size: 13px; color: var(--ink); font-weight: 400; margin-bottom: 0;
+}
+.choice {
+  display: flex; gap: 10px; align-items: flex-start; cursor: pointer;
+  border: 1px solid var(--line-2); border-radius: var(--radius-s);
+  padding: 11px 13px; background: var(--surface);
+}
+.choice:hover { border-color: var(--ink-3); }
+.choice.on { border-color: var(--orange); background: var(--orange-soft); }
+/* Outranks `.field input { width:100% }`, which was inflating the radio to
+   the full row and squeezing the text into the margin. */
+.field .choices .choice input[type="radio"] {
+  margin: 2px 0 0; flex: none; width: 15px; height: 15px; accent-color: var(--orange);
+}
+.choice b { display: block; font-size: 13px; font-weight: 600; color: var(--ink); }
+.choice .cnote { display: block; font-size: 11.5px; color: var(--ink-2); margin-top: 3px; line-height: 1.45; }
+
+/* Internal / Client segmented control — the single most consequential switch
+   on the page, so it gets real presence rather than a plain select. */
+.seg { display: inline-flex; background: var(--surface-2); border: 1px solid var(--line-2);
+       border-radius: 999px; padding: 3px; }
+.seg button {
+  border: none; background: transparent; border-radius: 999px; padding: 5px 14px;
+  font-size: 12px; font-weight: 600; color: var(--ink-3); letter-spacing: .01em;
+}
+.seg button[aria-pressed="true"] { background: var(--header); color: var(--header-tx); }
+.seg button[aria-pressed="true"].client { background: var(--blue); color: #fff; }
+
+/* Which set of numbers you are looking at is the most consequential state on
+   the page, so the toggle carries it in full colour rather than in a shade:
+   orange for internal, blue for client-facing — the same two colours those
+   figures wear everywhere else in the app. */
+.seg.audience-seg { padding: 3px; gap: 2px; }
+.seg.audience-seg button {
+  display: inline-flex; align-items: center; gap: 7px; padding: 7px 17px;
+  font-size: 12.5px; font-weight: 650; transition: background .15s, color .15s;
+}
+.seg.audience-seg button::before {
+  content: ''; width: 7px; height: 7px; border-radius: 50%;
+  background: var(--line-2); transition: background .15s;
+}
+.seg.audience-seg button[aria-pressed="true"] {
+  background: var(--orange); color: #fff;
+  box-shadow: 0 1px 4px color-mix(in oklab, var(--orange) 45%, transparent);
+}
+.seg.audience-seg button.client[aria-pressed="true"] {
+  background: var(--blue); color: #fff;
+  box-shadow: 0 1px 4px color-mix(in oklab, var(--blue) 45%, transparent);
+}
+.seg.audience-seg button[aria-pressed="true"]::before { background: #fff; }
+.seg.audience-seg button[aria-pressed="false"]:hover { color: var(--ink); }
+
+/* A standing band under the tabs, so the client-facing view can never be
+   mistaken for the internal one — including in a screenshot. */
+.viewband {
+  display: flex; align-items: center; gap: 9px; margin-top: 12px;
+  padding: 7px 13px; border-radius: var(--radius-xs); font-size: 12px;
+  background: var(--blue-soft); color: var(--ink-2);
+  border: 1px solid color-mix(in oklab, var(--blue) 32%, transparent);
+}
+.viewband strong { color: var(--blue); letter-spacing: .1em; font-size: 10.5px; white-space: nowrap; }
+:root[data-theme="dark"] .viewband strong { color: #7FB2E8; }
+
+.tabbar {
+  position: sticky; top: 69px; z-index: 39; background: var(--bg);
+  display: flex; align-items: center; gap: 16px;
+  border-bottom: 1px solid var(--line);
+}
+.tabbar button {
+  border: none; background: none; padding: 12px 1px; font-size: 13.5px;
+  color: var(--ink-3); border-bottom: 2px solid transparent; margin-bottom: -1px;
+  font-weight: 600;
+}
+.tabbar .monthnav { margin-left: auto; display: flex; align-items: center; gap: 2px; }
+.tabbar .monthnav button { padding: 0; width: 28px; height: 28px; border: 1px solid var(--line);
+  background: var(--surface); border-radius: 7px; display: grid; place-items: center;
+  font-size: 15px; color: var(--ink-2); }
+.tabbar .monthnav button:hover { border-color: var(--line-2); color: var(--ink); }
+.tabbar .monthnav .mlabel { padding: 0 12px; font-weight: 700; font-size: 13px;
+  min-width: 96px; text-align: center; color: var(--ink); }
+.tabbar .monthnav .all { width: auto; padding: 0 10px; font-size: 12px; font-weight: 600; }
+.tabbar button:hover { color: var(--ink); }
+.tabbar button[aria-selected="true"] { color: var(--ink); border-bottom-color: var(--orange); }
+
+/* Confidentiality band — this build shows margin, so say so, always. */
+.confid {
+  display: flex; align-items: center; gap: 9px; margin-top: 12px;
+  padding: 7px 13px; border-radius: var(--radius-xs);
+  background: var(--orange-soft); border: 1px solid color-mix(in oklab, var(--orange) 30%, transparent);
+  font-size: 12px; color: var(--ink-2);
+}
+.confid strong { color: var(--orange-deep); letter-spacing: .1em; font-size: 10.5px; white-space: nowrap; }
+.confid + .confid { margin-top: 6px; }
+.confid.demo { background: var(--blue-soft); border-color: color-mix(in oklab, var(--blue) 30%, transparent); }
+.confid.demo strong { color: var(--blue); }
+
+/* --------------------------------------------------------------- period */
+
+.period { display: flex; align-items: baseline; gap: 14px; padding: 16px 0 0; flex-wrap: wrap; }
+.period h2 {
+  margin: 0; font-size: 26px; line-height: 1; font-weight: 800; letter-spacing: 1px;
+  color: var(--orange); text-transform: uppercase;
+}
+.period h2 span { color: var(--ink-3); font-weight: 700; font-size: 16px;
+  letter-spacing: .5px; margin-left: 6px; }
+.period .meta { font-size: 12px; color: var(--ink-3); }
+
+/* --------------------------------------------------------------- filters */
+
+.filters {
+  display: flex; gap: 8px; flex-wrap: wrap; align-items: center;
+  margin: 14px 0 0; padding: 10px 12px; background: var(--surface);
+  border: 1px solid var(--line); border-radius: var(--radius); box-shadow: var(--shadow);
+}
+.filters label { font-size: 11px; color: var(--ink-3); margin-right: 4px; }
+.filters select, .filters input[type="search"], .filters input[type="text"] {
+  border: 1px solid var(--line-2); background: var(--surface); border-radius: var(--radius-xs);
+  padding: 6px 9px; font-size: 12.5px; outline: none;
+  max-width: 220px; min-width: 0; text-overflow: ellipsis;
+}
+.filters select:focus, .filters input:focus { border-color: var(--orange); }
+/* The search box was being squeezed to nothing by a long client name, leaving
+   its Clear button sitting on top of the text. It now keeps a floor and the
+   bar wraps instead. */
+.filters .grow { flex: 1 1 220px; min-width: 200px; display: flex; gap: 8px; align-items: center; }
+.filters .grow input { flex: 1; max-width: none; }
+
+/* ------------------------------------------------------------------ view */
+
+/* The gap above the page body belongs to the body, not to whatever happens to
+   be first inside it. Overview opens with .cards and used to carry its own
+   padding-top; By Client opens with a .panel and carried none, so its first
+   card sat flush against the filter bar. */
+.view { margin-top: 14px; }
+
+/* ----------------------------------------------------------------- cards */
+
+.cards { display: grid; gap: 12px; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+  padding: 0 0 4px; margin-bottom: 16px; }
+.card {
+  background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius);
+  box-shadow: var(--shadow); padding: 13px 15px; position: relative; overflow: hidden;
+}
+.card { --rule: var(--ink-3); }
+.card::before { content: ''; position: absolute; inset: 0 auto 0 0; width: 3px; background: var(--rule); }
+.card.total { --rule: var(--orange); }
+.card .k { font-size: 11px; letter-spacing: .5px; text-transform: uppercase; color: var(--ink-3); font-weight: 600; }
+.card .v { font-size: 27px; font-weight: 780; letter-spacing: -1px; line-height: 1;
+  margin-top: 5px; font-variant-numeric: tabular-nums; }
+.card .s { font-size: 11.5px; color: var(--ink-2); margin-top: 5px; }
+.card .bar { height: 4px; border-radius: 2px; background: var(--surface-2); margin-top: 9px; overflow: hidden; }
+.card .bar i { display: block; height: 100%; border-radius: 2px; background: var(--ink-3); }
+.card.alert { background: var(--crit-soft); border-color: color-mix(in oklab, var(--crit) 35%, transparent); }
+.card.alert { --rule: var(--crit); }
+.card.alert .v { color: var(--crit); }
+
+/* ----------------------------------------------------------------- panel */
+
+.panel {
+  background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius);
+  box-shadow: var(--shadow); margin-bottom: 20px; overflow: hidden;
+  min-width: 0;                      /* never widen to fit the table inside */
+}
+.panel > header { padding: 14px 16px 12px; border-bottom: 1px solid var(--line);
+  display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+.panel > header h3 { margin: 0; font-size: 14.5px; font-weight: 650; letter-spacing: -.01em; }
+.panel > header p { margin: 2px 0 0; font-size: 12px; color: var(--ink-3); }
+.panel .body { padding: 14px 16px; }
+.panel > header.entryhead { flex-wrap: nowrap; }
+.entrytools {
+  margin-left: auto; display: flex; align-items: center; justify-content: flex-end;
+  gap: 10px; flex-wrap: nowrap; white-space: nowrap;
+}
+.managecolumns { font-weight: 650; }
+@media (max-width: 760px) {
+  .panel > header.entryhead { align-items: flex-start; flex-wrap: wrap; }
+  .entrytools { margin-left: 0; width: 100%; justify-content: flex-start; flex-wrap: wrap; }
+}
+
+/* ----------------------------------------------------------------- table */
+
+.tablewrap {
+  overflow-x: auto; max-width: 100%; min-width: 0;
+  overscroll-behavior-x: contain;    /* scrolling the table stops at its edge */
+
+  /* A wide table just stopped at the panel edge with nothing to say it went on.
+     On a 1024px screen that hid Variance, Run at and the whole What-to-do
+     column, and the only clue was that the numbers looked oddly incomplete.
+     Two pairs of gradients: the `local` ones travel with the content and act as
+     masks, the `scroll` ones are pinned to the viewport and read as shadow — so
+     each edge shades only while there is more table beyond it. */
+  background:
+    linear-gradient(to right, var(--surface) 30%, transparent) left / 28px 100% no-repeat local,
+    linear-gradient(to left, var(--surface) 30%, transparent) right / 28px 100% no-repeat local,
+    radial-gradient(farthest-side at 0 50%, var(--edge-shadow), transparent) left / 13px 100% no-repeat,
+    radial-gradient(farthest-side at 100% 50%, var(--edge-shadow), transparent) right / 13px 100% no-repeat;
+  background-color: var(--surface);
+
+  /* macOS hides overlay scrollbars until you already scroll, which is no use
+     to someone who does not yet know there is anything to the right. Styling
+     the scrollbar at all opts this container out of overlay mode, so the bar
+     is drawn, takes its own row, and stays there — the shading says there is
+     more, the bar says how much and lets you drag to it. It only appears when
+     the table is genuinely wider than the panel. */
+  scrollbar-width: thin;
+  scrollbar-color: var(--ink-3) var(--surface-2);
+}
+.tablewrap::-webkit-scrollbar { height: 12px; }
+.tablewrap::-webkit-scrollbar-track {
+  background: var(--surface-2); border-top: 1px solid var(--line);
+}
+.tablewrap::-webkit-scrollbar-thumb {
+  background: var(--ink-3); border-radius: 6px;
+  border: 3px solid var(--surface-2);      /* insets the thumb inside the track */
+}
+.tablewrap::-webkit-scrollbar-thumb:hover { background: var(--ink-2); }
+table.data { border-collapse: separate; border-spacing: 0; width: 100%; font-size: 12.5px; }
+/* A short resizable table otherwise freezes at the sum of its default column
+   widths and leaves a dead strip inside a wider card. Keep those widths as the
+   floor, but let the table consume the whole panel whenever space is available. */
+table.data.fill-panel { min-width: 100%; }
+.alerttable { min-width: 0; }
+.tablepager {
+  display: flex; align-items: center; justify-content: space-between; gap: 14px;
+  padding: 9px 12px; border-top: 1px solid var(--line); background: var(--surface);
+  font-size: 11.5px;
+}
+.pageractions { display: flex; align-items: center; gap: 9px; }
+.pagerlabel { min-width: 72px; text-align: center; font-variant-numeric: tabular-nums; }
+.tablepager button:disabled { opacity: .42; cursor: default; }
+table.data th {
+  background: var(--header); color: var(--header-tx); text-align: left; font-weight: 600;
+  padding: 9px 10px; white-space: nowrap; position: sticky; top: 0; z-index: 2;
+  font-size: 11px; letter-spacing: .04em; text-transform: uppercase;
+}
+/* Cells right-align (figures line up on the decimal); their HEADERS centre.
+   A band of two-line uppercase labels ragged against the right edge read as
+   clutter — centred, each label sits over its column like a title, and the
+   identity column stays left with its rows. */
+table.data td.num { text-align: right; font-variant-numeric: tabular-nums; }
+table.data th { text-align: center; }
+table.data th:first-child { text-align: left; }
+
+/* Entry-grid header blocks: warm = you type it, blue = the app computes it,
+   charcoal = where the flight stands. Same family as the page's colour rules
+   (orange feeling, blue structure), dark enough to keep white text legible. */
+table.data th.gtyped { background: #3A2A1A; box-shadow: inset 0 3px 0 var(--orange); }
+table.data th.gcalc { background: #1A2A3A; box-shadow: inset 0 3px 0 var(--blue); }
+table.data td { padding: 8px 10px; border-bottom: 1px solid var(--line); vertical-align: middle; }
+table.data tbody tr:hover td { background: var(--surface-2); }
+table.data tbody tr.sub td { background: var(--surface-2); font-weight: 600; }
+table.data tbody tr.nb td { color: var(--ink-3); font-style: italic; }
+table.data tfoot td {
+  padding: 10px; border-top: 2px solid var(--line-2); font-weight: 700;
+  font-variant-numeric: tabular-nums; background: var(--surface);
+  position: sticky; bottom: 0;
+}
+table.data .grp td {
+  background: var(--surface-2); font-weight: 650; font-size: 11px; letter-spacing: .07em;
+  text-transform: uppercase; color: var(--ink-2); padding: 7px 10px;
+}
+td.wrap { white-space: normal; min-width: 150px; }
+
+/* Column resize grips. The header cell has to be positioned for the grip to
+   sit on its edge, and a resizing drag must not select text across the page. */
+table.data th { position: sticky; }
+.colgrip {
+  position: absolute; top: 0; right: -3px; bottom: 0; width: 7px;
+  cursor: col-resize; z-index: 5;
+}
+.colgrip::after {
+  content: ''; position: absolute; top: 25%; bottom: 25%; left: 3px; width: 1px;
+  background: rgba(255,255,255,.28);
+}
+.colgrip:hover::after { background: var(--orange); width: 2px; top: 0; bottom: 0; }
+body.col-resizing { cursor: col-resize; user-select: none; }
+body.col-resizing .colgrip::after { background: var(--orange); width: 2px; top: 0; bottom: 0; }
+/* Fixed layout has to clip — otherwise one long cell forces its column back
+   open and the drag does nothing. But clipping in silence just eats the text,
+   so: prose columns wrap and grow taller, everything else shows an ellipsis
+   and keeps the full text on hover. */
+table.data[style*="fixed"] td {
+  overflow: hidden; text-overflow: ellipsis;
+}
+/* Headers never ellipsise. A truncated figure is still a figure you can widen
+   to read; a truncated header ("CLIENT A…") removes the only thing that says
+   what the column means, and it stays wrong at every width. Two-line headers
+   cost one row of height, once. */
+table.data[style*="fixed"] th {
+  white-space: normal;
+  /* normal, not break-word: the drag floor already guarantees the widest word
+     fits, so a header wraps at its spaces and never down the middle of a word. */
+  overflow-wrap: normal;
+  overflow: visible;
+  text-overflow: clip;
+  /* Middle, since the labels went centre-aligned: bottom-alignment made the
+     one-line labels hang off the band's lower edge next to two-line ones. */
+  vertical-align: middle;
+}
+table.data[style*="fixed"] td.wrap,
+table.data[style*="fixed"] td.prose {
+  white-space: normal;
+  /* break-word, never anywhere: words stay whole instead of being sliced a
+     letter at a time down a narrow column. */
+  overflow-wrap: break-word;
+  text-overflow: clip;
+  overflow: visible;
+}
+/* Only prose gets clamped. A .wrap cell stacks a client name over its line
+   detail — clamping that truncates the identity of the row, which is the one
+   thing you always need to read. */
+table.data[style*="fixed"] td.prose > * {
+  display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 4;
+  overflow: hidden;
+}
+table.data[style*="fixed"] td.wrap *,
+table.data[style*="fixed"] td.prose * {
+  white-space: normal; overflow-wrap: break-word;
+}
+
+/* Pacing advice is a sentence. It was wearing .tag, which is nowrap, so it
+   stretched into one long line and got cut off at the column edge. */
+.advice {
+  display: block; font-size: 11.5px; line-height: 1.35;
+  padding: 3px 8px; border-radius: var(--radius-xs);
+  background: var(--surface-2); color: var(--ink-2);
+}
+.advice.good { background: var(--good-soft); color: var(--good); }
+.advice.warn { background: var(--warn-soft); color: var(--warn); }
+.advice.crit { background: var(--crit-soft); color: var(--crit); }
+.pacebudget {
+  margin-top: 5px; font-size: 10.5px; line-height: 1.35;
+}
+table.data[style*="fixed"] td.prose.pacecell > * {
+  display: block; overflow: visible; -webkit-line-clamp: initial;
+}
+.clientcell { min-width: 118px; }
+.linecell { min-width: 220px; }
+.platformtag { margin-right: 7px; vertical-align: middle; }
+.lineobjective {
+  color: var(--ink-2); font-size: 11px; font-weight: 600; vertical-align: middle;
+}
+.statusbtn {
+  margin-left: 7px; font: inherit; cursor: pointer; vertical-align: middle;
+}
+.statusbtn:hover { border-color: currentColor; }
+.statusbtn:focus-visible { outline: 2px solid var(--orange); outline-offset: 2px; }
+.linename { margin-top: 6px; font-weight: 650; color: var(--ink); }
+.linecampaign { margin-top: 2px; font-size: 10.5px; }
+.deliverypct { margin-top: 2px; font-size: 11px; line-height: 1.25; }
+
+/* First column is pinned horizontally: at 16 columns you scroll far enough to
+   forget whose row you are on. */
+table.data th:first-child,
+table.data td:first-child {
+  position: sticky; left: 0; z-index: 3;
+  background: var(--surface);
+  box-shadow: 1px 0 0 var(--line);
+}
+table.data th:first-child { z-index: 4; background: var(--header); }
+table.data tbody tr:hover td:first-child { background: var(--surface-2); }
+table.data tr.grp td:first-child { background: var(--surface-2); }
+table.data tfoot td:first-child { background: var(--surface); }
+.muted { color: var(--ink-3); }
+
+.tag {
+  display: inline-flex; align-items: center; gap: 5px; padding: 2px 8px; border-radius: 999px;
+  font-size: 11px; font-weight: 600; white-space: nowrap;
+  background: var(--surface-2); color: var(--ink-2); border: 1px solid var(--line-2);
+}
+.tag .pd { width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
+.tag.good { background: var(--good-soft); color: var(--good); border-color: transparent; }
+.tag.warn { background: var(--warn-soft); color: var(--warn); border-color: transparent; }
+.tag.crit { background: var(--crit-soft); color: var(--crit); border-color: transparent; }
+
+.pill-sel { border: 1px solid var(--line-2); background: var(--surface); border-radius: var(--radius-xs); padding: 4px 6px; font-size: 12px; max-width: 130px; }
+.cellinput {
+  width: 100%; min-width: 68px; border: 1px solid transparent; background: transparent;
+  border-radius: var(--radius-xs); padding: 4px 6px; text-align: right;
+  font-variant-numeric: tabular-nums; outline: none;
+}
+.cellinput:hover { border-color: var(--line-2); }
+.cellinput:focus { border-color: var(--orange); background: var(--surface); }
+.cellinput.dirty { background: var(--orange-soft); }
+
+/* A figure the app worked out rather than one you type. Sits where an input
+   would, at the same size, so a split line's total lines up with the creative
+   figures underneath it — but it is visibly not a field. */
+.derived {
+  padding: 4px 6px; text-align: right; font-variant-numeric: tabular-nums;
+  color: var(--ink-2); font-weight: 600;
+}
+
+/* Creative rows, indented under the line they belong to. The tint runs the
+   full height of the group so the block reads as one line, not as extra
+   lines — which is the whole point: they sum into the row above. */
+table.data tbody tr.crrow td { background: var(--surface-2); }
+table.data tbody tr.crrow:hover td { background: var(--surface-2); }
+table.data tbody tr.crrow td:first-child { background: var(--surface-2); padding-left: 26px; }
+.crname {
+  font-size: 12px; color: var(--ink-2); position: relative;
+}
+.cractions { white-space: nowrap; text-align: right; min-width: 144px; }
+.cractions .btn + .btn { margin-left: 6px; }
+.credit { color: var(--blue); border-color: color-mix(in oklab, var(--blue) 45%, var(--line-2)); }
+.credit:hover { color: #fff; background: var(--blue); border-color: var(--blue); }
+.crdelete { color: var(--crit); border-color: color-mix(in oklab, var(--crit) 45%, var(--line-2)); }
+.crdelete:hover { color: #fff; background: var(--crit); border-color: var(--crit); }
+.crpacecopy { font-size: 11px; margin-bottom: 6px; }
+.crmeter { min-width: 110px; }
+.linecontrols { margin-top: 6px; }
+.linebuttons { display: flex; align-items: center; gap: 7px; flex-wrap: wrap; }
+.allocation {
+  display: inline-flex; width: fit-content; margin-top: 5px;
+  font-size: 10.5px; line-height: 1.3; font-weight: 600; cursor: help;
+  text-decoration: underline dotted; text-underline-offset: 2px;
+}
+.allocation:focus-visible { outline: 2px solid var(--orange); outline-offset: 2px; border-radius: 2px; }
+.allocation.ok { color: var(--good); }
+.allocation.under { color: var(--warn); }
+.allocation.over { color: var(--crit); }
+.allocation-tooltip {
+  position: fixed; z-index: 90; max-width: min(320px, calc(100vw - 20px));
+  padding: 8px 10px; border: 1px solid var(--ink-2); border-radius: var(--radius-s);
+  background: var(--ink); color: var(--surface); box-shadow: var(--shadow-lg);
+  font-size: 11.5px; line-height: 1.45; pointer-events: none;
+  opacity: 0; visibility: hidden; transform: translateY(3px);
+  transition: opacity .12s ease, transform .12s ease, visibility 0s linear .12s;
+}
+.allocation-tooltip.on {
+  opacity: 1; visibility: visible; transform: translateY(0);
+  transition-delay: 0s;
+}
+.crname::before {
+  content: ''; position: absolute; left: -14px; top: 6px;
+  width: 8px; height: 8px; border-left: 1px solid var(--line-2);
+  border-bottom: 1px solid var(--line-2); border-radius: 0 0 0 2px;
+}
+/* Add-a-creative / add-a-column chip.
+ *
+ * Blue, not orange, and deliberately: inside this table orange already means
+ * "look at this" — the advice pills, the variance tags, the over-budget card
+ * all use it. A structural action that adds a row would be competing with a
+ * status signal for the same attention. Blue is the system's structure colour,
+ * so the chip reads as a control rather than as a warning. */
+.btn.chip {
+  margin-top: 7px; font-size: 11px; font-weight: 600; padding: 3px 9px;
+  border-radius: 20px; background: var(--blue-soft); color: var(--blue);
+  border-color: color-mix(in oklab, var(--blue) 28%, transparent);
+  letter-spacing: .01em; white-space: nowrap;
+}
+.btn.chip:hover { background: var(--blue); border-color: var(--blue); color: #fff; }
+
+/* Pacing meter — a bar that reads against time, not just against budget. */
+.meter { position: relative; height: 6px; border-radius: 3px; background: var(--surface-2); min-width: 76px; }
+.meter i { position: absolute; inset: 0 auto 0 0; border-radius: 3px; background: var(--good); }
+.meter i.under { background: var(--blue); } .meter i.over { background: var(--crit); }
+.meter i.none { background: var(--ink-3); }
+.meter u { position: absolute; top: -3px; bottom: -3px; width: 2px; background: var(--ink); opacity: .55; }
+
+/* ---------------------------------------------------------------- import */
+
+.drop {
+  border: 2px dashed var(--line-2); border-radius: var(--radius); padding: 34px 20px;
+  text-align: center; color: var(--ink-3); background: var(--surface-2);
+  transition: border-color .15s, background .15s;
+}
+.drop.over { border-color: var(--orange); background: var(--orange-soft); color: var(--orange-deep); }
+.drop strong { display: block; color: var(--ink); font-size: 15px; margin-bottom: 4px; }
+
+.okrow { display: flex; align-items: center; gap: 12px; }
+.warnlist { margin: 0; padding: 0; list-style: none; display: grid; gap: 6px; }
+.warnlist li {
+  font-size: 12px; padding: 7px 11px; border-radius: var(--radius-xs);
+  background: var(--warn-soft); color: var(--ink-2);
+  border-left: 3px solid var(--warn);
+}
+.warnlist li.ok { background: var(--good-soft); border-left-color: var(--good); }
+
+.sheetpick { display: flex; gap: 8px; flex-wrap: wrap; }
+.sheetpick button {
+  border: 1px solid var(--line-2); background: var(--surface); border-radius: var(--radius-xs);
+  padding: 8px 12px; text-align: left; font-size: 12px; line-height: 1.35;
+}
+.sheetpick button[aria-pressed="true"] { border-color: var(--orange); background: var(--orange-soft); }
+.sheetpick b { display: block; font-size: 12.5px; }
+.sheetpick button:disabled { opacity: .55; }
+.sheetpick span { color: var(--ink-3); }
+
+/* ---------------------------------------------------------------- charts */
+
+.grid-2 { display: grid; gap: var(--gap); grid-template-columns: 3fr 2fr; align-items: stretch; }
+.grid-2 > .panel { margin-bottom: 0; }
+@media (max-width: 1100px) { .grid-2 { grid-template-columns: 1fr; } }
+
+.legend { display: flex; flex-wrap: wrap; gap: 16px; margin-top: 12px; font-size: 11.5px; color: var(--ink-2); }
+.legend .lk { display: inline-flex; align-items: center; gap: 6px; }
+.legend .lk i { width: 11px; height: 11px; border-radius: 3px; display: inline-block; }
+
+.splitlist { display: grid; gap: 14px; }
+.splithead { display: flex; align-items: center; gap: 9px; margin-bottom: 6px; font-size: 12.5px; }
+.splitrow .bar { height: 7px; border-radius: 4px; background: var(--surface-2); overflow: hidden; }
+.splitrow .bar i { display: block; height: 100%; border-radius: 4px; }
+
+/* --------------------------------------------------------- campaign pace */
+
+.pacelist { display: grid; gap: 16px; }
+.pacerow { display: grid; gap: 7px; }
+.pacehead { display: flex; align-items: baseline; gap: 9px; font-size: 12.5px; flex-wrap: wrap; }
+.pacefoot { display: flex; align-items: center; gap: 10px; font-size: 11.5px; flex-wrap: wrap; }
+
+/* One track carries both marks: the fill is money spent, the tick is where the
+   schedule says you should be. The distance between them is the whole point. */
+.pacetrack { position: relative; height: 8px; border-radius: 4px; background: var(--surface-2); }
+.pacetrack i { position: absolute; inset: 0 auto 0 0; border-radius: 4px; }
+.pacetrack u {
+  position: absolute; top: -4px; bottom: -4px; width: 2px;
+  background: var(--ink); opacity: .6;
+}
+
+/* ----------------------------------------------------------------- plans */
+
+.plans { display: grid; gap: 12px; padding: 14px 16px 18px; }
+.planclient { border: 1px solid var(--line); border-radius: var(--radius-s); overflow: hidden; }
+
+.planrow {
+  width: 100%; display: flex; align-items: center; gap: 12px; text-align: left;
+  border: none; background: var(--surface); padding: 11px 13px; font-size: 13px;
+}
+.planrow:hover { background: var(--surface-2); }
+.planrow .chev { color: var(--ink-3); width: 12px; flex: none; }
+.planrow .muted { font-size: 11.5px; }
+.planrow .planfig { margin-left: auto; white-space: nowrap; font-variant-numeric: tabular-nums; }
+.planrow.client { background: var(--surface-2); font-size: 13.5px; }
+.planrow.client:hover { background: var(--line); }
+.planrow.campaign { border-top: 1px solid var(--line); padding-left: 22px; }
+
+.planbar { width: 90px; height: 6px; border-radius: 3px; background: var(--surface-2);
+  overflow: hidden; flex: none; }
+.planbar i { display: block; height: 100%; border-radius: 3px; }
+
+.plankids > .plancampaign > .tablewrap { border-top: 1px solid var(--line); }
+.plankids table.data th { font-size: 10px; }
+table.data th.mo, table.data td.mo { min-width: 68px; }
+table.data td.mo { color: var(--ink-2); font-size: 11.5px; }
+
+/* ---------------------------------------------------------------- export */
+
+/* The audience choice is the consequential one on this panel, so it reads as
+   two cards rather than a radio pair you can skim past. */
+.audience { display: grid; gap: 8px; }
+.audience button {
+  text-align: left; padding: 11px 13px; border-radius: var(--radius-s);
+  border: 1px solid var(--line-2); background: var(--surface);
+}
+.audience button b { display: block; font-size: 13px; margin-bottom: 2px; }
+.audience button span { font-size: 11.5px; color: var(--ink-3); line-height: 1.35; }
+.audience button:hover { border-color: var(--ink-3); }
+.audience button.on { border-color: var(--orange); background: var(--orange-soft); }
+.audience button.on b { color: var(--orange-deep); }
+.audience button.client.on { border-color: var(--blue); background: var(--blue-soft); }
+.audience button.client.on b { color: var(--blue); }
+
+.checklist { display: grid; gap: 5px; }
+.field .checklist label, .checklist label {
+  display: flex; align-items: flex-start; gap: 9px; padding: 7px 10px;
+  border: 1px solid var(--line); border-radius: var(--radius-xs);
+  font-size: 12.5px; cursor: pointer; text-transform: none; letter-spacing: 0;
+  color: var(--ink); font-weight: 400; margin: 0;
+}
+.field .checklist label:hover, .checklist label:hover { background: var(--surface-2); }
+.field .checklist label.on, .checklist label.on { border-color: var(--orange); background: var(--orange-soft); }
+.field .checklist input, .checklist input {
+  width: auto; flex: none; margin-top: 2px; accent-color: var(--orange);
+}
+.checklist span { text-transform: none; letter-spacing: 0; }
+.checklist b { display: block; font-weight: 600; text-transform: none; letter-spacing: 0; }
+.checklist i {
+  display: block; font-style: normal; font-size: 11px; color: var(--ink-3);
+  margin-top: 1px; text-transform: none; letter-spacing: 0; font-weight: 400;
+}
+
+/* ---------------------------------------------------------------- drawer */
+
+.scrim { position: fixed; inset: 0; z-index: 60; background: rgba(20,16,10,.32); }
+.drawer {
+  position: fixed; top: 0; right: 0; bottom: 0; width: min(560px, 100vw); z-index: 61;
+  background: var(--surface); border-left: 1px solid var(--line); box-shadow: var(--shadow-lg);
+  display: flex; flex-direction: column;
+}
+.drawer header { padding: 16px 18px 13px; border-bottom: 1px solid var(--line); display: flex; gap: 12px; align-items: flex-start; }
+.drawer header h3 { margin: 0; font-size: 15.5px; font-weight: 650; }
+.drawer header p { margin: 3px 0 0; font-size: 12px; color: var(--ink-3); }
+.drawer .content { padding: 16px 18px 42px; overflow-y: auto; flex: 1; }
+.drawer footer { padding: 12px 18px; border-top: 1px solid var(--line); display: flex; gap: 8px; justify-content: flex-end; }
+
+.field { margin-bottom: 13px; }
+.field label { display: block; font-size: 11px; letter-spacing: .06em; text-transform: uppercase;
+  color: var(--ink-3); font-weight: 620; margin-bottom: 4px; }
+.field input, .field select, .field textarea {
+  width: 100%; border: 1px solid var(--line-2); background: var(--surface);
+  border-radius: var(--radius-xs); padding: 7px 9px; outline: none;
+}
+/* A campaign name is longer than the box. Without room reserved for the native
+   dropdown arrow the label runs underneath it and the last characters are
+   unreadable — which is worst on exactly the option that has to be identified
+   precisely, the campaign an entry is about. */
+.field select { padding-right: 28px; text-overflow: ellipsis; }
+.field input:focus, .field select:focus, .field textarea:focus { border-color: var(--orange); }
+.field .hint { font-size: 11.5px; color: var(--ink-3); margin-top: 4px; }
+.row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.row3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; }
+
+/* Import ▸ fill in what the plan left out. Each field carries a sentence
+   saying what happens if it stays blank, so they need room to breathe rather
+   than the tight two-up the drawer uses. */
+.gapgrid {
+  display: grid; gap: 4px 18px;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  align-items: start;
+}
+/* Currency picker sized to its code; the rate takes what is left. */
+.fxpair { display: flex; gap: 8px; }
+.field .fxpair select { width: auto; flex: 0 0 84px; }
+.field .fxpair input { flex: 1; min-width: 0; }
+
+.calcbox {
+  background: var(--surface-2); border: 1px solid var(--line); border-radius: var(--radius-s);
+  padding: 12px 13px; margin: 6px 0 16px; font-size: 12.5px;
+}
+.calcbox dl { display: grid; grid-template-columns: auto 1fr; gap: 4px 14px; margin: 0; }
+.calcbox dt { color: var(--ink-3); }
+.calcbox dd { margin: 0; text-align: right; font-variant-numeric: tabular-nums; font-weight: 600; }
+.calcbox .formula { font-family: var(--mono); font-size: 11px; color: var(--ink-3);
+  margin-top: 9px; padding-top: 9px; border-top: 1px dashed var(--line-2); }
+
+/* ------------------------------------------------------------------ misc */
+
+.empty { padding: 46px 20px; text-align: center; color: var(--ink-3); }
+.empty strong { display: block; color: var(--ink); font-size: 15px; margin-bottom: 5px; }
+
+.gate { min-height: 100vh; display: grid; place-items: center; padding: 20px; }
+.gate .box { width: min(380px, 100%); background: var(--surface); border: 1px solid var(--line);
+  border-radius: var(--radius); box-shadow: var(--shadow-lg); padding: 26px 24px; }
+
+.foot { display: flex; flex-direction: column; align-items: center; gap: 5px;
+  padding: 24px 0 32px; border-top: 1px solid var(--line); margin-top: 10px; }
+.foot img { height: 17px; opacity: .85; margin-bottom: 2px; }
+:root[data-theme="dark"] .foot img { filter: brightness(0) invert(1); opacity: .7; }
+.foot .fline { font-size: 11px; color: var(--ink-3); }
+.foot .fline a { color: var(--ink-2); text-decoration: none; border-bottom: 1px solid var(--line-2); }
+.foot .fline a:hover { color: var(--orange); border-color: var(--orange); }
+.foot .fsub { font-size: 10px; color: var(--ink-3); font-style: italic; letter-spacing: .3px; }
+
+.sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+
+@media (max-width: 760px) {
+  .topbar { flex-wrap: wrap; }
+  .tabbar { top: 107px; gap: 14px; overflow-x: auto; }
+  .tabbar .monthnav { margin-left: 8px; }
+  .row2, .row3 { grid-template-columns: 1fr; }
+}
