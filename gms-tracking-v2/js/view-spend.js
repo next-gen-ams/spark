@@ -63,7 +63,9 @@ export function renderSpend(host, ctx) {
 
   const today = todayIso();
   const mode = state.spendMode === 'day' ? 'day' : 'today';
-  const bounds = state.ym ? monthBounds(state.ym) : null;
+  /* Platform sessions cross reporting months. The chosen snapshot date is the
+     boundary; the Overview month must never hide an account's other lines. */
+  const bounds = null;
 
   let date = today;
   if (mode === 'day') {
@@ -81,30 +83,145 @@ export function renderSpend(host, ctx) {
      button and ordinary page scrolling feel as though they were dragging. */
   primeCreativeImages(rows, date, rerender);
 
-  host.appendChild(el('div', { class: 'panel' },
-    el('header', { class: 'entryhead' },
-      el('h3', {}, mode === 'today' ? `Today’s numbers · ${dateAu(today)}` : 'Enter internal spend',
-        tip('Enter each platform cumulative total. For a creative split, update the creative rows and the Line Total calculates automatically.')),
-      el('div', { class: 'entrytools' },
-        el('div', { class: 'seg' },
-          segBtn('today', 'Today', mode, state, rerender),
-          segBtn('day', 'Another day', mode, state, rerender)),
-        mode === 'day' ? el('input', {
-          type: 'date', class: 'pill-sel', value: date,
-          min: bounds ? bounds.start : null,
-          max: bounds && bounds.end < today ? bounds.end : today,
-          onchange: (e) => { state.spendDate = e.target.value; rerender(); },
-        }) : null,
-        el('button', {
-          class: 'btn chip managecolumns', style: { marginTop: 0 },
-          'aria-label': 'Manage visible columns and custom metrics',
-          onclick: () => manageColumnsDialog(rerender),
-        }, 'Manage columns'),
-        el('button', {
-          class: 'btn ghost sm', 'aria-label': 'Put every column back to its default width',
-          onclick: () => { forgetWidths(entryWidthKey()); rerender(); },
-        }, 'Reset columns'))),
-    el('div', { class: 'tablewrap' }, grid(rows, date, mode, state, rerender))));
+  const shell = el('div', { class: 'platform-session-v2' });
+  const selected = state.filters.platform || rows[0]?.line.platform || 'Platform';
+  const latest = latestSpendDate(rows);
+  const inputCount = rows.reduce((sum, m) => {
+    const creatives = where('creative', (c) => c.line_id === m.line.id
+      && creativeActive(c, m.campaign, date));
+    return sum + Math.max(1, creatives.length);
+  }, 0);
+
+  shell.appendChild(el('div', { class: 'platform-session-toolbar-v2' },
+    el('div', { class: 'platform-session-title-v2' },
+      el('span', { class: 'platform-session-dot-v2', style: { background: PLATFORM_COLOR[selected] || 'var(--v2-blue)' } }),
+      el('div', {}, el('small', {}, 'Updating platform'), el('strong', {}, selected))),
+    el('label', { class: 'platform-search-v2' },
+      el('span', {}, 'Find client, campaign, line or creative'),
+      el('input', {
+        type: 'search', value: state.filters.q || '', autocomplete: 'off',
+        placeholder: `Search ${selected} lines`, 'data-focus': 'platform-search',
+        oninput: (event) => {
+          state.filters.q = event.target.value;
+          clearTimeout(event.target._searchTimer);
+          event.target._searchTimer = setTimeout(rerender, 180);
+        },
+      })),
+    el('label', { class: 'platform-date-v2' },
+      el('span', {}, 'Snapshot date'),
+      el('input', {
+        type: 'date', value: date,
+        min: bounds ? bounds.start : null,
+        max: bounds && bounds.end < today ? bounds.end : today,
+        onchange: (e) => {
+          state.spendMode = e.target.value === today ? 'today' : 'day';
+          state.spendDate = e.target.value;
+          rerender();
+        },
+      })),
+    el('div', { class: 'platform-session-actions-v2' },
+      el('button', {
+        class: 'btn sm', onclick: () => {
+          state.spendMode = mode === 'day' ? 'today' : 'day';
+          if (state.spendMode === 'day' && !state.spendDate) state.spendDate = today;
+          rerender();
+        },
+      }, mode === 'day' ? 'Use today' : 'Another day / backfill'),
+      el('button', {
+        class: 'btn sm managecolumns',
+        'aria-label': 'Manage visible columns and custom metrics',
+        onclick: () => manageColumnsDialog(rerender),
+      }, 'Manage columns'))));
+
+  shell.appendChild(el('div', { class: 'platform-session-summary-v2' },
+    sessionMetric('Platform scope', `${rows.length} lines`, `${inputCount} cumulative inputs`),
+    sessionMetric('Campaigns', String(new Set(rows.map((m) => m.campaign.id)).size),
+      `${new Set(rows.map((m) => m.campaign.client_id)).size} clients`),
+    sessionMetric('Latest existing snapshot', latest ? dateAu(latest) : 'None',
+      latest ? 'Existing totals remain visible below' : 'First update for this selection'),
+    sessionMetric('Entry method', 'Cumulative', 'Change and daily average calculate automatically')));
+
+  const groupList = el('div', { class: 'platform-entry-groups-v2' });
+  const grouped = new Map();
+  for (const m of rows) {
+    const key = m.campaign.id;
+    if (!grouped.has(key)) grouped.set(key, { campaign: m.campaign, rows: [] });
+    grouped.get(key).rows.push(m);
+  }
+  for (const { campaign, rows: campaignRows } of grouped.values()) {
+    const client = byId('client', campaign.client_id);
+    groupList.appendChild(el('section', { class: 'platform-entry-group-v2' },
+      el('header', { class: 'platform-entry-heading-v2' },
+        el('div', {}, el('span', {}, client?.name || 'Client'),
+          el('h3', {}, campaign.name || 'Untitled campaign')),
+        el('small', {}, `${campaignRows.length} line${campaignRows.length === 1 ? '' : 's'} · `,
+          `${campaignRows.reduce((sum, m) => sum + Math.max(1, where('creative', (c) => c.line_id === m.line.id).length), 0)} inputs`)),
+      el('div', { class: 'platform-line-list-v2' },
+        ...campaignRows.map((m) => lineEntryCard(m, date, mode, state, rerender)))));
+  }
+  shell.appendChild(groupList);
+  shell.appendChild(el('div', { class: 'platform-session-footer-v2' },
+    el('div', {}, el('b', {}, 'Line hierarchy',
+      tip('Each Line Total is its own update section. Creative rows stay inside their parent line, and entries save through the existing shared data layer.'))),
+    el('button', {
+      class: 'btn sm', onclick: () => {
+        const details = [...shell.querySelectorAll('.platform-line-card-v2')];
+        const shouldOpen = details.some((detail) => !detail.open);
+        details.forEach((detail) => { detail.open = shouldOpen; });
+      },
+    }, 'Expand / collapse all'),
+    el('button', {
+      class: 'btn sm ghost', 'aria-label': 'Put every column back to its default width',
+      onclick: () => { forgetWidths(entryWidthKey()); rerender(); },
+    }, 'Reset columns')));
+  host.appendChild(shell);
+}
+
+function sessionMetric(label, value, sub) {
+  return el('div', {}, el('span', {}, label), el('b', {}, value), el('small', {}, sub));
+}
+
+function latestSpendDate(rows) {
+  return rows.flatMap((m) => where('spend', (row) => row.line_id === m.line.id).map((row) => row.date))
+    .filter(Boolean).sort().at(-1) || '';
+}
+
+function lineEntryCard(m, date, mode, state, rerender) {
+  const creatives = where('creative', (c) => c.line_id === m.line.id);
+  const spends = where('spend', (row) => row.line_id === m.line.id);
+  const day = daySplit(creatives, spends, date);
+  const r = repace(m.line, m.campaign,
+    where('line_month', (row) => row.line_id === m.line.id), spends,
+    { fx: fxMap(), today: todayIso(), side: state.view });
+  const activeCreatives = creatives.filter((creative) => creativeActive(creative, m.campaign, date));
+  const status = effectiveStatus(m.line, m.campaign, todayIso());
+
+  return el('details', { class: 'platform-line-card-v2', open: true },
+    el('summary', { class: 'platform-line-summary-v2' },
+      el('div', { class: 'platform-line-name-v2' },
+        el('span', {}, 'Line total'),
+        el('h4', {}, lineLabel(m)),
+        el('small', {}, [m.line.objective, m.line.buy_method, m.line.market].filter(Boolean).join(' · '))),
+      lineSummaryMetric('Current total', money2(day.total.spend, m.ccy), latestSpendDate([m]) ? `Latest ${dateAu(latestSpendDate([m]))}` : 'No prior update'),
+      lineSummaryMetric('Delivery', r ? pct(deliveryPct(r), 0) : '—', status),
+      lineSummaryMetric('Required daily', r && !r.finished ? `${money2(r.localSuggestedDaily, m.ccy)} / day` : '—',
+        r ? `${money2(r.localToMonthTarget, m.ccy)} to month target` : 'No flight dates'),
+      el('div', { class: 'platform-line-toggle-v2' },
+        el('b', {}, activeCreatives.length
+          ? `${activeCreatives.length} creative${activeCreatives.length === 1 ? '' : 's'}` : 'Direct line input'),
+        el('small', {}, 'Open details'), el('i'))),
+    el('div', { class: 'platform-line-body-v2' },
+      el('div', { class: 'platform-line-help-v2' },
+        tip(activeCreatives.length
+          ? 'Update each creative cumulative total. The Line Total is calculated from its creative children.'
+          : 'This line has no creative split, so its cumulative total is entered directly.', 'How this line total works'),
+        el('span', {}, activeCreatives.length ? 'Creative roll-up' : 'Direct line entry')),
+      el('div', { class: 'platform-line-grid-v2 tablewrap' }, grid([m], date, mode, state, rerender))));
+}
+
+function lineSummaryMetric(label, value, sub) {
+  return el('div', { class: 'platform-line-metric-v2' },
+    el('span', {}, label), el('b', {}, value), el('small', {}, sub));
 }
 
 function primeCreativeImages(rows, date, rerender) {

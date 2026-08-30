@@ -38,6 +38,7 @@ export function buildRows(state) {
   const clients = new Map(all('client').map((c) => [c.id, c]));
   const monthsBy = index('line_month', 'line_id');
   const spendBy = index('spend', 'line_id');
+  const creativesBy = index('creative', 'line_id');
   const bounds = ym ? monthBounds(ym) : null;
   /* Defaulting the whole object only guards against it being absent; a caller
      that passes a partial one still reaches in. Cheap to survive. */
@@ -56,7 +57,7 @@ export function buildRows(state) {
     if (filters.status && effectiveStatus(line, campaign, today) !== filters.status) continue;
     /* Search covers everything a person might half-remember — the line, the
        supplier, the IO number, the KPI, a note — not just the campaign name. */
-    if (q && !haystack(line, campaign, client).includes(q)) continue;
+    if (q && !haystack(line, campaign, client, creativesBy.get(line.id) || []).includes(q)) continue;
 
     const months = (monthsBy.get(line.id) || []).filter((m) => !ym || m.ym === ym);
     /* Spend rows go through UNFILTERED. They are cumulative snapshots, so a
@@ -88,7 +89,7 @@ export function buildRows(state) {
 }
 
 /** Everything about a line that free-text search should reach. */
-function haystack(line, campaign, client) {
+function haystack(line, campaign, client, creatives = []) {
   return [
     client?.name, campaign.name, campaign.io_number, campaign.advertiser, campaign.am,
     line.platform, line.objective, line.placement, line.supplier, line.market,
@@ -96,6 +97,7 @@ function haystack(line, campaign, client) {
        Completed on screen, not the ones whose stored label happens to say so. */
     line.buy_method, line.kpi, line.landing_page, line.note,
     effectiveStatus(line, campaign), line.currency,
+    ...creatives.flatMap((creative) => [creative.name, creative.status, creative.note]),
   ].filter(Boolean).join(' ').toLowerCase();
 }
 

@@ -1,10 +1,6 @@
-/* Clients — a media plan in the shape it arrived in.
- *
- * Plans are imported one client at a time, so this is the view that matches
- * the source: client → campaign → line, collapsible, across every month the
- * plan covers rather than the single month selected above. Slicing a plan by
- * calendar month is what makes it hard to recognise.
- */
+/* Plans use a deliberate drill-down: client cards, campaign cards, then the
+ * full campaign. The hierarchy changes without removing any line-level data
+ * or controls from the existing application. */
 
 import { el, money, pct, monthLabel, dateAu, tag, tip } from './dom.js';
 import { PLATFORM_COLOR } from './config.js';
@@ -14,91 +10,240 @@ import { openLine } from './drawer.js';
 import { resizable } from './resizable.js';
 import { dialog, textField } from './modal.js';
 
-/* Collapse state lives across re-renders, keyed by id. */
-const open = { campaigns: new Set(), clients: new Set() };
-let booted = false;
-
 export function renderClients(host, ctx) {
-  const { state, rerender, goTo } = ctx;
-  const f = state.filters || {};
   const fx = fxMap();
   const today = todayIso();
-
-  const clients = all('client')
-    .filter((c) => !f.client || c.id === f.client)
-    .sort((a, b) => (a.name || '').localeCompare(b.name || ''));
+  const clients = all('client').sort((a, b) => (a.name || '').localeCompare(b.name || ''));
 
   if (!clients.length) {
-    host.appendChild(el('div', { class: 'panel' }, el('div', { class: 'empty' },
+    host.appendChild(el('div', { class: 'plan-empty-v2' }, el('div', { class: 'empty' },
       el('strong', {}, 'No clients yet'),
       el('div', {}, 'Import a media plan and the client appears here.'))));
     return;
   }
 
-  /* First visit: every client open, campaigns open, lines collapsed. */
-  if (!booted) {
-    booted = true;
-    clients.forEach((c) => open.clients.add(c.id));
-    all('campaign').forEach((k) => open.campaigns.add(k.id));
-  }
+  const client = ctx.state.planClient ? byId('client', ctx.state.planClient) : null;
+  const campaign = ctx.state.planCampaign ? byId('campaign', ctx.state.planCampaign) : null;
+  const routeCtx = { ...ctx, fx, today };
 
-  host.appendChild(el('div', { class: 'panel' },
-    el('header', {},
-      el('div', {},
-        el('h3', {}, 'Plans by client', tip('Each plan keeps the Client → Campaign → Line item structure it had when imported.')),
-        /* This page has no month stepper — it always shows the full flight, so
-           the copy must not point at a control that is not there. */
-        ),
-      el('div', { style: { flex: 1 } }),
+  if (campaign && client && campaign.client_id === client.id) {
+    renderCampaignView(host, client, campaign, routeCtx);
+    return;
+  }
+  if (client) {
+    if (ctx.state.planCampaign) ctx.state.planCampaign = '';
+    renderClientView(host, client, routeCtx);
+    return;
+  }
+  if (ctx.state.planClient || ctx.state.planCampaign) {
+    ctx.state.planClient = '';
+    ctx.state.planCampaign = '';
+  }
+  renderClientGrid(host, clients, routeCtx);
+}
+
+function pageHead(eyebrow, title, description, actions = []) {
+  return el('header', { class: 'plans-page-head-v2' },
+    el('div', {},
+      el('span', { class: 'eyebrow' }, eyebrow),
+      el('h2', {}, title),
+      description ? el('p', {}, description) : null),
+    actions.length ? el('div', { class: 'plans-page-actions-v2' }, ...actions) : null);
+}
+
+function breadcrumb(items) {
+  return el('nav', { class: 'plans-breadcrumb-v2', 'aria-label': 'Plan breadcrumb' },
+    ...items.flatMap((item, index) => [
+      index ? el('span', { 'aria-hidden': 'true' }, '›') : null,
+      item.onClick
+        ? el('button', { onclick: item.onClick }, item.label)
+        : el('span', { 'aria-current': 'page' }, item.label),
+    ]).filter(Boolean));
+}
+
+function renderClientGrid(host, clients, ctx) {
+  host.appendChild(pageHead('Plans', 'Clients',
+    'Choose a client first, then open one campaign and its execution detail.', [
+      el('button', { class: 'btn', onclick: () => ctx.goTo('tracking') }, 'Portfolio overview'),
+      el('button', { class: 'btn primary', onclick: () => ctx.goTo('import') }, 'Import plan'),
+    ]));
+
+  host.appendChild(el('div', { class: 'plans-client-grid-v2' }, ...clients.map((client) => {
+    const campaigns = campaignsFor(client);
+    const built = campaigns.map((campaign) => buildCampaign(campaign, withoutFilters(ctx)));
+    const rows = built.flatMap((item) => item.rows);
+    const t = totals(rows);
+    const side = ctx.state.view;
+    const active = built.filter((item) => item.rows.some((m) =>
+      ['Live', 'Paused'].includes(effectiveStatus(m.line, item.campaign, ctx.today)))).length;
+    const latest = latestSpend(rows);
+    return el('article', { class: 'plans-client-card-v2' },
+      el('span', { class: 'plans-card-kicker-v2' },
+        `${campaigns.length} campaign${campaigns.length === 1 ? '' : 's'} · ${rows.length} lines`),
+      el('h3', {}, client.name || 'Untitled client'),
+      el('div', { class: 'plans-card-meta-v2' },
+        el('span', {}, `${active} active`),
+        el('span', {}, latest ? `Latest ${dateAu(latest)}` : 'No spend update')),
+      el('div', { class: 'plans-card-metrics-v2' },
+        cardMetric(side === 'internal' ? 'Internal spend' : 'Client spend', money(t[side].spend)),
+        cardMetric('Whole-flight delivery', pct(t[side].pacingPct, 0))),
+      progress(t[side].spend, t[side].budget),
+      el('button', {
+        class: 'plans-card-link-v2',
+        onclick: () => ctx.openPlan(client.id),
+        'aria-label': `Open ${client.name || 'client'}`,
+      }, 'Open client', el('span', { 'aria-hidden': 'true' }, '→')));
+  })));
+}
+
+function renderClientView(host, client, ctx) {
+  const campaigns = campaignsFor(client);
+  const built = campaigns.map((campaign) => buildCampaign(campaign, withoutFilters(ctx)));
+  const rows = built.flatMap((item) => item.rows);
+  const t = totals(rows);
+  const side = ctx.state.view;
+
+  host.appendChild(breadcrumb([
+    { label: 'Plans', onClick: () => ctx.openPlan() },
+    { label: client.name || 'Client' },
+  ]));
+  host.appendChild(pageHead('Client view', client.name || 'Untitled client',
+    'Campaigns stay separate so each plan has a clear working space.', [
+      el('button', { class: 'btn', onclick: () => ctx.goTo('tracking') }, 'View overview'),
+      el('button', { class: 'btn primary', onclick: () => ctx.goTo('import') }, 'Add campaign plan'),
+    ]));
+  host.appendChild(el('div', { class: 'plans-summary-grid-v2' },
+    summaryMetric('Campaigns', String(campaigns.length),
+      `${built.filter((item) => item.rows.some((m) => effectiveStatus(m.line, item.campaign, ctx.today) === 'Live')).length} live`),
+    summaryMetric('Line items', String(rows.length),
+      `${rows.filter((m) => where('creative', (c) => c.line_id === m.line.id).length).length} split by creative`),
+    summaryMetric(side === 'internal' ? 'Internal spend' : 'Client spend',
+      money(t[side].spend), `${money(t[side].budget)} budget`),
+    summaryMetric('Whole-flight delivery', pct(t[side].pacingPct, 0),
+      latestSpend(rows) ? `Latest ${dateAu(latestSpend(rows))}` : 'No spend update')));
+  host.appendChild(pinnedNote('client', client, ctx.rerender));
+
+  const list = el('div', { class: 'plans-campaign-list-v2' });
+  if (!built.length) list.appendChild(el('div', { class: 'empty' }, el('strong', {}, 'No campaigns')));
+  for (const { campaign, rows: campaignRows } of built) {
+    const tCampaign = totals(campaignRows);
+    const status = campaignStatus(campaign, campaignRows, ctx.today);
+    list.appendChild(el('article', { class: 'plans-campaign-card-v2' },
+      el('div', { class: 'plans-campaign-main-v2' },
+        el('span', { class: 'plans-card-kicker-v2' }, campaign.io_number || 'No IO number'),
+        el('h3', {}, campaign.name || 'Untitled campaign'),
+        el('div', { class: 'plans-card-meta-v2' },
+          el('span', {}, campaign.start_date
+            ? `${dateAu(campaign.start_date)} to ${dateAu(campaign.end_date)}` : 'No flight dates'),
+          el('span', {}, `${campaignRows.length} line${campaignRows.length === 1 ? '' : 's'}`))),
+      compactMetric('Status', tag(status)),
+      compactMetric(side === 'internal' ? 'Internal spend' : 'Client spend', money(tCampaign[side].spend)),
+      el('div', { class: 'plans-compact-metric-v2 plans-delivery-v2' },
+        el('span', {}, 'Delivery'),
+        el('b', {}, pct(tCampaign[side].pacingPct, 0)),
+        progress(tCampaign[side].spend, tCampaign[side].budget)),
       el('button', {
         class: 'btn sm',
-        onclick: () => {
-          const anyOpen = open.campaigns.size > 0;
-          open.campaigns.clear();
-          if (!anyOpen) all('campaign').forEach((k) => open.campaigns.add(k.id));
-          rerender();
-        },
-      }, open.campaigns.size ? 'Collapse all' : 'Expand all')),
-    el('div', { class: 'body plans' },
-      ...clients.map((c) => clientBlock(c, { f, fx, today, state, rerender, goTo })))));
+        onclick: () => ctx.openPlan(client.id, campaign.id),
+        'aria-label': `Open ${campaign.name || 'campaign'}`,
+      }, 'Open campaign')));
+  }
+  host.appendChild(list);
 }
 
-/* --------------------------------------------------------------- client */
-
-function clientBlock(client, ctx) {
-  const { f, rerender } = ctx;
-  const campaigns = where('campaign', (k) => k.client_id === client.id)
-    .filter((k) => !f.campaign || k.id === f.campaign)
-    .sort((a, b) => (a.start_date || '').localeCompare(b.start_date || ''));
-
-  const built = campaigns.map((k) => buildCampaign(k, ctx));
-  const shown = built.filter((b) => b.rows.length);
-  if (!shown.length) return el('div');
-
+function renderCampaignView(host, client, campaign, ctx) {
+  const rows = buildCampaign(campaign, withoutFilters(ctx)).rows;
+  const t = totals(rows);
   const side = ctx.state.view;
-  const t = totals(shown.flatMap((b) => b.rows));
-  const isOpen = open.clients.has(client.id);
+  const status = campaignStatus(campaign, rows, ctx.today);
+  const creativeCount = rows.reduce((sum, m) =>
+    sum + where('creative', (c) => c.line_id === m.line.id).length, 0);
 
-  return el('div', { class: 'planclient' },
-    el('button', {
-      class: 'planrow client' + (isOpen ? ' open' : ''),
-      onclick: () => { isOpen ? open.clients.delete(client.id) : open.clients.add(client.id); rerender(); },
-    },
-    el('span', { class: 'chev' }, isOpen ? '▾' : '▸'),
-    el('b', {}, client.name),
-    el('span', { class: 'muted' },
-      `${shown.length} campaign${shown.length > 1 ? 's' : ''} · ${t.count} line${t.count > 1 ? 's' : ''}`),
-    el('span', { class: 'planfig' },
-      el('b', {}, money(t[side].spend)),
-      el('span', { class: 'muted' }, ` of ${money(t[side].budget)}`)),
-    progress(t[side].spend, t[side].budget)),
-
-    isOpen ? el('div', {},
-      pinnedNote('client', client, rerender),
-      el('div', { class: 'plankids' }, ...shown.map((b) => campaignBlock(b, ctx)))) : null);
+  host.appendChild(breadcrumb([
+    { label: 'Plans', onClick: () => ctx.openPlan() },
+    { label: client.name || 'Client', onClick: () => ctx.openPlan(client.id) },
+    { label: campaign.name || 'Campaign' },
+  ]));
+  host.appendChild(pageHead(campaign.io_number || 'Campaign', campaign.name || 'Untitled campaign',
+    campaign.start_date ? `${dateAu(campaign.start_date)} to ${dateAu(campaign.end_date)}` : 'No flight dates', [
+      el('button', {
+        class: 'btn',
+        onclick: () => {
+          ctx.state.filters = {
+            client: client.id, platform: '', objective: '', campaign: campaign.id, status: '', q: '',
+          };
+          ctx.goTo('tracking');
+        },
+      }, 'View overview'),
+      el('button', {
+        class: 'btn primary',
+        onclick: () => {
+          const firstPlatform = rows[0]?.line.platform || '';
+          ctx.state.filters = {
+            client: '', platform: firstPlatform, objective: '', campaign: '', status: '', q: '',
+          };
+          ctx.goTo('spend');
+        },
+      }, 'Update spend'),
+    ]));
+  host.appendChild(el('div', { class: 'plans-summary-grid-v2' },
+    summaryMetric('Campaign status', status,
+      `${rows.filter((m) => effectiveStatus(m.line, campaign, ctx.today) === 'Live').length} live lines`),
+    summaryMetric(side === 'internal' ? 'Internal spend' : 'Client spend',
+      money(t[side].spend), `${money(t[side].budget)} budget`),
+    summaryMetric('Whole-flight delivery', pct(t[side].pacingPct, 0),
+      latestSpend(rows) ? `Latest ${dateAu(latestSpend(rows))}` : 'No spend update'),
+    summaryMetric('Creatives', String(creativeCount),
+      `Across ${rows.filter((m) => where('creative', (c) => c.line_id === m.line.id).length).length} lines`)));
+  host.appendChild(el('section', { class: 'campaign-commercial-v2' },
+    el('div', { class: 'campaign-commercial-copy-v2' },
+      el('span', { class: 'eyebrow' }, 'Campaign economics'),
+      el('h3', {}, 'Booked budget composition',
+        tip('External budget is the client budget. Booked margin is external budget minus internal media budget.'))),
+    campaignEconomics(campaign, ctx)));
+  host.appendChild(el('section', { class: 'campaign-lines-v2 panel' },
+    el('header', {}, el('div', {},
+      el('h3', {}, 'Line items'),
+      el('p', { class: 'muted' }, 'Open a line to edit its plan, status, creatives and tracking log.'))),
+    lineTable(rows, ctx)));
 }
 
-/* ------------------------------------------------------------- campaign */
+function campaignsFor(client) {
+  return where('campaign', (campaign) => campaign.client_id === client.id)
+    .sort((a, b) => (a.start_date || '').localeCompare(b.start_date || ''));
+}
+
+function withoutFilters(ctx) {
+  return { ...ctx, state: { ...ctx.state, filters: {} } };
+}
+
+function latestSpend(rows) {
+  return rows.flatMap((m) => where('spend', (s) => s.line_id === m.line.id).map((s) => s.date))
+    .filter(Boolean).sort().at(-1) || '';
+}
+
+function campaignStatus(campaign, rows, today) {
+  const statuses = rows.map((m) => effectiveStatus(m.line, campaign, today));
+  if (statuses.includes('Live')) return 'Live';
+  if (statuses.includes('Paused')) return 'Paused';
+  if (statuses.includes('Upcoming')) return 'Upcoming';
+  if (statuses.includes('Stopped')) return 'Stopped';
+  return statuses[0] || 'Completed';
+}
+
+function cardMetric(label, value) {
+  return el('div', {}, el('span', {}, label), el('b', {}, value));
+}
+
+function compactMetric(label, value) {
+  return el('div', { class: 'plans-compact-metric-v2' },
+    el('span', {}, label), el('b', {}, value));
+}
+
+function summaryMetric(label, value, sub) {
+  return el('div', {}, el('span', {}, label), el('b', {}, value),
+    sub ? el('small', {}, sub) : null);
+}
 
 function buildCampaign(campaign, { fx, today, state }) {
   const f = state.filters || {};
@@ -120,13 +265,9 @@ function buildCampaign(campaign, { fx, today, state }) {
       && (!f.q || [l.platform, l.objective, l.placement, l.supplier, l.market, campaign.name]
         .join(' ').toLowerCase().includes(f.q.trim().toLowerCase())))
     .sort((a, b) => (a.seq ?? 0) - (b.seq ?? 0))
-    /* ym: null → the whole plan, not one month. That is the point of this view. */
     .map((l) => {
       const m = lineMetrics(l, campaign, monthsBy.get(l.id) || [], spendBy.get(l.id) || [],
         { fx, ym: null, today });
-      /* Both names, not just the campaign. The drawer header prints
-         `clientName — campaignName`, so a model missing one renders the word
-         "undefined" to the user. */
       m.clientName = byId('client', campaign.client_id)?.name || '—';
       m.campaignName = campaign.name || '—';
       return m;
@@ -135,42 +276,7 @@ function buildCampaign(campaign, { fx, today, state }) {
   return { campaign, rows };
 }
 
-function campaignBlock({ campaign, rows }, ctx) {
-  const { rerender, state } = ctx;
-  const side = state.view;
-  const t = totals(rows);
-  const isOpen = open.campaigns.has(campaign.id);
-
-  return el('div', { class: 'plancampaign' },
-    el('button', {
-      class: 'planrow campaign' + (isOpen ? ' open' : ''),
-      onclick: () => {
-        isOpen ? open.campaigns.delete(campaign.id) : open.campaigns.add(campaign.id);
-        rerender();
-      },
-    },
-    el('span', { class: 'chev' }, isOpen ? '▾' : '▸'),
-    el('span', {},
-      el('b', {}, campaign.name || 'Untitled campaign'),
-      campaign.io_number ? el('span', { class: 'muted', style: { marginLeft: '8px', fontSize: '11px' } }, campaign.io_number) : null,
-      el('div', { class: 'muted', style: { fontSize: '11px' } },
-        campaign.start_date ? `${dateAu(campaign.start_date)} – ${dateAu(campaign.end_date)}` : 'no flight dates',
-        ` · ${rows.length} line${rows.length > 1 ? 's' : ''}`,
-        campaign.fx_rate ? ` · 1 AUD = ${campaign.fx_rate} ${campaign.fx_ccy || ''}` : '')),
-    el('span', { class: 'planfig' },
-      el('b', {}, money(t[side].spend)),
-      el('span', { class: 'muted' }, ` of ${money(t[side].budget)}`)),
-    progress(t[side].spend, t[side].budget)),
-
-    isOpen ? el('div', { class: 'campaign-open-v2' },
-      campaignEconomics(campaign, ctx),
-      lineTable(rows, ctx)) : null);
-}
-
 function campaignEconomics(campaign, ctx) {
-  /* Campaign economics always represent the whole booking. A platform or
-     status filter may narrow the line table below, but it must not silently
-     turn a campaign-level margin into a filtered subtotal. */
   const fullRows = buildCampaign(campaign, {
     fx: ctx.fx,
     today: ctx.today,
@@ -181,15 +287,16 @@ function campaignEconomics(campaign, ctx) {
   const marginPct = t.client.budget > 0 ? bookedMargin / t.client.budget : null;
   return el('div', { class: 'campaign-context-v2' },
     el('div', { class: 'campaign-economics-v2' },
-      economy('Internal budget', t.internal.budget),
       economy('External budget', t.client.budget),
+      economy('Internal budget', t.internal.budget),
       economy('Booked margin', bookedMargin, marginPct)),
     pinnedNote('campaign', campaign, ctx.rerender),
     el('button', {
       class: 'btn sm primary',
       onclick: () => {
-        ctx.state.filters.client = campaign.client_id;
-        ctx.state.filters.campaign = campaign.id;
+        ctx.state.filters = {
+          client: campaign.client_id, platform: '', objective: '', campaign: campaign.id, status: '', q: '',
+        };
         ctx.goTo('monthly');
       },
     }, 'Monthly pacing'));
@@ -233,8 +340,6 @@ function editPinnedNote(table, row, label, rerender) {
   });
   setTimeout(() => field.focus(), 30);
 }
-
-/* ----------------------------------------------------------------- lines */
 
 function lineTable(rows, { state, rerender }) {
   const side = state.view;
@@ -307,8 +412,6 @@ function footRow(rows, months, side) {
     ...months.map((ym) => el('td', { class: 'num mo' }, money(monthTotal(ym)))),
     el('td', {})));
 }
-
-/* --------------------------------------------------------------- pieces */
 
 function progress(spend, budget) {
   const p = budget > 0 ? spend / budget : 0;

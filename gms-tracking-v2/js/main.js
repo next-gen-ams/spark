@@ -1,7 +1,7 @@
 /* App shell — chrome, routing, filters, and the one re-render everything calls. */
 
-import { APP, SUPABASE } from './config.js';
-import { el, fill, clear, monthLabel, toast, tip } from './dom.js';
+import { APP, SUPABASE, PLATFORM_COLOR } from './config.js';
+import { el, fill, clear, monthLabel, dateAu, toast, tip } from './dom.js';
 import * as store from './store.js';
 import { buildRows, facets, monthsAvailable, emptyFilters } from './model.js';
 import { renderTracking } from './view-tracking.js';
@@ -31,6 +31,8 @@ const state = {
   view: 'internal',
   ym: ymOf(todayIso()),
   filters: emptyFilters(),
+  planClient: '',
+  planCampaign: '',
   spendMode: 'month',
   spendDate: '',
   theme: localStorage.getItem('tracking-theme') || '',
@@ -94,6 +96,8 @@ function readUrl() {
   if (p.get('tab')) state.tab = p.get('tab');
   if (p.get('view')) state.view = p.get('view');
   if (p.has('ym')) state.ym = p.get('ym');
+  if (p.get('planClient')) state.planClient = p.get('planClient');
+  if (p.get('planCampaign')) state.planCampaign = p.get('planCampaign');
   for (const k of Object.keys(state.filters)) if (p.get(k)) state.filters[k] = p.get(k);
 }
 
@@ -102,6 +106,8 @@ function writeUrl() {
   p.set('tab', state.tab);
   p.set('view', state.view);
   p.set('ym', state.ym || '');
+  if (state.planClient) p.set('planClient', state.planClient);
+  if (state.planCampaign) p.set('planCampaign', state.planCampaign);
   for (const [k, v] of Object.entries(state.filters)) if (v) p.set(k, v);
   history.replaceState(null, '', '#' + p.toString());
 }
@@ -134,7 +140,9 @@ function render() {
 
   pruneStaleFilters();
   writeUrl();
-  rows = buildRows(state);
+  /* A platform session must include every line visible in that ad account,
+     not only lines with a budget row in the month currently used by Overview. */
+  rows = buildRows(state.tab === 'spend' ? { ...state, ym: null } : state);
 
   /* fill() returns the container it filled, not the child — appending to its
      return value put the whole page outside .app, which is why the gutter and
@@ -146,14 +154,14 @@ function render() {
   app.appendChild(secondaryNav());
   app.appendChild(confidBand());
 
-  if (!['admin', 'import', 'monthly'].includes(state.tab)) {
-    if (state.tab !== 'clients') app.appendChild(period());
+  if (!['admin', 'import', 'monthly', 'clients', 'spend'].includes(state.tab)) {
+    app.appendChild(period());
     app.appendChild(filterBar());
   }
 
   const view = el('div', { class: 'view' });
   app.appendChild(view);
-  const ctx = { rows, state, rerender: render, goTo };
+  const ctx = { rows, state, rerender: render, goTo, openPlan };
   if (state.tab === 'tracking') renderTracking(view, ctx);
   else if (state.tab === 'clients') renderClients(view, ctx);
   else if (state.tab === 'monthly') renderMonthly(view, ctx);
@@ -187,7 +195,26 @@ function render() {
   }
 }
 
-function goTo(tab) { state.tab = tab; closeDrawer(); closeExport(); render(); }
+function goTo(tab) {
+  const from = state.tab;
+  state.tab = tab;
+  /* A campaign can have no booking in the calendar month last used by the
+     portfolio chart. Entering Overview from Plans should show the selected
+     plan across its flight, not a misleading empty state. */
+  if (tab === 'tracking' && ['clients', 'monthly'].includes(from)) state.ym = '';
+  closeDrawer();
+  closeExport();
+  render();
+}
+
+function openPlan(clientId = '', campaignId = '') {
+  state.tab = 'clients';
+  state.planClient = clientId || '';
+  state.planCampaign = campaignId || '';
+  closeDrawer();
+  closeExport();
+  render();
+}
 
 /**
  * A client or campaign filter is stored as an id. If that id no longer exists
@@ -203,6 +230,15 @@ function pruneStaleFilters() {
   }
   if (state.filters.campaign && !store.byId('campaign', state.filters.campaign)) {
     gone.push('campaign'); state.filters.campaign = '';
+  }
+  const planClient = state.planClient && store.byId('client', state.planClient);
+  const planCampaign = state.planCampaign && store.byId('campaign', state.planCampaign);
+  if (state.planClient && !planClient) {
+    state.planClient = '';
+    state.planCampaign = '';
+  } else if (state.planCampaign
+    && (!planCampaign || planCampaign.client_id !== state.planClient)) {
+    state.planCampaign = '';
   }
   staleNotice = gone.length
     ? `A saved ${gone.join(' and ')} filter pointed at something that is no longer here, so it was cleared.`
@@ -430,17 +466,18 @@ function primaryNav() {
   return el('nav', { class: 'v2-primary-nav', 'aria-label': 'Main navigation' },
     ...NAV.map((section) => el('button', {
       'aria-current': current.id === section.id ? 'page' : null,
-      onclick: () => goTo(section.defaultTab),
+      onclick: () => section.id === 'plans' ? openPlan() : goTo(section.defaultTab),
     }, section.label)));
 }
 
 function secondaryNav() {
   const section = activeSection();
-  const showMonth = state.tab === 'tracking' || state.tab === 'spend';
+  if (section.tabs.length === 1) return el('div', { class: 'v2-nav-gap' });
+  const showMonth = state.tab === 'tracking';
   return el('nav', { class: 'tabbar v2-secondary-nav', 'aria-label': `${section.label} views` },
     ...section.tabs.map(([id, label]) => el('button', {
       'aria-selected': state.tab === id,
-      onclick: () => goTo(id),
+      onclick: () => id === 'clients' ? openPlan() : goTo(id),
     }, label)),
     showMonth ? monthNav() : null);
 }
@@ -459,25 +496,32 @@ function platformLauncher() {
   return el('section', { class: 'platform-launcher' + (selected ? ' selected' : '') },
     el('div', { class: 'platform-launcher-head' },
       el('div', {},
-        el('span', { class: 'eyebrow' }, selected ? 'Platform account selected' : 'Update spend'),
-        el('h2', {}, selected || 'Choose the ad platform account',
-          tip('Open one advertising account, then update every client and campaign visible under that platform.'))),
-      selected ? el('button', {
-        class: 'btn sm ghost',
-        onclick: () => { state.filters.platform = ''; render(); },
-      }, 'Switch platform') : null),
-    selected ? null : el('div', { class: 'platform-account-grid' },
+        el('span', { class: 'eyebrow' }, 'Platform update session'),
+        el('h2', {}, 'Update cumulative spend',
+          tip('Open one advertising account, then update every client and campaign visible under that platform.')))),
+    el('div', { class: 'platform-account-grid' },
       ...platforms.map(([platform, lines]) => {
         const campaignIds = new Set(lines.map((line) => line.campaign_id));
         const clientIds = new Set([...campaignIds].map((id) => store.byId('campaign', id)?.client_id).filter(Boolean));
+        const lineIds = new Set(lines.map((line) => line.id));
+        const latest = store.all('spend')
+          .filter((row) => lineIds.has(row.line_id) && row.date)
+          .map((row) => row.date).sort().at(-1);
+        const color = PLATFORM_COLOR[platform] || 'var(--v2-blue)';
         return el('button', {
-          class: 'platform-account-card',
-          onclick: () => { state.filters.platform = platform; render(); },
+          class: 'platform-account-card' + (selected === platform ? ' active' : ''),
+          'aria-pressed': selected === platform,
+          style: { '--platform-color': color },
+          onclick: () => {
+            state.filters = { ...emptyFilters(), platform };
+            render();
+          },
         },
         el('span', { class: 'platform-account-mark' }, platform.slice(0, 2).toUpperCase()),
         el('span', {}, el('b', {}, platform),
-          el('small', {}, `${lines.length} line${lines.length === 1 ? '' : 's'} · ${clientIds.size} client${clientIds.size === 1 ? '' : 's'}`)),
-        el('span', { class: 'platform-account-arrow', 'aria-hidden': 'true' }, '›'));
+          el('small', {}, `${lines.length} line${lines.length === 1 ? '' : 's'} · ${clientIds.size} client${clientIds.size === 1 ? '' : 's'}`),
+          el('small', {}, latest ? `Latest ${dateAu(latest)}` : 'No spend update')),
+        el('span', { class: 'platform-account-arrow', 'aria-hidden': 'true' }, selected === platform ? '✓' : '›'));
       })));
 }
 
