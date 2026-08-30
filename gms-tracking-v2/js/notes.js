@@ -24,12 +24,14 @@ import { todayIso } from './calc.js';
 import { dialog, confirmDanger, textField, errorLine } from './modal.js';
 import { whoAmI, setWhoAmI } from './who.js';
 
+const isTrackingNote = (note) => !note.kind || note.kind === 'tracking';
+
 /** Entries visible from one line: campaign-wide entries plus that line's own.
  * A line-scoped entry must never appear under a sibling line. */
 export function notesFor({ campaignId, lineId } = {}) {
-  return where('note', (n) => lineId
+  return where('note', (n) => isTrackingNote(n) && (lineId
     ? (n.line_id === lineId || (n.campaign_id === campaignId && !n.line_id))
-    : (n.campaign_id === campaignId && !n.line_id))
+    : (n.campaign_id === campaignId && !n.line_id)))
     .sort((a, b) => String(b.date || '').localeCompare(String(a.date || ''))
       || String(b.id).localeCompare(String(a.id)));
 }
@@ -38,12 +40,231 @@ export function notesFor({ campaignId, lineId } = {}) {
 export function campaignLog(campaignId, { sharedOnly = false } = {}) {
   const lineIds = new Set(where('line', (l) => l.campaign_id === campaignId).map((l) => l.id));
   return all('note')
-    .filter((n) => n.campaign_id === campaignId || lineIds.has(n.line_id))
+    .filter((n) => isTrackingNote(n)
+      && (n.campaign_id === campaignId || lineIds.has(n.line_id)))
     .filter((n) => !sharedOnly || n.shared === true)
     .sort((a, b) => String(a.date || '').localeCompare(String(b.date || '')));
 }
 
 export const noteCount = (campaignId, lineId) => notesFor({ campaignId, lineId }).length;
+
+/* ------------------------------------------------------- plan note history
+ *
+ * Client and campaign notes are working context, not tracking-log entries.
+ * They share the same table so attribution, offline writes and deletion keep
+ * the same guarantees, while `kind` keeps them out of reports and line logs.
+ */
+
+function entityKind(table) {
+  return table === 'client' ? 'client_note' : 'campaign_note';
+}
+
+function storedEntityNotes(table, row) {
+  const kind = entityKind(table);
+  return all('note').filter((note) => note.kind === kind
+    && (table === 'client' ? note.client_id === row.id : note.campaign_note_id === row.id))
+    .sort((a, b) => String(b.created_at || b.updated_at || b.date || '').localeCompare(
+      String(a.created_at || a.updated_at || a.date || ''))
+      || String(b.id).localeCompare(String(a.id)));
+}
+
+/** The old single pinned note stays visible until somebody edits or removes
+ * it. We do not invent an author or timestamp for text created before history
+ * existed. Editing converts it into a normal attributed entry. */
+export function entityNotes(table, row) {
+  const notes = storedEntityNotes(table, row).map((note) => ({ ...note, legacy: false }));
+  const legacy = String(row?.note || '').trim();
+  if (legacy) notes.push({
+    id: `legacy:${table}:${row.id}`,
+    body: legacy,
+    legacy: true,
+    author: '',
+    created_at: '',
+  });
+  return notes;
+}
+
+export function entityNoteCount(table, row) {
+  return entityNotes(table, row).length;
+}
+
+function isoNow() {
+  return new Date().toISOString();
+}
+
+function readableTime(value) {
+  if (!value) return 'Recorded before note history';
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return value;
+  return new Intl.DateTimeFormat('en-AU', {
+    day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit',
+  }).format(date);
+}
+
+function noteExcerpt(body, limit = 96) {
+  const clean = String(body || '').replace(/\s+/g, ' ').trim();
+  return clean.length > limit ? `${clean.slice(0, limit - 1)}…` : clean;
+}
+
+function authorField(current) {
+  const input = el('input', {
+    type: 'text', value: current || '', maxlength: '40',
+    placeholder: 'Your name', autocomplete: 'name',
+  });
+  return input;
+}
+
+/** Open the additive Client/Campaign note history. Entries start collapsed so
+ * a long-lived plan remains scannable; each one can be expanded, edited or
+ * removed without touching the other notes. */
+export function openEntityNotes({ table, row, rerender }) {
+  const label = table === 'client' ? 'Client notes' : 'Campaign notes';
+  const singular = table === 'client' ? 'client note' : 'campaign note';
+  const root = el('div', { class: 'entity-note-manager' });
+  let editor = null;
+  let draft = null;
+
+  const requireAuthor = (input, err) => {
+    const name = whoAmI() || setWhoAmI(input?.value || '');
+    if (name) return name;
+    err.textContent = 'Add your name so the team knows who recorded this note.';
+    input?.focus();
+    return '';
+  };
+
+  const paint = () => {
+    const rows = entityNotes(table, row);
+    const err = el('div', { class: 'derr' });
+    const currentAuthor = whoAmI();
+    const name = currentAuthor ? null : authorField('');
+
+    const composer = editor ? el('section', { class: 'entity-note-composer' },
+      el('div', { class: 'entity-note-composer-head' },
+        el('b', {}, editor.mode === 'add' ? `Add ${singular}` : `Edit ${singular}`),
+        currentAuthor ? el('span', {}, `Recording as ${currentAuthor}`) : null),
+      name ? el('label', { class: 'field' }, el('span', {}, 'Your name'), name) : null,
+      draft = el('textarea', {
+        rows: 5,
+        value: editor.body || '',
+        placeholder: 'Add context the team will need later',
+        oninput: (event) => { editor.body = event.target.value; },
+      }),
+      err,
+      el('div', { class: 'entity-note-composer-actions' },
+        el('button', {
+          class: 'btn sm',
+          onclick: () => { editor = null; draft = null; paint(); },
+        }, 'Cancel'),
+        el('button', {
+          class: 'btn sm primary',
+          onclick: () => {
+            const body = String(editor.body || '').trim();
+            if (!body) { err.textContent = 'Write the note before saving it.'; draft.focus(); return; }
+            const author = requireAuthor(name, err);
+            if (!author) return;
+            const now = isoNow();
+            if (editor.legacy) {
+              put(table, { id: row.id, note: '' });
+              row.note = '';
+              put('note', {
+                id: newId('nt'), kind: entityKind(table),
+                client_id: table === 'client' ? row.id : null,
+                campaign_note_id: table === 'campaign' ? row.id : null,
+                campaign_id: null,
+                line_id: null, date: todayIso(), body, shared: false,
+                author, created_at: now, updated_at: now, updated_by: author,
+              });
+            } else if (editor.id) {
+              put('note', {
+                id: editor.id, body, updated_at: now, updated_by: author,
+              });
+            } else {
+              put('note', {
+                id: newId('nt'), kind: entityKind(table),
+                client_id: table === 'client' ? row.id : null,
+                campaign_note_id: table === 'campaign' ? row.id : null,
+                campaign_id: null,
+                line_id: null, date: todayIso(), body, shared: false,
+                author, created_at: now, updated_at: now, updated_by: author,
+              });
+            }
+            editor = null; draft = null; paint(); rerender?.();
+          },
+        }, 'Save note')))
+      : null;
+
+    const list = rows.length
+      ? el('div', { class: 'entity-note-list' }, ...rows.map((note) => {
+        const edited = !note.legacy && note.updated_at && note.created_at
+          && note.updated_at !== note.created_at;
+        return el('details', { class: 'entity-note-item' },
+          el('summary', {},
+            el('div', {},
+              el('b', {}, noteExcerpt(note.body) || 'Empty note'),
+              el('span', {}, note.legacy
+                ? 'Earlier pinned note'
+                : `${note.author || 'Unknown author'} · ${readableTime(note.created_at || note.updated_at)}`)),
+            el('span', { class: 'entity-note-chevron', 'aria-hidden': 'true' })),
+          el('div', { class: 'entity-note-body' },
+            el('p', {}, note.body || ''),
+            edited ? el('small', {}, `Last edited by ${note.updated_by || note.author || 'unknown'} · ${readableTime(note.updated_at)}`) : null,
+            note.legacy ? el('small', {}, 'This was saved before author and time history was available.') : null,
+            el('div', { class: 'entity-note-actions' },
+              el('button', {
+                class: 'btn sm ghost',
+                onclick: () => {
+                  editor = { id: note.legacy ? '' : note.id, legacy: note.legacy, mode: 'edit', body: note.body || '' };
+                  paint(); setTimeout(() => draft?.focus(), 30);
+                },
+              }, 'Edit'),
+              el('button', {
+                class: 'btn sm ghost danger-text',
+                onclick: () => confirmDanger({
+                  title: `Delete ${singular}?`,
+                  detail: noteExcerpt(note.body, 140) || 'Empty note',
+                  confirmLabel: 'Delete note',
+                  onConfirm: () => {
+                    if (note.legacy) {
+                      put(table, { id: row.id, note: '' });
+                      row.note = '';
+                    }
+                    else remove('note', note.id);
+                    paint(); rerender?.();
+                  },
+                }),
+              }, 'Delete'))));
+      }))
+      : el('div', { class: 'entity-note-empty' },
+        el('b', {}, 'No notes yet'),
+        el('span', {}, 'Add the first dated note for this plan.'));
+
+    fill(root,
+      el('div', { class: 'entity-note-toolbar' },
+        el('div', {}, el('b', {}, `${rows.length} ${rows.length === 1 ? 'note' : 'notes'}`),
+          el('span', {}, 'Newest first, collapsed until needed')),
+        editor ? null : el('button', {
+          class: 'btn sm primary',
+          onclick: () => { editor = { mode: 'add', body: '' }; paint(); setTimeout(() => draft?.focus(), 30); },
+        }, 'Add note')),
+      composer,
+      list);
+  };
+
+  paint();
+  dialog({
+    title: label,
+    sub: 'A dated history of plan context, with author, edit and delete controls.',
+    width: '680px',
+    content: [root],
+    actions: [{ label: 'Close' }],
+    onBeforeClose: () => {
+      if (!editor || !String(editor.body || '').trim()) return undefined;
+      root.querySelector('.derr').textContent = 'Cancel the draft or save it before closing.';
+      draft?.focus();
+      return false;
+    },
+  });
+}
 
 /* --------------------------------------------------------------------- UI */
 

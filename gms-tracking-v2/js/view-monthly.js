@@ -1,6 +1,6 @@
 import { el, money, pct, tip, monthLabel } from './dom.js';
 import { all, byId, fxMap, put } from './store.js';
-import { monthBounds, num, periodSpend, toAud } from './calc.js';
+import { monthBounds, num, periodSpend, toAud, todayIso } from './calc.js';
 
 const workingBudget = (row) => row?.budget_working_media == null
   ? num(row?.budget_media)
@@ -36,25 +36,46 @@ function campaignModel(campaign) {
     spendsByLine.get(row.line_id).push(row);
   });
 
+  const todayYm = todayIso().slice(0, 7);
+  const currentYm = monthKeys.includes(todayYm)
+    ? todayYm
+    : monthKeys.filter((ym) => ym <= todayYm).at(-1) || monthKeys[0] || todayYm;
+
   const lineModels = lines.map((line) => {
+    let cumulativeBooked = 0;
+    let cumulativeBudgeted = 0;
+    let cumulativeActual = 0;
     const months = monthKeys.map((ym) => {
       const row = rowsByLine.get(line.id)?.get(ym);
       const booked = num(row?.budget_media);
       const budgeted = workingBudget(row);
       const actual = actualForMonth(line, campaign, ym, fx, spendsByLine.get(line.id) || []);
-      return { ym, row, lineId: line.id, booked, budgeted, actual };
+      cumulativeBooked += booked;
+      cumulativeBudgeted += budgeted;
+      cumulativeActual += actual;
+      return {
+        ym, row, lineId: line.id, booked, budgeted, actual,
+        cumulativeBooked, cumulativeBudgeted, cumulativeActual,
+      };
     });
     return { line, months };
   });
 
+  let cumulativeBooked = 0;
+  let cumulativeBudgeted = 0;
+  let cumulativeActual = 0;
   const months = monthKeys.map((ym) => {
     const values = lineModels.map((line) => line.months.find((month) => month.ym === ym));
-    return {
+    const month = {
       ym,
       booked: values.reduce((sum, month) => sum + num(month?.booked), 0),
       budgeted: values.reduce((sum, month) => sum + num(month?.budgeted), 0),
       actual: values.reduce((sum, month) => sum + num(month?.actual), 0),
     };
+    cumulativeBooked += month.booked;
+    cumulativeBudgeted += month.budgeted;
+    cumulativeActual += month.actual;
+    return { ...month, cumulativeBooked, cumulativeBudgeted, cumulativeActual };
   });
   const totals = months.reduce((out, month) => ({
     booked: out.booked + month.booked,
@@ -62,7 +83,7 @@ function campaignModel(campaign) {
     actual: out.actual + month.actual,
   }), { booked: 0, budgeted: 0, actual: 0 });
 
-  return { lines: lineModels, months, totals };
+  return { lines: lineModels, months, totals, currentYm };
 }
 
 function campaignPicker(campaigns, selected, state, rerender) {
@@ -84,14 +105,17 @@ function campaignPicker(campaigns, selected, state, rerender) {
 }
 
 function totalsStrip(model) {
-  const delivery = model.totals.budgeted > 0
-    ? model.totals.actual / model.totals.budgeted
-    : null;
+  const current = model.months.find((month) => month.ym === model.currentYm) || model.months.at(-1);
+  const position = current ? current.cumulativeActual - current.cumulativeBudgeted : 0;
+  const positionText = !current ? 'No allocation'
+    : Math.abs(position) < 0.5 ? 'On plan'
+      : `${money(Math.abs(position))} ${position > 0 ? 'over' : 'under'}`;
   return el('div', { class: 'monthly-totals' },
     metric('Booked', money(model.totals.booked), 'Original imported media plan'),
     metric('Budgeted', money(model.totals.budgeted), 'Current editable working allocation'),
-    metric('Actual', money(model.totals.actual), 'Recorded cumulative spend converted to internal AUD'),
-    metric('Delivery', pct(delivery, 0), 'Actual divided by the current working budget'));
+    metric('Actual', money(model.totals.actual), 'Recorded spend converted to internal AUD'),
+    metric('Current position', positionText,
+      `Cumulative actual minus cumulative budget through ${current ? monthLabel(current.ym) : 'the current month'}`));
 }
 
 function metric(label, value, help) {
@@ -101,26 +125,32 @@ function metric(label, value, help) {
 }
 
 function monthlyChart(model) {
-  const max = Math.max(1, ...model.months.flatMap((month) => [month.booked, month.budgeted, month.actual]));
+  const max = Math.max(1, ...model.months.flatMap((month) =>
+    [month.cumulativeBooked, month.cumulativeBudgeted, month.cumulativeActual]));
   const bar = (kind, value) => el('i', {
     class: kind,
     style: { height: `${Math.max(value > 0 ? 2 : 0, value / max * 100)}%` },
   });
   return el('div', { class: 'monthly-chart-wrap' },
     el('div', { class: 'monthly-legend' },
-      el('span', {}, el('i', { class: 'booked' }), 'Booked'),
-      el('span', {}, el('i', { class: 'budgeted' }), 'Budgeted'),
-      el('span', {}, el('i', { class: 'actual' }), 'Actual')),
-    el('div', { class: 'monthly-chart-v2', role: 'img', 'aria-label': 'Booked, budgeted and actual by month' },
-      ...model.months.map((month) => el('div', { class: 'monthly-chart-month' },
+      el('span', {}, el('i', { class: 'booked' }), 'Cumulative booked'),
+      el('span', {}, el('i', { class: 'budgeted' }), 'Cumulative budgeted'),
+      el('span', {}, el('i', { class: 'actual' }), 'Cumulative actual')),
+    el('div', { class: 'monthly-chart-v2', role: 'img', 'aria-label': 'Cumulative booked, budgeted and actual through each month' },
+      ...model.months.map((month) => el('div', {
+        class: `monthly-chart-month${month.ym === model.currentYm ? ' current' : ''}`,
+        title: `${monthLabel(month.ym)}: cumulative booked ${money(month.cumulativeBooked)}, budgeted ${money(month.cumulativeBudgeted)}, actual ${money(month.cumulativeActual)}`,
+      },
         el('div', { class: 'monthly-bars' },
-          bar('booked', month.booked),
-          bar('budgeted', month.budgeted),
-          bar('actual', month.actual)),
-        el('b', {}, monthLabel(month.ym).slice(0, 3))))));
+          bar('booked', month.cumulativeBooked),
+          bar('budgeted', month.cumulativeBudgeted),
+          bar('actual', month.cumulativeActual)),
+        el('b', {}, monthLabel(month.ym).slice(0, 3)),
+        month.ym === model.currentYm
+          ? el('small', { class: 'monthly-current-label' }, 'Current') : null))));
 }
 
-function lineCard(model, rerender) {
+function lineCard(model, currentYm, rerender) {
   const totals = model.months.reduce((out, month) => ({
     booked: out.booked + month.booked,
     budgeted: out.budgeted + month.budgeted,
@@ -144,9 +174,10 @@ function lineCard(model, rerender) {
             el('th', {}, 'Month'),
             el('th', { class: 'num' }, 'Booked'),
             el('th', { class: 'num' }, 'Budgeted'),
-            el('th', { class: 'num' }, 'Actual'),
-            el('th', {}, 'Position'))),
-          el('tbody', {}, ...model.months.map((month) => monthRow(month, rerender))))),
+            el('th', { class: 'num' }, 'Actual this month'),
+            el('th', {}, 'Cumulative position',
+              tip('Compares all actual spend through this month with all working budget through this month.')))),
+          el('tbody', {}, ...model.months.map((month) => monthRow(month, currentYm, rerender))))),
       changed ? el('button', {
         class: 'btn sm ghost',
         onclick: () => {
@@ -164,12 +195,16 @@ function summaryMetric(label, value) {
     el('small', {}, label), el('b', {}, money(value)));
 }
 
-function monthRow(month, rerender) {
-  const position = month.budgeted > 0
-    ? month.actual > month.budgeted
-      ? `${money(month.actual - month.budgeted)} over`
-      : `${pct(month.actual / month.budgeted, 0)} used`
-    : month.actual > 0 ? `${money(month.actual)} unbudgeted` : 'No allocation';
+function monthRow(month, currentYm, rerender) {
+  const difference = month.cumulativeActual - month.cumulativeBudgeted;
+  const position = month.cumulativeBudgeted > 0
+    ? month.ym < currentYm
+      ? `${pct(month.cumulativeActual / month.cumulativeBudgeted, 0)} used`
+      : month.ym === currentYm
+        ? Math.abs(difference) < 0.5 ? 'On plan'
+          : `${money(Math.abs(difference))} ${difference > 0 ? 'over' : 'under'}`
+        : 'Upcoming'
+    : month.cumulativeActual > 0 ? `${money(month.cumulativeActual)} unbudgeted` : 'No allocation';
   const edited = Math.abs(month.budgeted - month.booked) > 0.005;
   const input = el('input', {
     type: 'number', min: '0', step: '0.01', inputmode: 'decimal',
@@ -192,12 +227,15 @@ function monthRow(month, rerender) {
     },
     onkeydown: (event) => { if (event.key === 'Enter') event.currentTarget.blur(); },
   });
-  return el('tr', { class: edited ? 'budget-edited' : '' },
+  return el('tr', { class: `${edited ? 'budget-edited ' : ''}${month.ym === currentYm ? 'current-month' : ''}`.trim() },
     el('td', {}, monthLabel(month.ym)),
     el('td', { class: 'num' }, money(month.booked)),
     el('td', { class: 'num monthly-budget-cell' }, input),
     el('td', { class: 'num' }, money(month.actual)),
-    el('td', { class: month.actual > month.budgeted && month.budgeted >= 0 ? 'monthly-over' : '' }, position));
+    el('td', {
+      class: month.ym === currentYm && difference > 0 ? 'monthly-over' : '',
+      title: `Cumulative budgeted ${money(month.cumulativeBudgeted)}, cumulative actual ${money(month.cumulativeActual)}`,
+    }, position));
 }
 
 export function renderMonthly(host, { state, rerender }) {
@@ -228,5 +266,6 @@ export function renderMonthly(host, { state, rerender }) {
     el('div', { class: 'monthly-lines-head' },
       el('h3', {}, 'Line items'),
       tip('Booked comes from the imported plan. Budgeted is editable and shared. Actual is derived from cumulative snapshots.')),
-    el('div', { class: 'monthly-line-list' }, ...model.lines.map((line) => lineCard(line, rerender)))));
+    el('div', { class: 'monthly-line-list' },
+      ...model.lines.map((line) => lineCard(line, model.currentYm, rerender)))));
 }

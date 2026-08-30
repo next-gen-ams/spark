@@ -19,7 +19,7 @@ import { imageField } from './paste-image.js';
 import { openLog, noteCount } from './notes.js';
 import { monthBounds, grossUp, repace, todayIso, daySplit, looseSpendTotal, periodSpend,
   cumulative, creativeActive, creativePace, kpiValue, spendForSide, deliveryPct,
-  effectiveStatus } from './calc.js';
+  effectiveStatus, num } from './calc.js';
 import { kpiDefs, addKpi, removeKpi, PRESETS, hasPreset, companionsFor, kpiFormula, formatKpi } from './kpis.js';
 import { resizable, forgetWidths } from './resizable.js';
 import { PLATFORM_COLOR } from './config.js';
@@ -76,23 +76,16 @@ export function renderSpend(host, ctx) {
     if (date > today) date = today;
   }
 
-  /* The boot query deliberately leaves artwork out because screenshots are
-     comparatively large. Fetch every visible creative in one request and
-     repaint once. Loading one image per row used to cause one full-page
-     rebuild per creative immediately after refresh, which made the Columns
-     button and ordinary page scrolling feel as though they were dragging. */
-  primeCreativeImages(rows, date, rerender);
-
   const shell = el('div', { class: 'platform-session-v2' });
   const selected = state.filters.platform || rows[0]?.line.platform || 'Platform';
   const latest = latestSpendDate(rows);
   const inputCount = rows.reduce((sum, m) => {
-    const creatives = where('creative', (c) => c.line_id === m.line.id
-      && creativeActive(c, m.campaign, date));
-    return sum + Math.max(1, creatives.length);
+    const creatives = where('creative', (c) => c.line_id === m.line.id);
+    const active = creatives.filter((creative) => creativeActive(creative, m.campaign, date));
+    return sum + (creatives.length ? active.length : 1);
   }, 0);
 
-  shell.appendChild(el('div', { class: 'platform-session-toolbar-v2' },
+  shell.appendChild(el('div', { class: 'platform-session-toolbar-v2 spend-only-toolbar-v2' },
     el('div', { class: 'platform-session-title-v2' },
       el('span', { class: 'platform-session-dot-v2', style: { background: PLATFORM_COLOR[selected] || 'var(--v2-blue)' } }),
       el('div', {}, el('small', {}, 'Updating platform'), el('strong', {}, selected))),
@@ -126,54 +119,44 @@ export function renderSpend(host, ctx) {
           if (state.spendMode === 'day' && !state.spendDate) state.spendDate = today;
           rerender();
         },
-      }, mode === 'day' ? 'Use today' : 'Another day / backfill'),
-      el('button', {
-        class: 'btn sm managecolumns',
-        'aria-label': 'Manage visible columns and custom metrics',
-        onclick: () => manageColumnsDialog(rerender),
-      }, 'Manage columns'))));
+      }, mode === 'day' ? 'Use today' : 'Another day / backfill'))));
 
-  shell.appendChild(el('div', { class: 'platform-session-summary-v2' },
-    sessionMetric('Platform scope', `${rows.length} lines`, `${inputCount} cumulative inputs`),
-    sessionMetric('Campaigns', String(new Set(rows.map((m) => m.campaign.id)).size),
-      `${new Set(rows.map((m) => m.campaign.client_id)).size} clients`),
-    sessionMetric('Latest existing snapshot', latest ? dateAu(latest) : 'None',
-      latest ? 'Existing totals remain visible below' : 'First update for this selection'),
-    sessionMetric('Entry method', 'Cumulative', 'Change and daily average calculate automatically')));
+  shell.appendChild(el('div', { class: 'spend-only-context-v2' },
+    el('div', {}, el('b', {}, `${rows.length} line${rows.length === 1 ? '' : 's'} to review`),
+      el('span', {}, `${inputCount} cumulative ${inputCount === 1 ? 'input' : 'inputs'} across `,
+        `${new Set(rows.map((m) => m.campaign.client_id)).size} clients`)),
+    el('div', {}, el('span', {}, 'Latest platform update'),
+      el('b', {}, latest ? dateAu(latest) : 'No previous update'))));
 
   const groupList = el('div', { class: 'platform-entry-groups-v2' });
   const grouped = new Map();
   for (const m of rows) {
-    const key = m.campaign.id;
-    if (!grouped.has(key)) grouped.set(key, { campaign: m.campaign, rows: [] });
-    grouped.get(key).rows.push(m);
+    const client = byId('client', m.campaign.client_id);
+    const clientKey = client?.id || m.campaign.client_id || 'client';
+    if (!grouped.has(clientKey)) grouped.set(clientKey, { client, campaigns: new Map() });
+    const campaigns = grouped.get(clientKey).campaigns;
+    if (!campaigns.has(m.campaign.id)) campaigns.set(m.campaign.id, { campaign: m.campaign, rows: [] });
+    campaigns.get(m.campaign.id).rows.push(m);
   }
-  for (const { campaign, rows: campaignRows } of grouped.values()) {
-    const client = byId('client', campaign.client_id);
+  for (const { client, campaigns } of grouped.values()) {
+    const clientRows = [...campaigns.values()].flatMap((group) => group.rows);
     groupList.appendChild(el('section', { class: 'platform-entry-group-v2' },
       el('header', { class: 'platform-entry-heading-v2' },
-        el('div', {}, el('span', {}, client?.name || 'Client'),
-          el('h3', {}, campaign.name || 'Untitled campaign')),
-        el('small', {}, `${campaignRows.length} line${campaignRows.length === 1 ? '' : 's'} · `,
-          `${campaignRows.reduce((sum, m) => sum + Math.max(1, where('creative', (c) => c.line_id === m.line.id).length), 0)} inputs`)),
-      el('div', { class: 'platform-line-list-v2' },
-        ...campaignRows.map((m) => lineEntryCard(m, date, mode, state, rerender)))));
+        el('div', {}, el('span', {}, 'Client'),
+          el('h3', {}, client?.name || 'Client')),
+        el('small', {}, `${campaigns.size} campaign${campaigns.size === 1 ? '' : 's'} · `,
+          `${clientRows.length} line${clientRows.length === 1 ? '' : 's'}`)),
+      el('div', { class: 'platform-client-campaigns-v2' },
+        ...[...campaigns.values()].map(({ campaign, rows: campaignRows }) =>
+          el('section', { class: 'platform-campaign-block-v2' },
+            el('header', { class: 'platform-campaign-heading-v2' },
+              el('div', {}, el('span', {}, campaign.io_number || 'Campaign'),
+                el('h4', {}, campaign.name || 'Untitled campaign')),
+              el('small', {}, `${campaignRows.length} line${campaignRows.length === 1 ? '' : 's'}`)),
+            el('div', { class: 'platform-line-list-v2' },
+              ...campaignRows.map((m) => lineEntryCard(m, date, mode, state, rerender))))))));
   }
   shell.appendChild(groupList);
-  shell.appendChild(el('div', { class: 'platform-session-footer-v2' },
-    el('div', {}, el('b', {}, 'Line hierarchy',
-      tip('Each Line Total is its own update section. Creative rows stay inside their parent line, and entries save through the existing shared data layer.'))),
-    el('button', {
-      class: 'btn sm', onclick: () => {
-        const details = [...shell.querySelectorAll('.platform-line-card-v2')];
-        const shouldOpen = details.some((detail) => !detail.open);
-        details.forEach((detail) => { detail.open = shouldOpen; });
-      },
-    }, 'Expand / collapse all'),
-    el('button', {
-      class: 'btn sm ghost', 'aria-label': 'Put every column back to its default width',
-      onclick: () => { forgetWidths(entryWidthKey()); rerender(); },
-    }, 'Reset columns')));
   host.appendChild(shell);
 }
 
@@ -196,27 +179,96 @@ function lineEntryCard(m, date, mode, state, rerender) {
   const activeCreatives = creatives.filter((creative) => creativeActive(creative, m.campaign, date));
   const status = effectiveStatus(m.line, m.campaign, todayIso());
 
-  return el('details', { class: 'platform-line-card-v2', open: true },
-    el('summary', { class: 'platform-line-summary-v2' },
-      el('div', { class: 'platform-line-name-v2' },
-        el('span', {}, 'Line total'),
-        el('h4', {}, lineLabel(m)),
+  const write = (creativeId, value) => {
+    put('spend', {
+      id: spendId(m.line.id, creativeId, date),
+      line_id: m.line.id,
+      creative_id: creativeId || null,
+      date,
+      spend_internal: value,
+    });
+    rerender();
+  };
+  const delivery = r ? deliveryPct(r) : null;
+  const inputs = activeCreatives.length
+    ? activeCreatives.map((creative) => {
+      const figures = spendBucket(day.parts.find((part) => part.creative.id === creative.id));
+      return spendInputRow(m, creative.name || 'Creative', figures, date,
+        (input) => confirmRise(input, figures, m, (value) => write(creative.id, value)), true);
+    })
+    : creatives.length ? [] : [spendInputRow(m, 'Line total', spendBucket(day.loose), date,
+      (input) => confirmRise(input, spendBucket(day.loose), m, (value) => write(null, value)), false)];
+
+  return el('article', { class: `spend-line-entry-v2${inputs.some((row) => row.dataset.updated === 'true') ? ' updated' : ''}` },
+    el('header', { class: 'spend-line-head-v2' },
+      el('div', { class: 'spend-line-identity-v2' },
+        el('span', {}, 'Line item'),
+        el('h5', {}, lineLabel(m)),
         el('small', {}, [m.line.objective, m.line.buy_method, m.line.market].filter(Boolean).join(' · '))),
-      lineSummaryMetric('Current total', money2(day.total.spend, m.ccy), latestSpendDate([m]) ? `Latest ${dateAu(latestSpendDate([m]))}` : 'No prior update'),
-      lineSummaryMetric('Delivery', r ? pct(deliveryPct(r), 0) : '—', status),
-      lineSummaryMetric('Required daily', r && !r.finished ? `${money2(r.localSuggestedDaily, m.ccy)} / day` : '—',
-        r ? `${money2(r.localToMonthTarget, m.ccy)} to month target` : 'No flight dates'),
-      el('div', { class: 'platform-line-toggle-v2' },
-        el('b', {}, activeCreatives.length
-          ? `${activeCreatives.length} creative${activeCreatives.length === 1 ? '' : 's'}` : 'Direct line input'),
-        el('small', {}, 'Open details'), el('i'))),
-    el('div', { class: 'platform-line-body-v2' },
-      el('div', { class: 'platform-line-help-v2' },
-        tip(activeCreatives.length
-          ? 'Update each creative cumulative total. The Line Total is calculated from its creative children.'
-          : 'This line has no creative split, so its cumulative total is entered directly.', 'How this line total works'),
-        el('span', {}, activeCreatives.length ? 'Creative roll-up' : 'Direct line entry')),
-      el('div', { class: 'platform-line-grid-v2 tablewrap' }, grid([m], date, mode, state, rerender))));
+      el('div', { class: 'spend-line-total-v2' },
+        el('span', {}, 'Current cumulative'),
+        el('b', {}, money2(day.total.spend, m.ccy)),
+        el('small', {}, latestSpendDate([m]) ? `Latest ${dateAu(latestSpendDate([m]))}` : 'No prior update')),
+      el('div', { class: 'spend-delivery-v2' },
+        el('div', {}, el('span', {}, 'Delivery'),
+          el('b', {}, delivery == null ? 'No budget' : pct(delivery, 0))),
+        deliveryBar(delivery, status))),
+    el('div', { class: 'spend-input-list-v2' },
+      creatives.length && !activeCreatives.length
+        ? el('div', { class: 'spend-no-active-v2' },
+          el('b', {}, 'No creatives active on this date'),
+          el('span', {}, 'Choose another snapshot date, or update creative dates in Plans.'))
+        : null,
+      ...inputs,
+      activeCreatives.length && day.loose.spend > 0
+        ? el('div', { class: 'spend-loose-history-v2' },
+          el('span', {}, 'Earlier line-level spend'),
+          el('b', {}, money2(day.loose.spend, m.ccy)),
+          el('small', {}, 'Read only after creative split'))
+        : null));
+}
+
+function spendBucket(bucket) {
+  if (!bucket?.typed) return bucket;
+  const raw = bucket.typed.raw?.spend_internal;
+  return raw == null || raw === '' ? { ...bucket, typed: null } : bucket;
+}
+
+function deliveryBar(value, status) {
+  const width = Math.min(100, Math.max(0, num(value) * 100));
+  const kind = num(value) > 1 ? 'over' : status === 'Paused' || status === 'Stopped' ? 'held' : '';
+  return el('div', {
+    class: `spend-delivery-bar-v2 ${kind}`.trim(), role: 'progressbar',
+    'aria-label': `Whole-flight delivery ${value == null ? 'unavailable' : pct(value, 0)}`,
+    'aria-valuemin': '0', 'aria-valuemax': '100',
+    'aria-valuenow': value == null ? '0' : String(Math.round(num(value) * 100)),
+  }, el('i', { style: { width: `${width}%` } }));
+}
+
+function spendInputRow(m, label, bucket, date, onChange, creative) {
+  const updated = !!bucket?.typed;
+  const input = el('input', {
+    class: 'spend-only-input-v2', type: 'number', min: '0', step: '0.01', inputmode: 'decimal',
+    value: updated ? bucket.typed.spend : '',
+    placeholder: bucket?.at ? String(bucket.spend) : '0',
+    'aria-label': `${label} cumulative spend at ${dateAu(date)}`,
+    'data-focus': `${m.line.id}|${creative ? bucket.creative?.id : '_'}|s`,
+    onchange: (event) => onChange(event.target),
+    onkeydown: (event) => { if (event.key === 'Enter') event.currentTarget.blur(); },
+  });
+  const row = el('label', { class: `spend-input-row-v2${creative ? ' creative' : ''}` },
+    el('div', {},
+      creative ? el('span', { class: 'spend-creative-mark-v2', 'aria-hidden': 'true' }) : null,
+      el('b', {}, label),
+      el('small', {}, updated
+        ? `Recorded for ${dateAu(date)}`
+        : bucket?.at ? `Previous ${money2(bucket.spend, m.ccy)} at ${dateAu(bucket.at)}` : 'No previous spend')),
+    el('span', { class: 'spend-input-control-v2' },
+      el('small', {}, `Cumulative ${m.ccy}`),
+      input,
+      el('em', {}, updated ? 'Updated' : 'Enter total')));
+  row.dataset.updated = String(updated);
+  return row;
 }
 
 function lineSummaryMetric(label, value, sub) {

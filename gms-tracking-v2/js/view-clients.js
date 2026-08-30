@@ -4,11 +4,11 @@
 
 import { el, money, pct, monthLabel, dateAu, tag, tip } from './dom.js';
 import { PLATFORM_COLOR } from './config.js';
-import { all, where, byId, fxMap, put } from './store.js';
+import { all, where, byId, fxMap } from './store.js';
 import { lineMetrics, totals, todayIso, num, effectiveStatus } from './calc.js';
 import { openLine } from './drawer.js';
 import { resizable } from './resizable.js';
-import { dialog, textField } from './modal.js';
+import { entityNotes, entityNoteCount, openEntityNotes } from './notes.js';
 
 export function renderClients(host, ctx) {
   const fx = fxMap();
@@ -310,35 +310,19 @@ function economy(label, value, percentage) {
 }
 
 function pinnedNote(table, row, rerender) {
-  const label = table === 'client' ? 'Client note' : 'Campaign note';
+  const label = table === 'client' ? 'Client notes' : 'Campaign notes';
+  const notes = entityNotes(table, row);
+  const latest = notes[0];
+  const count = entityNoteCount(table, row);
   return el('div', { class: 'pinned-note-v2' },
     el('span', { class: 'pinned-note-icon', 'aria-hidden': 'true' }, '📝'),
     el('div', {}, el('b', {}, label),
-      el('span', {}, row.note || 'No pinned note')),
+      el('span', {}, latest?.body || 'No notes yet'),
+      count ? el('small', {}, `${count} ${count === 1 ? 'note' : 'notes'} in history`) : null),
     el('button', {
       class: 'btn sm ghost',
-      onclick: () => editPinnedNote(table, row, label, rerender),
-    }, row.note ? 'Edit' : 'Add'));
-}
-
-function editPinnedNote(table, row, label, rerender) {
-  const field = textField(label, {
-    value: row.note || '',
-    placeholder: 'Durable context for this plan',
-    hint: 'Use the Tracking Log for dated decisions and incidents. This note stays pinned.',
-  });
-  dialog({
-    title: label,
-    content: [field],
-    actions: [
-      { label: 'Cancel' },
-      {
-        label: 'Save note', primary: true,
-        onClick: () => { put(table, { ...row, note: field.value() }); rerender(); },
-      },
-    ],
-  });
-  setTimeout(() => field.focus(), 30);
+      onclick: () => openEntityNotes({ table, row, rerender }),
+    }, count ? 'Open notes' : 'Add note'));
 }
 
 function lineTable(rows, { state, rerender }) {

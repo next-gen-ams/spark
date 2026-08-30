@@ -214,8 +214,8 @@ export function remove(table, id) {
  * looking for a parent that no longer exists.
  */
 const CHILDREN = {
-  client: [['campaign', 'client_id']],
-  campaign: [['line', 'campaign_id'], ['note', 'campaign_id']],
+  client: [['note', 'client_id'], ['campaign', 'client_id']],
+  campaign: [['line', 'campaign_id'], ['note', 'campaign_id'], ['note', 'campaign_note_id']],
   line: [['spend', 'line_id'], ['creative', 'line_id'],
     ['line_month', 'line_id'], ['note', 'line_id']],
   creative: [['spend', 'creative_id']],
