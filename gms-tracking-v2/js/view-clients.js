@@ -315,14 +315,14 @@ function pinnedNote(table, row, rerender) {
   const latest = notes[0];
   const count = entityNoteCount(table, row);
   return el('div', { class: 'pinned-note-v2' },
-    el('span', { class: 'pinned-note-icon', 'aria-hidden': 'true' }, '📝'),
-    el('div', {}, el('b', {}, label),
-      el('span', {}, latest?.body || 'No notes yet'),
-      count ? el('small', {}, `${count} ${count === 1 ? 'note' : 'notes'} in history`) : null),
     el('button', {
-      class: 'btn sm ghost',
+      class: 'note-trigger-v2',
+      title: count ? `Open ${label.toLowerCase()}` : `Add a ${label.toLowerCase().replace(/s$/, '')}`,
+      'aria-label': `${label}, ${count} ${count === 1 ? 'entry' : 'entries'}`,
       onclick: () => openEntityNotes({ table, row, rerender }),
-    }, count ? 'Open notes' : 'Add note'));
+    },
+    el('span', {}, label),
+    el('small', {}, count || '+')));
 }
 
 function lineTable(rows, { state, rerender }) {
@@ -354,6 +354,7 @@ function lineRow(m, months, side, rerender) {
 
   return el('tr', {
     class: m.billable ? '' : 'nb', style: { cursor: 'pointer' },
+    'data-line-id': m.line.id,
     onclick: () => openLine(m, rerender),
   },
   el('td', {}, m.line.platform

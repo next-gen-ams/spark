@@ -15,6 +15,7 @@ import { openExport, closeExport } from './view-export.js';
 import { dialog } from './modal.js';
 import { ymOf, todayIso } from './calc.js';
 import { closeDrawer } from './drawer.js';
+import { platformMark } from './platforms.js';
 
 const NAV = [
   { id: 'update', label: 'Update Spend', defaultTab: 'spend', tabs: [['spend', 'Platform update']] },
@@ -447,7 +448,7 @@ function exportMenu() {
   }
 
   const btn = el('button', {
-    class: 'btn', onclick: (e) => {
+    class: 'btn topbar-export-v2', onclick: (e) => {
       e.stopPropagation();
       menu.style.display = menu.style.display === 'none' ? 'block' : 'none';
     },
@@ -517,7 +518,7 @@ function platformLauncher() {
             render();
           },
         },
-        el('span', { class: 'platform-account-mark', 'aria-hidden': 'true' }),
+        platformMark(platform),
         el('span', {}, el('b', {}, platform),
           el('small', {}, `${lines.length} line${lines.length === 1 ? '' : 's'}, ${clientIds.size} client${clientIds.size === 1 ? '' : 's'} · ${latest ? dateAu(latest) : 'No update'}`)),
         el('span', { class: 'platform-account-arrow', 'aria-hidden': 'true' }, selected === platform ? '✓' : '›'));

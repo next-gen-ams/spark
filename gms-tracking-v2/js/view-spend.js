@@ -24,6 +24,7 @@ import { kpiDefs, addKpi, removeKpi, PRESETS, hasPreset, companionsFor, kpiFormu
 import { resizable, forgetWidths } from './resizable.js';
 import { PLATFORM_COLOR } from './config.js';
 import { exportBackup } from './exportxlsx.js';
+import { platformMark } from './platforms.js';
 
 const spendId = (lineId, creativeId, date) => `${lineId}|${creativeId || '_'}|${date}`;
 const ENTRY_COLUMNS_KEY = 'gms-tracking-entry-columns-v1';
@@ -87,7 +88,7 @@ export function renderSpend(host, ctx) {
 
   shell.appendChild(el('div', { class: 'platform-session-toolbar-v2 spend-only-toolbar-v2' },
     el('div', { class: 'platform-session-title-v2' },
-      el('span', { class: 'platform-session-dot-v2', style: { background: PLATFORM_COLOR[selected] || 'var(--v2-blue)' } }),
+      platformMark(selected, 'platform-session-logo-v2'),
       el('div', {}, el('small', {}, 'Updating platform'), el('strong', {}, selected))),
     el('label', { class: 'platform-search-v2' },
       el('span', {}, 'Find client, campaign, line or creative'),
@@ -128,35 +129,9 @@ export function renderSpend(host, ctx) {
     el('div', {}, el('span', {}, 'Latest platform update'),
       el('b', {}, latest ? dateAu(latest) : 'No previous update'))));
 
-  const groupList = el('div', { class: 'platform-entry-groups-v2' });
-  const grouped = new Map();
-  for (const m of rows) {
-    const client = byId('client', m.campaign.client_id);
-    const clientKey = client?.id || m.campaign.client_id || 'client';
-    if (!grouped.has(clientKey)) grouped.set(clientKey, { client, campaigns: new Map() });
-    const campaigns = grouped.get(clientKey).campaigns;
-    if (!campaigns.has(m.campaign.id)) campaigns.set(m.campaign.id, { campaign: m.campaign, rows: [] });
-    campaigns.get(m.campaign.id).rows.push(m);
-  }
-  for (const { client, campaigns } of grouped.values()) {
-    const clientRows = [...campaigns.values()].flatMap((group) => group.rows);
-    groupList.appendChild(el('section', { class: 'platform-entry-group-v2' },
-      el('header', { class: 'platform-entry-heading-v2' },
-        el('div', {}, el('span', {}, 'Client'),
-          el('h3', {}, client?.name || 'Client')),
-        el('small', {}, `${campaigns.size} campaign${campaigns.size === 1 ? '' : 's'} · `,
-          `${clientRows.length} line${clientRows.length === 1 ? '' : 's'}`)),
-      el('div', { class: 'platform-client-campaigns-v2' },
-        ...[...campaigns.values()].map(({ campaign, rows: campaignRows }) =>
-          el('section', { class: 'platform-campaign-block-v2' },
-            el('header', { class: 'platform-campaign-heading-v2' },
-              el('div', {}, el('span', {}, campaign.io_number || 'Campaign'),
-                el('h4', {}, campaign.name || 'Untitled campaign')),
-              el('small', {}, `${campaignRows.length} line${campaignRows.length === 1 ? '' : 's'}`)),
-            el('div', { class: 'platform-line-list-v2' },
-              ...campaignRows.map((m) => lineEntryCard(m, date, mode, state, rerender))))))));
-  }
-  shell.appendChild(groupList);
+  shell.appendChild(el('div', { class: 'platform-entry-card-grid-v2' },
+    ...rows.map((m) => lineEntryCard(
+      m, byId('client', m.campaign.client_id), date, mode, state, rerender))));
   host.appendChild(shell);
 }
 
@@ -169,7 +144,7 @@ function latestSpendDate(rows) {
     .filter(Boolean).sort().at(-1) || '';
 }
 
-function lineEntryCard(m, date, mode, state, rerender) {
+function lineEntryCard(m, client, date, mode, state, rerender) {
   const creatives = where('creative', (c) => c.line_id === m.line.id);
   const spends = where('spend', (row) => row.line_id === m.line.id);
   const day = daySplit(creatives, spends, date);
@@ -202,6 +177,13 @@ function lineEntryCard(m, date, mode, state, rerender) {
       (input) => confirmRise(input, spendBucket(day.loose), m, (value) => write(null, value)), false)];
 
   return el('article', { class: `spend-line-entry-v2${inputs.some((row) => row.dataset.updated === 'true') ? ' updated' : ''}` },
+    el('div', { class: 'spend-card-context-v2' },
+      el('div', { class: 'spend-card-client-v2' },
+        el('span', {}, 'Client'),
+        el('b', {}, client?.name || 'Client')),
+      el('div', { class: 'spend-card-campaign-v2' },
+        el('span', {}, m.campaign.io_number || 'Campaign'),
+        el('b', {}, m.campaign.name || 'Untitled campaign'))),
     el('header', { class: 'spend-line-head-v2' },
       el('div', { class: 'spend-line-identity-v2' },
         el('span', {}, 'Line item'),

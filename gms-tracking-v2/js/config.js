@@ -52,6 +52,19 @@ export const PLATFORM_COLOR = {
   Douyin: '#111111', IQIYI: '#00BE06', DSP: '#7E86C4', Other: '#8C877E',
 };
 
+/* Brand marks are vendored with V2 so the platform picker still works from
+   mainland-China offices without relying on a third-party icon CDN. DSP is
+   the iPinYou account in the current plans, so it intentionally carries the
+   current iPinYou / DeepZero mark while its stored platform value stays DSP. */
+export const PLATFORM_LOGO = {
+  Baidu: 'assets/platforms/baidu.svg',
+  WeChat: 'assets/platforms/wechat.svg',
+  RED: 'assets/platforms/xiaohongshu.svg',
+  IQIYI: 'assets/platforms/iqiyi.svg',
+  DSP: 'assets/platforms/ipinyou.svg',
+  IPY: 'assets/platforms/ipinyou.svg',
+};
+
 /* Raw media-plan strings → our platform vocabulary. Matched case-insensitively
    as a substring, longest key first. Unmatched values are kept verbatim. */
 export const PLATFORM_ALIASES = {

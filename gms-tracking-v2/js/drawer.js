@@ -370,6 +370,7 @@ function creatives(line, refresh, m) {
       value: c.preview_url || '',
       onchange: (e) => put('creative', { id: c.id, preview_url: e.target.value }),
     })),
+    el('td', {}, creativeNoteButton(c, refresh)),
     el('td', {}, thumbCell(c, refresh)),
     el('td', {}, el('button', {
       class: 'btn ghost sm', 'aria-label': 'Remove creative',
@@ -398,7 +399,7 @@ function creatives(line, refresh, m) {
         el('thead', {}, el('tr', {},
           el('th', {}, 'Creative'), el('th', {}, 'Start'), el('th', {}, 'End'),
           el('th', { class: 'num' }, `Booking budget · ${line.currency || 'AUD'}`),
-          el('th', { class: 'num' }, 'Spend'), el('th', {}, 'Preview'),
+          el('th', { class: 'num' }, 'Spend'), el('th', {}, 'Preview'), el('th', {}, 'Note'),
           el('th', {}, 'Screenshot'), el('th', {}))),
         body))
       : tip('Line-level spend is tracked either way; add creatives only when you want the breakdown.', 'Why add creatives'),
@@ -406,6 +407,61 @@ function creatives(line, refresh, m) {
       class: 'btn sm', style: { marginTop: '8px' },
       onclick: () => addCreativeDialog(line, m, refresh),
     }, '+ Add creative'));
+}
+
+function creativeNoteButton(creative, refresh) {
+  const hasNote = Boolean(String(creative.note || '').trim());
+  return el('button', {
+    class: `creative-note-trigger-v2${hasNote ? ' has-note' : ''}`,
+    title: hasNote ? 'Open creative note' : 'Add a creative note',
+    'aria-label': `${hasNote ? 'Edit' : 'Add'} note for ${creative.name || 'creative'}`,
+    onclick: () => creativeNoteDialog(creative, refresh),
+  },
+  el('span', {}, hasNote ? 'Note' : 'Add note'),
+  hasNote ? el('small', {}, '1') : null);
+}
+
+function creativeNoteDialog(creative, refresh) {
+  const input = el('textarea', {
+    rows: 5,
+    value: creative.note || '',
+    placeholder: 'Add context for this creative',
+  });
+  const err = errorLine();
+  dialog({
+    title: 'Creative note',
+    sub: creative.name || 'Creative',
+    content: [el('div', { class: 'field' }, el('label', {}, 'Note'), input), err],
+    actions: [
+      ...(creative.note ? [{
+        label: 'Delete note', danger: true, onClick: () => {
+          confirmDanger({
+            title: 'Delete this creative note?',
+            detail: `The note attached to ${creative.name || 'this creative'} will be removed.`,
+            confirmLabel: 'Delete note',
+            onConfirm: () => {
+              put('creative', { id: creative.id, note: '' });
+              refresh();
+            },
+          });
+        },
+      }] : []),
+      { label: 'Cancel' },
+      {
+        label: 'Save note', primary: true, onClick: () => {
+          const note = input.value.trim();
+          if (!note) {
+            err.say(creative.note ? 'Use Delete note to remove this note.' : 'Write a note before saving.');
+            return false;
+          }
+          put('creative', { id: creative.id, note });
+          refresh();
+          return undefined;
+        },
+      },
+    ],
+  });
+  setTimeout(() => input.focus(), 30);
 }
 
 function addCreativeDialog(line, m, refresh) {
