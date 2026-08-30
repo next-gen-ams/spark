@@ -232,11 +232,11 @@ function monthly(m) {
   };
 
   return el('div', { class: 'field' },
-    el('label', {}, 'Booked by month — from the media plan', tip(linked
+    el('label', {}, 'Booked by month', tip(linked
       ? `Internal and client are locked together at this line's margin of ${pct(margin, 1)}: type either one and the other follows, so they cannot drift apart.`
       : 'This line has no margin set, so the two columns are independent. Set a margin above to link them.', 'Monthly booking help')),
     el('div', { class: 'tablewrap' },
-      el('table', { class: 'data' },
+      el('table', { class: 'data monthly-booking-table' },
         el('thead', {}, el('tr', {},
           el('th', {}, 'Month'), el('th', { class: 'num' }, 'Units'),
           el('th', { class: 'num' }, 'Internal'),
@@ -244,17 +244,20 @@ function monthly(m) {
         el('tbody', {}, ...rows.map((r) => el('tr', {},
           el('td', {}, monthLabel(r.ym)),
           el('td', { class: 'num' }, el('input', {
-            class: 'cellinput', type: 'number', step: '1', value: r.units ?? '',
+            class: 'cellinput', type: 'number', step: '0.01', inputmode: 'decimal',
+            value: editableNumber(r.units),
             onchange: (e) => put('line_month', {
               id: r.id, units: e.target.value === '' ? null : Number(e.target.value),
             }),
           })),
           el('td', { class: 'num' }, el('input', {
-            class: 'cellinput', type: 'number', step: '1', value: r.budget_media ?? '',
+            class: 'cellinput', type: 'number', step: '0.01', inputmode: 'decimal',
+            value: editableNumber(r.budget_media),
             onchange: (e) => { write(r, 'budget_media', e.target.value); refreshDrawer(); },
           })),
           el('td', { class: 'num' }, el('input', {
-            class: 'cellinput', type: 'number', step: '1', value: r.budget_gms ?? '',
+            class: 'cellinput', type: 'number', step: '0.01', inputmode: 'decimal',
+            value: editableNumber(r.budget_gms),
             onchange: (e) => { write(r, 'budget_gms', e.target.value); refreshDrawer(); },
           }))))),
         el('tfoot', {}, el('tr', {},
@@ -265,6 +268,12 @@ function monthly(m) {
 }
 
 const round2 = (n) => Math.round(n * 100) / 100;
+const editableNumber = (value) => {
+  if (value == null || value === '') return '';
+  const n = Number(value);
+  if (!Number.isFinite(n)) return '';
+  return n.toFixed(2).replace(/\.00$/, '').replace(/(\.\d)0$/, '$1');
+};
 
 /* Re-opening the drawer is how the linked column shows its new value. */
 let reopen = null;

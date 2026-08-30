@@ -517,10 +517,9 @@ function platformLauncher() {
             render();
           },
         },
-        el('span', { class: 'platform-account-mark' }, platform.slice(0, 2).toUpperCase()),
+        el('span', { class: 'platform-account-mark', 'aria-hidden': 'true' }),
         el('span', {}, el('b', {}, platform),
-          el('small', {}, `${lines.length} line${lines.length === 1 ? '' : 's'} · ${clientIds.size} client${clientIds.size === 1 ? '' : 's'}`),
-          el('small', {}, latest ? `Latest ${dateAu(latest)}` : 'No spend update')),
+          el('small', {}, `${lines.length} line${lines.length === 1 ? '' : 's'}, ${clientIds.size} client${clientIds.size === 1 ? '' : 's'} · ${latest ? dateAu(latest) : 'No update'}`)),
         el('span', { class: 'platform-account-arrow', 'aria-hidden': 'true' }, selected === platform ? '✓' : '›'));
       })));
 }

@@ -19,7 +19,7 @@ import { imageField } from './paste-image.js';
 import { openLog, noteCount } from './notes.js';
 import { monthBounds, grossUp, repace, todayIso, daySplit, looseSpendTotal, periodSpend,
   cumulative, creativeActive, creativePace, kpiValue, spendForSide, deliveryPct,
-  effectiveStatus, num } from './calc.js';
+  effectiveStatus, creativeWindow, num } from './calc.js';
 import { kpiDefs, addKpi, removeKpi, PRESETS, hasPreset, companionsFor, kpiFormula, formatKpi } from './kpis.js';
 import { resizable, forgetWidths } from './resizable.js';
 import { PLATFORM_COLOR } from './config.js';
@@ -81,8 +81,8 @@ export function renderSpend(host, ctx) {
   const latest = latestSpendDate(rows);
   const inputCount = rows.reduce((sum, m) => {
     const creatives = where('creative', (c) => c.line_id === m.line.id);
-    const active = creatives.filter((creative) => creativeActive(creative, m.campaign, date));
-    return sum + (creatives.length ? active.length : 1);
+    const entrySet = creativeEntrySet(creatives, m.campaign, date);
+    return sum + (creatives.length ? entrySet.items.length : 1);
   }, 0);
 
   shell.appendChild(el('div', { class: 'platform-session-toolbar-v2 spend-only-toolbar-v2' },
@@ -119,7 +119,7 @@ export function renderSpend(host, ctx) {
           if (state.spendMode === 'day' && !state.spendDate) state.spendDate = today;
           rerender();
         },
-      }, mode === 'day' ? 'Use today' : 'Another day / backfill'))));
+      }, mode === 'day' ? 'Use today' : 'Backfill date'))));
 
   shell.appendChild(el('div', { class: 'spend-only-context-v2' },
     el('div', {}, el('b', {}, `${rows.length} line${rows.length === 1 ? '' : 's'} to review`),
@@ -176,7 +176,8 @@ function lineEntryCard(m, date, mode, state, rerender) {
   const r = repace(m.line, m.campaign,
     where('line_month', (row) => row.line_id === m.line.id), spends,
     { fx: fxMap(), today: todayIso(), side: state.view });
-  const activeCreatives = creatives.filter((creative) => creativeActive(creative, m.campaign, date));
+  const entrySet = creativeEntrySet(creatives, m.campaign, date);
+  const entryCreatives = entrySet.items;
   const status = effectiveStatus(m.line, m.campaign, todayIso());
 
   const write = (creativeId, value) => {
@@ -190,11 +191,12 @@ function lineEntryCard(m, date, mode, state, rerender) {
     rerender();
   };
   const delivery = r ? deliveryPct(r) : null;
-  const inputs = activeCreatives.length
-    ? activeCreatives.map((creative) => {
+  const inputs = entryCreatives.length
+    ? entryCreatives.map((creative) => {
       const figures = spendBucket(day.parts.find((part) => part.creative.id === creative.id));
       return spendInputRow(m, creative.name || 'Creative', figures, date,
-        (input) => confirmRise(input, figures, m, (value) => write(creative.id, value)), true);
+        (input) => confirmRise(input, figures, m, (value) => write(creative.id, value)), true,
+        entrySet.lateCorrection);
     })
     : creatives.length ? [] : [spendInputRow(m, 'Line total', spendBucket(day.loose), date,
       (input) => confirmRise(input, spendBucket(day.loose), m, (value) => write(null, value)), false)];
@@ -214,18 +216,37 @@ function lineEntryCard(m, date, mode, state, rerender) {
           el('b', {}, delivery == null ? 'No budget' : pct(delivery, 0))),
         deliveryBar(delivery, status))),
     el('div', { class: 'spend-input-list-v2' },
-      creatives.length && !activeCreatives.length
+      entrySet.futureOnly
         ? el('div', { class: 'spend-no-active-v2' },
-          el('b', {}, 'No creatives active on this date'),
-          el('span', {}, 'Choose another snapshot date, or update creative dates in Plans.'))
+          el('b', {}, 'Creative tracking has not started for this date'),
+          el('span', {}, 'Choose a later snapshot date, or update creative dates in Plans.'))
         : null,
       ...inputs,
-      activeCreatives.length && day.loose.spend > 0
+      entryCreatives.length && day.loose.spend > 0
         ? el('div', { class: 'spend-loose-history-v2' },
           el('span', {}, 'Earlier line-level spend'),
           el('b', {}, money2(day.loose.spend, m.ccy)),
           el('small', {}, 'Read only after creative split'))
         : null));
+}
+
+function creativeEntrySet(creatives, campaign, date) {
+  const active = creatives.filter((creative) => creativeActive(creative, campaign, date));
+  if (active.length) return { items: active, lateCorrection: false, futureOnly: false };
+
+  /* A split line must never regain a separate Line Total input: that would be
+     added to the creative totals and double count spend. Once a creative has
+     started, however, its cumulative total remains editable after its flight
+     so late invoices and platform corrections still have a safe home. */
+  const started = creatives.filter((creative) => {
+    const flight = creativeWindow(creative, campaign);
+    return !flight || date >= flight.start;
+  });
+  return {
+    items: started,
+    lateCorrection: started.length > 0,
+    futureOnly: creatives.length > 0 && started.length === 0,
+  };
 }
 
 function spendBucket(bucket) {
@@ -245,7 +266,7 @@ function deliveryBar(value, status) {
   }, el('i', { style: { width: `${width}%` } }));
 }
 
-function spendInputRow(m, label, bucket, date, onChange, creative) {
+function spendInputRow(m, label, bucket, date, onChange, creative, lateCorrection = false) {
   const updated = !!bucket?.typed;
   const input = el('input', {
     class: 'spend-only-input-v2', type: 'number', min: '0', step: '0.01', inputmode: 'decimal',
@@ -259,7 +280,8 @@ function spendInputRow(m, label, bucket, date, onChange, creative) {
   const row = el('label', { class: `spend-input-row-v2${creative ? ' creative' : ''}` },
     el('div', {},
       creative ? el('span', { class: 'spend-creative-mark-v2', 'aria-hidden': 'true' }) : null,
-      el('b', {}, label),
+      el('b', {}, label,
+        lateCorrection ? el('span', { class: 'spend-correction-v2' }, 'Late correction') : null),
       el('small', {}, updated
         ? `Recorded for ${dateAu(date)}`
         : bucket?.at ? `Previous ${money2(bucket.spend, m.ccy)} at ${dateAu(bucket.at)}` : 'No previous spend')),
