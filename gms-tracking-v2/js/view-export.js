@@ -140,7 +140,7 @@ function clientPicker(clients, redraw) {
   if (!clients.length) return el('div', { class: 'hint' }, 'No clients yet.');
   return el('div', { class: 'field' },
     el('label', {}, `Client — one report per client (${opts.clients.size} selected)`),
-    el('div', { class: 'checklist' }, ...clients.map((c) => el('label', {
+    el('div', { class: 'checklist client-checklist-v2' }, ...clients.map((c) => el('label', {
       class: opts.clients.has(c.id) ? 'on' : '',
     },
     el('input', {
@@ -179,15 +179,17 @@ function sheetPicker(isClient, redraw) {
   const keys = Object.keys(SHEETS).filter((k) => !(isClient && k === 'spendlog'));
   return el('div', { class: 'field' },
     el('label', {}, 'Sheets'),
-    el('div', { class: 'checklist' }, ...keys.map((k) => el('label', {
+    el('div', { class: 'checklist sheet-checklist-v2' }, ...keys.map((k) => el('label', {
       class: opts.sheets[k] ? 'on' : '',
     },
     el('input', {
       type: 'checkbox', checked: !!opts.sheets[k],
       onchange: (e) => { opts.sheets[k] = e.target.checked; redraw(); },
     }),
-    el('span', {}, el('b', {}, SHEETS[k][0]),
-      tip(SHEETS[k][1], `${SHEETS[k][0]} contents`))))));
+    el('span', { class: 'sheet-copy-v2' },
+      el('span', { class: 'sheet-title-v2' },
+        el('b', {}, SHEETS[k][0]),
+        tip(SHEETS[k][1], `${SHEETS[k][0]} contents`)))))));
 }
 
 function extras(redraw) {

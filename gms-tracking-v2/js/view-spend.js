@@ -48,7 +48,7 @@ function entryWidthKey() {
   const counters = defs.filter((d) => d.kind === 'counter').length;
   const rates = defs.length - counters;
   const cols = entryColumns();
-  return `tracking-entry6-${counters}c${rates}r-${cols.impressions ? 'm' : ''}${cols.clicks ? 'k' : ''}${cols.ctr ? 't' : ''}${cols.internalAud ? 'i' : ''}${cols.clientAud ? 'c' : ''}`;
+  return `tracking-entry7-${counters}c${rates}r-${cols.impressions ? 'm' : ''}${cols.clicks ? 'k' : ''}${cols.ctr ? 't' : ''}${cols.internalAud ? 'i' : ''}${cols.clientAud ? 'c' : ''}`;
 }
 
 export function renderSpend(host, ctx) {
@@ -337,7 +337,6 @@ function grid(rows, date, mode, state, rerender) {
 
     /* ---- the line's own row. Editable only while nothing is split off it. */
     body.appendChild(el('tr', { class: m.billable ? '' : 'nb' },
-      el('td', { class: 'wrap clientcell' }, el('b', {}, m.clientName)),
       el('td', { class: 'wrap linecell' },
         platformTag(m.line.platform),
         m.line.objective ? el('span', { class: 'lineobjective' }, m.line.objective) : null,
@@ -443,7 +442,6 @@ function grid(rows, date, mode, state, rerender) {
      grouping so the eye does not have to parse it from column names. */
   const table = resizable(el('table', { class: 'data fill-panel' },
     el('thead', {}, el('tr', {},
-      el('th', {}, 'Client'),
       el('th', {}, 'Line'),
       el('th', { class: 'num gtyped' },
         `Actual to ${dateAu(date)}`, tip('Internal spend as paid to the media owner, in the line’s own currency', 'Actual spend definition')),
@@ -467,7 +465,7 @@ function grid(rows, date, mode, state, rerender) {
        column was added or removed never lands on the wrong columns. (The v2
        prefix retired layouts saved under the pre-reorder column order.) */
     body), entryWidthKey(), [
-      128, COLW[0], COLW[1],
+      COLW[0], COLW[1],
       ...(audColumns.impressions ? [COLW[4]] : []),
       ...(audColumns.clicks ? [COLW[5]] : []),
       ...counters.map(() => 96),
@@ -485,7 +483,7 @@ function grid(rows, date, mode, state, rerender) {
     const total = widths.reduce((a, b) => a + b, 0);
     const slack = wrap.clientWidth - total;
     if (slack <= 1) return;
-    group.children[1].style.width = `${widths[1] + slack}px`;
+    group.children[0].style.width = `${widths[0] + slack}px`;
     table.style.width = `${wrap.clientWidth}px`;
   });
   return table;
@@ -750,7 +748,6 @@ function creativeRow(m, label, figures, opts = {}) {
   const dim = () => el('td', { class: 'num muted' }, '');
 
   return el('tr', { class: 'crrow' + (m.billable ? '' : ' nb') },
-    el('td', { class: 'wrap clientcell' }, ''),
     el('td', { class: 'wrap' },
       el('span', { class: 'crname' }, label),
       opts.creative ? creativeThumb(opts.creative) : null,

@@ -47,7 +47,7 @@ export function tip(text, label = 'Help') {
     tabindex: '0',
     'aria-label': `${label}: ${text}`,
     'data-tip': text,
-  }, '💡');
+  }, '💡︎');
 }
 
 /* ------------------------------------------------------------- formatting */
