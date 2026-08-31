@@ -244,16 +244,17 @@ textarea:focus-visible {
   align-items: center;
   justify-content: center;
   margin-left: 4px;
-  border: 1px solid color-mix(in srgb, var(--v2-orange) 22%, var(--v2-edge));
-  border-radius: 999px;
-  background: color-mix(in srgb, var(--v2-orange-soft) 52%, var(--surface));
+  border: 0;
+  border-radius: 3px;
+  background: transparent;
   color: var(--v2-orange);
-  font-family: Arial, sans-serif;
-  font-size: 9px;
   line-height: 1;
   cursor: help;
   vertical-align: middle;
 }
+
+.tip-bulb svg { display: block; width: 14px; height: 14px; }
+.tip-bulb:focus-visible { outline: 2px solid currentColor; outline-offset: 1px; }
 
 .tip-bulb::after {
   position: absolute;
@@ -295,8 +296,10 @@ textarea:focus-visible {
   width: 14px;
   height: 14px;
   margin-left: 3px;
-  font-size: 8px;
 }
+.data th .tip-bulb svg,
+.data td .tip-bulb svg,
+.tag .tip-bulb svg { width: 12px; height: 12px; }
 
 .preset-option-v2 {
   display: inline-flex;
@@ -329,7 +332,8 @@ textarea:focus-visible {
 .platform-launcher-head > div { flex: 1; min-width: 0; }
 .platform-launcher h2 { display: flex; align-items: center; margin: 2px 0 0; font-size: 16px; letter-spacing: -.02em; }
 .platform-launcher-head .eyebrow { color: #9fd0ed; }
-.platform-launcher-head .tip-bulb { border-color: rgba(255, 255, 255, .26); background: rgba(255, 255, 255, .12); color: #ffd3b9; }
+.topbar .tip-bulb,
+.platform-launcher-head .tip-bulb { color: #ffd3b9; }
 
 .platform-account-grid {
   display: grid;
@@ -585,6 +589,8 @@ textarea:focus-visible {
   border-radius: var(--v2-radius-card);
   background: var(--surface);
   box-shadow: var(--v2-shadow);
+  cursor: pointer;
+  transition: border-color 140ms ease, box-shadow 140ms ease, transform 140ms ease;
 }
 .plans-client-card-v2 h3,
 .plans-campaign-card-v2 h3 { margin: 6px 0 0; font-size: 17px; letter-spacing: -.025em; }
@@ -597,7 +603,8 @@ textarea:focus-visible {
 .plans-card-metrics-v2 b { margin-top: 4px; font-size: 14px; }
 .plans-card-link-v2 { display: flex; align-items: center; justify-content: space-between; width: fit-content; margin-top: 14px; padding: 0; border: 0; background: transparent; color: var(--v2-orange); font-size: 11px; font-weight: 780; }
 .plans-card-link-v2 span { margin-left: 7px; transition: transform 140ms ease; }
-.plans-card-link-v2:hover span { transform: translateX(3px); }
+.plans-client-card-v2:hover .plans-card-link-v2 span,
+.plans-client-card-v2:focus-visible .plans-card-link-v2 span { transform: translateX(3px); }
 
 .plans-summary-grid-v2 { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); overflow: hidden; margin-bottom: 11px; border: 1px solid var(--v2-edge); border-radius: var(--v2-radius-card); background: var(--surface); box-shadow: var(--v2-shadow); }
 .plans-summary-grid-v2 > div { min-height: 88px; padding: 14px 16px; border-right: 1px solid var(--line); }
@@ -621,6 +628,19 @@ textarea:focus-visible {
   border-radius: var(--v2-radius-card);
   background: var(--surface);
   box-shadow: var(--v2-shadow);
+  cursor: pointer;
+  transition: border-color 140ms ease, box-shadow 140ms ease, transform 140ms ease;
+}
+.plans-client-card-v2:hover,
+.plans-campaign-card-v2:hover {
+  border-color: color-mix(in srgb, var(--v2-blue) 42%, var(--v2-edge));
+  box-shadow: 0 18px 34px -27px rgba(27, 55, 76, .7);
+  transform: translateY(-1px);
+}
+.plans-client-card-v2:focus-visible,
+.plans-campaign-card-v2:focus-visible {
+  outline: 2px solid var(--v2-blue);
+  outline-offset: 2px;
 }
 .plans-campaign-main-v2 { min-width: 0; }
 .plans-campaign-main-v2 h3 { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }

@@ -61,6 +61,25 @@ function breadcrumb(items) {
     ]).filter(Boolean));
 }
 
+function openableCard(className, label, onOpen) {
+  return {
+    class: className,
+    role: 'link',
+    tabindex: '0',
+    'aria-label': label,
+    onclick: (event) => {
+      const control = event.target.closest('a, button, input, select, textarea');
+      if (control && control !== event.currentTarget) return;
+      onOpen();
+    },
+    onkeydown: (event) => {
+      if (event.target !== event.currentTarget || !['Enter', ' '].includes(event.key)) return;
+      event.preventDefault();
+      onOpen();
+    },
+  };
+}
+
 function renderClientGrid(host, clients, ctx) {
   host.appendChild(pageHead('Plans', 'Clients',
     'Choose a client first, then open one campaign and its execution detail.', [
@@ -77,7 +96,8 @@ function renderClientGrid(host, clients, ctx) {
     const active = built.filter((item) => item.rows.some((m) =>
       ['Live', 'Paused'].includes(effectiveStatus(m.line, item.campaign, ctx.today)))).length;
     const latest = latestSpend(rows);
-    return el('article', { class: 'plans-client-card-v2' },
+    return el('article', openableCard('plans-client-card-v2',
+      `Open ${client.name || 'client'}`, () => ctx.openPlan(client.id)),
       el('span', { class: 'plans-card-kicker-v2' },
         `${campaigns.length} campaign${campaigns.length === 1 ? '' : 's'} · ${rows.length} lines`),
       el('h3', {}, client.name || 'Untitled client'),
@@ -88,10 +108,9 @@ function renderClientGrid(host, clients, ctx) {
         cardMetric(side === 'internal' ? 'Internal spend' : 'Client spend', money(t[side].spend)),
         cardMetric('Whole-flight delivery', pct(t[side].pacingPct, 0))),
       progress(t[side].spend, t[side].budget),
-      el('button', {
+      el('span', {
         class: 'plans-card-link-v2',
-        onclick: () => ctx.openPlan(client.id),
-        'aria-label': `Open ${client.name || 'client'}`,
+        'aria-hidden': 'true',
       }, 'Open client', el('span', { 'aria-hidden': 'true' }, '→')));
   })));
 }
@@ -128,7 +147,8 @@ function renderClientView(host, client, ctx) {
   for (const { campaign, rows: campaignRows } of built) {
     const tCampaign = totals(campaignRows);
     const status = campaignStatus(campaign, campaignRows, ctx.today);
-    list.appendChild(el('article', { class: 'plans-campaign-card-v2' },
+    list.appendChild(el('article', openableCard('plans-campaign-card-v2',
+      `Open ${campaign.name || 'campaign'}`, () => ctx.openPlan(client.id, campaign.id)),
       el('div', { class: 'plans-campaign-main-v2' },
         el('span', { class: 'plans-card-kicker-v2' }, campaign.io_number || 'No IO number'),
         el('h3', {}, campaign.name || 'Untitled campaign'),
@@ -142,11 +162,7 @@ function renderClientView(host, client, ctx) {
         el('span', {}, 'Delivery'),
         el('b', {}, pct(tCampaign[side].pacingPct, 0)),
         progress(tCampaign[side].spend, tCampaign[side].budget)),
-      el('button', {
-        class: 'btn sm',
-        onclick: () => ctx.openPlan(client.id, campaign.id),
-        'aria-label': `Open ${campaign.name || 'campaign'}`,
-      }, 'Open campaign')));
+      el('span', { class: 'btn sm', 'aria-hidden': 'true' }, 'Open campaign')));
   }
   host.appendChild(list);
 }

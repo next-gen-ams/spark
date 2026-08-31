@@ -47,7 +47,19 @@ export function tip(text, label = 'Help') {
     tabindex: '0',
     'aria-label': `${label}: ${text}`,
     'data-tip': text,
-  }, '💡︎');
+  }, el('svg', {
+    viewBox: '0 0 24 24',
+    fill: 'none',
+    stroke: 'currentColor',
+    'stroke-width': '2',
+    'stroke-linecap': 'round',
+    'stroke-linejoin': 'round',
+    'aria-hidden': 'true',
+    focusable: 'false',
+  },
+  el('path', { d: 'M9 18h6' }),
+  el('path', { d: 'M10 22h4' }),
+  el('path', { d: 'M15.1 14c.2-.6.6-1.2 1.2-1.5a6 6 0 1 0-8.6 0c.6.3 1 .9 1.2 1.5' })));
 }
 
 /* ------------------------------------------------------------- formatting */
