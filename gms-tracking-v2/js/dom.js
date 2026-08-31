@@ -30,6 +30,17 @@ function add(node, kids) {
   }
 }
 
+const SVG_NS = 'http://www.w3.org/2000/svg';
+function svgEl(tag, props = {}, ...kids) {
+  const node = document.createElementNS(SVG_NS, tag);
+  for (const [key, value] of Object.entries(props)) {
+    if (value == null || value === false) continue;
+    node.setAttribute(key, value === true ? '' : String(value));
+  }
+  add(node, kids);
+  return node;
+}
+
 export const $ = (sel, root = document) => root.querySelector(sel);
 export const clear = (node) => { while (node.firstChild) node.removeChild(node.firstChild); return node; };
 export const fill = (node, ...kids) => { clear(node); add(node, kids); return node; };
@@ -47,7 +58,7 @@ export function tip(text, label = 'Help') {
     tabindex: '0',
     'aria-label': `${label}: ${text}`,
     'data-tip': text,
-  }, el('svg', {
+  }, svgEl('svg', {
     viewBox: '0 0 24 24',
     fill: 'none',
     stroke: 'currentColor',
@@ -57,9 +68,9 @@ export function tip(text, label = 'Help') {
     'aria-hidden': 'true',
     focusable: 'false',
   },
-  el('path', { d: 'M9 18h6' }),
-  el('path', { d: 'M10 22h4' }),
-  el('path', { d: 'M15.1 14c.2-.6.6-1.2 1.2-1.5a6 6 0 1 0-8.6 0c.6.3 1 .9 1.2 1.5' })));
+  svgEl('path', { d: 'M9 18h6' }),
+  svgEl('path', { d: 'M10 22h4' }),
+  svgEl('path', { d: 'M15.1 14c.2-.6.6-1.2 1.2-1.5a6 6 0 1 0-8.6 0c.6.3 1 .9 1.2 1.5' })));
 }
 
 /* ------------------------------------------------------------- formatting */
