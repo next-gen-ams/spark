@@ -330,7 +330,7 @@ function lineTable(rows, { state, rerender }) {
   const months = [...new Set(rows.flatMap((m) =>
     where('line_month', (x) => x.line_id === m.line.id).map((x) => x.ym)))].sort();
 
-  return el('div', { class: 'tablewrap' }, resizable(el('table', { class: 'data' },
+  return el('div', { class: 'tablewrap' }, resizable(el('table', { class: 'data fill-panel' },
     el('thead', {}, el('tr', {},
       el('th', {}, 'Platform'), el('th', {}, 'Objective'), el('th', {}, 'Line'),
       el('th', {}, 'Buy'),
