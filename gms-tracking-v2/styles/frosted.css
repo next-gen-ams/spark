@@ -201,15 +201,25 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
 
 /* Approved soft-white search and snapshot-date controls. */
 .platform-session-toolbar-v2 { padding: 14px; gap: 14px; }
-.platform-search-v2, .platform-date-v2 { gap: 7px; }
-.platform-search-v2 > span, .platform-date-v2 > span {
+.platform-search-v2, .platform-date-v2, .monthly-campaign-picker { gap: 7px; }
+.platform-search-v2 > span, .platform-date-v2 > span, .monthly-campaign-picker > span {
   font-size: 11px; font-weight: 500; color: var(--ink-2);
+  text-transform: none; letter-spacing: 0;
 }
-.platform-session-toolbar-v2 input:not([type='checkbox']):not([type='radio']) {
+.platform-session-toolbar-v2 input:not([type='checkbox']):not([type='radio']),
+.monthly-campaign-picker select {
   min-height: 42px; padding: 0 12px; font-size: 14px;
   background: rgb(255 255 255 / .74); border: 1px solid rgb(255 255 255 / .95);
   border-radius: 10px; box-shadow: 0 3px 8px -5px rgb(36 62 99 / .35);
 }
+.monthly-campaign-picker { position: relative; }
+.monthly-campaign-picker select { appearance: none; -webkit-appearance: none; padding-right: 38px; font-weight: 400; cursor: pointer; }
+.monthly-campaign-picker::after {
+  content: ''; position: absolute; right: 16px; bottom: 18px; width: 7px; height: 7px;
+  border-right: 1.5px solid var(--ink-3); border-bottom: 1.5px solid var(--ink-3);
+  transform: rotate(45deg); pointer-events: none;
+}
+.monthly-campaign-picker option { color: var(--ink); background: var(--surface); }
 .platform-search-v2 { position: relative; }
 .platform-session-toolbar-v2 .platform-search-v2 input:not([type='checkbox']):not([type='radio']) { padding-left: 38px; }
 .platform-search-v2::after {
@@ -218,18 +228,23 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
   -webkit-mask: url('../assets/search.svg') center / contain no-repeat;
   mask: url('../assets/search.svg') center / contain no-repeat;
 }
-.platform-session-toolbar-v2 input:focus-visible { outline: 2px solid var(--theme-action); outline-offset: 2px; }
+.platform-session-toolbar-v2 input:focus-visible, .monthly-campaign-picker select:focus-visible { outline: 2px solid var(--theme-action); outline-offset: 2px; }
 .platform-session-actions-v2 { align-self: end; align-items: center; min-height: 42px; }
-:root[data-theme='dark'] .platform-session-toolbar-v2 input {
+:root[data-theme='dark'] .platform-session-toolbar-v2 input,
+:root[data-theme='dark'] .monthly-campaign-picker select {
   background: rgb(38 58 83 / .92); border-color: rgb(179 199 227 / .30);
 }
-:root[data-theme='dark'] .platform-session-toolbar-v2 input:focus-visible { outline-color: var(--theme-focus); }
+:root[data-theme='dark'] .platform-session-toolbar-v2 input:focus-visible,
+:root[data-theme='dark'] .monthly-campaign-picker select:focus-visible { outline-color: var(--theme-focus); }
 @media (max-width: 700px) {
-  .platform-session-toolbar-v2 input:not([type='checkbox']):not([type='radio']) { min-height: 44px; font-size: 16px; }
+  .platform-session-toolbar-v2 input:not([type='checkbox']):not([type='radio']),
+  .monthly-campaign-picker select { min-height: 44px; font-size: 16px; }
   .platform-search-v2::after { bottom: 14px; }
+  .monthly-campaign-picker::after { bottom: 19px; }
 }
 @media (prefers-reduced-transparency: reduce) {
-  .platform-session-toolbar-v2 input:not([type='checkbox']):not([type='radio']) { background: var(--surface); }
+  .platform-session-toolbar-v2 input:not([type='checkbox']):not([type='radio']),
+  .monthly-campaign-picker select { background: var(--surface); }
 }
 
 /* Read first; edit settings or monthly bookings explicitly. */
