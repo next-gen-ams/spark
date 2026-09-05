@@ -2,10 +2,10 @@
    number was derived, and manage its creatives. */
 
 import { el, fill, money, money2, int, pct, monthLabel, toast, selectOrNew, shown, tip } from './dom.js';
-import { put, where, newId, vocab, addVocab, fxMap, loadCreativeImages, deleteCascade, deleteCreative } from './store.js';
+import { put, where, byId, newId, vocab, addVocab, fxMap, loadCreativeImages, deleteCascade, deleteCreative } from './store.js';
 import { imageField } from './paste-image.js';
 import { dialog, confirmDanger, errorLine } from './modal.js';
-import { grossUp, num, perAud, effectiveStatus, cumulative} from './calc.js';
+import { grossUp, num, perAud, effectiveStatus, cumulative, lineMetrics } from './calc.js';
 import { exportBackup } from './exportxlsx.js';
 
 let host = null;
@@ -17,54 +17,66 @@ function mount() {
   return host;
 }
 
-export function closeDrawer() { if (host) fill(host); }
+let requestClose = null;
+export function closeDrawer() { if (requestClose) requestClose(); else if (host) fill(host); }
 
 export function openLine(m, rerender) {
-  const line = { ...m.line };
+  const returnFocus = document.activeElement;
+  let line = { ...m.line }, active = 'overview', editing = false;
+  let draft = null, monthDrafts = [], pendingMonths = new Map();
+  let closed = false, creativesOpen = false;
   const h = fill(mount());
-  const refresh = () => { rerender(); openLine({ ...m, line: { ...line } }, rerender); };
-  reopen = refresh;
-
-  const save = (patch) => {
-    Object.assign(line, patch);
-    put('line', { id: line.id, ...patch });
-    rerender();
+  const currentModel = () => {
+    line = { ...(byId('line', line.id) || line) };
+    return { ...m, ...lineMetrics(line, m.campaign,
+      where('line_month', row => row.line_id === line.id),
+      where('spend', row => row.line_id === line.id), { fx: fxMap() }) };
   };
-
-  h.appendChild(el('div', { class: 'scrim', onclick: closeDrawer }));
-  h.appendChild(el('aside', { class: 'drawer', role: 'dialog', 'aria-label': 'Line item' },
-    el('header', {},
-      el('div', { style: { flex: 1 } },
-        el('h3', {}, shown(line.platform) || 'Line item',
-          shown(line.placement) ? el('span', { class: 'muted' }, ' · ' + shown(line.placement)) : null),
-        /* Defensive: a row model built outside model.js may not carry the
-           names. Better a thin header than the word "undefined". */
-        el('p', {}, [m.clientName, m.campaignName].filter(Boolean).join(' · ') || 'Line item',
-          m.campaign.io_number ? ` · ${m.campaign.io_number}` : '')),
-      el('button', { class: 'btn ghost', onclick: closeDrawer, 'aria-label': 'Close' }, '✕')),
-
-    el('div', { class: 'content' },
-      derivation(m),
-      identity(line, save, m.campaign),
-      commercials(line, save, m),
-      monthly(m),
-      creatives(line, refresh, m),
-      el('div', { class: 'field' },
-        el('label', {}, 'Note'),
-        el('textarea', {
-          rows: 3, value: line.note || '',
-          onchange: (e) => save({ note: e.target.value }),
-        }))),
-
-    el('footer', {},
-      el('button', { class: 'btn ghost', onclick: () => {
-        /* Say what actually goes, counted. "and all of its spend" is a phrase;
-           "and the 24 spend entries on it" is a number the user can weigh. */
+  const finish = () => {
+    closed = true; requestClose = null; fill(h);
+    document.removeEventListener('keydown', onKey);
+    if (returnFocus?.isConnected) returnFocus.focus();
+  };
+  const dirty = () => editing && (active === 'monthly' ? pendingMonths.size > 0
+    : Object.keys(draft).some(key => draft[key] !== line[key]));
+  requestClose = () => {
+    if (!dirty()) return finish();
+    dialog({ title: 'Discard unsaved changes?',
+      sub: 'Your saved settings and budgets will stay unchanged.',
+      actions: [{ label: 'Keep editing' }, { label: 'Discard changes', onClick: finish }] });
+  };
+  const refresh = () => { if (!closed && !editing) { rerender(); render(); } };
+  const startEdit = () => {
+    editing = true; draft = { ...line }; pendingMonths = new Map();
+    monthDrafts = where('line_month', row => row.line_id === line.id)
+      .sort((a, b) => a.ym.localeCompare(b.ym)).map(row => ({ ...row }));
+    render(); h.querySelector('.content input, .content select')?.focus();
+  };
+  const saveChanges = () => {
+    const invalid = [...h.querySelectorAll('.content input[data-edited]')].find(input => !input.checkValidity());
+    if (invalid) { invalid.reportValidity(); return; }
+    if (active === 'monthly') {
+      for (const patch of pendingMonths.values()) put('line_month', patch);
+    } else {
+      const patch = Object.fromEntries(Object.entries(draft).filter(([key, value]) => value !== line[key]));
+      if (Object.keys(patch).length) put('line', { id: line.id, ...patch });
+      for (const key of ['platform', 'objective', 'buy_method', 'status']) {
+        if (patch[key]) addVocab(key, patch[key]);
+      }
+    }
+    editing = false; rerender(); render(); toast('Changes saved');
+  };
+  const row = (label, value) => el('div', { class: 'line-detail-row' },
+    el('span', {}, label), el('b', {}, value == null || value === '' ? '—' : value));
+  const heading = (label, editLabel) => el('div', { class: 'line-detail-heading' },
+    el('h4', {}, label), editLabel && !editing ? el('button', { class: 'btn ghost sm', onclick: startEdit }, editLabel) : null);
+  const detail = (label, ...content) => el('details', { class: 'line-detail-disclosure' }, el('summary', {}, label), ...content);
+  const deleteButton = () => el('button', { class: 'btn ghost danger', onclick: () => {
         const spend = where('spend', (x) => x.line_id === line.id).length;
-        const creatives = where('creative', (c) => c.line_id === line.id).length;
+        const creativeCount = where('creative', (c) => c.line_id === line.id).length;
         const also = [
           spend ? `${spend} spend ${spend === 1 ? 'entry' : 'entries'}` : null,
-          creatives ? `${creatives} creative${creatives === 1 ? '' : 's'}` : null,
+          creativeCount ? `${creativeCount} creative${creativeCount === 1 ? '' : 's'}` : null,
         ].filter(Boolean);
         confirmDanger({
           title: 'Delete this line?',
@@ -74,14 +86,112 @@ export function openLine(m, rerender) {
           onBackup: exportBackup,
           onConfirm: () => {
             deleteCascade('line', line.id);
-            closeDrawer(); rerender(); toast('Line deleted');
+            finish(); rerender(); toast('Line deleted');
           },
         });
-      } }, 'Delete line'),
-      el('button', { class: 'btn primary', onclick: closeDrawer }, 'Done'))));
+      } }, 'Delete line');
 
-  const esc = (e) => { if (e.key === 'Escape') { closeDrawer(); document.removeEventListener('keydown', esc); } };
-  document.addEventListener('keydown', esc);
+  const monthlyPanel = (model) => {
+    const rows = editing ? monthDrafts : where('line_month', item => item.line_id === line.id).sort((a,b) => a.ym.localeCompare(b.ym));
+    const linked = model.margin > 0 && model.margin < 1;
+    const table = el('table', { class: 'data monthly-booking-table line-detail-budget' });
+    const totals = el('tfoot');
+    const updateTotals = () => fill(totals, el('tr', {}, el('td', {}, 'Total'),
+      ...['budget_media', 'budget_gms'].map(key => el('td', { class: 'num' }, money2(rows.reduce((sum,r) => sum + num(r[key]), 0))))));
+    const write = (r, key, input) => {
+      const value = input.value === '' ? null : Number(input.value);
+      if (value != null && !Number.isFinite(value)) return;
+      const patch = { ...(pendingMonths.get(r.id) || { id: r.id }), [key]: value };
+      if (linked && value != null && key !== 'units') {
+        const other = key === 'budget_media' ? 'budget_gms' : 'budget_media';
+        patch[other] = round2(key === 'budget_media' ? value / (1 - model.margin) : value * (1 - model.margin));
+        const peer = input.closest('tr').querySelector(`[data-budget-key="${other}"]`);
+        if (peer) peer.value = editableNumber(patch[other]);
+      }
+      Object.assign(r, patch); pendingMonths.set(r.id, patch); updateTotals();
+    };
+    const numberInput = (r,key) => {
+      const input = el('input', { class: 'cellinput', type: 'number', step: '0.01', inputmode: 'decimal',
+        'data-budget-key': key, 'aria-label': `${monthLabel(r.ym)} ${key === 'units' ? 'units' : key === 'budget_media' ? 'internal budget' : 'client budget'}`,
+        value: editableNumber(r[key]), oninput: e => write(r,key,e.target) });
+      return input;
+    };
+    fill(table, el('thead', {}, el('tr', {}, el('th', {}, 'Month'), el('th', {class:'num'}, 'Internal'), el('th', {class:'num'}, 'Client'))),
+      el('tbody', {}, ...rows.map(r => el('tr', {}, el('td', {}, monthLabel(r.ym)),
+        ...['budget_media', 'budget_gms'].map(key => el('td', {class:'num'}, editing ? numberInput(r,key) : money2(r[key])))))), totals);
+    updateTotals();
+    return el('section', {}, heading('Monthly budget · AUD', rows.length ? 'Edit budget' : null),
+      rows.length ? el('div', {class:'tablewrap'}, table) : el('p', {class:'hint'}, 'No monthly bookings on this line.'),
+      el('p', {class:'hint'}, linked ? `When editing, internal and client budgets are linked at a ${pct(model.margin,1)} margin. Change either amount and the other follows.` : 'No linked margin is set. Internal and client budgets are independent.'),
+      rows.length ? detail('Show booked units', el('table', {class:'data line-detail-units'}, el('tbody', {}, ...rows.map(r => el('tr', {},
+        el('td', {}, monthLabel(r.ym)), el('td', {class:'num'}, editing ? numberInput(r,'units') : int(r.units))))))) : null);
+  };
+
+  function render() {
+    const model = currentModel();
+    const content = el('div', { class: 'content', role: 'tabpanel', id: 'line-detail-panel', 'aria-labelledby': `line-detail-${active}` });
+    if (active === 'overview') {
+      fill(content, el('h4', {}, 'Spend to date'),
+        el('div', {class:'line-detail-numbers'},
+          el('div', {}, el('span', {}, 'Client spend'), el('b', {}, model.billable ? money2(model.clientProrata) : '—'), el('small', {}, 'AUD')),
+          el('div', {}, el('span', {}, 'Internal spend'), el('b', {}, money2(model.spendInternal)), el('small', {}, 'AUD'))),
+        !model.billable ? el('p',{class:'hint'},'Non-billable — excluded from client reports and pacing.') : null,
+        model.overspend > .5 ? el('p',{class:'line-detail-warning'},`Client spend is ${money2(model.overspend)} over the booked budget.`) : null,
+        detail('How is client spend calculated?', derivation(model)),
+        el('section', {class:'line-detail-section'}, el('h4', {}, 'Booked budget · AUD'),
+          row('Internal budget', money2(model.budgetInternal)), row('Client budget',money2(model.budgetClient)), row('Booked margin',pct(model.margin,1))),
+        el('section', {class:'line-detail-section'}, el('div',{class:'line-detail-heading'},el('h4',{},'Delivery details'),
+          el('button',{class:'btn ghost sm',onclick:()=>{active='settings';startEdit();}},'Edit details')),
+          row('Objective',line.objective),row('Buy method',line.buy_method),row('Status',effectiveStatus(line,m.campaign)),row('Supplier',line.supplier)),
+        line.note ? el('section',{class:'line-detail-section'},el('h4',{},'Note'),el('p',{class:'line-detail-note'},line.note)) : null);
+    } else if (active === 'monthly') fill(content,monthlyPanel(model));
+    else if (editing) {
+      const stage = patch => Object.assign(draft,patch);
+      fill(content,heading('Line settings'),identity(draft,stage,m.campaign),
+        el('section',{class:'line-detail-section'},el('h4',{},'Pricing & currency'),commercials(draft,stage,model)),
+        el('div',{class:'field'},el('label',{},'Note'),el('textarea',{rows:3,value:draft.note||'',oninput:e=>stage({note:e.target.value})})));
+    } else {
+      fill(content,heading('Line settings','Edit settings'),
+        ...[['Platform',line.platform],['Objective',line.objective],['Placement',line.placement],['Buy method',line.buy_method],['Supplier',line.supplier],['Market',line.market],['Status',effectiveStatus(line,m.campaign)]].map(([k,v])=>row(k,v)),
+        detail('Pricing & currency',row('Spend currency',`${model.ccy} · 1 AUD = ${model.rate}`),row('Booked rate · media',line.rate_media),row('Booked rate · GMS',line.rate_gms),row('Margin',pct(model.margin,1)),row('Net media cost (AUD)',money2(line.cost_media)),row('Net GMS cost (AUD)',money2(line.cost_gms))),
+        row('Included in client reports',model.billable?'Yes':'No'),row('IO number',m.campaign.io_number),
+        detail('Note',el('p',{class:'line-detail-note'},line.note||'No note yet.')),
+        el('details',{class:'line-detail-disclosure',open:creativesOpen,ontoggle:event=>{
+          const target=event.currentTarget;
+          if (!target.isConnected) return;
+          creativesOpen = target.open;
+          if(target.open&&!target.dataset.loaded){target.dataset.loaded='true';target.appendChild(el('p',{class:'hint'},'Creative changes save automatically.'));target.appendChild(creatives(line,refresh,model));}
+        }},el('summary',{},`Manage creatives (${where('creative',c=>c.line_id===line.id).length})`)),
+        el('div',{class:'line-detail-section'},deleteButton()));
+    }
+    for (const input of content.querySelectorAll('input')) {
+      input.addEventListener('input', () => { input.dataset.edited = 'true'; });
+    }
+    fill(h,el('div',{class:'scrim',onclick:closeDrawer}),
+      el('aside',{class:'drawer line-detail-drawer',role:'dialog','aria-modal':'true','aria-label':'Line item'},
+        el('header',{},el('div',{class:'line-detail-title'},
+          el('h3',{},m.clientName||'Client'),el('p',{class:'line-detail-placement'},[shown(line.platform),shown(line.placement)].filter(Boolean).join(' · ')||'Line item'),
+          el('p',{},m.campaignName||m.campaign.name||'Campaign')),
+          el('button',{class:'btn ghost','aria-label':'Close',onclick:closeDrawer},'✕')),
+        el('nav',{class:'line-detail-tabs',role:'tablist','aria-label':'Line detail'},...[
+          ['overview','Overview'],['monthly','Monthly budget'],['settings','Settings']
+        ].map(([key,label])=>el('button',{id:`line-detail-${key}`,role:'tab','aria-controls':'line-detail-panel','aria-selected':active===key,disabled:editing,
+          onclick:()=>{active=key;render();h.querySelector(`#line-detail-${key}`)?.focus();}},label))),content,
+        el('footer',{},el('small',{'aria-live':'polite'},editing?'Unsaved changes':''),
+          editing ? el('button',{class:'btn',onclick:()=>{editing=false;render();}},'Cancel') : null,
+          el('button',{class:'btn primary',onclick:editing?saveChanges:closeDrawer},editing?'Save changes':'Done'))));
+  }
+  function onKey(event) {
+    if (document.querySelector('.dialogbox, .confirmbox')) return;
+    if (event.key === 'Escape') { event.preventDefault(); closeDrawer(); }
+    if (event.key === 'Tab') {
+      const nodes=[...h.querySelectorAll('button:not(:disabled), input, select, textarea, summary, a[href]')].filter(node=>node.getClientRects().length);
+      const first=nodes[0],last=nodes.at(-1);
+      if(event.shiftKey&&document.activeElement===first){event.preventDefault();last?.focus();}
+      else if(!event.shiftKey&&document.activeElement===last){event.preventDefault();first?.focus();}
+    }
+  }
+  render(); h.querySelector('header button')?.focus(); document.addEventListener('keydown',onKey);
 }
 
 /* ------------------------------------------------------------ derivation */
@@ -123,9 +233,14 @@ function derivation(m) {
 /* --------------------------------------------------------------- fields */
 
 function identity(line, save, campaign) {
-  const pick = (kind, key) => selectOrNew(line[key] || '', vocab(kind), (v) => {
-    addVocab(kind, v); save({ [key]: v });
-  }, { cls: '' });
+  const pick = (kind, key) => {
+    const select = selectOrNew(line[key] || '', vocab(kind), (value) => {
+      if (![...select.options].some(option => option.value === value)) select.appendChild(el('option', {value}, value));
+      select.value = value;
+      save({ [key]: value });
+    }, { cls: '' });
+    return select;
+  };
 
   /* 'Not started' and 'Live' only describe where the calendar is, so the app
      derives them from the flight and everywhere else shows the derived one.
@@ -145,12 +260,12 @@ function identity(line, save, campaign) {
           ? tip(`Shows as “${shown}” — automatic from the flight dates. Pick Paused or Stopped to override.`, 'Automatic status')
           : null),
       el('div', { class: 'field' }, el('label', {}, 'Market'),
-        el('input', { value: line.market || '', onchange: (e) => save({ market: e.target.value }) }))),
+        el('input', { value: line.market || '', oninput: (e) => save({ market: e.target.value }) }))),
     el('div', { class: 'row2' },
       el('div', { class: 'field' }, el('label', {}, 'Campaign / placement'),
-        el('input', { value: line.placement || '', onchange: (e) => save({ placement: e.target.value }) })),
+        el('input', { value: line.placement || '', oninput: (e) => save({ placement: e.target.value }) })),
       el('div', { class: 'field' }, el('label', {}, 'Supplier'),
-        el('input', { value: line.supplier || '', onchange: (e) => save({ supplier: e.target.value }) }))));
+        el('input', { value: line.supplier || '', oninput: (e) => save({ supplier: e.target.value }) }))));
 }
 
 function commercials(line, save, m) {
@@ -160,40 +275,40 @@ function commercials(line, save, m) {
     el('div', { class: 'row3' },
       el('div', { class: 'field' },
         el('label', {}, 'Spend currency'),
-        el('select', { onchange: (e) => save({ currency: e.target.value }) },
+        el('select', { oninput: (e) => save({ currency: e.target.value }) },
           ...ccys.map((c) => el('option', { value: c, selected: c === (line.currency || 'AUD') }, c))),
         el('div', { class: 'hint' }, `1 AUD = ${perAud(line.currency || 'AUD', fx, m.campaign)}`)),
       el('div', { class: 'field' },
         el('label', {}, 'Booked rate — media'),
         el('input', {
-          type: 'number', step: '0.01', value: line.rate_media ?? '',
-          onchange: (e) => save({ rate_media: e.target.value === '' ? null : Number(e.target.value) }),
+          type: 'number', step: 'any', value: line.rate_media ?? '',
+          oninput: (e) => save({ rate_media: e.target.value === '' ? null : Number(e.target.value) }),
         })),
       el('div', { class: 'field' },
         el('label', {}, 'Booked rate — GMS'),
         el('input', {
-          type: 'number', step: '0.01', value: line.rate_gms ?? '',
-          onchange: (e) => save({ rate_gms: e.target.value === '' ? null : Number(e.target.value) }),
+          type: 'number', step: 'any', value: line.rate_gms ?? '',
+          oninput: (e) => save({ rate_gms: e.target.value === '' ? null : Number(e.target.value) }),
         }))),
     el('div', { class: 'row3' },
       el('div', { class: 'field' },
         el('label', {}, 'Margin %'),
         el('input', {
-          type: 'number', step: '0.1', value: line.margin_pct == null ? '' : (line.margin_pct * 100).toFixed(2),
-          onchange: (e) => save({ margin_pct: e.target.value === '' ? null : Number(e.target.value) / 100 }),
+          type: 'number', step: 'any', value: line.margin_pct == null ? '' : (line.margin_pct * 100).toFixed(2),
+          oninput: (e) => save({ margin_pct: e.target.value === '' ? null : Number(e.target.value) / 100 }),
         }),
         tip('Pulled from the media plan. Changing it changes every client-facing number on this line.', 'Margin help')),
       el('div', { class: 'field' },
         el('label', {}, 'Net media cost (AUD)'),
         el('input', {
-          type: 'number', step: '1', value: line.cost_media ?? '',
-          onchange: (e) => save({ cost_media: e.target.value === '' ? null : Number(e.target.value) }),
+          type: 'number', step: 'any', value: line.cost_media ?? '',
+          oninput: (e) => save({ cost_media: e.target.value === '' ? null : Number(e.target.value) }),
         })),
       el('div', { class: 'field' },
         el('label', {}, 'Net GMS cost (AUD)'),
         el('input', {
-          type: 'number', step: '1', value: line.cost_gms ?? '',
-          onchange: (e) => save({ cost_gms: e.target.value === '' ? null : Number(e.target.value) }),
+          type: 'number', step: 'any', value: line.cost_gms ?? '',
+          oninput: (e) => save({ cost_gms: e.target.value === '' ? null : Number(e.target.value) }),
         }),
         el('div', { class: 'hint' }, line.cost_media != null && line.margin_pct
           ? `at margin: ${money(grossUp(line.cost_media, line.margin_pct))}` : ''))),
@@ -201,70 +316,8 @@ function commercials(line, save, m) {
       el('label', {},
         el('input', {
           type: 'checkbox', checked: line.billable !== false, style: { width: 'auto', marginRight: '7px' },
-          onchange: (e) => save({ billable: e.target.checked }),
+          oninput: (e) => save({ billable: e.target.checked }),
         }), 'Billable — include in pacing, cost efficiency and the client report')));
-}
-
-/**
- * Monthly bookings, with the two money columns linked through the line's
- * margin. A line's margin does not change from month to month, so letting
- * both figures be typed independently only creates opportunities for them to
- * disagree — and a disagreement here is silently wrong client billing. Type
- * either one and the other follows.
- */
-function monthly(m) {
-  const rows = where('line_month', (x) => x.line_id === m.line.id)
-    .sort((a, b) => a.ym.localeCompare(b.ym));
-  if (!rows.length) return el('div');
-
-  const margin = num(m.line.margin_pct);
-  const linked = margin > 0 && margin < 1;
-
-  const write = (row, key, value) => {
-    const v = value === '' ? null : Number(value);
-    const patch = { id: row.id, [key]: v };
-    if (linked && v != null) {
-      /* Derive the other side rather than leaving it stale. */
-      if (key === 'budget_media') patch.budget_gms = round2(v / (1 - margin));
-      else patch.budget_media = round2(v * (1 - margin));
-    }
-    put('line_month', patch);
-  };
-
-  return el('div', { class: 'field' },
-    el('label', {}, 'Booked by month', tip(linked
-      ? `Internal and client are locked together at this line's margin of ${pct(margin, 1)}: type either one and the other follows, so they cannot drift apart.`
-      : 'This line has no margin set, so the two columns are independent. Set a margin above to link them.', 'Monthly booking help')),
-    el('div', { class: 'tablewrap' },
-      el('table', { class: 'data monthly-booking-table' },
-        el('thead', {}, el('tr', {},
-          el('th', {}, 'Month'), el('th', { class: 'num' }, 'Units'),
-          el('th', { class: 'num' }, 'Internal'),
-          el('th', { class: 'num' }, linked ? `Client (÷ ${(1 - margin).toFixed(2)})` : 'Client'))),
-        el('tbody', {}, ...rows.map((r) => el('tr', {},
-          el('td', {}, monthLabel(r.ym)),
-          el('td', { class: 'num' }, el('input', {
-            class: 'cellinput', type: 'number', step: '0.01', inputmode: 'decimal',
-            value: editableNumber(r.units),
-            onchange: (e) => put('line_month', {
-              id: r.id, units: e.target.value === '' ? null : Number(e.target.value),
-            }),
-          })),
-          el('td', { class: 'num' }, el('input', {
-            class: 'cellinput', type: 'number', step: '0.01', inputmode: 'decimal',
-            value: editableNumber(r.budget_media),
-            onchange: (e) => { write(r, 'budget_media', e.target.value); refreshDrawer(); },
-          })),
-          el('td', { class: 'num' }, el('input', {
-            class: 'cellinput', type: 'number', step: '0.01', inputmode: 'decimal',
-            value: editableNumber(r.budget_gms),
-            onchange: (e) => { write(r, 'budget_gms', e.target.value); refreshDrawer(); },
-          }))))),
-        el('tfoot', {}, el('tr', {},
-          el('td', {}, 'Total'),
-          el('td', { class: 'num' }, int(rows.reduce((a, r) => a + num(r.units), 0) || null)),
-          el('td', { class: 'num' }, money(rows.reduce((a, r) => a + num(r.budget_media), 0))),
-          el('td', { class: 'num' }, money(rows.reduce((a, r) => a + num(r.budget_gms), 0))))))));
 }
 
 const round2 = (n) => Math.round(n * 100) / 100;
@@ -274,10 +327,6 @@ const editableNumber = (value) => {
   if (!Number.isFinite(n)) return '';
   return n.toFixed(2).replace(/\.00$/, '').replace(/(\.\d)0$/, '$1');
 };
-
-/* Re-opening the drawer is how the linked column shows its new value. */
-let reopen = null;
-function refreshDrawer() { if (reopen) reopen(); }
 
 /* ------------------------------------------------------------- creatives */
 
