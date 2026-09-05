@@ -59,7 +59,8 @@ export const PLATFORM_COLOR = {
 export const PLATFORM_LOGO = {
   Baidu: 'assets/platforms/baidu.svg',
   WeChat: 'assets/platforms/wechat.svg',
-  RED: 'assets/platforms/xiaohongshu.svg',
+  RED: 'assets/platforms/xiaohongshu-supplied.png',
+  Douyin: 'assets/platforms/douyin-supplied.png',
   IQIYI: 'assets/platforms/iqiyi.svg',
   DSP: 'assets/platforms/ipinyou.svg',
   IPY: 'assets/platforms/ipinyou.svg',

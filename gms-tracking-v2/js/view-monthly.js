@@ -86,22 +86,41 @@ function campaignModel(campaign) {
   return { lines: lineModels, months, totals, currentYm };
 }
 
-function campaignPicker(campaigns, selected, state, rerender) {
-  return el('label', { class: 'monthly-campaign-picker' },
-    el('span', {}, 'Campaign'),
+function monthlyFilters(campaigns, selected, state, rerender) {
+  const clients = all('client').slice().sort((a, b) => (a.name || '').localeCompare(b.name || ''));
+  const clientPicker = el('label', { class: 'monthly-client-picker' },
+    el('span', {}, 'Client'),
     el('select', {
-      onchange: (event) => {
-        state.filters.campaign = event.target.value;
-        state.filters.client = byId('campaign', event.target.value)?.client_id || '';
+      'aria-label': 'Client', 'data-focus': 'monthly-client',
+      onchange: event => {
+        state.filters.client = event.target.value;
+        const available = all('campaign')
+          .filter(campaign => !state.filters.client || campaign.client_id === state.filters.client)
+          .sort((a, b) => (a.name || '').localeCompare(b.name || ''));
+        state.filters.campaign = available.find(campaign => campaign.id === selected?.id)?.id
+          || available[0]?.id || '';
         rerender();
       },
-    }, ...campaigns.map((campaign) => {
+    }, el('option', { value: '', selected: !state.filters.client }, 'All clients'),
+    ...clients.map(client => el('option', {
+      value: client.id, selected: client.id === state.filters.client,
+    }, client.name || 'Untitled client'))));
+  const campaignPicker = el('label', { class: 'monthly-campaign-picker' },
+    el('span', {}, 'Campaign'),
+    el('select', {
+      'aria-label': 'Campaign', 'data-focus': 'monthly-campaign', disabled: !campaigns.length,
+      onchange: event => {
+        state.filters.campaign = event.target.value;
+        rerender();
+      },
+    }, campaigns.length ? campaigns.map(campaign => {
       const client = byId('client', campaign.client_id);
       return el('option', {
-        value: campaign.id,
-        selected: campaign.id === selected.id,
-      }, `${client?.name || 'Client'} · ${campaign.name || 'Untitled campaign'}`);
-    })));
+        value: campaign.id, selected: campaign.id === selected?.id,
+      }, state.filters.client ? campaign.name || 'Untitled campaign'
+        : `${client?.name || 'Client'} · ${campaign.name || 'Untitled campaign'}`);
+    }) : el('option', { value: '' }, 'No campaigns')));
+  return el('div', { class: 'monthly-filter-pair' }, clientPicker, campaignPicker);
 }
 
 function totalsStrip(model) {
@@ -242,30 +261,28 @@ export function renderMonthly(host, { state, rerender }) {
   const campaigns = all('campaign')
     .filter((campaign) => !state.filters.client || campaign.client_id === state.filters.client)
     .sort((a, b) => (a.name || '').localeCompare(b.name || ''));
-  const selected = campaigns.find((campaign) => campaign.id === state.filters.campaign)
-    || campaigns[0]
-    || all('campaign')[0];
-
-  if (!selected) {
-    host.appendChild(el('div', { class: 'panel' }, el('div', { class: 'empty' },
-      el('strong', {}, 'No campaigns yet'),
-      el('div', {}, 'Import a media plan before setting monthly working budgets.'))));
-    return;
-  }
-
-  const model = campaignModel(selected);
-  host.appendChild(el('section', { class: 'monthly-page-v2' },
+  const selected = campaigns.find(campaign => campaign.id === state.filters.campaign) || campaigns[0];
+  const section = el('section', { class: 'monthly-page-v2' },
     el('div', { class: 'monthly-page-head' },
       el('div', {},
         el('span', { class: 'eyebrow' }, 'Monthly pacing'),
-        el('h2', {}, selected.name || 'Untitled campaign',
+        el('h2', {}, selected?.name || 'Monthly pacing',
           tip('Every line is collapsed by default. Open only the line whose monthly working budget needs changing.'))),
-      campaignPicker(all('campaign'), selected, state, rerender)),
-    totalsStrip(model),
-    monthlyChart(model),
+      monthlyFilters(campaigns, selected, state, rerender)));
+  host.appendChild(section);
+  if (!selected) {
+    section.appendChild(el('div', { class: 'empty' },
+      el('strong', {}, state.filters.client ? 'No campaigns for this client' : 'No campaigns yet'),
+      el('div', {}, state.filters.client
+        ? 'Choose another client or import a media plan for this client.'
+        : 'Import a media plan before setting monthly working budgets.')));
+    return;
+  }
+  const model = campaignModel(selected);
+  section.append(totalsStrip(model), monthlyChart(model),
     el('div', { class: 'monthly-lines-head' },
       el('h3', {}, 'Line items'),
       tip('Booked comes from the imported plan. Budgeted is editable and shared. Actual is derived from cumulative snapshots.')),
     el('div', { class: 'monthly-line-list' },
-      ...model.lines.map((line) => lineCard(line, model.currentYm, rerender)))));
+      ...model.lines.map(line => lineCard(line, model.currentYm, rerender))));
 }

@@ -9,6 +9,7 @@ export function platformMark(platform, extraClass = '') {
   const cls = `platform-brand-mark${name === 'DSP' || name === 'IPY' ? ' wide' : ''}${extraClass ? ` ${extraClass}` : ''}`;
   return el('span', {
     class: cls,
+    'data-platform': name,
     style: { '--platform-color': PLATFORM_COLOR[name] || 'var(--v2-blue)' },
     'aria-hidden': 'true',
   }, src

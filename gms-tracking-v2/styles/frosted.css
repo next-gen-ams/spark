@@ -381,3 +381,30 @@ table textarea { --control-height: 76px; }
   body { background: white; }
   .panel, .card, .monthly-page-v2, .spend-line-entry-v2 { background: white; backdrop-filter: none; box-shadow: none; }
 }
+
+/* Supplied square platform marks need their full footprint to stay legible. */
+.platform-brand-mark[data-platform='RED'], .platform-brand-mark[data-platform='Douyin'] {
+  width: 36px; height: 36px; padding: 0; border: 0; border-radius: 8px;
+  overflow: hidden; background: #fff;
+}
+.platform-brand-mark[data-platform='Douyin'] { padding: 3px; }
+.platform-session-logo-v2[data-platform='RED'], .platform-session-logo-v2[data-platform='Douyin'] {
+  width: 38px; height: 38px;
+}
+.monthly-filter-pair {
+  display: grid; grid-template-columns: minmax(160px, .7fr) minmax(240px, 1.3fr);
+  gap: 14px; width: min(680px, 62%); min-width: 0;
+}
+.monthly-filter-pair .monthly-client-picker, .monthly-filter-pair .monthly-campaign-picker {
+  display: grid; gap: 7px; min-width: 0; width: 100%;
+}
+.monthly-client-picker > span { font-size: 11px; font-weight: 500; color: var(--ink-2); }
+.monthly-client-picker select { width: 100%; }
+@container workspace (max-width: 1050px) { .monthly-filter-pair { width: 100%; } }
+@media (max-width: 1100px) { .monthly-filter-pair { width: 100%; } }
+@media (max-width: 600px) { .monthly-filter-pair { grid-template-columns: minmax(0, 1fr); } }
+.monthly-page-head > .monthly-filter-pair { flex: 1.6; }
+/* The last total's help bubble opens inward beside the paired filters. */
+.monthly-totals > div:last-child .tip-bulb::after { left: auto; right: 0; transform: translateY(-3px); }
+.monthly-totals > div:last-child .tip-bulb:hover::after,
+.monthly-totals > div:last-child .tip-bulb:focus-visible::after { transform: translateY(0); }

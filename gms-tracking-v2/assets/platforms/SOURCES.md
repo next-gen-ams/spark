@@ -9,3 +9,7 @@ Verified 2026-08-30 and vendored locally so the internal dashboard does not depe
 - `ipinyou.svg`: current header mark served by `http://www.ipinyou.com/images/header-logo.svg`
 
 All platform names and marks remain the property of their respective owners and are used here only to identify the account being updated.
+
+User-selected replacements, 2026-09-05 (original PNG bytes preserved):
+- `douyin-supplied.png`: supplied Douyin logo; replaces the text fallback.
+- `xiaohongshu-supplied.png`: supplied square red Xiaohongshu logo; replaces the small horizontal mark in V2.
