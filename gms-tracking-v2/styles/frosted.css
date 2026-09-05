@@ -1,0 +1,206 @@
+/* Approved V2 theme: navy / warm white, frosted blue-coral workspace,
+   DM Sans, action-blue buttons. Keep layout and business semantics in v2.css. */
+@font-face {
+  font-family: 'DM Sans';
+  src: url('../assets/fonts/dm-sans-variable.ttf') format('truetype');
+  font-style: normal;
+  font-weight: 100 1000;
+  font-display: swap;
+}
+
+:root, :root[data-theme='light'] {
+  --font: 'DM Sans', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+  --mono: var(--font);
+  --bg: #e3ecf6; --surface: #f8fafc; --surface-2: #edf2f8;
+  --ink: #2c3345; --ink-2: #4b596d; --ink-3: #536076;
+  --line: #ccd5e1; --line-2: #9baabc;
+  --header: #243e63; --header-tx: #fff;
+  --blue: #006fab; --blue-soft: #eaf7fd;
+  --orange: #a05235; --orange-deep: #8a412e; --orange-soft: #fff0e9;
+  --good: #30628a; --good-soft: #e8f2f9;
+  --warn: #944523; --warn-soft: #fff0e9;
+  --crit: #ab3446; --crit-soft: #fbecef;
+  --v2-blue: #5487b0; --v2-blue-soft: #e8f2f9;
+  --v2-orange: #a05235; --v2-orange-soft: #fff0e9;
+  --v2-header: #243e63; --v2-header-2: #243e63;
+  --v2-glass: rgb(255 255 255 / .50);
+  --v2-glass-strong: rgb(255 255 255 / .72);
+  --v2-edge: rgb(255 255 255 / .83);
+  --v2-control-bg: rgb(255 255 255 / .78);
+  --v2-control-edge: #7b8ca0;
+  --v2-radius-card: 16px; --v2-radius-control: 9px;
+  --v2-shadow: 0 18px 34px -24px rgb(51 64 99 / .4), inset 0 1px rgb(255 255 255 / .8);
+  --shadow: 0 12px 24px -20px rgb(51 64 99 / .32);
+  --shadow-lg: 0 20px 50px -18px rgb(35 52 82 / .4);
+  --edge-shadow: rgb(51 64 99 / .15);
+  --theme-nav: #f4f3ef; --theme-nav-ink: #4b5667;
+  --theme-action: #006fab; --theme-action-hover: #005c90;
+  --theme-action-ink: #fff; --theme-secondary: #eaf7fd;
+  --theme-secondary-ink: #235c7b; --theme-secondary-edge: #7ba0b8;
+  --theme-tint: rgb(225 242 253 / .42);
+  --theme-data: rgb(255 255 255 / .29);
+  --theme-focus: #385879; --theme-solid: #eef2f8;
+  --theme-canvas: radial-gradient(ellipse at 0% 42%, #f5ad91 0%, transparent 44%),
+    radial-gradient(ellipse at 100% 8%, #83bfe5 0%, transparent 48%),
+    radial-gradient(ellipse at 92% 80%, #ada4cf 0%, transparent 42%),
+    linear-gradient(145deg, #e8dadd, #e3ecf6 52%, #d5e4f1);
+}
+
+:root[data-theme='dark'] {
+  --header: #243e63; --header-tx: #fff;
+  --bg: #162338; --surface: #202e43; --surface-2: #28394f;
+  --ink: #f2f5fb; --ink-2: #d0d9e7; --ink-3: #b7c5d9;
+  --line: #43546e; --line-2: #71839f;
+  --blue: #9ed7fa; --blue-soft: #263f55;
+  --orange: #f5b293; --orange-deep: #ffccb4; --orange-soft: #4a3838;
+  --good: #a6d5f5; --good-soft: #263f55;
+  --warn: #ffc6a9; --warn-soft: #4a3838;
+  --crit: #ffabb6; --crit-soft: #4b2e3d;
+  --v2-blue: #9ecbea; --v2-blue-soft: #263f55;
+  --v2-orange: #f5b293; --v2-orange-soft: #4a3838;
+  --v2-glass: rgb(28 43 64 / .74); --v2-glass-strong: rgb(32 48 70 / .92);
+  --v2-edge: rgb(179 199 227 / .25);
+  --v2-control-bg: #263a53; --v2-control-edge: #8b9fb9;
+  --v2-shadow: 0 18px 34px -24px rgb(0 0 0 / .7), inset 0 1px rgb(255 255 255 / .10);
+  --shadow: 0 12px 24px -20px rgb(0 0 0 / .5);
+  --shadow-lg: 0 20px 50px -18px rgb(0 0 0 / .75);
+  --theme-nav: #2b3b51; --theme-nav-ink: #e3eaf5;
+  --theme-secondary: #29415a; --theme-secondary-ink: #c7e8ff;
+  --theme-secondary-edge: #7f9bb6; --theme-tint: rgb(73 110 150 / .25);
+  --theme-data: rgb(27 44 66 / .32); --theme-focus: #a0d7fa;
+  --theme-solid: #24354c;
+  --theme-canvas: radial-gradient(ellipse at 0% 42%, #513b44 0%, transparent 44%),
+    radial-gradient(ellipse at 100% 8%, #245779 0%, transparent 48%),
+    radial-gradient(ellipse at 92% 80%, #3e385a 0%, transparent 42%), #162338;
+}
+
+html { background: var(--bg); }
+body { background: var(--theme-canvas); background-attachment: fixed; min-height: 100vh;
+  font-family: var(--font); font-optical-sizing: auto; padding-top: 0; }
+button, input, select, textarea, table, svg text { font-family: var(--font); }
+input, textarea { caret-color: var(--theme-focus); }
+::selection { background: var(--blue-soft); color: var(--ink); }
+.app { padding-top: 16px; }
+.topbar {
+  top: 8px; margin: 0 0 14px; padding: 14px 18px; gap: 14px;
+  border: 1px solid rgb(255 255 255 / .30); border-radius: 16px;
+  background: #243e63; color: #fff; backdrop-filter: none;
+  box-shadow: 0 16px 28px -20px rgb(23 44 72 / .5), inset 0 1px rgb(255 255 255 / .14);
+}
+.topbar .plate, :root[data-theme='dark'] .topbar .plate, .gate .plate {
+  background: #f4f3ef; border-color: transparent; padding: 8px 10px; border-radius: 7px;
+}
+.topbar .plate img { height: 29px; width: auto; }
+.topbar .plate .mark, .topbar .plate .rule { display: none; }
+.topbar .titles h1 { color: #fff; font-size: 18px; }
+.topbar .chip, .topbar .audience-seg, .topbar .btn,
+.topbar .topbar-export-v2 { color: #fff; background: rgb(255 255 255 / .12); border-color: rgb(255 255 255 / .46); }
+.topbar .btn:hover, .topbar .topbar-export-v2:hover { background: rgb(255 255 255 / .2); color: #fff; }
+.topbar .audience-seg button[aria-pressed='false'] { color: #f0f3fa; }
+.topbar .audience-seg button[aria-pressed='true'] { background: #eaf7fd; color: #234766; border-color: transparent; }
+.topbar .audience-seg button[aria-pressed='true']::before { background: #006fab; }
+.topbar .v2-version { background: #eaf7fd; border-color: transparent; color: #235c7b; }
+.topbar .tip-bulb { color: #edf5ff; }
+.topbar :focus-visible { outline-color: white; }
+.v2-primary-nav { margin-top: 0; padding: 0 16px; gap: 26px; min-height: 44px;
+  background: var(--theme-nav); border: 1px solid var(--v2-edge); border-radius: 12px; }
+.v2-primary-nav button { color: var(--theme-nav-ink); }
+.v2-primary-nav button[aria-current='page'] { color: var(--blue); border-bottom-color: var(--orange); }
+.v2-secondary-nav { margin-top: 8px; padding-inline: 12px; background: var(--v2-glass-strong);
+  border-radius: 9px; border: 1px solid var(--v2-edge); backdrop-filter: blur(20px); }
+.v2-secondary-nav button[aria-selected='true'] { color: var(--blue); border-bottom-color: var(--blue); }
+
+/* Every page uses the same glass surface; overlays remain opaque for legibility. */
+.panel, .card, .filters, .platform-launcher, .monthly-page-v2,
+.spend-line-entry-v2, .plans-client-card-v2, .plans-campaign-card-v2,
+.plans-summary-grid-v2, .campaign-commercial-v2, .platform-session-summary-v2,
+.monthly-line-card, .plan-empty-v2, .platform-session-toolbar-v2 {
+  background: var(--v2-glass); border-color: var(--v2-edge); border-radius: var(--v2-radius-card);
+  backdrop-filter: blur(26px) saturate(120%); -webkit-backdrop-filter: blur(26px) saturate(120%);
+  box-shadow: var(--v2-shadow);
+}
+.platform-session-toolbar-v2 { background: var(--v2-glass); }
+.platform-launcher-head, .spend-card-context-v2, .panel > header,
+.monthly-page-head { background: var(--theme-tint); color: var(--ink); }
+.platform-launcher-head .eyebrow, .platform-launcher-head .tip-bulb,
+.spend-card-context-v2 span { color: var(--ink-2); }
+.spend-card-context-v2 > div + div { border-left-color: var(--line); }
+.spend-input-row-v2, .spend-line-head-v2 { background: var(--theme-data); }
+.spend-input-row-v2.creative { background: var(--theme-tint); }
+.spend-line-entry-v2.updated { border-color: var(--theme-secondary-edge); }
+.spend-input-row-v2[data-updated='true'] .spend-input-control-v2 > em { color: var(--blue); }
+.platform-account-card { background: var(--v2-glass-strong); border-color: var(--v2-edge); }
+.platform-account-card[aria-pressed='true'] { background: var(--blue-soft); }
+.platform-account-card small { color: var(--ink-2); }
+.card::before { width: 0; }
+.card.total .v { color: var(--blue); }
+.plans-card-link-v2, .linkish { color: var(--blue); }
+.plans-client-card-v2:hover, .plans-campaign-card-v2:hover { background: var(--v2-glass-strong); border-color: var(--theme-secondary-edge); }
+.confid, .viewband { background: var(--v2-glass-strong); color: var(--ink-2); }
+.platform-session-footer-v2 { background: var(--v2-glass-strong); backdrop-filter: blur(26px); }
+.drawer, .dialogbox, .confirmbox, .gate .box { background: var(--surface); border-color: var(--line); }
+.drawer header, .drawer footer { background: var(--surface-2); }
+.tip-bulb::after { background: var(--surface); color: var(--ink); border-color: var(--line-2); }
+.data th { background: var(--surface-2); color: var(--ink-2); }
+.data td { border-bottom-color: var(--line); }
+
+/* C: action blue / ice blue. Danger and disabled states keep their meaning. */
+.btn, .note-trigger-v2, .creative-note-trigger-v2,
+.platform-session-actions-v2 .btn { background: var(--theme-secondary); color: var(--theme-secondary-ink);
+  border-color: var(--theme-secondary-edge); border-radius: 9px; box-shadow: inset 0 1px rgb(255 255 255 / .24); }
+.btn:hover, .note-trigger-v2:hover, .creative-note-trigger-v2:hover { background: color-mix(in srgb, var(--theme-secondary) 90%, var(--v2-blue)); color: var(--theme-secondary-ink); }
+.btn.primary { background: var(--theme-action); border-color: var(--theme-action); color: var(--theme-action-ink); }
+.btn.primary:hover { background: var(--theme-action-hover); border-color: var(--theme-action-hover); color: var(--theme-action-ink); }
+.btn.ghost { background: transparent; border-color: transparent; color: var(--ink-2); box-shadow: none; }
+.btn.ghost:hover { background: var(--v2-glass-strong); }
+.btn.danger { background: var(--crit-soft); color: var(--crit); border-color: var(--crit); }
+.btn.danger:hover { background: color-mix(in srgb, var(--crit-soft) 90%, var(--crit)); color: var(--crit); }
+.btn:disabled { background: var(--surface-2); color: var(--ink-3); border-color: var(--line); opacity: .65; box-shadow: none; }
+.topbar .btn.ghost { color: #fff; background: rgb(255 255 255 / .12); border-color: rgb(255 255 255 / .46); }
+.topbar .export-menu-row .btn.ghost { color: var(--ink); background: transparent; border-color: transparent; }
+.topbar .export-menu-row .btn.ghost:hover { background: var(--surface-2); }
+.topbar .export-menu-row .tip-bulb { color: var(--ink-2); }
+.note-trigger-v2 small, .creative-note-trigger-v2 small { background: var(--blue-soft); color: var(--blue); }
+.seg button[aria-pressed='true'], .audience button.on { border-color: var(--blue); background: var(--blue-soft); color: var(--blue); }
+.audience button.on b { color: var(--blue); }
+.field .checklist label.on, .checklist label.on { background: var(--blue-soft); border-color: var(--blue); }
+input[type='checkbox'], input[type='radio'] { accent-color: var(--theme-action); }
+input:not([type='checkbox']):not([type='radio']), select, textarea,
+.monthly-campaign-picker select { background: var(--v2-control-bg); border-color: var(--v2-control-edge); border-radius: 9px; }
+input::placeholder, textarea::placeholder,
+.platform-session-toolbar-v2 input::placeholder, .field input::placeholder, .field textarea::placeholder { color: var(--ink-3); opacity: 1; }
+button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-visible {
+  outline: 3px solid var(--theme-focus); outline-offset: 2px;
+}
+.monthly-booking-table .cellinput:focus { border-color: var(--theme-focus); box-shadow: none; }
+
+@media (max-width: 1100px) {
+  .topbar { flex-wrap: wrap; }
+  .topbar .titles { flex: 1; }
+}
+@media (max-width: 700px) {
+  .app { padding: 10px 10px 32px; }
+  .topbar { position: relative; top: 0; margin: 0 0 12px; padding: 12px; gap: 10px; }
+  .topbar .titles { display: block; flex: 1 1 150px; }
+  .topbar .titles h1 { font-size: 15px; }
+  .topbar .plate img { height: 26px; }
+  .topbar .spacer { display: none; }
+  .v2-primary-nav { padding-inline: 12px; gap: 22px; }
+}
+@media (prefers-reduced-transparency: reduce) {
+  .panel, .card, .filters, .platform-launcher, .monthly-page-v2,
+  .spend-line-entry-v2, .plans-client-card-v2, .plans-campaign-card-v2,
+  .plans-summary-grid-v2, .campaign-commercial-v2, .platform-session-summary-v2,
+  .monthly-line-card, .plan-empty-v2, .platform-session-toolbar-v2,
+  .platform-session-footer-v2 { background: var(--theme-solid); backdrop-filter: none; -webkit-backdrop-filter: none; }
+}
+@supports not (backdrop-filter: blur(1px)) {
+  .panel, .card, .filters, .platform-launcher, .monthly-page-v2,
+  .spend-line-entry-v2, .plans-client-card-v2, .plans-campaign-card-v2,
+  .plans-summary-grid-v2, .campaign-commercial-v2, .platform-session-summary-v2,
+  .monthly-line-card, .plan-empty-v2, .platform-session-toolbar-v2 { background: var(--theme-solid); }
+}
+@media print {
+  body { background: white; }
+  .panel, .card, .monthly-page-v2, .spend-line-entry-v2 { background: white; backdrop-filter: none; box-shadow: none; }
+}

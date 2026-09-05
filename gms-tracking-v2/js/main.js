@@ -36,7 +36,7 @@ const state = {
   planCampaign: '',
   spendMode: 'month',
   spendDate: '',
-  theme: localStorage.getItem('tracking-theme') || '',
+  theme: localStorage.getItem('tracking-theme') || 'light',
 };
 
 const root = document.getElementById('root');
