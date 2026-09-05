@@ -26,8 +26,10 @@
   --v2-glass: rgb(255 255 255 / .50);
   --v2-glass-strong: rgb(255 255 255 / .72);
   --v2-edge: rgb(255 255 255 / .83);
-  --v2-control-bg: rgb(255 255 255 / .78);
-  --v2-control-edge: #7b8ca0;
+  --v2-control-bg: rgb(255 255 255 / .74);
+  --v2-control-edge: rgb(255 255 255 / .95);
+  --control-focus: var(--theme-action);
+  --control-chevron: url('../assets/chevron-down.svg');
   --v2-radius-card: 16px; --v2-radius-control: 9px;
   --v2-shadow: 0 18px 34px -24px rgb(51 64 99 / .4), inset 0 1px rgb(255 255 255 / .8);
   --shadow: 0 12px 24px -20px rgb(51 64 99 / .32);
@@ -60,7 +62,9 @@
   --v2-orange: #f5b293; --v2-orange-soft: #4a3838;
   --v2-glass: rgb(28 43 64 / .74); --v2-glass-strong: rgb(32 48 70 / .92);
   --v2-edge: rgb(179 199 227 / .25);
-  --v2-control-bg: #263a53; --v2-control-edge: #8b9fb9;
+  --v2-control-bg: rgb(38 58 83 / .92); --v2-control-edge: rgb(179 199 227 / .30);
+  --control-focus: var(--theme-focus);
+  --control-chevron: url('../assets/chevron-down-light.svg');
   --v2-shadow: 0 18px 34px -24px rgb(0 0 0 / .7), inset 0 1px rgb(255 255 255 / .10);
   --shadow: 0 12px 24px -20px rgb(0 0 0 / .5);
   --shadow-lg: 0 20px 50px -18px rgb(0 0 0 / .75);
@@ -190,61 +194,94 @@ input, textarea { caret-color: var(--theme-focus); }
 .audience button.on b { color: var(--blue); }
 .field .checklist label.on, .checklist label.on { background: var(--blue-soft); border-color: var(--blue); }
 input[type='checkbox'], input[type='radio'] { accent-color: var(--theme-action); }
-input:not([type='checkbox']):not([type='radio']), select, textarea,
-.monthly-campaign-picker select { background: var(--v2-control-bg); border-color: var(--v2-control-edge); border-radius: 9px; }
+/* One control surface across filters, drawers, dialogs, admin and imports.
+   The root/body scope outranks legacy field rules, including hover/focus.
+   Contexts adjust density with variables without redefining the surface. */
+:root body :is(input, select, textarea):not([type='checkbox']):not([type='radio']):not(:where([type='file'], [type='hidden'], [type='range'], [type='color'], [type='button'], [type='submit'], [type='reset'], [type='image'])) {
+  min-height: var(--control-height, 42px); min-width: 0;
+  padding: var(--control-padding, 9px 12px);
+  font-family: var(--font); font-size: var(--control-font-size, 14px);
+  line-height: 1.4; color: var(--ink);
+  background-color: var(--v2-control-bg);
+  background-image: var(--control-image, none);
+  background-position: right 12px center; background-size: 14px; background-repeat: no-repeat;
+  border: 1px solid var(--v2-control-edge); border-radius: 10px;
+  box-shadow: 0 3px 8px -5px rgb(36 62 99 / .35);
+  transition: border-color 120ms ease, background-color 120ms ease, box-shadow 120ms ease;
+}
+:root body :is(input, select, textarea):not([type='checkbox']):not([type='radio']):not(:where([type='file'], [type='hidden'], [type='range'], [type='color'], [type='button'], [type='submit'], [type='reset'], [type='image'])):hover:not(:disabled) {
+  background-color: color-mix(in srgb, var(--v2-control-bg) 85%, var(--surface));
+  border-color: color-mix(in srgb, var(--v2-control-edge) 80%, var(--blue));
+}
+:root body :is(input, select, textarea):not([type='checkbox']):not([type='radio']):not(:where([type='file'], [type='hidden'], [type='range'], [type='color'], [type='button'], [type='submit'], [type='reset'], [type='image'])):focus {
+  background-color: var(--v2-control-bg); border-color: var(--control-focus);
+  outline: 2px solid var(--control-focus); outline-offset: 2px;
+  box-shadow: 0 3px 8px -5px rgb(36 62 99 / .35);
+}
+:root body :is(input, select, textarea):not([type='checkbox']):not([type='radio']):not(:where([type='file'], [type='hidden'], [type='range'], [type='color'], [type='button'], [type='submit'], [type='reset'], [type='image'])):disabled {
+  opacity: .65; cursor: not-allowed; box-shadow: none;
+}
+:root body :is(input, select, textarea):not([type='checkbox']):not([type='radio']):not(:where([type='file'], [type='hidden'], [type='range'], [type='color'], [type='button'], [type='submit'], [type='reset'], [type='image']))[aria-invalid='true'] { border-color: var(--crit); outline-color: var(--crit); }
+:root body :is(input, select, textarea):not([type='checkbox']):not([type='radio']):not(:where([type='file'], [type='hidden'], [type='range'], [type='color'], [type='button'], [type='submit'], [type='reset'], [type='image'])).dirty { background-color: var(--orange-soft); }
 input::placeholder, textarea::placeholder,
 .platform-session-toolbar-v2 input::placeholder, .field input::placeholder, .field textarea::placeholder { color: var(--ink-3); opacity: 1; }
-button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-visible {
+button:focus-visible, a:focus-visible, input[type='checkbox']:focus-visible, input[type='radio']:focus-visible {
   outline: 3px solid var(--theme-focus); outline-offset: 2px;
 }
-.monthly-booking-table .cellinput:focus { border-color: var(--theme-focus); box-shadow: none; }
+select:not([multiple]):not([size]), select[size='1'] {
+  appearance: none; -webkit-appearance: none; cursor: pointer;
+  --control-padding: var(--control-select-padding, 9px 36px 9px 12px);
+  --control-image: var(--control-chevron);
+  background-position: right 12px center; background-size: 14px; background-repeat: no-repeat;
+  text-overflow: ellipsis;
+}
+select option { color: var(--ink); background: var(--surface); }
+textarea { --control-height: 104px; resize: vertical; }
+table, .spend-only-input-v2 {
+  --control-height: 36px; --control-font-size: 13px; --control-padding: 6px 9px;
+  --control-select-padding: 6px 32px 6px 9px;
+}
+table textarea { --control-height: 76px; }
+.field label { text-transform: none; letter-spacing: 0; font-weight: 500; color: var(--ink-2); }
 
-/* Approved soft-white search and snapshot-date controls. */
+/* Overview filters share the labelled search/date layout. */
+.filters { padding: 14px; gap: 12px; align-items: end; }
+.filters .filter-field {
+  display: flex; flex-direction: column; align-items: stretch; gap: 7px;
+  flex: 1 1 140px; min-width: 120px; margin: 0;
+}
+.filters .filter-field > span { font-size: 11px; font-weight: 500; color: var(--ink-2); }
+.filters .filter-field select, .filters .filter-field input { width: 100%; max-width: none; }
+.filters .grow { flex: 2 1 270px; min-width: 220px; align-items: end; }
+.filters .grow .filter-field { min-width: 0; }
+.filters .grow .btn { min-height: 42px; }
+
+/* Approved search and snapshot-date layout. */
 .platform-session-toolbar-v2 { padding: 14px; gap: 14px; }
 .platform-search-v2, .platform-date-v2, .monthly-campaign-picker { gap: 7px; }
 .platform-search-v2 > span, .platform-date-v2 > span, .monthly-campaign-picker > span {
   font-size: 11px; font-weight: 500; color: var(--ink-2);
   text-transform: none; letter-spacing: 0;
 }
-.platform-session-toolbar-v2 input:not([type='checkbox']):not([type='radio']),
-.monthly-campaign-picker select {
-  min-height: 42px; padding: 0 12px; font-size: 14px;
-  background: rgb(255 255 255 / .74); border: 1px solid rgb(255 255 255 / .95);
-  border-radius: 10px; box-shadow: 0 3px 8px -5px rgb(36 62 99 / .35);
-}
-.monthly-campaign-picker { position: relative; }
-.monthly-campaign-picker select { appearance: none; -webkit-appearance: none; padding-right: 38px; font-weight: 400; cursor: pointer; }
-.monthly-campaign-picker::after {
-  content: ''; position: absolute; right: 16px; bottom: 18px; width: 7px; height: 7px;
-  border-right: 1.5px solid var(--ink-3); border-bottom: 1.5px solid var(--ink-3);
-  transform: rotate(45deg); pointer-events: none;
-}
-.monthly-campaign-picker option { color: var(--ink); background: var(--surface); }
-.platform-search-v2 { position: relative; }
-.platform-session-toolbar-v2 .platform-search-v2 input:not([type='checkbox']):not([type='radio']) { padding-left: 38px; }
+.monthly-campaign-picker select { font-weight: 400; }
+.platform-search-v2 { position: relative; --control-padding: 9px 12px 9px 38px; }
 .platform-search-v2::after {
   content: ''; position: absolute; bottom: 13px; left: 12px; width: 16px; height: 16px;
   background: var(--ink-3); pointer-events: none;
   -webkit-mask: url('../assets/search.svg') center / contain no-repeat;
   mask: url('../assets/search.svg') center / contain no-repeat;
 }
-.platform-session-toolbar-v2 input:focus-visible, .monthly-campaign-picker select:focus-visible { outline: 2px solid var(--theme-action); outline-offset: 2px; }
 .platform-session-actions-v2 { align-self: end; align-items: center; min-height: 42px; }
-:root[data-theme='dark'] .platform-session-toolbar-v2 input,
-:root[data-theme='dark'] .monthly-campaign-picker select {
-  background: rgb(38 58 83 / .92); border-color: rgb(179 199 227 / .30);
-}
-:root[data-theme='dark'] .platform-session-toolbar-v2 input:focus-visible,
-:root[data-theme='dark'] .monthly-campaign-picker select:focus-visible { outline-color: var(--theme-focus); }
 @media (max-width: 700px) {
-  .platform-session-toolbar-v2 input:not([type='checkbox']):not([type='radio']),
-  .monthly-campaign-picker select { min-height: 44px; font-size: 16px; }
+  :root { --control-height: 44px; --control-font-size: 16px; }
+  table, .spend-only-input-v2 { --control-font-size: 16px; }
   .platform-search-v2::after { bottom: 14px; }
-  .monthly-campaign-picker::after { bottom: 19px; }
+  .filters .filter-field { flex-basis: calc(50% - 12px); min-width: 0; }
+  .filters .grow { flex-basis: 100%; min-width: 0; }
+  .filters .grow .btn { min-height: 44px; }
 }
 @media (prefers-reduced-transparency: reduce) {
-  .platform-session-toolbar-v2 input:not([type='checkbox']):not([type='radio']),
-  .monthly-campaign-picker select { background: var(--surface); }
+  :root, :root[data-theme] { --v2-control-bg: var(--surface); }
 }
 
 /* Read first; edit settings or monthly bookings explicitly. */
@@ -305,6 +342,11 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
   .line-detail-drawer footer .btn { min-height: 44px; }
 }
 
+/* Keep header help bubbles within the tablet viewport, even while hidden. */
+@media (min-width: 701px) and (max-width: 1100px) {
+  .topbar .tip-bulb::after { left: auto; right: 0; transform: translateY(-3px); }
+  .topbar .tip-bulb:hover::after, .topbar .tip-bulb:focus-visible::after { transform: translateY(0); }
+}
 @media (max-width: 1100px) {
   .topbar { flex-wrap: wrap; }
   .topbar .titles { flex: 1; }

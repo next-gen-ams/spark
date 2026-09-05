@@ -601,9 +601,10 @@ function period() {
 function filterBar() {
   const f = facets();
   const sel = (key, label, options, toValue = (o) => o, toLabel = (o) => o) =>
-    el('div', { style: { display: 'flex', alignItems: 'center' } },
-      el('label', {}, label),
+    el('label', { class: 'filter-field' },
+      el('span', {}, label),
       el('select', {
+        'aria-label': label,
         onchange: (e) => { state.filters[key] = e.target.value; render(); },
       },
       el('option', { value: '' }, 'All'),
@@ -628,7 +629,8 @@ function filterBar() {
     sel('objective', 'Objective', f.objectives),
     sel('campaign', 'Campaign', f.campaigns, (c) => c.id, (c) => c.name),
     sel('status', 'Status', f.statuses),
-    el('div', { class: 'grow' }, search,
+    el('div', { class: 'grow' },
+      el('label', { class: 'filter-field' }, el('span', {}, 'Search'), search),
       active ? el('button', {
         class: 'btn ghost sm', style: { flex: 'none' },
         onclick: () => { state.filters = emptyFilters(); render(); },
