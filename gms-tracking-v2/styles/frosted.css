@@ -110,6 +110,26 @@ input, textarea { caret-color: var(--theme-focus); }
   border-radius: 9px; border: 1px solid var(--v2-edge); backdrop-filter: blur(20px); }
 .v2-secondary-nav button[aria-selected='true'] { color: var(--blue); border-bottom-color: var(--blue); }
 
+.v2-site-header {
+  position: sticky; top: 8px; z-index: 40; margin-bottom: 14px;
+  background: var(--theme-nav); border: 1px solid var(--v2-edge); border-radius: 16px;
+  box-shadow: 0 16px 28px -20px rgb(23 44 72 / .5);
+}
+.v2-site-header .topbar {
+  position: relative; top: 0; margin: 0; border: 0;
+  border-radius: 15px 15px 0 0; box-shadow: none;
+}
+.v2-site-header .v2-primary-nav {
+  border: 0; border-radius: 0 0 15px 15px; padding-inline: 18px;
+}
+.v2-site-header .v2-primary-nav button[aria-current='page'] { border-bottom-color: var(--blue); }
+.app > .v2-secondary-nav {
+  position: relative; top: auto; z-index: 1; margin-top: 0; padding-inline: 14px;
+  background: transparent; border: 0; border-bottom: 1px solid var(--line);
+  border-radius: 0; backdrop-filter: none;
+}
+.app > .v2-secondary-nav button { font-weight: 500; }
+
 /* Every page uses the same glass surface; overlays remain opaque for legibility. */
 .panel, .card, .filters, .platform-launcher, .monthly-page-v2,
 .spend-line-entry-v2, .plans-client-card-v2, .plans-campaign-card-v2,
@@ -261,7 +281,7 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
 .line-detail-drawer .row3 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 @media (max-width: 480px) {
   .line-detail-drawer > header, .line-detail-drawer .content { padding: 18px; }
-  .line-detail-tabs { padding: 0 18px; gap: 18px; }
+  .line-detail-tabs { padding: 0 18px; gap: 12px; }
   .line-detail-tabs button { font-size: 12px; min-height: 44px; }
   .line-detail-numbers { gap: 10px; }
   .line-detail-numbers b { font-size: 22px; }
@@ -282,6 +302,9 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
   .topbar .plate img { height: 26px; }
   .topbar .spacer { display: none; }
   .v2-primary-nav { padding-inline: 12px; gap: 22px; }
+  .v2-site-header { position: relative; top: 0; }
+  .v2-site-header .topbar { margin: 0; }
+  .v2-site-header .v2-primary-nav { padding-inline: 12px; }
 }
 @media (prefers-reduced-transparency: reduce) {
   .panel, .card, .filters, .platform-launcher, .monthly-page-v2,
@@ -297,6 +320,7 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
   .monthly-line-card, .plan-empty-v2, .platform-session-toolbar-v2 { background: var(--theme-solid); }
 }
 @media print {
+  .v2-site-header { display: none; }
   body { background: white; }
   .panel, .card, .monthly-page-v2, .spend-line-entry-v2 { background: white; backdrop-filter: none; box-shadow: none; }
 }

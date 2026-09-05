@@ -24,7 +24,7 @@ export function openLine(m, rerender) {
   const returnFocus = document.activeElement;
   let line = { ...m.line }, active = 'overview', editing = false;
   let draft = null, monthDrafts = [], pendingMonths = new Map();
-  let closed = false, creativesOpen = false;
+  let closed = false;
   const h = fill(mount());
   const currentModel = () => {
     line = { ...(byId('line', line.id) || line) };
@@ -145,6 +145,10 @@ export function openLine(m, rerender) {
           row('Objective',line.objective),row('Buy method',line.buy_method),row('Status',effectiveStatus(line,m.campaign)),row('Supplier',line.supplier)),
         line.note ? el('section',{class:'line-detail-section'},el('h4',{},'Note'),el('p',{class:'line-detail-note'},line.note)) : null);
     } else if (active === 'monthly') fill(content,monthlyPanel(model));
+    else if (active === 'creatives') {
+      fill(content, creatives(line,refresh,model),
+        el('p',{class:'hint'},'Creative changes save automatically.'));
+    }
     else if (editing) {
       const stage = patch => Object.assign(draft,patch);
       fill(content,heading('Line settings'),identity(draft,stage,m.campaign),
@@ -156,12 +160,6 @@ export function openLine(m, rerender) {
         detail('Pricing & currency',row('Spend currency',`${model.ccy} · 1 AUD = ${model.rate}`),row('Booked rate · media',line.rate_media),row('Booked rate · GMS',line.rate_gms),row('Margin',pct(model.margin,1)),row('Net media cost (AUD)',money2(line.cost_media)),row('Net GMS cost (AUD)',money2(line.cost_gms))),
         row('Included in client reports',model.billable?'Yes':'No'),row('IO number',m.campaign.io_number),
         detail('Note',el('p',{class:'line-detail-note'},line.note||'No note yet.')),
-        el('details',{class:'line-detail-disclosure',open:creativesOpen,ontoggle:event=>{
-          const target=event.currentTarget;
-          if (!target.isConnected) return;
-          creativesOpen = target.open;
-          if(target.open&&!target.dataset.loaded){target.dataset.loaded='true';target.appendChild(el('p',{class:'hint'},'Creative changes save automatically.'));target.appendChild(creatives(line,refresh,model));}
-        }},el('summary',{},`Manage creatives (${where('creative',c=>c.line_id===line.id).length})`)),
         el('div',{class:'line-detail-section'},deleteButton()));
     }
     for (const input of content.querySelectorAll('input')) {
@@ -174,7 +172,7 @@ export function openLine(m, rerender) {
           el('p',{},m.campaignName||m.campaign.name||'Campaign')),
           el('button',{class:'btn ghost','aria-label':'Close',onclick:closeDrawer},'✕')),
         el('nav',{class:'line-detail-tabs',role:'tablist','aria-label':'Line detail'},...[
-          ['overview','Overview'],['monthly','Monthly budget'],['settings','Settings']
+          ['overview','Overview'],['monthly','Monthly budget'],['creatives','Creatives'],['settings','Settings']
         ].map(([key,label])=>el('button',{id:`line-detail-${key}`,role:'tab','aria-controls':'line-detail-panel','aria-selected':active===key,disabled:editing,
           onclick:()=>{active=key;render();h.querySelector(`#line-detail-${key}`)?.focus();}},label))),content,
         el('footer',{},el('small',{'aria-live':'polite'},editing?'Unsaved changes':''),

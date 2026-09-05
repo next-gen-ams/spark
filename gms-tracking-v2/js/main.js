@@ -150,8 +150,7 @@ function render() {
      the max-width never appeared. */
   const app = el('div', { class: 'app' });
   fill(root, app);
-  app.appendChild(topbar());
-  app.appendChild(primaryNav());
+  app.appendChild(el('header', { class: 'v2-site-header' }, topbar(), primaryNav()));
   app.appendChild(secondaryNav());
   app.appendChild(confidBand());
 
