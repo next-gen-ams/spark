@@ -342,7 +342,7 @@ function topbar() {
       onclick: () => setMenuOpen(!menuOpen),
     }, navigationIcon('menu'), 'Menu'),
     el('div', { class: 'plate' },
-      el('img', { src: 'assets/gms-logo.png', alt: 'GMS' }),
+      el('img', { src: 'assets/gms-logo-white.png', alt: 'GMS' }),
       el('span', { class: 'rule' }),
       el('span', { class: 'mark' }, 'DIGITAL')),
     el('div', { class: 'titles' },

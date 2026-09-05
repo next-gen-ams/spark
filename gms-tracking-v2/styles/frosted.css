@@ -91,10 +91,13 @@ input, textarea { caret-color: var(--theme-focus); }
   background: #243e63; color: #fff; backdrop-filter: none;
   box-shadow: 0 16px 28px -20px rgb(23 44 72 / .5), inset 0 1px rgb(255 255 255 / .14);
 }
-.topbar .plate, :root[data-theme='dark'] .topbar .plate, .gate .plate {
+.gate .plate {
   background: #f4f3ef; border-color: transparent; padding: 8px 10px; border-radius: 7px;
 }
-.topbar .plate img { height: 29px; width: auto; }
+.topbar .plate, :root[data-theme='dark'] .topbar .plate {
+  background: transparent; border-color: transparent; padding: 4px 0; box-shadow: none;
+}
+.topbar .plate img { height: 34px; width: auto; }
 .topbar .plate .mark, .topbar .plate .rule { display: none; }
 .topbar .titles h1 { color: #fff; font-size: 18px; }
 .topbar .chip, .topbar .audience-seg, .topbar .btn,
@@ -356,7 +359,7 @@ table textarea { --control-height: 76px; }
   .topbar { position: relative; top: 0; margin: 0 0 12px; padding: 12px; gap: 10px; }
   .topbar .titles { display: block; flex: 1 1 150px; }
   .topbar .titles h1 { font-size: 15px; }
-  .topbar .plate img { height: 26px; }
+  .topbar .plate img { height: 29px; }
   .topbar .spacer { display: none; }
   .v2-primary-nav { padding-inline: 12px; gap: 22px; }
   .v2-site-header { position: relative; top: 0; }
