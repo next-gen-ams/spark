@@ -117,6 +117,21 @@ function writeUrl() {
 
 let rows = [];
 let renderedTab = null;
+let menuOpen = false;
+
+function setMenuOpen(open, returnFocus = false) {
+  menuOpen = open;
+  const app = root.querySelector('.app');
+  if (app) app.classList.toggle('v2-menu-open', open);
+  const trigger = root.querySelector('.v2-menu-toggle');
+  trigger?.setAttribute('aria-expanded', String(open));
+  if (returnFocus) trigger?.focus({ preventScroll: true });
+}
+document.addEventListener('keydown', (event) => {
+  if (event.key === 'Escape' && menuOpen) {
+    event.preventDefault(); setMenuOpen(false, true);
+  }
+});
 
 function render() {
   if (store.state.status === 'locked') { renderGate(); return; }
@@ -128,6 +143,7 @@ function render() {
      rebuild; inputs carry a stable data-focus key so "the same cell" survives
      its own DOM being replaced. */
   const scrollY = window.scrollY;
+  const navScroll = root.querySelector('.v2-floating-nav')?.scrollTop || 0;
   /* A horizontal position belongs to one view. Carrying Tracking Entry's
      far-right Actions position into Overview shifts its first table sideways. */
   const panes = renderedTab === state.tab
@@ -148,19 +164,20 @@ function render() {
   /* fill() returns the container it filled, not the child — appending to its
      return value put the whole page outside .app, which is why the gutter and
      the max-width never appeared. */
-  const app = el('div', { class: 'app' });
+  const app = el('div', { class: 'app v2-floating-shell' + (menuOpen ? ' v2-menu-open' : '') });
   fill(root, app);
-  app.appendChild(el('header', { class: 'v2-site-header' }, topbar(), primaryNav()));
-  app.appendChild(secondaryNav());
-  app.appendChild(confidBand());
+  app.appendChild(el('header', { class: 'v2-site-header' }, topbar()));
+  const content = el('section', { class: 'v2-workspace-content', 'aria-label': 'Current workspace', tabindex: '-1' });
+  app.appendChild(el('div', { class: 'v2-workspace-layout' }, primaryNav(), content));
+  content.appendChild(confidBand());
 
   if (!['admin', 'import', 'monthly', 'clients', 'spend'].includes(state.tab)) {
-    app.appendChild(period());
-    app.appendChild(filterBar());
+    content.appendChild(period());
+    content.appendChild(filterBar());
   }
 
   const view = el('div', { class: 'view' });
-  app.appendChild(view);
+  content.appendChild(view);
   const ctx = { rows, state, rerender: render, goTo, openPlan };
   if (state.tab === 'tracking') renderTracking(view, ctx);
   else if (state.tab === 'clients') renderClients(view, ctx);
@@ -173,13 +190,14 @@ function render() {
   else renderAdmin(view, ctx);
   renderedTab = state.tab;
 
-  app.appendChild(footer());
+  content.appendChild(footer());
 
   /* Put the reader back where they were. Focus first, then pin the offsets —
      and pin them AGAIN one frame later, because both scroll anchoring and the
      browser's own focus handling like to re-scroll asynchronously after a DOM
      swap, and whoever scrolls last wins. */
   [...app.querySelectorAll('.tablewrap')].forEach((w, i) => { w.scrollLeft = panes[i] || 0; });
+  app.querySelector('.v2-floating-nav').scrollTop = navScroll;
   const back = focusKey && app.querySelector(`[data-focus="${CSS.escape(focusKey)}"]`);
   if (back) {
     /* Scroll so the rebuilt cell lands at the exact viewport position its
@@ -318,6 +336,11 @@ function topbar() {
   paintStatus();
 
   return el('div', { class: 'topbar' },
+    el('button', {
+      class: 'btn ghost v2-menu-toggle', 'aria-expanded': menuOpen,
+      'aria-controls': 'v2-workspace-navigation',
+      onclick: () => setMenuOpen(!menuOpen),
+    }, navigationIcon('menu'), 'Menu'),
     el('div', { class: 'plate' },
       el('img', { src: 'assets/gms-logo.png', alt: 'GMS' }),
       el('span', { class: 'rule' }),
@@ -335,7 +358,7 @@ function topbar() {
         class: 'client', 'aria-pressed': state.view === 'client',
         onclick: () => { state.view = 'client'; render(); },
       }, 'Client-facing'),
-      tip('Internal shows what GMS pays the media owner. Client-facing shows the amount billed after applying the booked line margin.', 'Audience view')),
+      tip('Internal shows media cost and margins: do not share this view with clients. Client-facing shows the billed amount. Use Export > Client report for sharing.', 'Audience view')),
 
     statusChip,
     exportMenu(),
@@ -461,25 +484,54 @@ function activeSection() {
   return NAV.find((section) => section.tabs.some(([tab]) => tab === state.tab)) || NAV[0];
 }
 
-function primaryNav() {
-  const current = activeSection();
-  return el('nav', { class: 'v2-primary-nav', 'aria-label': 'Main navigation' },
-    ...NAV.map((section) => el('button', {
-      'aria-current': current.id === section.id ? 'page' : null,
-      onclick: () => section.id === 'plans' ? openPlan() : goTo(section.defaultTab),
-    }, section.label)));
+function navigateWorkspace(tab) {
+  menuOpen = false;
+  tab === 'clients' ? openPlan() : goTo(tab);
+  window.scrollTo(0, 0);
+  if (matchMedia('(max-width: 900px)').matches) {
+    root.querySelector('.v2-workspace-content')?.focus({ preventScroll: true });
+  }
 }
 
-function secondaryNav() {
-  const section = activeSection();
-  if (section.tabs.length === 1) return el('div', { class: 'v2-nav-gap' });
-  const showMonth = state.tab === 'tracking';
-  return el('nav', { class: 'tabbar v2-secondary-nav', 'aria-label': `${section.label} views` },
-    ...section.tabs.map(([id, label]) => el('button', {
-      'aria-selected': state.tab === id,
-      onclick: () => id === 'clients' ? openPlan() : goTo(id),
-    }, label)),
-    showMonth ? monthNav() : null);
+function navigationIcon(name) {
+  const paths = {
+    update: ['M20 8V5a2 2 0 0 0-2-2H6a3 3 0 0 0 0 6h14v12H6a3 3 0 0 1-3-3V6', 'M20 12h-5v5h5'],
+    plans: ['M3 7V5a2 2 0 0 1 2-2h5l2 2h7a2 2 0 0 1 2 2v10', 'M3 9h6l2 2h6v10H3z'],
+    admin: ['M4 6h16M4 12h16M4 18h16', 'M8 3v6M16 9v6M10 15v6'],
+    down: ['m7 10 5 5 5-5'], right: ['m10 7 5 5-5 5'],
+    menu: ['M4 6h16M4 12h16M4 18h16'],
+  };
+  const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+  Object.entries({ viewBox: '0 0 24 24', width: '16', height: '16', fill: 'none',
+    stroke: 'currentColor', 'stroke-width': '1.5', 'stroke-linecap': 'round',
+    'stroke-linejoin': 'round', 'aria-hidden': 'true', focusable: 'false' })
+    .forEach(([key, value]) => svg.setAttribute(key, value));
+  (paths[name] || paths.right).forEach(d => {
+    const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+    path.setAttribute('d', d); svg.appendChild(path);
+  });
+  return svg;
+}
+
+function primaryNav() {
+  const current = activeSection();
+  return el('nav', { id: 'v2-workspace-navigation', class: 'v2-primary-nav v2-floating-nav', 'aria-label': 'Main navigation' },
+    ...NAV.map(section => el('div', { class: 'v2-nav-section' },
+      el('button', {
+        class: 'v2-main-link', 'data-focus': `nav-section-${section.id}`,
+        'aria-current': current.id === section.id ? 'page' : null,
+        'aria-expanded': section.tabs.length > 1 ? current.id === section.id : null,
+        'aria-controls': section.tabs.length > 1 ? `v2-nav-${section.id}` : null,
+        onclick: () => navigateWorkspace(section.defaultTab),
+      }, navigationIcon(section.id), el('span', {}, section.label),
+      section.tabs.length > 1 ? navigationIcon(current.id === section.id ? 'down' : 'right') : null),
+      section.tabs.length > 1 ? el('div', {
+        id: `v2-nav-${section.id}`, class: 'v2-secondary-nav', hidden: current.id !== section.id,
+        role: 'group', 'aria-label': `${section.label} views`,
+      }, ...section.tabs.map(([id, label]) => el('button', {
+        'aria-current': state.tab === id ? 'location' : null,
+        'data-focus': `nav-view-${id}`, onclick: () => navigateWorkspace(id),
+      }, label))) : null)));
 }
 
 function platformLauncher() {
@@ -553,15 +605,6 @@ function monthNav() {
 
 function confidBand() {
   const bands = [];
-  /* The warning belongs to the internal figures. On the client-facing view
-     there is nothing sensitive on screen, so the toggle carries the state on
-     its own and the band would just be noise. */
-  if (APP.confidential && state.view === 'internal') {
-    bands.push(el('div', { class: 'confid' },
-      el('strong', {}, 'INTERNAL'),
-      tip('This page shows margin and internal media cost. Do not share the link or a screenshot with a client. Use Export ▸ Client report instead.', 'Internal data notice')));
-  }
-
   if (staleNotice) {
     bands.push(el('div', { class: 'viewband' },
       el('strong', {}, 'FILTER RESET'),
@@ -593,7 +636,8 @@ function period() {
     el('h2', {}, ...label),
     el('div', { class: 'meta' },
       `${rows.length} line${rows.length === 1 ? '' : 's'} in view`,
-      months.length ? ` · plan covers ${monthLabel(months[0])} – ${monthLabel(months.at(-1))}` : ''));
+      months.length ? ` · plan covers ${monthLabel(months[0])} – ${monthLabel(months.at(-1))}` : ''),
+    monthNav());
 }
 
 /* --------------------------------------------------------------- filters */

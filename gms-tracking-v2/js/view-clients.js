@@ -42,10 +42,9 @@ export function renderClients(host, ctx) {
   renderClientGrid(host, clients, routeCtx);
 }
 
-function pageHead(eyebrow, title, description, actions = []) {
+function pageHead(title, description, actions = []) {
   return el('header', { class: 'plans-page-head-v2' },
     el('div', {},
-      el('span', { class: 'eyebrow' }, eyebrow),
       el('h2', {}, title),
       description ? el('p', {}, description) : null),
     actions.length ? el('div', { class: 'plans-page-actions-v2' }, ...actions) : null);
@@ -81,7 +80,7 @@ function openableCard(className, label, onOpen) {
 }
 
 function renderClientGrid(host, clients, ctx) {
-  host.appendChild(pageHead('Plans', 'Clients',
+  host.appendChild(pageHead('Clients',
     'Choose a client first, then open one campaign and its execution detail.', [
       el('button', { class: 'btn', onclick: () => ctx.goTo('tracking') }, 'Portfolio overview'),
       el('button', { class: 'btn primary', onclick: () => ctx.goTo('import') }, 'Import plan'),
@@ -123,10 +122,9 @@ function renderClientView(host, client, ctx) {
   const side = ctx.state.view;
 
   host.appendChild(breadcrumb([
-    { label: 'Plans', onClick: () => ctx.openPlan() },
-    { label: client.name || 'Client' },
+    { label: 'All clients', onClick: () => ctx.openPlan() },
   ]));
-  host.appendChild(pageHead('Client view', client.name || 'Untitled client',
+  host.appendChild(pageHead(client.name || 'Untitled client',
     'Campaigns stay separate so each plan has a clear working space.', [
       el('button', { class: 'btn', onclick: () => ctx.goTo('tracking') }, 'View overview'),
       el('button', { class: 'btn primary', onclick: () => ctx.goTo('import') }, 'Add campaign plan'),
@@ -175,13 +173,7 @@ function renderCampaignView(host, client, campaign, ctx) {
   const creativeCount = rows.reduce((sum, m) =>
     sum + where('creative', (c) => c.line_id === m.line.id).length, 0);
 
-  host.appendChild(breadcrumb([
-    { label: 'Plans', onClick: () => ctx.openPlan() },
-    { label: client.name || 'Client', onClick: () => ctx.openPlan(client.id) },
-    { label: campaign.name || 'Campaign' },
-  ]));
-  host.appendChild(pageHead(campaign.io_number || 'Campaign', campaign.name || 'Untitled campaign',
-    campaign.start_date ? `${dateAu(campaign.start_date)} to ${dateAu(campaign.end_date)}` : 'No flight dates', [
+  const campaignHeading = pageHead(campaign.name || 'Untitled campaign', null, [
       el('button', {
         class: 'btn',
         onclick: () => {
@@ -201,7 +193,18 @@ function renderCampaignView(host, client, campaign, ctx) {
           ctx.goTo('spend');
         },
       }, 'Update spend'),
-    ]));
+    ]);
+  const titleBlock = campaignHeading.firstElementChild;
+  titleBlock.prepend(el('button', {
+    class: 'campaign-client-back-v2', onclick: () => ctx.openPlan(client.id),
+  }, el('span', { 'aria-hidden': 'true' }, '←'), client.name || 'Client'));
+  const details = el('details', { class: 'campaign-details-v2' },
+    el('summary', {}, 'Campaign details'),
+    el('div', {}, el('span', {}, 'IO number'), el('b', {}, campaign.io_number || 'No IO number')));
+  titleBlock.appendChild(el('div', { class: 'campaign-meta-v2' },
+    el('span', {}, campaign.start_date
+      ? `${dateAu(campaign.start_date)} to ${dateAu(campaign.end_date)}` : 'No flight dates'), details));
+  host.appendChild(campaignHeading);
   host.appendChild(el('div', { class: 'plans-summary-grid-v2' },
     summaryMetric('Campaign status', status,
       `${rows.filter((m) => effectiveStatus(m.line, campaign, ctx.today) === 'Live').length} live lines`),
