@@ -125,6 +125,11 @@ input, textarea { caret-color: var(--theme-focus); }
 .platform-launcher-head .eyebrow, .platform-launcher-head .tip-bulb,
 .spend-card-context-v2 span { color: var(--ink-2); }
 .spend-card-context-v2 > div + div { border-left-color: var(--line); }
+.spend-card-client-v2 b {
+  color: #243e63; font-size: 14px; font-weight: 750; line-height: 1.3;
+  white-space: normal; overflow-wrap: anywhere;
+}
+:root[data-theme='dark'] .spend-card-client-v2 b { color: #c7e8ff; }
 .spend-input-row-v2, .spend-line-head-v2 { background: var(--theme-data); }
 .spend-input-row-v2.creative { background: var(--theme-tint); }
 .spend-line-entry-v2.updated { border-color: var(--theme-secondary-edge); }
