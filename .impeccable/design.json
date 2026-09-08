@@ -1,0 +1,267 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-09-08T07:30:29Z",
+  "title": "Design System: GMS Executive Project Tracker",
+  "extensions": {
+    "colorMeta": {
+      "brand-navy": {
+        "role": "primary",
+        "displayName": "GMS Institutional Navy",
+        "canonical": "#243e63",
+        "tonalRamp": ["oklch(15% 0.045 255)", "oklch(25% 0.06 255)", "oklch(35% 0.075 255)", "oklch(45% 0.085 255)", "oklch(58% 0.07 255)", "oklch(72% 0.05 255)", "oklch(84% 0.03 255)", "oklch(95% 0.012 255)"]
+      },
+      "action-blue": {
+        "role": "primary",
+        "displayName": "Operational Action Blue",
+        "canonical": "#006fab",
+        "tonalRamp": ["oklch(15% 0.07 240)", "oklch(25% 0.1 240)", "oklch(35% 0.12 240)", "oklch(48% 0.14 240)", "oklch(60% 0.12 240)", "oklch(72% 0.09 240)", "oklch(84% 0.055 240)", "oklch(95% 0.02 240)"]
+      },
+      "action-blue-hover": {
+        "role": "primary",
+        "displayName": "Deep Action Blue",
+        "canonical": "#005c90",
+        "tonalRamp": ["oklch(15% 0.06 240)", "oklch(24% 0.085 240)", "oklch(33% 0.105 240)", "oklch(43% 0.12 240)", "oklch(56% 0.105 240)", "oklch(70% 0.08 240)", "oklch(83% 0.048 240)", "oklch(95% 0.018 240)"]
+      },
+      "coral-atmosphere": {
+        "role": "secondary",
+        "displayName": "Coral Atmosphere",
+        "canonical": "rgb(245 173 145 / .82)",
+        "tonalRamp": ["oklch(15% 0.05 35)", "oklch(27% 0.08 35)", "oklch(40% 0.11 35)", "oklch(54% 0.14 35)", "oklch(67% 0.13 35)", "oklch(78% 0.1 35)", "oklch(87% 0.065 35)", "oklch(95% 0.025 35)"]
+      },
+      "sky-atmosphere": {
+        "role": "secondary",
+        "displayName": "Sky Atmosphere",
+        "canonical": "rgb(131 191 229 / .82)",
+        "tonalRamp": ["oklch(15% 0.035 235)", "oklch(27% 0.055 235)", "oklch(40% 0.075 235)", "oklch(54% 0.09 235)", "oklch(67% 0.085 235)", "oklch(78% 0.07 235)", "oklch(87% 0.045 235)", "oklch(95% 0.018 235)"]
+      },
+      "lavender-atmosphere": {
+        "role": "tertiary",
+        "displayName": "Lavender Atmosphere",
+        "canonical": "rgb(173 164 207 / .72)",
+        "tonalRamp": ["oklch(15% 0.025 290)", "oklch(27% 0.045 290)", "oklch(40% 0.065 290)", "oklch(54% 0.08 290)", "oklch(67% 0.075 290)", "oklch(78% 0.06 290)", "oklch(87% 0.04 290)", "oklch(95% 0.015 290)"]
+      },
+      "warm-white": {
+        "role": "neutral",
+        "displayName": "Warm Navigation White",
+        "canonical": "#f4f3ef",
+        "tonalRamp": ["oklch(15% 0.008 85)", "oklch(27% 0.01 85)", "oklch(40% 0.012 85)", "oklch(54% 0.014 85)", "oklch(67% 0.013 85)", "oklch(78% 0.011 85)", "oklch(87% 0.009 85)", "oklch(95% 0.006 85)"]
+      },
+      "canvas-mist": {
+        "role": "neutral",
+        "displayName": "Canvas Mist",
+        "canonical": "#eef2f8",
+        "tonalRamp": ["oklch(15% 0.008 250)", "oklch(27% 0.012 250)", "oklch(40% 0.016 250)", "oklch(54% 0.02 250)", "oklch(67% 0.018 250)", "oklch(78% 0.015 250)", "oklch(87% 0.012 250)", "oklch(95% 0.008 250)"]
+      },
+      "glass-surface": {
+        "role": "neutral",
+        "displayName": "Frosted Working Surface",
+        "canonical": "rgb(255 255 255 / .54)",
+        "tonalRamp": ["oklch(15% 0.004 250 / .54)", "oklch(27% 0.004 250 / .54)", "oklch(40% 0.004 250 / .54)", "oklch(54% 0.004 250 / .54)", "oklch(67% 0.004 250 / .54)", "oklch(78% 0.004 250 / .54)", "oklch(87% 0.004 250 / .54)", "oklch(95% 0.004 250 / .54)"]
+      },
+      "solid-surface": {
+        "role": "neutral",
+        "displayName": "Solid Working White",
+        "canonical": "#fff",
+        "tonalRamp": ["oklch(15% 0 0)", "oklch(27% 0 0)", "oklch(40% 0 0)", "oklch(54% 0 0)", "oklch(67% 0 0)", "oklch(78% 0 0)", "oklch(87% 0 0)", "oklch(95% 0 0)"]
+      },
+      "ink": {
+        "role": "neutral",
+        "displayName": "Executive Ink",
+        "canonical": "#2c3345",
+        "tonalRamp": ["oklch(15% 0.018 260)", "oklch(25% 0.025 260)", "oklch(35% 0.03 260)", "oklch(45% 0.032 260)", "oklch(58% 0.028 260)", "oklch(72% 0.02 260)", "oklch(84% 0.012 260)", "oklch(95% 0.005 260)"]
+      },
+      "ink-soft": {
+        "role": "neutral",
+        "displayName": "Soft Executive Ink",
+        "canonical": "#4b596d",
+        "tonalRamp": ["oklch(15% 0.016 255)", "oklch(27% 0.024 255)", "oklch(40% 0.032 255)", "oklch(54% 0.035 255)", "oklch(67% 0.028 255)", "oklch(78% 0.02 255)", "oklch(87% 0.012 255)", "oklch(95% 0.005 255)"]
+      },
+      "ink-muted": {
+        "role": "neutral",
+        "displayName": "Muted Ledger Ink",
+        "canonical": "#536076",
+        "tonalRamp": ["oklch(15% 0.015 255)", "oklch(27% 0.024 255)", "oklch(40% 0.034 255)", "oklch(54% 0.038 255)", "oklch(67% 0.03 255)", "oklch(78% 0.021 255)", "oklch(87% 0.013 255)", "oklch(95% 0.005 255)"]
+      },
+      "border-cool": {
+        "role": "neutral",
+        "displayName": "Cool Divider",
+        "canonical": "#ccd5e1",
+        "tonalRamp": ["oklch(15% 0.012 250)", "oklch(27% 0.02 250)", "oklch(40% 0.028 250)", "oklch(54% 0.035 250)", "oklch(67% 0.032 250)", "oklch(78% 0.026 250)", "oklch(87% 0.018 250)", "oklch(95% 0.008 250)"]
+      },
+      "success-text": {
+        "role": "secondary",
+        "displayName": "Ready Green",
+        "canonical": "#286450",
+        "tonalRamp": ["oklch(15% 0.04 160)", "oklch(27% 0.065 160)", "oklch(40% 0.08 160)", "oklch(54% 0.09 160)", "oklch(67% 0.075 160)", "oklch(78% 0.055 160)", "oklch(87% 0.032 160)", "oklch(95% 0.012 160)"]
+      },
+      "success-wash": {
+        "role": "secondary",
+        "displayName": "Ready Wash",
+        "canonical": "#e4f4ed",
+        "tonalRamp": ["oklch(15% 0.025 160)", "oklch(27% 0.04 160)", "oklch(40% 0.055 160)", "oklch(54% 0.065 160)", "oklch(67% 0.055 160)", "oklch(78% 0.042 160)", "oklch(87% 0.028 160)", "oklch(95% 0.012 160)"]
+      },
+      "review-text": {
+        "role": "secondary",
+        "displayName": "Review Blue",
+        "canonical": "#345f7d",
+        "tonalRamp": ["oklch(15% 0.035 235)", "oklch(27% 0.055 235)", "oklch(40% 0.075 235)", "oklch(54% 0.085 235)", "oklch(67% 0.07 235)", "oklch(78% 0.05 235)", "oklch(87% 0.03 235)", "oklch(95% 0.012 235)"]
+      },
+      "review-wash": {
+        "role": "secondary",
+        "displayName": "Review Wash",
+        "canonical": "#e7f2f9",
+        "tonalRamp": ["oklch(15% 0.02 235)", "oklch(27% 0.035 235)", "oklch(40% 0.05 235)", "oklch(54% 0.06 235)", "oklch(67% 0.05 235)", "oklch(78% 0.038 235)", "oklch(87% 0.024 235)", "oklch(95% 0.01 235)"]
+      },
+      "warning-text": {
+        "role": "secondary",
+        "displayName": "Ownership Coral",
+        "canonical": "#8b472f",
+        "tonalRamp": ["oklch(15% 0.04 38)", "oklch(27% 0.07 38)", "oklch(40% 0.095 38)", "oklch(54% 0.11 38)", "oklch(67% 0.09 38)", "oklch(78% 0.065 38)", "oklch(87% 0.038 38)", "oklch(95% 0.014 38)"]
+      },
+      "warning-wash": {
+        "role": "secondary",
+        "displayName": "Ownership Wash",
+        "canonical": "#fff0e8",
+        "tonalRamp": ["oklch(15% 0.025 38)", "oklch(27% 0.045 38)", "oklch(40% 0.065 38)", "oklch(54% 0.078 38)", "oklch(67% 0.065 38)", "oklch(78% 0.048 38)", "oklch(87% 0.03 38)", "oklch(95% 0.012 38)"]
+      }
+    },
+    "typographyMeta": {
+      "display": { "displayName": "Meeting Display", "purpose": "Page-level meeting and backlog titles." },
+      "headline": { "displayName": "Discussion Headline", "purpose": "Selected-topic title in the detail drawer." },
+      "title": { "displayName": "Panel Title", "purpose": "Agenda, readiness and reminder headings." },
+      "body": { "displayName": "Executive Body", "purpose": "Introduction and explanatory copy." },
+      "label": { "displayName": "Operational Label", "purpose": "Dates, form labels, counts and metadata." }
+    },
+    "shadows": [
+      { "name": "brand-header", "value": "0 8px 30px rgb(17 34 58 / .18)", "purpose": "Separates the institutional masthead from the workspace." },
+      { "name": "working-panel", "value": "0 16px 40px rgb(37 58 85 / .11)", "purpose": "Quiet ambient lift for agenda and support panels." },
+      { "name": "primary-action", "value": "0 8px 22px rgb(0 111 171 / .18)", "purpose": "Reinforces the single dominant action." },
+      { "name": "field-lift", "value": "0 4px 14px rgb(37 58 85 / .07)", "purpose": "Separates the search input from its translucent toolbar." },
+      { "name": "modal", "value": "0 28px 80px rgb(24 42 65 / .22)", "purpose": "Strongest depth, reserved for temporary modal layers." }
+    ],
+    "motion": [
+      { "name": "ledger-state", "value": "160ms ease-out", "purpose": "Hover backgrounds, chevron translation and other direct row feedback." },
+      { "name": "reduced-motion", "value": ".01ms", "purpose": "Near-instant transition and animation duration under prefers-reduced-motion." }
+    ],
+    "breakpoints": [
+      { "name": "compact-desktop", "value": "1120px" },
+      { "name": "tablet", "value": "900px" },
+      { "name": "mobile", "value": "680px" }
+    ]
+  },
+  "components": [
+    {
+      "name": "Primary Action Button",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "The single high-confidence action used to add or save executive work.",
+      "html": "<button class=\"ds-btn-primary\" type=\"button\"><svg viewBox=\"0 0 24 24\" aria-hidden=\"true\"><path d=\"M5 12h14M12 5v14\"/></svg><span>Add discussion</span></button>",
+      "css": ".ds-btn-primary{min-height:44px;display:inline-flex;align-items:center;justify-content:center;gap:6px;padding:0 16px;border:1px solid transparent;border-radius:12px;background:var(--primary,#006fab);color:#fff;font-family:'DM Sans','PingFang SC','Microsoft YaHei',sans-serif;font-size:.875rem;font-weight:500;box-shadow:0 8px 22px rgb(0 111 171 / .18);transition:background 160ms ease-out,transform 160ms ease-out}.ds-btn-primary svg{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round}.ds-btn-primary:hover{background:#005c90}.ds-btn-primary:focus-visible{outline:3px solid rgb(0 111 171 / .3);outline-offset:2px}.ds-btn-primary:active{transform:translateY(1px)}"
+    },
+    {
+      "name": "Secondary Action Button",
+      "kind": "button",
+      "refersTo": "button-secondary",
+      "description": "A pale-sky operational action for previews and moving work between lists.",
+      "html": "<button class=\"ds-btn-secondary\" type=\"button\">Preview agenda email</button>",
+      "css": ".ds-btn-secondary{min-height:44px;display:inline-flex;align-items:center;justify-content:center;padding:0 16px;border:1px solid #b8d3e2;border-radius:12px;background:#eaf7fd;color:#235c7b;font-family:'DM Sans','PingFang SC','Microsoft YaHei',sans-serif;font-size:.875rem;font-weight:500;transition:background 160ms ease-out,color 160ms ease-out}.ds-btn-secondary:hover{background:#e1f1f9;color:#1c506c}.ds-btn-secondary:focus-visible{outline:3px solid rgb(0 111 171 / .3);outline-offset:2px}.ds-btn-secondary:active{transform:translateY(1px)}"
+    },
+    {
+      "name": "Search Field",
+      "kind": "input",
+      "refersTo": "input",
+      "description": "A compact, lifted search field embedded inside the translucent agenda toolbar.",
+      "html": "<label class=\"ds-search-field\"><svg viewBox=\"0 0 24 24\" aria-hidden=\"true\"><circle cx=\"11\" cy=\"11\" r=\"8\"/><path d=\"m21 21-4.35-4.35\"/></svg><span class=\"ds-sr-only\">Search agenda</span><input type=\"search\" placeholder=\"Search agenda\" /></label>",
+      "css": ".ds-search-field{position:relative;display:block;width:230px;font-family:'DM Sans','PingFang SC','Microsoft YaHei',sans-serif}.ds-search-field svg{position:absolute;left:12px;top:50%;width:16px;height:16px;transform:translateY(-50%);fill:none;stroke:#536076;stroke-width:2;stroke-linecap:round}.ds-search-field input{width:100%;height:42px;padding:0 12px 0 36px;border:1px solid rgb(255 255 255 / .92);border-radius:12px;background:rgb(255 255 255 / .74);color:#2c3345;font:inherit;font-size:.875rem;box-shadow:0 4px 14px rgb(37 58 85 / .07);outline:none;transition:border-color 160ms ease-out,box-shadow 160ms ease-out}.ds-search-field input:hover{border-color:#ccd5e1}.ds-search-field input:focus-visible{border-color:#006fab;box-shadow:0 0 0 3px rgb(0 111 171 / .3)}.ds-sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap}"
+    },
+    {
+      "name": "Sidebar Navigation",
+      "kind": "nav",
+      "refersTo": "nav-item-active",
+      "description": "A compact warm-white navigation group with pale-sky current-state emphasis.",
+      "html": "<nav class=\"ds-nav\" aria-label=\"Workspace\"><button class=\"ds-nav-item\" data-active=\"true\" type=\"button\"><svg viewBox=\"0 0 24 24\" aria-hidden=\"true\"><path d=\"M8 2v4M16 2v4M3 9h18M5 4h14a2 2 0 0 1 2 2v13a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2Z\"/></svg><span>Next meeting</span></button><button class=\"ds-nav-item\" type=\"button\"><svg viewBox=\"0 0 24 24\" aria-hidden=\"true\"><path d=\"M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01\"/></svg><span>Discussion backlog</span><span class=\"ds-nav-count\">2</span></button></nav>",
+      "css": ".ds-nav{width:210px;display:grid;gap:4px;padding:10px;border:1px solid rgb(255 255 255 / .84);border-radius:16px;background:rgb(244 243 239 / .9);font-family:'DM Sans','PingFang SC','Microsoft YaHei',sans-serif;box-shadow:0 16px 40px rgb(37 58 85 / .06);backdrop-filter:blur(26px) saturate(120%)}.ds-nav-item{min-height:44px;display:flex;align-items:center;gap:10px;padding:0 11px;border:0;border-radius:10px;background:transparent;color:#4b596d;font:inherit;font-size:.9rem;font-weight:560;text-align:left;transition:background 160ms ease-out,color 160ms ease-out}.ds-nav-item svg{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}.ds-nav-item:hover{background:rgb(255 255 255 / .7);color:#2c3345}.ds-nav-item:focus-visible{outline:3px solid rgb(0 111 171 / .3);outline-offset:-3px}.ds-nav-item[data-active='true']{background:#eaf7fd;color:#235c7b;font-weight:700}.ds-nav-item[data-active='true'] svg{color:#006fab}.ds-nav-count{margin-left:auto;min-width:22px;height:22px;display:grid;place-items:center;border-radius:999px;background:rgb(255 255 255 / .76);color:#536076;font-size:.75rem;font-variant-numeric:tabular-nums}"
+    },
+    {
+      "name": "Agenda Ledger Row",
+      "kind": "custom",
+      "refersTo": "panel-glass",
+      "description": "The signature executive-ledger row joining order, discussion, owner, status and time.",
+      "html": "<button class=\"ds-agenda-row\" type=\"button\"><span class=\"ds-agenda-order\">01</span><span class=\"ds-agenda-summary\"><span class=\"ds-agenda-topline\"><span class=\"ds-agenda-title\">Confirm Q4 all-hands owners and format</span><span class=\"ds-agenda-status-ready\">Ready</span></span><span class=\"ds-agenda-meta\">People &amp; culture <i></i> Maya Chen</span></span><span class=\"ds-agenda-duration\">10 min</span><svg class=\"ds-agenda-chevron\" viewBox=\"0 0 24 24\" aria-hidden=\"true\"><path d=\"m9 18 6-6-6-6\"/></svg></button>",
+      "css": ".ds-agenda-row{width:100%;min-height:88px;display:grid;grid-template-columns:36px minmax(0,1fr) auto 20px;gap:14px;align-items:center;padding:17px 20px;border:0;border-bottom:1px solid rgb(155 170 188 / .36);background:transparent;color:#2c3345;font-family:'DM Sans','PingFang SC','Microsoft YaHei',sans-serif;text-align:left;transition:background 160ms ease-out,box-shadow 160ms ease-out}.ds-agenda-row:hover{background:rgb(255 255 255 / .72)}.ds-agenda-row:focus-visible{outline:3px solid rgb(0 111 171 / .3);outline-offset:-3px;background:rgb(255 255 255 / .75)}.ds-agenda-order{color:#6a788a;font-size:.78rem;font-weight:700;font-variant-numeric:tabular-nums}.ds-agenda-summary{min-width:0}.ds-agenda-topline{display:flex;align-items:center;justify-content:space-between;gap:12px}.ds-agenda-title{overflow:hidden;color:#25334a;font-size:.97rem;font-weight:680;line-height:1.35;text-overflow:ellipsis;white-space:nowrap}.ds-agenda-meta{display:flex;align-items:center;gap:8px;margin-top:8px;color:#536076;font-size:.78rem}.ds-agenda-meta i{width:3px;height:3px;border-radius:50%;background:#8290a0}.ds-agenda-status-ready{height:24px;display:inline-flex;align-items:center;padding:0 8px;border:1px solid #b8dccc;border-radius:999px;background:#e4f4ed;color:#286450;font-size:.75rem;font-weight:500}.ds-agenda-duration{color:#536076;font-size:.8rem;font-weight:620;white-space:nowrap}.ds-agenda-chevron{width:16px;height:16px;fill:none;stroke:#7a899b;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;transition:transform 160ms ease-out,color 160ms ease-out}.ds-agenda-row:hover .ds-agenda-chevron{transform:translateX(3px);stroke:#006fab}"
+    },
+    {
+      "name": "Status Chips",
+      "kind": "chip",
+      "refersTo": "status-ready",
+      "description": "Three compact semantic states for meeting readiness and ownership.",
+      "html": "<div class=\"ds-status-group\"><span class=\"ds-status ds-status-ready\"><svg viewBox=\"0 0 24 24\" aria-hidden=\"true\"><path d=\"m5 12 4 4L19 6\"/></svg>Ready</span><span class=\"ds-status ds-status-review\"><svg viewBox=\"0 0 24 24\" aria-hidden=\"true\"><circle cx=\"12\" cy=\"12\" r=\"9\"/><path d=\"M12 8v5M12 16h.01\"/></svg>In review</span><span class=\"ds-status ds-status-owner\"><svg viewBox=\"0 0 24 24\" aria-hidden=\"true\"><circle cx=\"12\" cy=\"12\" r=\"9\"/><path d=\"M12 8v5M12 16h.01\"/></svg>Needs owner</span></div>",
+      "css": ".ds-status-group{display:flex;flex-wrap:wrap;gap:8px;font-family:'DM Sans','PingFang SC','Microsoft YaHei',sans-serif}.ds-status{height:24px;display:inline-flex;align-items:center;gap:4px;padding:0 8px;border:1px solid;border-radius:999px;font-size:.75rem;font-weight:500;white-space:nowrap}.ds-status svg{width:12px;height:12px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}.ds-status-ready{color:#286450;background:#e4f4ed;border-color:#b8dccc}.ds-status-review{color:#345f7d;background:#e7f2f9;border-color:#bad3e2}.ds-status-owner{color:#8b472f;background:#fff0e8;border-color:#edc3b3}.ds-status:hover{filter:saturate(1.08)}.ds-status:focus-visible{outline:3px solid rgb(0 111 171 / .3);outline-offset:2px}"
+    },
+    {
+      "name": "Frosted Working Panel",
+      "kind": "card",
+      "refersTo": "panel-glass",
+      "description": "The stable translucent container used for the agenda and meeting-support surfaces.",
+      "html": "<section class=\"ds-glass-panel\"><div class=\"ds-panel-heading\"><h3>Agenda</h3><p>4 discussions · 40 minutes planned</p></div><div class=\"ds-panel-rule\"></div><p class=\"ds-panel-copy\">Working content stays orderly and legible while the atmosphere remains visible behind the surface.</p></section>",
+      "css": ".ds-glass-panel{overflow:hidden;width:min(420px,100%);border:0;border-radius:16px;background:rgb(255 255 255 / .54);color:#2c3345;font-family:'DM Sans','PingFang SC','Microsoft YaHei',sans-serif;box-shadow:0 16px 40px rgb(37 58 85 / .11);backdrop-filter:blur(26px) saturate(120%);transition:background 160ms ease-out}.ds-glass-panel:hover{background:rgb(255 255 255 / .6)}.ds-glass-panel:focus-within{outline:3px solid rgb(0 111 171 / .3);outline-offset:2px}.ds-panel-heading{padding:20px 22px}.ds-panel-heading h3{margin:0 0 3px;color:#243e63;font-size:1.05rem;letter-spacing:-.015em}.ds-panel-heading p,.ds-panel-copy{margin:0;color:#536076;font-size:.82rem;line-height:1.45}.ds-panel-rule{height:1px;background:rgb(155 170 188 / .45)}.ds-panel-copy{padding:20px 22px}@supports not (backdrop-filter:blur(1px)){.ds-glass-panel{background:#eef2f8}}"
+    },
+    {
+      "name": "Meeting Readiness Tally",
+      "kind": "custom",
+      "refersTo": "panel-glass",
+      "description": "A compact sky-wash summary that balances ready work against unresolved work.",
+      "html": "<div class=\"ds-readiness-tally\" aria-label=\"2 of 4 discussions ready\"><strong>2 ready</strong><span>2 to review</span></div>",
+      "css": ".ds-readiness-tally{display:flex;align-items:baseline;justify-content:space-between;gap:12px;padding:13px 14px;border-radius:12px;background:rgb(234 247 253 / .78);color:#243e63;font-family:'DM Sans','PingFang SC','Microsoft YaHei',sans-serif;font-variant-numeric:tabular-nums;transition:background 160ms ease-out}.ds-readiness-tally strong{font-size:1rem}.ds-readiness-tally span{color:#536076;font-size:.78rem;font-weight:650}.ds-readiness-tally:hover{background:#eaf7fd}.ds-readiness-tally:focus-visible{outline:3px solid rgb(0 111 171 / .3);outline-offset:2px}"
+    },
+    {
+      "name": "Topic Drawer Tabs",
+      "kind": "nav",
+      "refersTo": "nav-item-active",
+      "description": "A warm-white, underline-led tab rail for overview, decision and reminder context.",
+      "html": "<div class=\"ds-topic-tabs\" role=\"tablist\" aria-label=\"Topic details\"><button class=\"ds-topic-tab\" role=\"tab\" aria-selected=\"true\" type=\"button\">Overview</button><button class=\"ds-topic-tab\" role=\"tab\" aria-selected=\"false\" type=\"button\">Decision</button><button class=\"ds-topic-tab\" role=\"tab\" aria-selected=\"false\" type=\"button\">Reminders</button></div>",
+      "css": ".ds-topic-tabs{height:52px;display:flex;align-items:stretch;gap:20px;padding:0 28px;background:#f4f3ef;font-family:'DM Sans','PingFang SC','Microsoft YaHei',sans-serif}.ds-topic-tab{position:relative;height:100%;padding:0 2px;border:0;background:transparent;color:#536076;font:inherit;font-size:.875rem;font-weight:500}.ds-topic-tab:hover{color:#243e63}.ds-topic-tab:focus-visible{outline:3px solid rgb(0 111 171 / .3);outline-offset:-3px}.ds-topic-tab[aria-selected='true']{color:#243e63}.ds-topic-tab[aria-selected='true']::after{content:'';position:absolute;right:0;bottom:0;left:0;height:3px;background:#006fab}.ds-topic-tab:active{transform:translateY(1px)}"
+    },
+    {
+      "name": "Reminder Switch",
+      "kind": "custom",
+      "refersTo": "button-primary",
+      "description": "A compact action-blue switch for Microsoft-connected reminder preferences.",
+      "html": "<button class=\"ds-switch\" type=\"button\" role=\"switch\" aria-checked=\"true\" aria-label=\"Automatic reminders\"><span class=\"ds-switch-thumb\"></span></button>",
+      "css": ".ds-switch{position:relative;width:32px;height:18.4px;display:inline-flex;align-items:center;padding:0;border:1px solid transparent;border-radius:999px;background:#006fab;transition:background 160ms ease-out;outline:none}.ds-switch-thumb{display:block;width:16px;height:16px;border-radius:50%;background:#eef2f8;transform:translateX(14px);transition:transform 160ms ease-out}.ds-switch[aria-checked='false']{background:#9baabc}.ds-switch[aria-checked='false'] .ds-switch-thumb{transform:translateX(0)}.ds-switch:hover{filter:saturate(1.08)}.ds-switch:focus-visible{border-color:#006fab;box-shadow:0 0 0 3px rgb(0 111 171 / .3)}.ds-switch:active .ds-switch-thumb{width:17px}"
+    }
+  ],
+  "narrative": {
+    "northStar": "The Executive Operating Ledger",
+    "overview": "The tracker is a calm, accountable workspace rather than a generic metric dashboard. A solid GMS navy header establishes institutional identity; beneath it, a short warm-white navigation rail and a chronological agenda ledger keep attention on the next discussion, its owner and its follow-up.\n\nThe material language is frosted but disciplined. Coral, sky and lavender atmospheric bands sit behind translucent working surfaces, while crisp dividers, moderate radii and compact status marks preserve operational clarity. Decorative effects never compete with meeting preparation or decision capture.",
+    "keyCharacteristics": [
+      "GMS navy identity anchored by the authentic white GMS 10 Years logo.",
+      "DM Sans throughout, with compact labels and decisive display headings.",
+      "A warm-white sticky sidebar beside a ledger-first central workspace.",
+      "Frosted panels over coral, sky and lavender atmospheric fields.",
+      "Crisp 1px separators, moderate corners and restrained shadows.",
+      "Semantic status washes that communicate readiness without visual alarm."
+    ],
+    "rules": [
+      { "name": "The Atmosphere, Not Alert Rule", "body": "Coral, sky and lavender belong to the background field; interactive urgency is expressed through restrained semantic washes, never large saturated blocks.", "section": "colors" },
+      { "name": "The One Action Blue Rule", "body": "Use action blue for genuine controls, focus and current state; do not scatter it across passive decoration.", "section": "colors" },
+      { "name": "The Ledger Voice Rule", "body": "Keep interface copy in sentence case and use weight before colour to establish hierarchy; reserve tabular numerals for counts, agenda order and time values.", "section": "typography" },
+      { "name": "The Next Decision Rule", "body": "The agenda ledger remains the widest and most legible surface; supporting readiness and reminder controls must not outgrow the work they explain.", "section": "layout" },
+      { "name": "The Working Glass Rule", "body": "Blur belongs to stable workspace surfaces, not every control; forms and detail cells remain solid, and the no-blur fallback returns panels to Canvas Mist.", "section": "elevation" }
+    ],
+    "dos": [
+      "Do keep the authentic white GMS 10 Years logo on the solid navy header.",
+      "Do preserve the ledger sequence: order, discussion, state, owner, duration and entry to detail.",
+      "Do use 1px dividers and muted metadata to make dense information scannable.",
+      "Do reserve the 16px panel radius for major surfaces and 10–14px radii for nested controls.",
+      "Do keep controls keyboard-operable with visible blue focus treatment and respect reduced motion."
+    ],
+    "donts": [
+      "Don't replace the operating ledger with generic KPI cards or decorative dashboard tiles.",
+      "Don't use coral, sky or lavender atmospheric colours as competing primary actions.",
+      "Don't apply frosted blur to forms, detail cells or every small control.",
+      "Don't introduce oversized pills, excessive shadows or ornamental gradients inside operational content.",
+      "Don't imply that sample data or simulated Microsoft integrations are live."
+    ]
+  }
+}
