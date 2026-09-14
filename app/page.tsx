@@ -5,7 +5,7 @@ import Image from 'next/image';
 import {
   Bell, CalendarDays, Check, CheckCircle2, ChevronRight, CircleAlert,
   ClipboardCheck, Clock3, LayoutList, LogIn, Mail, Menu,
-  MessageSquareText, Plus, Search, Sparkles, UserRound, Users,
+  MessageSquareText, Plus, Search, Sparkles, Timer, UserRound, Users,
 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -83,6 +83,70 @@ function formatDueDate(value: string) {
   return new Intl.DateTimeFormat('en-AU', { day: 'numeric', month: 'short', year: 'numeric', timeZone: 'UTC' }).format(new Date(`${value}T00:00:00Z`));
 }
 
+const DAY_MS = 86_400_000;
+const FORTNIGHT_MS = DAY_MS * 14;
+const MEETING_ANCHOR = Date.UTC(2026, 8, 14);
+const MELBOURNE_TIME_ZONE = 'Australia/Melbourne';
+
+function melbourneDateSerial(date: Date) {
+  const parts = new Intl.DateTimeFormat('en-AU', {
+    timeZone: MELBOURNE_TIME_ZONE,
+    year: 'numeric', month: 'numeric', day: 'numeric',
+  }).formatToParts(date);
+  const value = Object.fromEntries(parts.map((part) => [part.type, part.value]));
+  return Date.UTC(Number(value.year), Number(value.month) - 1, Number(value.day));
+}
+
+function melbourneDateTime(dateSerial: number, hour: number, minute: number) {
+  const date = new Date(dateSerial);
+  const desired = Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate(), hour, minute);
+  let guess = desired;
+  const formatter = new Intl.DateTimeFormat('en-AU', {
+    timeZone: MELBOURNE_TIME_ZONE,
+    year: 'numeric', month: 'numeric', day: 'numeric', hour: 'numeric', minute: 'numeric',
+    hourCycle: 'h23',
+  });
+  for (let pass = 0; pass < 2; pass += 1) {
+    const parts = Object.fromEntries(formatter.formatToParts(new Date(guess)).map((part) => [part.type, part.value]));
+    const represented = Date.UTC(Number(parts.year), Number(parts.month) - 1, Number(parts.day), Number(parts.hour), Number(parts.minute));
+    guess += desired - represented;
+  }
+  return new Date(guess);
+}
+
+function buildMeetingCalendar(now: Date) {
+  const todaySerial = melbourneDateSerial(now);
+  const cyclesSinceAnchor = Math.floor((todaySerial - MEETING_ANCHOR) / FORTNIGHT_MS);
+  const cycleMeetingSerial = MEETING_ANCHOR + cyclesSinceAnchor * FORTNIGHT_MS;
+  const cycleMeetingTime = melbourneDateTime(cycleMeetingSerial, 9, 30);
+  const nextMeetingSerial = cycleMeetingTime.getTime() > now.getTime() ? cycleMeetingSerial : cycleMeetingSerial + FORTNIGHT_MS;
+  const cycleStartSerial = nextMeetingSerial - FORTNIGHT_MS;
+  const nextMeeting = melbourneDateTime(nextMeetingSerial, 9, 30);
+  const days = Array.from({ length: 14 }, (_, index) => {
+    const serial = cycleStartSerial + index * DAY_MS;
+    const date = new Date(serial);
+    return {
+      serial,
+      weekday: new Intl.DateTimeFormat('en-AU', { weekday: 'short', timeZone: 'UTC' }).format(date),
+      day: date.getUTCDate(),
+      month: new Intl.DateTimeFormat('en-AU', { month: 'short', timeZone: 'UTC' }).format(date),
+      isToday: serial === todaySerial,
+      isWeekend: index % 7 > 4,
+    };
+  });
+  const remaining = Math.max(0, nextMeeting.getTime() - now.getTime());
+  return {
+    nextMeeting,
+    nextMeetingSerial,
+    days,
+    countdown: {
+      days: Math.floor(remaining / DAY_MS),
+      hours: Math.floor((remaining % DAY_MS) / 3_600_000),
+      minutes: Math.floor((remaining % 3_600_000) / 60_000),
+    },
+  };
+}
+
 function Navigation({ activeView, backlogCount, decisionCount, ownershipCount, onSelect }: { activeView: WorkspaceView; backlogCount: number; decisionCount: number; ownershipCount: number; onSelect: (view: WorkspaceView) => void }) {
   return (
     <SidebarContent className="nav-content">
@@ -131,6 +195,12 @@ export default function Home() {
   const [decisionDraft, setDecisionDraft] = React.useState({ decision: '', followUpOwner: '', followUpAction: '', dueDate: '' });
   const [activeTopicTab, setActiveTopicTab] = React.useState('overview');
   const [search, setSearch] = React.useState('');
+  const [now, setNow] = React.useState(() => new Date());
+  const meetingCalendar = React.useMemo(() => buildMeetingCalendar(now), [now]);
+  const meetingDateLong = new Intl.DateTimeFormat('en-AU', {
+    weekday: 'long', day: 'numeric', month: 'long', year: 'numeric', timeZone: 'UTC',
+  }).format(new Date(meetingCalendar.nextMeetingSerial));
+  const cycleRange = `${meetingCalendar.days[0].day} ${meetingCalendar.days[0].month}–${meetingCalendar.days[13].day} ${meetingCalendar.days[13].month}`;
   const filteredTopics = topics.filter((topic) => `${topic.title} ${topic.category} ${topic.lead}`.toLowerCase().includes(search.toLowerCase()));
   const recordedDecisions = [...topics, ...backlog].filter((topic) => topic.decision);
   const totalMinutes = topics.reduce((sum, topic) => sum + Number.parseInt(topic.time, 10), 0);
@@ -140,7 +210,7 @@ export default function Home() {
       .map((topic) => ({ id: topic.id * 10 + 1, owner: topic.followUpOwner, initials: topic.followUpOwner.split(' ').map((part) => part[0]).join(''), kind: 'Follow-up' as const, topic, action: topic.followUpAction || 'Complete the agreed follow-up.', due: formatDueDate(topic.dueDate) })),
     ...topics
       .filter((topic) => !topic.decision && topic.lead !== 'Unassigned')
-      .map((topic) => ({ id: topic.id * 10 + 2, owner: topic.lead, initials: topic.leadInitials, kind: 'Meeting preparation' as const, topic, action: topic.prepAction, due: 'For 17 Sep meeting' })),
+      .map((topic) => ({ id: topic.id * 10 + 2, owner: topic.lead, initials: topic.leadInitials, kind: 'Meeting preparation' as const, topic, action: topic.prepAction, due: 'For next Monday meeting' })),
     ...topics
       .filter((topic) => topic.lead === 'Unassigned')
       .map((topic) => ({ id: topic.id * 10 + 3, owner: 'Unassigned', initials: '—', kind: 'Unassigned' as const, topic, action: topic.prepAction, due: 'Needs lead now' })),
@@ -153,6 +223,11 @@ export default function Home() {
   React.useEffect(() => {
     const requestedView = new URLSearchParams(window.location.search).get('view');
     if (requestedView === 'meeting' || requestedView === 'backlog' || requestedView === 'decisions' || requestedView === 'people' || requestedView === 'reminders') queueMicrotask(() => setActiveView(requestedView));
+  }, []);
+
+  React.useEffect(() => {
+    const timer = window.setInterval(() => setNow(new Date()), 60_000);
+    return () => window.clearInterval(timer);
   }, []);
 
   React.useEffect(() => {
@@ -223,7 +298,7 @@ export default function Home() {
 
   function saveDecision() {
     if (!selectedTopic) return;
-    updateTopic({ ...selectedTopic, ...decisionDraft, decisionDate: decisionDraft.decision ? selectedTopic.decisionDate || '17 September 2026' : undefined });
+    updateTopic({ ...selectedTopic, ...decisionDraft, decisionDate: decisionDraft.decision ? selectedTopic.decisionDate || meetingDateLong : undefined });
     toast.add({ type: 'success', title: 'Decision saved', description: 'The decision and follow-up are now visible in this mockup session.' });
   }
 
@@ -263,21 +338,36 @@ export default function Home() {
           </div>
           {activeView === 'meeting' ? <><section className="meeting-intro" aria-labelledby="meeting-title">
             <div>
-              <p className="meeting-date">Thursday, 17 September 2026 · 9:30–10:30 AM</p>
+              <p className="meeting-date">{meetingDateLong} · 9:30–10:30 AM</p>
               <h1 id="meeting-title">Next executive meeting</h1>
               <p className="intro-copy">Shape the agenda, name a lead and leave every discussion with a clear next move.</p>
             </div>
             <Button className="primary-action" size="lg" onClick={() => { setNewDestination('meeting'); setAddOpen(true); }}><Plus aria-hidden="true" />Add discussion</Button>
           </section>
 
-          <section className="meeting-cycle" aria-label="Fortnightly meeting cycle">
-            {[
-              { label: 'Collect topics', state: 'complete' },
-              { label: 'Set agenda', state: 'current' },
-              { label: 'Discuss · 17 Sep', state: 'upcoming' },
-              { label: 'Follow up', state: 'upcoming' },
-            ].map((stage, index) => <div className={`cycle-stage is-${stage.state}`} key={stage.label}><span className="cycle-marker">{stage.state === 'complete' ? <Check aria-hidden="true" /> : index + 1}</span><span>{stage.label}</span></div>)}
-            <p className="cycle-note"><strong>Current stage:</strong> set the agenda and collect input by 16 September.</p>
+          <section className="fortnight-planner" aria-label="Fortnightly executive meeting calendar">
+            <div className="calendar-pane">
+              <div className="calendar-heading"><div><h2>Current fortnight</h2><p>{cycleRange} · meeting every second Monday</p></div><Badge className="cadence-badge">Monday cadence</Badge></div>
+              <div className="week-calendar">
+                {[0, 1].map((weekIndex) => <div className="calendar-week" key={weekIndex}>
+                  <span className="week-label">Week {weekIndex + 1}</span>
+                  <ol>{meetingCalendar.days.slice(weekIndex * 7, weekIndex * 7 + 7).map((day) => <li className={`${day.isToday ? 'is-today' : ''} ${day.isWeekend ? 'is-weekend' : ''}`} key={day.serial} aria-current={day.isToday ? 'date' : undefined}>
+                    <span>{day.weekday}</span><strong>{day.day}</strong><small>{day.month}</small>
+                  </li>)}</ol>
+                </div>)}
+              </div>
+            </div>
+            <aside className="meeting-countdown" aria-live="polite">
+              <div className="countdown-title"><Timer aria-hidden="true" /><span><small>Next executive meeting</small><strong>{meetingDateLong}</strong></span></div>
+              <div className="countdown-values" aria-label={`${meetingCalendar.countdown.days} days, ${meetingCalendar.countdown.hours} hours and ${meetingCalendar.countdown.minutes} minutes remaining`}>
+                <span><strong>{meetingCalendar.countdown.days}</strong><small>days</small></span>
+                <i>:</i>
+                <span><strong>{String(meetingCalendar.countdown.hours).padStart(2, '0')}</strong><small>hours</small></span>
+                <i>:</i>
+                <span><strong>{String(meetingCalendar.countdown.minutes).padStart(2, '0')}</strong><small>mins</small></span>
+              </div>
+              <p>9:30 AM · Australia/Melbourne</p>
+            </aside>
           </section>
 
           <div className="content-grid">
@@ -303,7 +393,7 @@ export default function Home() {
               <section className="reminder-panel">
                 <div className="reminder-heading"><span className="icon-tile"><Bell aria-hidden="true" /></span><div><h2>Outlook reminders</h2><p>Drafted for every lead</p></div></div>
                 <div className="switch-row"><div><strong>Automatic reminders</strong><span>{signedIn ? '2 business days before' : 'Connect Microsoft to activate'}</span></div><Switch checked={signedIn && remindersOn} disabled={!signedIn} onCheckedChange={setRemindersOn} aria-label="Automatic reminders" /></div>
-                <div className="next-reminder"><CalendarDays aria-hidden="true" /><div><span>Next reminder</span><strong>{!signedIn ? 'Waiting for Microsoft connection' : remindersOn ? 'Tuesday, 15 September · 9:30 AM' : 'Paused'}</strong></div></div>
+                <div className="next-reminder"><CalendarDays aria-hidden="true" /><div><span>Next reminder</span><strong>{!signedIn ? 'Waiting for Microsoft connection' : remindersOn ? 'Two business days before the meeting' : 'Paused'}</strong></div></div>
                 <p className="mock-note">Simulation only — no email or calendar event will be created.</p>
               </section>
             </aside>
@@ -360,8 +450,8 @@ export default function Home() {
               <aside className="reminder-preview" aria-labelledby="preview-reminders-title"><div className="preview-head"><span className="icon-tile"><Mail aria-hidden="true" /></span><div><h2 id="preview-reminders-title">Next scheduled reminders</h2><p>Preview of the messages that would be prepared.</p></div></div>
                 <div className="recipient-strip"><span>Recipients</span><strong>Discussion leads · Follow-up owners</strong></div>
                 <div className="preview-list">
-                  <article className="preview-message"><span className="preview-time">15 Sep · 9:30 AM</span><strong>Daniel — input needed for contract signing authority</strong><p>Bring the current thresholds and flagged policy gaps for the 17 September meeting.</p></article>
-                  <article className="preview-message"><span className="preview-time">17 Sep · 9:00 AM</span><strong>Priya — leave coverage action due tomorrow</strong><p>Set up the shared coverage calendar and circulate the handover template.</p></article>
+                  <article className="preview-message"><span className="preview-time">2 business days before</span><strong>Daniel — input needed for contract signing authority</strong><p>Bring the current thresholds and flagged policy gaps for the next Monday meeting.</p></article>
+                  <article className="preview-message"><span className="preview-time">1 business day before due</span><strong>Priya — leave coverage action approaching</strong><p>Set up the shared coverage calendar and circulate the handover template.</p></article>
                 </div>
                 <p className="mock-note">Simulation only — no email or calendar event will be created.</p>
               </aside>
@@ -391,7 +481,7 @@ export default function Home() {
       <Sheet open={mobileNavOpen} onOpenChange={setMobileNavOpen}><SheetContent side="left" id="mobile-navigation" className="mobile-nav-sheet"><SheetHeader><SheetTitle>Executive Projects</SheetTitle><SheetDescription>Workspace navigation</SheetDescription></SheetHeader><Navigation activeView={activeView} backlogCount={backlog.length} decisionCount={recordedDecisions.length} ownershipCount={ownershipItems.length} onSelect={(view) => { selectView(view); setMobileNavOpen(false); }} /></SheetContent></Sheet>
 
       <Sheet open={Boolean(selectedTopic)} onOpenChange={(open) => !open && setSelectedTopic(null)}><SheetContent className="topic-sheet">
-        {selectedTopic ? <><div className="topic-sheet-header"><Badge className="topic-category">{selectedTopic.category}</Badge><SheetHeader><SheetTitle>{selectedTopic.title}</SheetTitle><SheetDescription>Fortnightly executive meeting · sample discussion</SheetDescription></SheetHeader></div>
+        {selectedTopic ? <><div className="topic-sheet-header"><Badge className="topic-category">{selectedTopic.category}</Badge><SheetHeader><SheetTitle>{selectedTopic.title}</SheetTitle><SheetDescription>Every second Monday · sample discussion</SheetDescription></SheetHeader></div>
           <Tabs value={activeTopicTab} onValueChange={setActiveTopicTab} className="topic-tabs"><TabsList className="topic-tab-list"><TabsTrigger value="overview">Overview</TabsTrigger><TabsTrigger value="decision">Decision</TabsTrigger><TabsTrigger value="reminders">Reminders</TabsTrigger></TabsList>
             <TabsContent value="overview" className="tab-panel"><StatusBadge status={selectedTopic.status} /><p className="topic-note">{selectedTopic.note}</p><label className="owner-control" htmlFor="topic-lead"><span>Discussion lead</span><NativeSelect id="topic-lead" value={selectedTopic.lead} onChange={(event) => assignLead(event.target.value)}><NativeSelectOption>Unassigned</NativeSelectOption><NativeSelectOption>Maya Chen</NativeSelectOption><NativeSelectOption>Daniel Lee</NativeSelectOption><NativeSelectOption>Priya Shah</NativeSelectOption></NativeSelect></label><div className="detail-grid"><div><span>Agenda time</span><strong>{selectedTopic.time}</strong></div><div><span>Reminder</span><strong>{signedIn && remindersOn && selectedTopic.remindLead ? selectedTopic.reminder : 'Not active'}</strong></div><div><span>Decision state</span><strong>{selectedTopic.decision ? 'Recorded' : 'Pending meeting'}</strong></div><div><span>Follow-up</span><strong>{selectedTopic.followUpOwner || 'Not assigned'}</strong></div></div></TabsContent>
             <TabsContent value="decision" className="tab-panel"><div className="decision-placeholder"><MessageSquareText aria-hidden="true" /><h3>Capture the decision in the meeting</h3><p>Record what was agreed, the owner, the next action and its due date in one place.</p>{selectedTopic.decision ? <div className="saved-decision"><strong>Saved decision</strong><span>{selectedTopic.decision}</span><small>Next action: {selectedTopic.followUpAction || 'Not added'}</small><small>Owner: {selectedTopic.followUpOwner || 'Not assigned'} · Due: {formatDueDate(selectedTopic.dueDate)}</small></div> : null}<label className="decision-field" htmlFor="decision-rationale"><span>Decision and rationale</span><Textarea id="decision-rationale" value={decisionDraft.decision} onChange={(event) => setDecisionDraft((draft) => ({ ...draft, decision: event.target.value }))} placeholder="What was agreed?" /></label><label className="decision-field" htmlFor="decision-action"><span>Next action</span><Input id="decision-action" value={decisionDraft.followUpAction} onChange={(event) => setDecisionDraft((draft) => ({ ...draft, followUpAction: event.target.value }))} placeholder="What needs to happen next?" /></label><div className="form-pair"><label className="decision-field" htmlFor="decision-owner"><span>Follow-up owner</span><Input id="decision-owner" value={decisionDraft.followUpOwner} onChange={(event) => setDecisionDraft((draft) => ({ ...draft, followUpOwner: event.target.value }))} placeholder="Name" /></label><label className="decision-field" htmlFor="decision-due-date"><span>Due date</span><Input id="decision-due-date" value={decisionDraft.dueDate} onChange={(event) => setDecisionDraft((draft) => ({ ...draft, dueDate: event.target.value }))} type="date" /></label></div><Button className="primary-action" onClick={saveDecision}><Check aria-hidden="true" />Save decision</Button></div></TabsContent>
