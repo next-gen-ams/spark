@@ -27,11 +27,12 @@ import { Textarea } from '@/components/ui/textarea';
 import { Toaster, toast } from '@/components/ui/toast';
 
 type TopicStatus = 'Ready' | 'Needs owner' | 'In review';
-type WorkspaceView = 'meeting' | 'backlog';
+type WorkspaceView = 'meeting' | 'backlog' | 'decisions';
 type Topic = {
   id: number; title: string; category: string; status: TopicStatus;
   lead: string; leadInitials: string; time: string; note: string; reminder: string;
   decision: string; followUpOwner: string; dueDate: string;
+  decisionDate?: string;
   remindLead: boolean; remindFollowup: boolean;
 };
 
@@ -50,10 +51,10 @@ type WebMCPContext = {
 };
 
 const initialTopics: Topic[] = [
-  { id: 1, title: 'Confirm Q4 all-hands owners and format', category: 'People & culture', status: 'Ready', lead: 'Maya Chen', leadInitials: 'MC', time: '10 min', note: 'Agree the host, business updates and questions format before the October invitation is drafted.', reminder: '2 business days before meeting', decision: '', followUpOwner: '', dueDate: '', remindLead: false, remindFollowup: false },
+  { id: 1, title: 'Confirm Q4 all-hands owners and format', category: 'People & culture', status: 'Ready', lead: 'Maya Chen', leadInitials: 'MC', time: '10 min', note: 'Agree the host, business updates and questions format before the October invitation is drafted.', reminder: '2 business days before meeting', decision: 'Run a 45-minute all-hands with one host, three business updates and a moderated team Q&A.', followUpOwner: 'Maya Chen', dueDate: '2026-09-22', decisionDate: '3 September 2026', remindLead: false, remindFollowup: false },
   { id: 2, title: 'Review contract signing authority', category: 'Governance', status: 'In review', lead: 'Daniel Lee', leadInitials: 'DL', time: '15 min', note: 'Review current thresholds and decide whether the operating policy needs a 2026 update.', reminder: '1 business day before meeting', decision: '', followUpOwner: '', dueDate: '', remindLead: false, remindFollowup: false },
   { id: 3, title: 'Decide executive offsite planning lead', category: 'Operations', status: 'Needs owner', lead: 'Unassigned', leadInitials: '—', time: '8 min', note: 'Assign one lead to return with timing, location options and a proposed working agenda.', reminder: 'Not scheduled', decision: '', followUpOwner: '', dueDate: '', remindLead: false, remindFollowup: false },
-  { id: 4, title: 'Approve shared leave coverage process', category: 'Operations', status: 'Ready', lead: 'Priya Shah', leadInitials: 'PS', time: '7 min', note: 'Confirm the minimum handover information and who owns the shared coverage calendar.', reminder: '2 business days before meeting', decision: '', followUpOwner: '', dueDate: '', remindLead: false, remindFollowup: false },
+  { id: 4, title: 'Approve shared leave coverage process', category: 'Operations', status: 'Ready', lead: 'Priya Shah', leadInitials: 'PS', time: '7 min', note: 'Confirm the minimum handover information and who owns the shared coverage calendar.', reminder: '2 business days before meeting', decision: 'Use one shared coverage calendar and require a named backup plus a short handover note for leave longer than two days.', followUpOwner: 'Priya Shah', dueDate: '2026-09-18', decisionDate: '20 August 2026', remindLead: false, remindFollowup: false },
 ];
 
 const initialBacklog: Topic[] = [
@@ -62,7 +63,6 @@ const initialBacklog: Topic[] = [
 ];
 
 const secondaryNavItems = [
-  { label: 'Decisions', icon: ClipboardCheck, count: 12 },
   { label: 'People & ownership', icon: Users },
   { label: 'Reminder settings', icon: Bell },
 ];
@@ -72,7 +72,12 @@ function StatusBadge({ status }: { status: TopicStatus }) {
   return <Badge className={`status-badge status-${status.toLowerCase().replace(' ', '-')}`}><Icon aria-hidden="true" />{status}</Badge>;
 }
 
-function Navigation({ activeView, backlogCount, onSelect }: { activeView: WorkspaceView; backlogCount: number; onSelect: (view: WorkspaceView) => void }) {
+function formatDueDate(value: string) {
+  if (!value) return 'Not set';
+  return new Intl.DateTimeFormat('en-AU', { day: 'numeric', month: 'short', year: 'numeric', timeZone: 'UTC' }).format(new Date(`${value}T00:00:00Z`));
+}
+
+function Navigation({ activeView, backlogCount, decisionCount, onSelect }: { activeView: WorkspaceView; backlogCount: number; decisionCount: number; onSelect: (view: WorkspaceView) => void }) {
   return (
     <SidebarContent className="nav-content">
       <SidebarGroup className="nav-group"><SidebarGroupContent>
@@ -80,6 +85,7 @@ function Navigation({ activeView, backlogCount, onSelect }: { activeView: Worksp
           {[
             { label: 'Next meeting', icon: CalendarDays, view: 'meeting' as WorkspaceView },
             { label: 'Discussion backlog', icon: LayoutList, view: 'backlog' as WorkspaceView, count: backlogCount },
+            { label: 'Decisions', icon: ClipboardCheck, view: 'decisions' as WorkspaceView, count: decisionCount },
           ].map(({ label, icon: Icon, view, count }) => (
             <SidebarMenuItem key={label}>
               <SidebarMenuButton isActive={activeView === view} className="nav-button" onClick={() => onSelect(view)}>
@@ -88,10 +94,10 @@ function Navigation({ activeView, backlogCount, onSelect }: { activeView: Worksp
               </SidebarMenuButton>
             </SidebarMenuItem>
           ))}
-          {secondaryNavItems.map(({ label, icon: Icon, count }) => (
+          {secondaryNavItems.map(({ label, icon: Icon }) => (
             <SidebarMenuItem key={label}>
               <SidebarMenuButton className="nav-button" onClick={() => toast.add({ type: 'info', title: `${label} preview`, description: 'This mockup keeps that workflow inside each discussion drawer.' })}>
-                <Icon aria-hidden="true" /><span>{label}</span>{count ? <span className="nav-count">{count}</span> : null}
+                <Icon aria-hidden="true" /><span>{label}</span>
               </SidebarMenuButton>
             </SidebarMenuItem>
           ))}
@@ -118,10 +124,16 @@ export default function Home() {
   const [newContext, setNewContext] = React.useState('');
   const [newDestination, setNewDestination] = React.useState<WorkspaceView>('meeting');
   const [decisionDraft, setDecisionDraft] = React.useState({ decision: '', followUpOwner: '', dueDate: '' });
+  const [activeTopicTab, setActiveTopicTab] = React.useState('overview');
   const [search, setSearch] = React.useState('');
   const filteredTopics = topics.filter((topic) => `${topic.title} ${topic.category} ${topic.lead}`.toLowerCase().includes(search.toLowerCase()));
-  const readyCount = topics.filter((topic) => topic.status === 'Ready').length;
+  const recordedDecisions = [...topics, ...backlog].filter((topic) => topic.decision);
   const totalMinutes = topics.reduce((sum, topic) => sum + Number.parseInt(topic.time, 10), 0);
+
+  React.useEffect(() => {
+    const requestedView = new URLSearchParams(window.location.search).get('view');
+    if (requestedView === 'meeting' || requestedView === 'backlog' || requestedView === 'decisions') setActiveView(requestedView);
+  }, []);
 
   React.useEffect(() => {
     const context = (document as Document & { modelContext?: WebMCPContext }).modelContext;
@@ -164,8 +176,16 @@ export default function Home() {
     toast.add({ type: 'success', title: 'Discussion added', description: newDestination === 'backlog' ? 'It is now in the discussion backlog.' : 'It is now on the sample agenda.' });
   }
 
-  function openTopic(topic: Topic) {
+  function selectView(view: WorkspaceView) {
+    setActiveView(view);
+    const url = new URL(window.location.href);
+    url.searchParams.set('view', view);
+    window.history.replaceState({}, '', url);
+  }
+
+  function openTopic(topic: Topic, tab = 'overview') {
     setSelectedTopic(topic);
+    setActiveTopicTab(tab);
     setDecisionDraft({ decision: topic.decision, followUpOwner: topic.followUpOwner, dueDate: topic.dueDate });
   }
 
@@ -183,7 +203,7 @@ export default function Home() {
 
   function saveDecision() {
     if (!selectedTopic) return;
-    updateTopic({ ...selectedTopic, ...decisionDraft });
+    updateTopic({ ...selectedTopic, ...decisionDraft, decisionDate: decisionDraft.decision ? selectedTopic.decisionDate || '17 September 2026' : undefined });
     toast.add({ type: 'success', title: 'Decision saved', description: 'The decision and follow-up are now visible in this mockup session.' });
   }
 
@@ -215,7 +235,7 @@ export default function Home() {
       </header>
 
       <SidebarProvider className="workspace-provider"><div className="workspace-layout">
-        <Sidebar collapsible="none" className="workspace-sidebar"><Navigation activeView={activeView} backlogCount={backlog.length} onSelect={setActiveView} /></Sidebar>
+        <Sidebar collapsible="none" className="workspace-sidebar"><Navigation activeView={activeView} backlogCount={backlog.length} decisionCount={recordedDecisions.length} onSelect={selectView} /></Sidebar>
         <main className="workspace-main" id="workspace-main">
           <div className="mobile-topbar">
             <Button variant="outline" className="mobile-menu-button" aria-expanded={mobileNavOpen} aria-controls="mobile-navigation" onClick={() => setMobileNavOpen(true)}><Menu aria-hidden="true" />Menu</Button>
@@ -249,13 +269,7 @@ export default function Home() {
               </div>
             </section>
 
-            <aside className="meeting-rail" aria-label="Meeting readiness">
-              <section className="readiness-panel">
-                <div className="readiness-tally" aria-label={`${readyCount} of ${topics.length} discussions ready`}><strong>{readyCount} ready</strong><span>{topics.length - readyCount} to review</span></div>
-                <div><h2>Meeting readiness</h2><p>{topics.length - readyCount} items still need attention before the agenda can be sent.</p></div>
-                <div className="readiness-checks"><div className="check-row is-done"><Check aria-hidden="true" /><span>Meeting time confirmed</span></div><div className="check-row is-done"><Check aria-hidden="true" /><span>Draft agenda created</span></div><div className="check-row"><CircleAlert aria-hidden="true" /><span>Assign one discussion lead</span></div></div>
-                <Button variant="secondary" className="send-agenda-button" onClick={() => toast.add({ type: 'info', title: 'Agenda preview ready', description: 'Sending is disabled in this mockup.' })}><Mail aria-hidden="true" />Preview agenda email</Button>
-              </section>
+            <aside className="meeting-rail" aria-label="Meeting reminders">
               <section className="reminder-panel">
                 <div className="reminder-heading"><span className="icon-tile"><Bell aria-hidden="true" /></span><div><h2>Outlook reminders</h2><p>Drafted for every lead</p></div></div>
                 <div className="switch-row"><div><strong>Automatic reminders</strong><span>{signedIn ? '2 business days before' : 'Connect Microsoft to activate'}</span></div><Switch checked={signedIn && remindersOn} disabled={!signedIn} onCheckedChange={setRemindersOn} aria-label="Automatic reminders" /></div>
@@ -263,12 +277,26 @@ export default function Home() {
                 <p className="mock-note">Simulation only — no email or calendar event will be created.</p>
               </section>
             </aside>
-          </div></> : <section className="backlog-view" aria-labelledby="backlog-title">
+          </div></> : activeView === 'backlog' ? <section className="backlog-view" aria-labelledby="backlog-title">
             <div className="meeting-intro"><div><p className="meeting-date">Topics waiting for a future agenda</p><h1 id="backlog-title">Discussion backlog</h1><p className="intro-copy">Assign a lead and move a topic into the next meeting when it is ready.</p></div><Button className="primary-action" size="lg" onClick={() => { setNewDestination('backlog'); setAddOpen(true); }}><Plus aria-hidden="true" />Add to backlog</Button></div>
             <section className="agenda-panel backlog-panel"><div className="panel-toolbar"><div><h2>Waiting for discussion</h2><p>{backlog.length} sample topics</p></div></div><div className="agenda-list">
               {backlog.map((topic, index) => <div className="backlog-row" key={topic.id}><button type="button" className="backlog-open" onClick={() => openTopic(topic)}><span className="agenda-order">{String(index + 1).padStart(2, '0')}</span><span className="agenda-summary"><span className="agenda-topline"><span className="agenda-title">{topic.title}</span><StatusBadge status={topic.status} /></span><span className="agenda-meta"><span>{topic.category}</span><span className="meta-dot" aria-hidden="true" /><span className={topic.lead === 'Unassigned' ? 'needs-owner' : ''}>{topic.lead}</span></span></span></button><Button variant="secondary" onClick={() => moveToAgenda(topic)}>Move to next meeting</Button></div>)}
               {backlog.length === 0 ? <div className="empty-state"><CheckCircle2 aria-hidden="true" /><strong>Backlog cleared</strong><span>Every discussion has been placed on an agenda.</span></div> : null}
             </div></section>
+          </section> : <section className="decisions-view" aria-labelledby="decisions-title">
+            <div className="meeting-intro"><div><p className="meeting-date">A clear record of what was agreed</p><h1 id="decisions-title">Decisions</h1><p className="intro-copy">Review the decision, rationale, owner and due date without reopening the full meeting agenda.</p></div></div>
+            <section className="decisions-panel" aria-labelledby="decision-log-title">
+              <div className="panel-toolbar"><div><h2 id="decision-log-title">Decision log</h2><p>{recordedDecisions.length} recorded decisions · sample data</p></div></div>
+              <div className="decision-list">
+                {recordedDecisions.map((topic) => <button type="button" className="decision-row" key={topic.id} onClick={() => openTopic(topic, 'decision')}>
+                  <span className="decision-date">{topic.decisionDate || '17 September 2026'}</span>
+                  <span className="decision-summary"><span className="decision-topic">{topic.title}</span><span className="decision-copy">{topic.decision}</span><span className="decision-category">{topic.category}</span></span>
+                  <span className="decision-followup"><small>Follow-up owner</small><strong>{topic.followUpOwner || 'Not assigned'}</strong><small>Due {formatDueDate(topic.dueDate)}</small></span>
+                  <ChevronRight className="row-chevron" aria-hidden="true" />
+                </button>)}
+                {recordedDecisions.length === 0 ? <div className="empty-state"><ClipboardCheck aria-hidden="true" /><strong>No decisions recorded yet</strong><span>Saved meeting decisions will appear here.</span></div> : null}
+              </div>
+            </section>
           </section>}
         </main>
       </div></SidebarProvider>
@@ -291,13 +319,13 @@ export default function Home() {
         <DialogFooter><DialogClose render={<Button variant="ghost" />}>Cancel</DialogClose><Button className="primary-action" onClick={simulateSignIn}>{signedIn ? 'Done' : 'Simulate Microsoft sign-in'}</Button></DialogFooter>
       </DialogContent></Dialog>
 
-      <Sheet open={mobileNavOpen} onOpenChange={setMobileNavOpen}><SheetContent side="left" id="mobile-navigation" className="mobile-nav-sheet"><SheetHeader><SheetTitle>Executive Projects</SheetTitle><SheetDescription>Workspace navigation</SheetDescription></SheetHeader><Navigation activeView={activeView} backlogCount={backlog.length} onSelect={(view) => { setActiveView(view); setMobileNavOpen(false); }} /></SheetContent></Sheet>
+      <Sheet open={mobileNavOpen} onOpenChange={setMobileNavOpen}><SheetContent side="left" id="mobile-navigation" className="mobile-nav-sheet"><SheetHeader><SheetTitle>Executive Projects</SheetTitle><SheetDescription>Workspace navigation</SheetDescription></SheetHeader><Navigation activeView={activeView} backlogCount={backlog.length} decisionCount={recordedDecisions.length} onSelect={(view) => { selectView(view); setMobileNavOpen(false); }} /></SheetContent></Sheet>
 
       <Sheet open={Boolean(selectedTopic)} onOpenChange={(open) => !open && setSelectedTopic(null)}><SheetContent className="topic-sheet">
         {selectedTopic ? <><div className="topic-sheet-header"><Badge className="topic-category">{selectedTopic.category}</Badge><SheetHeader><SheetTitle>{selectedTopic.title}</SheetTitle><SheetDescription>Fortnightly executive meeting · sample discussion</SheetDescription></SheetHeader></div>
-          <Tabs defaultValue="overview" className="topic-tabs"><TabsList className="topic-tab-list"><TabsTrigger value="overview">Overview</TabsTrigger><TabsTrigger value="decision">Decision</TabsTrigger><TabsTrigger value="reminders">Reminders</TabsTrigger></TabsList>
+          <Tabs value={activeTopicTab} onValueChange={setActiveTopicTab} className="topic-tabs"><TabsList className="topic-tab-list"><TabsTrigger value="overview">Overview</TabsTrigger><TabsTrigger value="decision">Decision</TabsTrigger><TabsTrigger value="reminders">Reminders</TabsTrigger></TabsList>
             <TabsContent value="overview" className="tab-panel"><StatusBadge status={selectedTopic.status} /><p className="topic-note">{selectedTopic.note}</p><label className="owner-control"><span>Discussion lead</span><NativeSelect value={selectedTopic.lead} onChange={(event) => assignLead(event.target.value)}><NativeSelectOption>Unassigned</NativeSelectOption><NativeSelectOption>Maya Chen</NativeSelectOption><NativeSelectOption>Daniel Lee</NativeSelectOption><NativeSelectOption>Priya Shah</NativeSelectOption></NativeSelect></label><div className="detail-grid"><div><span>Agenda time</span><strong>{selectedTopic.time}</strong></div><div><span>Reminder</span><strong>{signedIn && remindersOn && selectedTopic.remindLead ? selectedTopic.reminder : 'Not active'}</strong></div><div><span>Decision state</span><strong>{selectedTopic.decision ? 'Recorded' : 'Pending meeting'}</strong></div><div><span>Follow-up</span><strong>{selectedTopic.followUpOwner || 'Not assigned'}</strong></div></div></TabsContent>
-            <TabsContent value="decision" className="tab-panel"><div className="decision-placeholder"><MessageSquareText aria-hidden="true" /><h3>Capture the decision in the meeting</h3><p>Record what was agreed, the follow-up owner and the due date in one place.</p>{selectedTopic.decision ? <div className="saved-decision"><strong>Saved decision</strong><span>{selectedTopic.decision}</span><small>Follow-up: {selectedTopic.followUpOwner || 'Not assigned'} · Due: {selectedTopic.dueDate || 'Not set'}</small></div> : null}<Textarea value={decisionDraft.decision} onChange={(event) => setDecisionDraft((draft) => ({ ...draft, decision: event.target.value }))} placeholder="Decision and rationale" /><div className="form-pair"><Input value={decisionDraft.followUpOwner} onChange={(event) => setDecisionDraft((draft) => ({ ...draft, followUpOwner: event.target.value }))} placeholder="Follow-up owner" /><Input value={decisionDraft.dueDate} onChange={(event) => setDecisionDraft((draft) => ({ ...draft, dueDate: event.target.value }))} type="date" aria-label="Follow-up due date" /></div><Button className="primary-action" onClick={saveDecision}><Check aria-hidden="true" />Save decision</Button></div></TabsContent>
+            <TabsContent value="decision" className="tab-panel"><div className="decision-placeholder"><MessageSquareText aria-hidden="true" /><h3>Capture the decision in the meeting</h3><p>Record what was agreed, the follow-up owner and the due date in one place.</p>{selectedTopic.decision ? <div className="saved-decision"><strong>Saved decision</strong><span>{selectedTopic.decision}</span><small>Follow-up: {selectedTopic.followUpOwner || 'Not assigned'} · Due: {formatDueDate(selectedTopic.dueDate)}</small></div> : null}<Textarea value={decisionDraft.decision} onChange={(event) => setDecisionDraft((draft) => ({ ...draft, decision: event.target.value }))} placeholder="Decision and rationale" /><div className="form-pair"><Input value={decisionDraft.followUpOwner} onChange={(event) => setDecisionDraft((draft) => ({ ...draft, followUpOwner: event.target.value }))} placeholder="Follow-up owner" /><Input value={decisionDraft.dueDate} onChange={(event) => setDecisionDraft((draft) => ({ ...draft, dueDate: event.target.value }))} type="date" aria-label="Follow-up due date" /></div><Button className="primary-action" onClick={saveDecision}><Check aria-hidden="true" />Save decision</Button></div></TabsContent>
             <TabsContent value="reminders" className="tab-panel"><div className="reminder-setting-row"><div><Bell aria-hidden="true" /><span><strong>Lead reminder</strong><small>{signedIn && remindersOn ? 'Send before the meeting' : signedIn ? 'Automatic reminders are paused' : 'Connect Microsoft to activate'}</small></span></div><Switch checked={signedIn && remindersOn && selectedTopic.remindLead} disabled={!signedIn || !remindersOn} onCheckedChange={(checked) => updateTopic({ ...selectedTopic, remindLead: checked })} aria-label="Lead reminder" /></div><div className="reminder-setting-row"><div><ClipboardCheck aria-hidden="true" /><span><strong>Follow-up reminder</strong><small>{signedIn && remindersOn ? 'Send before the action due date' : signedIn ? 'Automatic reminders are paused' : 'Connect Microsoft to activate'}</small></span></div><Switch checked={signedIn && remindersOn && selectedTopic.remindFollowup} disabled={!signedIn || !remindersOn} onCheckedChange={(checked) => updateTopic({ ...selectedTopic, remindFollowup: checked })} aria-label="Follow-up reminder" /></div><div className="integration-callout"><Sparkles aria-hidden="true" /><p><strong>{signedIn ? 'Microsoft Graph connected' : 'Microsoft Graph connection needed'}</strong><span>{signedIn ? remindersOn ? 'Reminder preferences are active in this mock session.' : 'The Microsoft connection is ready, but automatic reminders are paused.' : 'The production version would request delegated work-account permissions under your organisation’s security policy.'}</span></p></div></TabsContent>
           </Tabs></> : null}
       </SheetContent></Sheet>
