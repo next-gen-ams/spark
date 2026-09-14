@@ -9,8 +9,8 @@ export const metadata: Metadata = {
 
 const directionContract = `THESIS: A fortnightly decision ledger makes every discussion travel visibly from agenda to owner to follow-up; it refuses the generic metric-card dashboard.
 OWN-WORLD: GMS navy identity, warm-white navigation, action blue, and coral-sky-lavender frosted working surfaces with authentic GMS artwork.
-STORY: Executives scan the next meeting, resolve missing ownership, open a topic, record a decision and confirm the reminder path.
-FIRST VIEWPORT: Brand header above a short left rail, a chronological agenda ledger in the centre, and meeting-readiness controls at right; Add discussion is the primary action.
+STORY: Executives follow the fortnightly cycle from topic collection to agenda, decision, named owner and follow-up reminder.
+FIRST VIEWPORT: Brand header above a short left rail, a chronological meeting-cycle strip, the agenda ledger in the centre, and Outlook reminder controls at right; Add discussion is the primary action.
 FORM: Grounded structure candidate 4, assigned by seed 5afa5f67.
 FINISH: unreviewed and undocumented is unfinished; this build ends with the finish review, the verdict, and DESIGN.md`;
 
