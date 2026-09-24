@@ -8,7 +8,7 @@
   "scripts": {
     "dev": "vinext dev",
     "build": "vinext build",
-    "build:github": "GITHUB_PAGES=true NEXT_PUBLIC_APP_BASE_PATH=/emt-tracker vinext build",
+    "build:github": "node scripts/require-public-auth-env.mjs && GITHUB_PAGES=true NEXT_PUBLIC_APP_BASE_PATH=/emt-tracker vinext build",
     "start": "wrangler dev --config dist/server/wrangler.json",
     "lint": "oxlint",
     "format": "oxfmt"
