@@ -3,10 +3,11 @@
 GMS Executive Management Team workspace for fortnightly agendas, decisions and follow-up reminders.
 
 - Published path: `https://spark.kmt.global/emt-tracker/`
-- Microsoft sign-in: tenant-scoped Entra SPA using delegated `User.Read`, restricted to the four approved EMT accounts
-- Shared data: persisted through the KMT Spark Supabase project and protected by the EMT workspace function
+- Microsoft sign-in: tenant-scoped Entra SPA using delegated `User.Read`; access is granted only to active members in the EMT membership table
+- Shared data: persisted through the KMT Spark Supabase project and protected by backend Microsoft profile and membership verification
 - Reminder preferences: managed once per signed-in Microsoft account and applied automatically to that member's assigned agenda topics and follow-up actions; topic-level reminder switches have been removed
-- Outlook email delivery: Microsoft Graph sender authorisation for `insights@gms.global`, production secrets, branded templates and delivery audit records are deployed; live test delivery to Lisa, George and Brenda, with Coco copied on each message, was accepted by Microsoft Graph on 24 September 2026
+- Outlook email delivery: automatic reminders use the admin-managed `insights@gms.global` sender; member-initiated topic shares request delegated `Mail.Send` only after preview and send from the signed-in member's account
+- Mail safeguards: recipients must be active EMT members, previews do not send, manual sends are rate-limited and idempotent, and Graph access tokens are never stored
 - Reminder automation: authenticated manual/test delivery is enabled; the recurring scheduled job is not enabled yet
 - Calendar delivery: not enabled
 
