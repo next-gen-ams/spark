@@ -10,12 +10,6 @@ const ALLOWED_ORIGINS = new Set([
   'http://localhost:8791',
 ]);
 const BUCKETS = new Set(['agenda', 'backlog', 'history']);
-const CATEGORIES = new Set([
-  'People & culture',
-  'Operations',
-  'Governance',
-  'Finance',
-]);
 const STATUSES = new Set(['Scheduled', 'Needs lead', 'Needs input']);
 const APPROVED_EMAILS = new Set([
   'lisa.xu@gms.global',
@@ -111,13 +105,14 @@ function minutesFrom(value: unknown) {
 function topicPayload(
   input: TopicInput,
   profile: MicrosoftProfile,
+  allowedCategories: Set<string>,
   includeId = false,
 ) {
   const bucket = requiredString(input.bucket ?? 'agenda', 'Bucket', 20);
   const category = requiredString(input.category, 'Category', 40);
   const status = requiredString(input.status ?? 'Scheduled', 'Status', 30);
   if (!BUCKETS.has(bucket)) throw new Error('Bucket is invalid.');
-  if (!CATEGORIES.has(category)) throw new Error('Category is invalid.');
+  if (!allowedCategories.has(category)) throw new Error('Category is invalid.');
   if (!STATUSES.has(status)) throw new Error('Status is invalid.');
 
   const payload: Record<string, unknown> = {
@@ -193,6 +188,29 @@ function mapSettings(row: Record<string, unknown>) {
   };
 }
 
+function mapCategory(row: Record<string, unknown>, usageCount = 0) {
+  return {
+    id: Number(row.id),
+    name: String(row.name),
+    sortOrder: Number(row.sort_order),
+    active: Boolean(row.active),
+    system: Boolean(row.system),
+    usageCount,
+  };
+}
+
+async function getAllowedCategories(database: ReturnType<typeof createClient>) {
+  const { data, error } = await database
+    .from('emt_topic_categories')
+    .select('name,active,system');
+  if (error) throw error;
+  return new Set(
+    (data || [])
+      .filter((category) => category.active || category.system)
+      .map((category) => String(category.name)),
+  );
+}
+
 async function authenticate(
   request: Request,
   database: ReturnType<typeof createClient>,
@@ -228,9 +246,7 @@ async function authenticate(
   const displayName = graphProfile.displayName || '';
   const id = graphProfile.id || '';
   if (!id || !displayName || !APPROVED_EMAILS.has(email)) {
-    throw new Error(
-      'This Microsoft account is not approved for EMT Tracker.',
-    );
+    throw new Error('This Microsoft account is not approved for EMT Tracker.');
   }
 
   const { data: member, error } = await database
@@ -287,25 +303,42 @@ Deno.serve(async (request) => {
     const profile = await authenticate(request, database);
 
     if (request.method === 'GET') {
-      const [topicsResult, settingsResult] = await Promise.all([
-        database
-          .from('emt_topics')
-          .select('*')
-          .order('id', { ascending: true }),
-        database
-          .from('emt_settings')
-          .select('*')
-          .eq('workspace_id', WORKSPACE_ID)
-          .single(),
-      ]);
+      const [topicsResult, settingsResult, categoriesResult] =
+        await Promise.all([
+          database
+            .from('emt_topics')
+            .select('*')
+            .order('id', { ascending: true }),
+          database
+            .from('emt_settings')
+            .select('*')
+            .eq('workspace_id', WORKSPACE_ID)
+            .single(),
+          database
+            .from('emt_topic_categories')
+            .select('*')
+            .order('sort_order', { ascending: true }),
+        ]);
       if (topicsResult.error) throw topicsResult.error;
       if (settingsResult.error) throw settingsResult.error;
+      if (categoriesResult.error) throw categoriesResult.error;
+      const categoryUsage = new Map<string, number>();
+      for (const topic of topicsResult.data || []) {
+        const category = String(topic.category);
+        categoryUsage.set(category, (categoryUsage.get(category) || 0) + 1);
+      }
       return json(origin, {
         profile,
         topics: (topicsResult.data || []).map((row) =>
           mapTopic(row as Record<string, unknown>),
         ),
         settings: mapSettings(settingsResult.data as Record<string, unknown>),
+        categories: (categoriesResult.data || []).map((row) =>
+          mapCategory(
+            row as Record<string, unknown>,
+            categoryUsage.get(String(row.name)) || 0,
+          ),
+        ),
       });
     }
 
@@ -313,10 +346,16 @@ Deno.serve(async (request) => {
       action?: string;
       topic?: TopicInput;
       settings?: Record<string, unknown>;
+      id?: number;
+      name?: string;
     };
 
     if (body.action === 'create_topic') {
-      const payload = topicPayload(body.topic || {}, profile);
+      const payload = topicPayload(
+        body.topic || {},
+        profile,
+        await getAllowedCategories(database),
+      );
       const { data, error } = await database
         .from('emt_topics')
         .insert({ ...payload, created_by: profile.email })
@@ -331,7 +370,12 @@ Deno.serve(async (request) => {
     }
 
     if (body.action === 'save_topic') {
-      const payload = topicPayload(body.topic || {}, profile, true);
+      const payload = topicPayload(
+        body.topic || {},
+        profile,
+        await getAllowedCategories(database),
+        true,
+      );
       const id = payload.id;
       delete payload.id;
       const { data, error } = await database
@@ -373,6 +417,87 @@ Deno.serve(async (request) => {
       return json(origin, {
         settings: mapSettings(data as Record<string, unknown>),
       });
+    }
+
+    if (body.action === 'create_category') {
+      const name = requiredString(body.name, 'Topic name', 40);
+      const { data: existing, error: existingError } = await database
+        .from('emt_topic_categories')
+        .select('*')
+        .ilike('name', name)
+        .maybeSingle();
+      if (existingError) throw existingError;
+      if (existing?.active || existing?.system)
+        throw new Error('A topic with this name already exists.');
+      const { data: lastCategory, error: orderError } = await database
+        .from('emt_topic_categories')
+        .select('sort_order')
+        .eq('active', true)
+        .order('sort_order', { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      if (orderError) throw orderError;
+      if (existing) {
+        const { data, error } = await database
+          .from('emt_topic_categories')
+          .update({
+            active: true,
+            sort_order: Number(lastCategory?.sort_order || 0) + 10,
+            updated_by: profile.email,
+            updated_at: new Date().toISOString(),
+          })
+          .eq('id', existing.id)
+          .select('*')
+          .single();
+        if (error) throw error;
+        return json(
+          origin,
+          { category: mapCategory(data as Record<string, unknown>) },
+          201,
+        );
+      }
+      const { data, error } = await database
+        .from('emt_topic_categories')
+        .insert({
+          name,
+          sort_order: Number(lastCategory?.sort_order || 0) + 10,
+          created_by: profile.email,
+          updated_by: profile.email,
+        })
+        .select('*')
+        .single();
+      if (error) throw error;
+      return json(
+        origin,
+        { category: mapCategory(data as Record<string, unknown>) },
+        201,
+      );
+    }
+
+    if (body.action === 'rename_category') {
+      if (!Number.isSafeInteger(body.id) || Number(body.id) <= 0)
+        throw new Error('Topic ID is invalid.');
+      const name = requiredString(body.name, 'Topic name', 40);
+      const { data, error } = await database.rpc('emt_rename_category', {
+        p_id: body.id,
+        p_name: name,
+        p_updated_by: profile.email,
+      });
+      if (error) throw error;
+      return json(origin, {
+        category: mapCategory(data as Record<string, unknown>),
+      });
+    }
+
+    if (body.action === 'delete_category') {
+      if (!Number.isSafeInteger(body.id) || Number(body.id) <= 0)
+        throw new Error('Topic ID is invalid.');
+      const { data, error } = await database.rpc('emt_delete_category', {
+        p_id: body.id,
+        p_updated_by: profile.email,
+      });
+      if (error) throw error;
+      return json(origin, data as Record<string, unknown>);
     }
 
     return json(origin, { error: 'Action is not supported.' }, 400);

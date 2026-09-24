@@ -34,9 +34,19 @@ export type WorkspaceSettings = {
   businessDaysOnly: boolean;
 };
 
+export type WorkspaceCategory = {
+  id: number;
+  name: string;
+  sortOrder: number;
+  active: boolean;
+  system: boolean;
+  usageCount: number;
+};
+
 type WorkspaceResponse = {
   topics: WorkspaceTopic[];
   settings: WorkspaceSettings;
+  categories: WorkspaceCategory[];
 };
 
 async function request<T>(method: 'GET' | 'POST', body?: unknown) {
@@ -85,4 +95,28 @@ export async function saveEmtSettings(settings: WorkspaceSettings) {
     settings,
   });
   return result.settings;
+}
+
+export async function createEmtCategory(name: string) {
+  const result = await request<{ category: WorkspaceCategory }>('POST', {
+    action: 'create_category',
+    name,
+  });
+  return result.category;
+}
+
+export async function renameEmtCategory(id: number, name: string) {
+  const result = await request<{ category: WorkspaceCategory }>('POST', {
+    action: 'rename_category',
+    id,
+    name,
+  });
+  return result.category;
+}
+
+export async function deleteEmtCategory(id: number) {
+  return request<{ deletedCategory: string; reassignedCount: number }>('POST', {
+    action: 'delete_category',
+    id,
+  });
 }
