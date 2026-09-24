@@ -119,9 +119,9 @@ export function renderReminderEmail(input: ReminderEmailInput) {
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>${escapeHtml(subject(input, copy))}</title>
   </head>
-  <body style="margin:0;padding:0;background:#f4f7f8;color:#25282b;font-family:Arial,'Helvetica Neue',sans-serif;">
+  <body style="margin:0;padding:0;background:#ffffff;color:#25282b;font-family:Arial,'Helvetica Neue',sans-serif;">
     <div style="display:none;max-height:0;overflow:hidden;opacity:0;color:transparent;">${escapeHtml(copy.intro)} ${topicTitle}</div>
-    <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="width:100%;background:#f4f7f8;">
+    <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="width:100%;background:#ffffff;">
       <tr>
         <td align="center" style="padding:32px 16px;">
           <table role="presentation" width="600" cellspacing="0" cellpadding="0" border="0" style="width:100%;max-width:600px;background:#ffffff;border-collapse:separate;border-spacing:0;border-radius:18px;overflow:hidden;box-shadow:0 12px 32px rgba(37,40,43,.10);">
