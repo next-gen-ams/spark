@@ -313,6 +313,44 @@ Deno.serve(async (request) => {
       return json(origin, { topic: mapTopic(data as Record<string, unknown>) });
     }
 
+    if (body.action === 'delete_decision') {
+      if (!Number.isSafeInteger(body.id) || Number(body.id) <= 0)
+        throw new Error('Discussion ID is invalid.');
+      const { data: existing, error: existingError } = await database
+        .from('emt_topics')
+        .select('id,bucket,decision')
+        .eq('id', body.id)
+        .maybeSingle();
+      if (existingError) throw existingError;
+      if (!existing) throw new Error('Discussion was not found.');
+      if (!String(existing.decision || '').trim())
+        throw new Error('This discussion does not have a recorded decision.');
+
+      const movedToBacklog = existing.bucket === 'history';
+      const { data, error } = await database
+        .from('emt_topics')
+        .update({
+          bucket: movedToBacklog ? 'backlog' : existing.bucket,
+          decision: '',
+          follow_up_owner: '',
+          follow_up_action: '',
+          due_date: null,
+          decision_date: null,
+          updated_by: profile.email,
+          updated_at: new Date().toISOString(),
+        })
+        .eq('id', body.id)
+        .neq('decision', '')
+        .select('*')
+        .maybeSingle();
+      if (error) throw error;
+      if (!data) throw new Error('The decision has already been deleted.');
+      return json(origin, {
+        topic: mapTopic(data as Record<string, unknown>),
+        movedToBacklog,
+      });
+    }
+
     if (body.action === 'delete_topic') {
       if (!Number.isSafeInteger(body.id) || Number(body.id) <= 0)
         throw new Error('Discussion ID is invalid.');

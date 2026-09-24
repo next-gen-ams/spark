@@ -86,6 +86,7 @@ import {
   createEmtCategory,
   createEmtTopic,
   deleteEmtCategory,
+  deleteEmtDecision,
   deleteEmtTopic,
   loadEmtWorkspace,
   renameEmtCategory,
@@ -715,6 +716,8 @@ export default function Home() {
     React.useState<WorkspaceCategory | null>(null);
   const [discussionPendingDelete, setDiscussionPendingDelete] =
     React.useState<Topic | null>(null);
+  const [decisionPendingDelete, setDecisionPendingDelete] =
+    React.useState<Topic | null>(null);
   const [activeView, setActiveView] = React.useState<WorkspaceView>('meeting');
   const [selectedTopic, setSelectedTopic] = React.useState<Topic | null>(null);
   const [addOpen, setAddOpen] = React.useState(false);
@@ -1148,6 +1151,53 @@ export default function Home() {
       toast.add({
         type: 'error',
         title: 'Discussion not deleted',
+        description: error instanceof Error ? error.message : 'Try again.',
+      });
+    }
+  }
+
+  async function confirmDeleteDecision() {
+    if (!decisionPendingDelete) return;
+    const decision = decisionPendingDelete;
+    setWorkspaceStatus('saving');
+    try {
+      const { topic: saved, movedToBacklog } = await deleteEmtDecision(
+        decision.id,
+      );
+      const placeInBucket = (
+        items: Topic[],
+        bucket: Topic['bucket'],
+      ): Topic[] => {
+        if (saved.bucket !== bucket)
+          return items.filter((item) => item.id !== saved.id);
+        return items.some((item) => item.id === saved.id)
+          ? items.map((item) => (item.id === saved.id ? saved : item))
+          : [...items, saved];
+      };
+      setTopics((current) => placeInBucket(current, 'agenda'));
+      setBacklog((current) => placeInBucket(current, 'backlog'));
+      setHistoricalDecisions((current) => placeInBucket(current, 'history'));
+      setSelectedTopic(null);
+      setDecisionPendingDelete(null);
+      setDecisionDraft({
+        decision: '',
+        followUpOwner: '',
+        followUpAction: '',
+        dueDate: '',
+      });
+      setWorkspaceStatus('ready');
+      toast.add({
+        type: 'success',
+        title: 'Decision deleted',
+        description: movedToBacklog
+          ? 'The discussion was kept and moved to the backlog.'
+          : 'The discussion was kept without its decision record.',
+      });
+    } catch (error) {
+      setWorkspaceStatus('error');
+      toast.add({
+        type: 'error',
+        title: 'Decision not deleted',
         description: error instanceof Error ? error.message : 'Try again.',
       });
     }
@@ -2470,6 +2520,49 @@ export default function Home() {
         </Dialog>
 
         <Dialog
+          open={Boolean(decisionPendingDelete)}
+          onOpenChange={(open) => !open && setDecisionPendingDelete(null)}
+        >
+          <DialogContent className="form-dialog category-delete-dialog">
+            <DialogHeader>
+              <span className="signin-icon delete-topic-icon">
+                <Trash2 aria-hidden="true" />
+              </span>
+              <DialogTitle>Delete this decision?</DialogTitle>
+              <DialogDescription>
+                {decisionPendingDelete?.title || ''}
+              </DialogDescription>
+            </DialogHeader>
+            <div className="delete-topic-warning">
+              <CircleAlert aria-hidden="true" />
+              <p>
+                <strong>This cannot be undone</strong>
+                <span>
+                  The decision, next action, owner and due date will be removed.
+                  The discussion itself will be kept
+                  {decisionPendingDelete?.bucket === 'history'
+                    ? ' and moved to the backlog.'
+                    : '.'}
+                </span>
+              </p>
+            </div>
+            <DialogFooter>
+              <DialogClose render={<Button variant="ghost" type="button" />}>
+                Cancel
+              </DialogClose>
+              <Button
+                variant="destructive"
+                disabled={workspaceStatus === 'saving'}
+                onClick={() => void confirmDeleteDecision()}
+              >
+                <Trash2 aria-hidden="true" />
+                Delete decision
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+
+        <Dialog
           open={Boolean(discussionPendingDelete)}
           onOpenChange={(open) => !open && setDiscussionPendingDelete(null)}
         >
@@ -2653,15 +2746,28 @@ export default function Home() {
                       </div>
                     </div>
                     <SheetFooter className="topic-action-bar">
-                      <Button
-                        variant="destructive"
-                        onClick={() =>
-                          setDiscussionPendingDelete(selectedTopic)
-                        }
-                      >
-                        <Trash2 aria-hidden="true" />
-                        Delete discussion
-                      </Button>
+                      <div className="topic-delete-actions">
+                        {selectedTopic.decision ? (
+                          <Button
+                            variant="destructive"
+                            onClick={() =>
+                              setDecisionPendingDelete(selectedTopic)
+                            }
+                          >
+                            <Trash2 aria-hidden="true" />
+                            Delete decision
+                          </Button>
+                        ) : null}
+                        <Button
+                          variant="destructive"
+                          onClick={() =>
+                            setDiscussionPendingDelete(selectedTopic)
+                          }
+                        >
+                          <Trash2 aria-hidden="true" />
+                          Delete discussion
+                        </Button>
+                      </div>
                       <Button
                         className="primary-action topic-save-action"
                         disabled={workspaceStatus === 'saving'}

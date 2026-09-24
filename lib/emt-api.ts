@@ -107,6 +107,17 @@ export async function deleteEmtTopic(id: number) {
   );
 }
 
+export async function deleteEmtDecision(id: number) {
+  const result = await request<{
+    topic: WorkspaceTopic;
+    movedToBacklog: boolean;
+  }>('POST', {
+    action: 'delete_decision',
+    id,
+  });
+  return result;
+}
+
 export async function saveEmtSettings(settings: WorkspaceSettings) {
   const result = await request<{ settings: WorkspaceSettings }>('POST', {
     action: 'save_settings',

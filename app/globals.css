@@ -1961,6 +1961,11 @@ h1 {
   border-top: 1px solid #d8e0e4;
   background: #f0f4f8;
 }
+.topic-delete-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
 .topic-save-action {
   margin-left: auto;
 }
@@ -2296,7 +2301,22 @@ h1 {
     padding-inline: 20px;
   }
   .topic-action-bar {
+    align-items: stretch;
+    flex-direction: column;
     padding-inline: 20px;
+  }
+  .topic-delete-actions {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .topic-delete-actions:has(> :only-child) {
+    grid-template-columns: 1fr;
+  }
+  .topic-action-bar button {
+    width: 100%;
+  }
+  .topic-save-action {
+    margin-left: 0;
   }
   .form-dialog [data-slot='dialog-footer'],
   .signin-dialog [data-slot='dialog-footer'],
