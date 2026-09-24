@@ -1,0 +1,266 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>EMT Tracker — Reminder email preview</title>
+    <style>
+      @font-face {
+        font-family: 'DM Sans';
+        src: url('../public/assets/fonts/dm-sans-variable.ttf') format('truetype');
+        font-weight: 100 1000;
+        font-style: normal;
+        font-display: swap;
+      }
+
+      :root {
+        color-scheme: light;
+        --active-blue: #007fc8;
+        --focus-sky: #009ae6;
+        --orange: #ff6632;
+        --soft-orange: #fff0ea;
+        --sky: #eaf7fd;
+        --ink: #25282b;
+        --graphite: #464546;
+        --muted: #617086;
+        --mist: #f4f7f8;
+        --line: #d8e0e4;
+      }
+
+      * { box-sizing: border-box; }
+
+      html { min-width: 320px; background: var(--mist); }
+
+      body {
+        margin: 0;
+        min-width: 320px;
+        min-height: 100vh;
+        color: var(--ink);
+        background:
+          radial-gradient(ellipse 62% 58% at 3% 82%, rgb(255 102 50 / 0.18), transparent 72%),
+          radial-gradient(ellipse 66% 60% at 96% 8%, rgb(0 154 230 / 0.2), transparent 72%),
+          var(--mist);
+        font-family: 'DM Sans', Arial, sans-serif;
+        text-rendering: optimizeLegibility;
+      }
+
+      ::selection { color: var(--ink); background: var(--sky); }
+
+      .preview-stage {
+        width: min(900px, calc(100% - 32px));
+        margin: 0 auto;
+        padding: 40px 0 64px;
+      }
+
+      .preview-toolbar {
+        display: flex;
+        align-items: flex-end;
+        justify-content: space-between;
+        gap: 24px;
+        margin: 0 auto 20px;
+        padding: 0 4px;
+      }
+
+      .preview-toolbar h1 {
+        margin: 0 0 5px;
+        font-size: clamp(1.45rem, 4vw, 2.15rem);
+        line-height: 1.08;
+        letter-spacing: -0.03em;
+      }
+
+      .preview-toolbar p {
+        margin: 0;
+        color: var(--graphite);
+        font-size: 0.92rem;
+        line-height: 1.5;
+      }
+
+      .preview-status {
+        flex: 0 0 auto;
+        padding: 8px 12px;
+        border: 1px solid rgb(0 127 200 / 0.18);
+        border-radius: 999px;
+        color: #235c7b;
+        background: var(--sky);
+        font-size: 0.76rem;
+        font-weight: 720;
+      }
+
+      .mail-window {
+        overflow: hidden;
+        border: 1px solid rgb(216 224 228 / 0.92);
+        border-radius: 16px;
+        background: rgb(255 255 255 / 0.72);
+        box-shadow: 0 24px 70px rgb(37 40 43 / 0.12);
+        backdrop-filter: blur(26px) saturate(120%);
+      }
+
+      .mail-chrome {
+        padding: 18px 22px;
+        border-bottom: 1px solid var(--line);
+        background: rgb(255 255 255 / 0.78);
+      }
+
+      .mail-chrome table { width: 100%; border-collapse: collapse; }
+      .mail-chrome td { padding: 3px 0; vertical-align: top; }
+      .mail-chrome .label { width: 64px; color: var(--muted); font-size: 0.74rem; font-weight: 720; }
+      .mail-chrome .value { color: var(--graphite); font-size: 0.78rem; }
+      .mail-chrome .subject { color: var(--ink); font-size: 0.84rem; font-weight: 740; }
+
+      .mail-canvas {
+        padding: 34px 18px 40px;
+        background: rgb(244 247 248 / 0.68);
+      }
+
+      .email-shell {
+        width: 100%;
+        max-width: 600px;
+        margin: 0 auto;
+        overflow: hidden;
+        border-radius: 14px;
+        background: #ffffff;
+        box-shadow: 0 14px 38px rgb(37 40 43 / 0.1);
+      }
+
+      .email-body-copy { font-family: 'DM Sans', Arial, sans-serif; }
+
+      @media only screen and (max-width: 640px) {
+        .preview-stage { width: min(100% - 20px, 900px); padding: 22px 0 36px; }
+        .preview-toolbar { align-items: flex-start; flex-direction: column; gap: 12px; }
+        .mail-chrome { padding: 14px 16px; }
+        .mail-canvas { padding: 16px 8px 24px; }
+        .email-shell { border-radius: 10px; }
+        .mobile-pad { padding-left: 22px !important; padding-right: 22px !important; }
+        .mobile-block { display: block !important; width: 100% !important; }
+        .mobile-block + .mobile-block { padding-top: 12px !important; padding-left: 0 !important; }
+        .email-heading { font-size: 25px !important; }
+        .email-logo { width: 112px !important; height: auto !important; }
+        .product-name { font-size: 14px !important; }
+      }
+
+      @media (prefers-reduced-transparency: reduce) {
+        .mail-window { background: #ffffff; backdrop-filter: none; }
+      }
+    </style>
+  </head>
+  <body>
+    <!--
+      THESIS: Turn an operational reminder into a compact executive ledger, not a generic notification card.
+      OWN-WORLD: GMS Active Blue masthead, authentic white logo, orange action, Sky and Mist information fields, DM Sans.
+      STORY: The recipient immediately sees the action, its meeting context, its due date, and one clear route back to EMT Tracker.
+      FIRST VIEWPORT: A 600px email with brand masthead, direct heading, action record, due-date band, and one orange CTA.
+      FORM: Established-world narrow extension; email-safe table layout with Outlook-compatible fallbacks; seed key NARROW-EMAIL-01.
+      FINISH: unreviewed and undocumented is unfinished; this build ends with the finish review, the verdict, and DESIGN.md
+    -->
+    <main class="preview-stage">
+      <header class="preview-toolbar">
+        <div>
+          <h1>Reminder email preview</h1>
+          <p>Illustrative follow-up reminder · desktop and mobile responsive</p>
+        </div>
+        <span class="preview-status">Preview only · nothing sent</span>
+      </header>
+
+      <section class="mail-window" aria-label="EMT Tracker email preview">
+        <div class="mail-chrome">
+          <table role="presentation" aria-label="Email metadata">
+            <tr><td class="label">From</td><td class="value">GMS EMT Tracker &lt;insights@gms.global&gt;</td></tr>
+            <tr><td class="label">To</td><td class="value">Lisa Xu &lt;lisa.xu@gms.global&gt;</td></tr>
+            <tr><td class="label">Subject</td><td class="subject">[EMT] Follow-up due soon · Confirm Q4 all-hands owners and format</td></tr>
+          </table>
+        </div>
+
+        <div class="mail-canvas">
+          <!-- Email-safe message markup begins here. -->
+          <table class="email-shell" role="presentation" width="600" cellpadding="0" cellspacing="0" border="0" align="center" style="width:100%;max-width:600px;margin:0 auto;border-collapse:separate;background:#ffffff;">
+            <tr>
+              <td style="height:4px;font-size:0;line-height:0;background:#ff6632;">&nbsp;</td>
+            </tr>
+            <tr>
+              <td class="mobile-pad" style="padding:20px 30px;background:#007fc8;">
+                <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="width:100%;border-collapse:collapse;">
+                  <tr>
+                    <td style="vertical-align:middle;white-space:nowrap;">
+                      <img class="email-logo" src="../public/assets/gms-logo-white.png" width="126" alt="GMS 10 Years" style="display:block;width:126px;height:auto;border:0;" />
+                    </td>
+                    <td style="width:18px;vertical-align:middle;">&nbsp;</td>
+                    <td style="width:1px;height:28px;background:rgba(255,255,255,0.34);font-size:0;line-height:0;">&nbsp;</td>
+                    <td style="width:18px;vertical-align:middle;">&nbsp;</td>
+                    <td class="product-name email-body-copy" style="vertical-align:middle;color:#ffffff;font-family:'DM Sans',Arial,sans-serif;font-size:15px;font-weight:700;line-height:1.2;white-space:nowrap;">EMT Tracker</td>
+                  </tr>
+                </table>
+              </td>
+            </tr>
+
+            <tr>
+              <td class="mobile-pad email-body-copy" style="padding:38px 42px 18px;color:#25282b;font-family:'DM Sans',Arial,sans-serif;">
+                <h1 class="email-heading" style="margin:0 0 14px;color:#25282b;font-family:'DM Sans',Arial,sans-serif;font-size:30px;font-weight:760;line-height:1.16;letter-spacing:-0.025em;">Your EMT follow-up is due soon</h1>
+                <p style="margin:0 0 10px;color:#464546;font-size:15px;line-height:1.6;">Hi Lisa,</p>
+                <p style="margin:0;color:#464546;font-size:15px;line-height:1.6;">Here is a quick reminder about an action from the Executive Team meeting.</p>
+              </td>
+            </tr>
+
+            <tr>
+              <td class="mobile-pad" style="padding:10px 42px 0;">
+                <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="width:100%;border:1px solid #d8e0e4;border-collapse:separate;border-radius:12px;background:#ffffff;">
+                  <tr>
+                    <td class="email-body-copy" style="padding:24px 24px 20px;font-family:'DM Sans',Arial,sans-serif;">
+                      <p style="margin:0 0 7px;color:#007fc8;font-size:12px;font-weight:760;line-height:1.3;">Confirm Q4 all-hands owners and format</p>
+                      <p style="margin:0;color:#536076;font-size:13px;line-height:1.55;">Decision: Run a 45-minute all-hands with one host, three business updates and a moderated team Q&amp;A.</p>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td style="height:1px;background:#d8e0e4;font-size:0;line-height:0;">&nbsp;</td>
+                  </tr>
+                  <tr>
+                    <td class="email-body-copy" style="padding:20px 24px 23px;font-family:'DM Sans',Arial,sans-serif;">
+                      <p style="margin:0 0 7px;color:#8b472f;font-size:12px;font-weight:760;line-height:1.3;">Your action</p>
+                      <p style="margin:0;color:#25282b;font-size:16px;font-weight:700;line-height:1.45;">Draft the October all-hands invitation and confirm the three business update owners.</p>
+                    </td>
+                  </tr>
+                </table>
+              </td>
+            </tr>
+
+            <tr>
+              <td class="mobile-pad" style="padding:16px 42px 0;">
+                <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="width:100%;border-collapse:separate;border-radius:12px;background:#eaf7fd;">
+                  <tr>
+                    <td class="mobile-block email-body-copy" width="50%" style="width:50%;padding:16px 18px;vertical-align:top;font-family:'DM Sans',Arial,sans-serif;">
+                      <p style="margin:0 0 4px;color:#235c7b;font-size:11px;font-weight:760;line-height:1.3;">Due</p>
+                      <p style="margin:0;color:#25282b;font-size:14px;font-weight:700;line-height:1.45;">Monday 28 September 2026</p>
+                    </td>
+                    <td class="mobile-block email-body-copy" width="50%" style="width:50%;padding:16px 18px 16px 10px;vertical-align:top;font-family:'DM Sans',Arial,sans-serif;">
+                      <p style="margin:0 0 4px;color:#235c7b;font-size:11px;font-weight:760;line-height:1.3;">Owner</p>
+                      <p style="margin:0;color:#25282b;font-size:14px;font-weight:700;line-height:1.45;">Lisa Xu</p>
+                    </td>
+                  </tr>
+                </table>
+              </td>
+            </tr>
+
+            <tr>
+              <td class="mobile-pad" style="padding:26px 42px 36px;">
+                <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="border-collapse:separate;">
+                  <tr>
+                    <td align="center" bgcolor="#ff6632" style="border-radius:12px;background:#ff6632;box-shadow:0 8px 20px rgb(255 102 50 / 0.2);">
+                      <a href="https://spark.kmt.global/emt-tracker/" style="display:inline-block;padding:13px 20px;color:#ffffff;font-family:'DM Sans',Arial,sans-serif;font-size:14px;font-weight:760;line-height:1.2;text-decoration:none;">Open in EMT Tracker</a>
+                    </td>
+                  </tr>
+                </table>
+              </td>
+            </tr>
+
+            <tr>
+              <td class="mobile-pad email-body-copy" style="padding:20px 42px 24px;border-top:1px solid #d8e0e4;color:#617086;background:#f4f7f8;font-family:'DM Sans',Arial,sans-serif;font-size:11px;line-height:1.55;">
+                <p style="margin:0 0 5px;">Sent by GMS EMT Tracker from <strong style="color:#464546;">insights@gms.global</strong>.</p>
+                <p style="margin:0;">You are receiving this because you are the owner of this EMT action. <a href="https://spark.kmt.global/emt-tracker/?view=reminders" style="color:#007fc8;text-decoration:underline;text-underline-offset:2px;">Manage reminder settings</a></p>
+              </td>
+            </tr>
+          </table>
+          <!-- Email-safe message markup ends here. -->
+        </div>
+      </section>
+    </main>
+  </body>
+</html>

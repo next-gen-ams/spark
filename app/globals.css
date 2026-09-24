@@ -138,10 +138,11 @@ h1 { margin-bottom: 8px; color: #25282b; font-size: clamp(2rem,4vw,3.15rem); lin
 .primary-action:hover { background: #e85224; }
 
 .next-meeting-card { min-height: 116px; display: flex; align-items: center; justify-content: space-between; gap: 24px; margin: -4px 0 22px; padding: 24px 26px; border-radius: 16px; color: #fff; background: linear-gradient(112deg,#007fc8,#009ae6); box-shadow: 0 14px 34px rgb(0 127 200 / .2); }
-.next-meeting-card>div { display: grid; gap: 5px; }
+.meeting-card-copy { min-width: 0; display: grid; justify-items: start; gap: 5px; }
 .next-meeting-card span { color: rgb(255 255 255 / .74); font-size: .75rem; font-weight: 650; letter-spacing: .015em; }
 .next-meeting-card strong { color: #fff; font-size: clamp(1.22rem,2.5vw,1.7rem); line-height: 1.2; letter-spacing: -.025em; }
-.next-meeting-card .countdown-badge { height: 34px; flex: 0 0 auto; padding: 0 13px; color: #0071b4; background: #fff; border: 1px solid rgb(255 255 255 / .5); font-size: .78rem; box-shadow: 0 6px 16px rgb(0 80 125 / .12); }
+.next-meeting-card .countdown-badge { min-height: 28px; margin-top: 8px; padding: 0 11px; color: #0071b4; background: #fff; border: 1px solid rgb(255 255 255 / .5); font-size: .74rem; box-shadow: 0 6px 16px rgb(0 80 125 / .12); }
+.next-meeting-card .meeting-card-action { flex: 0 0 auto; box-shadow: 0 10px 24px rgb(109 42 18 / .22); }
 
 .fortnight-planner { display: grid; grid-template-columns: minmax(0,1fr) 286px; overflow: hidden; margin: -4px 0 24px; border-radius: 16px; background: rgb(255 255 255 / .58); box-shadow: 0 12px 30px rgb(37 40 43 / .08); backdrop-filter: blur(22px) saturate(120%); }
 .calendar-pane { min-width: 0; padding: 18px 20px 20px; }
@@ -373,7 +374,7 @@ h1 { margin-bottom: 8px; color: #25282b; font-size: clamp(2rem,4vw,3.15rem); lin
   .profile-button { min-width: 44px; max-width: 150px; padding: 4px 9px 4px 4px; } .profile-copy { display: grid; } .profile-copy strong { max-width: 92px; } .profile-copy small,.profile-chevron { display: none; }
   .workspace-layout { padding: 16px 14px 50px; } .meeting-intro { align-items: stretch; flex-direction: column; } h1 { font-size: 2.15rem; }
   .primary-action { width: 100%; } .panel-toolbar { align-items: stretch; flex-direction: column; } .search-field { width: 100%; }
-  .next-meeting-card { min-height: 0; align-items: flex-start; flex-direction: column; gap: 16px; padding: 20px; } .countdown-badge { align-self: flex-start; }
+  .next-meeting-card { min-height: 0; align-items: stretch; flex-direction: column; gap: 18px; padding: 20px; } .meeting-card-copy { justify-items: start; } .next-meeting-card .meeting-card-action { width: 100%; }
   .agenda-row { grid-template-columns: 30px minmax(0,1fr) 18px; gap: 10px; padding: 16px 14px; } .agenda-duration { display: none; }
   .agenda-topline { gap: 7px; } .agenda-title { white-space: normal; } .agenda-meta { flex-wrap: wrap; } .meeting-rail { grid-template-columns: 1fr; }
   .fortnight-planner { grid-template-columns: 1fr; } .calendar-pane { padding: 16px 14px 18px; } .calendar-heading { align-items: flex-start; } .cadence-badge { display: none; } .calendar-week { grid-template-columns: 42px minmax(0,1fr); gap: 6px; } .calendar-week ol { gap: 3px; } .calendar-week li { height: 48px; padding: 6px 4px; text-align: center; } .calendar-week li>span,.calendar-week li>strong { grid-column: 1/-1; } .calendar-week li>small { display: none; } .meeting-countdown { padding: 18px 20px; } .countdown-title { justify-content: center; } .countdown-values { width: min(310px,100%); margin-inline: auto; }

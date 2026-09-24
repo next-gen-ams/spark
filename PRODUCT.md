@@ -30,7 +30,7 @@ Used before, during and after a fortnightly executive meeting. Microsoft work ac
 
 - Microsoft work-account sign-in uses a tenant-scoped Entra single-page application and verifies the signed-in profile through Microsoft Graph.
 - The primary workflow is: capture a topic, place it on an upcoming agenda, assign a lead, record a decision and track follow-up.
-- Outlook email and calendar reminder delivery remain inactive until the required delegated permissions and delivery workflow are separately enabled.
+- Outlook email delivery uses an app-only Microsoft Graph sender scoped to `insights@gms.global`; the prepared delivery function remains inactive until Exchange Application RBAC, production secrets and the scheduled job are separately approved and enabled.
 - Illustrative topics, dates and team members must be labelled as sample data.
 - The initial interface language is English.
 
@@ -49,6 +49,7 @@ Use the established GMS dashboard design language and authentic supplied GMS 10 
 - Keep meeting preparation and follow-up in one continuous journey.
 - Distinguish sample content and inactive reminder delivery from verified Microsoft sign-in.
 - Preserve executive-level scanability while keeping item-level detail close at hand.
+- Prepare and deduplicate reminder deliveries before sending, keep an auditable delivery record, and support a dry-run check that cannot send mail.
 
 ## Accessibility & Inclusion
 
