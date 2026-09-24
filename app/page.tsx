@@ -88,6 +88,7 @@ import {
   createEmtCategory,
   createEmtTopic,
   deleteEmtCategory,
+  deleteEmtTopic,
   loadEmtWorkspace,
   renameEmtCategory,
   saveEmtSettings,
@@ -708,6 +709,8 @@ export default function Home() {
   const [newTopicCategory, setNewTopicCategory] = React.useState('');
   const [categoryPendingDelete, setCategoryPendingDelete] =
     React.useState<WorkspaceCategory | null>(null);
+  const [discussionPendingDelete, setDiscussionPendingDelete] =
+    React.useState<Topic | null>(null);
   const [activeView, setActiveView] = React.useState<WorkspaceView>('meeting');
   const [selectedTopic, setSelectedTopic] = React.useState<Topic | null>(null);
   const [addOpen, setAddOpen] = React.useState(false);
@@ -828,9 +831,7 @@ export default function Home() {
     remindersOn && currentMember
       ? [
           ...topics
-            .filter(
-              (topic) => topic.lead === currentMember && topic.remindLead,
-            )
+            .filter((topic) => topic.lead === currentMember && topic.remindLead)
             .map((topic) => ({
               id: `agenda-${topic.id}`,
               timing: agendaReminderTiming,
@@ -1173,6 +1174,35 @@ export default function Home() {
         title: 'Decision saved',
         description: 'The shared decision is now visible in the decision log.',
       });
+  }
+
+  async function confirmDeleteDiscussion() {
+    if (!discussionPendingDelete) return;
+    const discussion = discussionPendingDelete;
+    setWorkspaceStatus('saving');
+    try {
+      const result = await deleteEmtTopic(discussion.id);
+      const removeDiscussion = (items: Topic[]) =>
+        items.filter((item) => item.id !== result.deletedTopicId);
+      setTopics(removeDiscussion);
+      setBacklog(removeDiscussion);
+      setHistoricalDecisions(removeDiscussion);
+      setSelectedTopic(null);
+      setDiscussionPendingDelete(null);
+      setWorkspaceStatus('ready');
+      toast.add({
+        type: 'success',
+        title: 'Discussion deleted',
+        description: `${result.deletedTopicTitle} was removed from the workspace.`,
+      });
+    } catch (error) {
+      setWorkspaceStatus('error');
+      toast.add({
+        type: 'error',
+        title: 'Discussion not deleted',
+        description: error instanceof Error ? error.message : 'Try again.',
+      });
+    }
   }
 
   async function moveToAgenda(topic: Topic) {
@@ -2475,6 +2505,46 @@ export default function Home() {
           </DialogContent>
         </Dialog>
 
+        <Dialog
+          open={Boolean(discussionPendingDelete)}
+          onOpenChange={(open) => !open && setDiscussionPendingDelete(null)}
+        >
+          <DialogContent className="form-dialog category-delete-dialog">
+            <DialogHeader>
+              <span className="signin-icon delete-topic-icon">
+                <Trash2 aria-hidden="true" />
+              </span>
+              <DialogTitle>Delete this discussion?</DialogTitle>
+              <DialogDescription>
+                {discussionPendingDelete?.title || ''}
+              </DialogDescription>
+            </DialogHeader>
+            <div className="delete-topic-warning">
+              <CircleAlert aria-hidden="true" />
+              <p>
+                <strong>This cannot be undone</strong>
+                <span>
+                  The discussion, its recorded decision, reminder settings and
+                  prepared reminder history will all be removed.
+                </span>
+              </p>
+            </div>
+            <DialogFooter>
+              <DialogClose render={<Button variant="ghost" type="button" />}>
+                Cancel
+              </DialogClose>
+              <Button
+                variant="destructive"
+                disabled={workspaceStatus === 'saving'}
+                onClick={() => void confirmDeleteDiscussion()}
+              >
+                <Trash2 aria-hidden="true" />
+                Delete discussion
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+
         <Sheet open={mobileNavOpen} onOpenChange={setMobileNavOpen}>
           <SheetContent
             side="left"
@@ -2630,7 +2700,20 @@ export default function Home() {
                       </div>
                     </div>
                     <SheetFooter className="topic-action-bar">
-                      <Button className="primary-action" onClick={saveDecision}>
+                      <Button
+                        variant="destructive"
+                        onClick={() =>
+                          setDiscussionPendingDelete(selectedTopic)
+                        }
+                      >
+                        <Trash2 aria-hidden="true" />
+                        Delete discussion
+                      </Button>
+                      <Button
+                        className="primary-action topic-save-action"
+                        disabled={workspaceStatus === 'saving'}
+                        onClick={saveDecision}
+                      >
                         <Check aria-hidden="true" />
                         Save decision
                       </Button>
@@ -2712,6 +2795,17 @@ export default function Home() {
                         </span>
                       </p>
                     </div>
+                    <SheetFooter className="topic-action-bar reminder-action-bar">
+                      <Button
+                        variant="destructive"
+                        onClick={() =>
+                          setDiscussionPendingDelete(selectedTopic)
+                        }
+                      >
+                        <Trash2 aria-hidden="true" />
+                        Delete discussion
+                      </Button>
+                    </SheetFooter>
                   </TabsContent>
                 </Tabs>
               </>

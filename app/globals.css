@@ -1883,12 +1883,18 @@ h1 {
   min-height: 76px;
   flex-direction: row;
   align-items: center;
-  justify-content: flex-end;
+  justify-content: space-between;
   gap: 8px;
   margin: 0;
   padding: 16px 28px calc(16px + env(safe-area-inset-bottom));
   border-top: 1px solid #d8e0e4;
   background: #f0f4f8;
+}
+.topic-save-action {
+  margin-left: auto;
+}
+.reminder-action-bar {
+  margin: 20px -28px -28px;
 }
 .topic-action-bar button {
   min-width: 132px;
@@ -2256,6 +2262,9 @@ h1 {
   }
   .topic-action-bar {
     padding-inline: 20px;
+  }
+  .reminder-action-bar {
+    margin: 20px -20px -28px;
   }
   .topic-tab-list {
     gap: 14px;

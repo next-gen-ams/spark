@@ -89,6 +89,16 @@ export async function saveEmtTopic(topic: WorkspaceTopic) {
   return result.topic;
 }
 
+export async function deleteEmtTopic(id: number) {
+  return request<{ deletedTopicId: number; deletedTopicTitle: string }>(
+    'POST',
+    {
+      action: 'delete_topic',
+      id,
+    },
+  );
+}
+
 export async function saveEmtSettings(settings: WorkspaceSettings) {
   const result = await request<{ settings: WorkspaceSettings }>('POST', {
     action: 'save_settings',

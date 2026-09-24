@@ -388,6 +388,23 @@ Deno.serve(async (request) => {
       return json(origin, { topic: mapTopic(data as Record<string, unknown>) });
     }
 
+    if (body.action === 'delete_topic') {
+      if (!Number.isSafeInteger(body.id) || Number(body.id) <= 0)
+        throw new Error('Discussion ID is invalid.');
+      const { data, error } = await database
+        .from('emt_topics')
+        .delete()
+        .eq('id', body.id)
+        .select('id,title')
+        .maybeSingle();
+      if (error) throw error;
+      if (!data) throw new Error('Discussion was not found.');
+      return json(origin, {
+        deletedTopicId: Number(data.id),
+        deletedTopicTitle: String(data.title),
+      });
+    }
+
     if (body.action === 'save_settings') {
       const settings = body.settings || {};
       const payload = {
