@@ -11,6 +11,7 @@ const MELBOURNE_TIME_ZONE = 'Australia/Melbourne';
 const TRACKER_URL = 'https://spark.kmt.global/emt-tracker/';
 const PREFERENCES_URL = `${TRACKER_URL}?view=reminders`;
 const DEFAULT_SENDER = 'insights@gms.global';
+const LIVE_SENDING_ENABLED = false;
 
 type SettingsRow = {
   reminders_on: boolean;
@@ -320,6 +321,9 @@ Deno.serve(async (request) => {
     };
     const mode = body.mode || 'dry_run';
     if (mode !== 'dry_run' && mode !== 'send') throw new Error('Mode must be dry_run or send.');
+    if (mode === 'send' && !LIVE_SENDING_ENABLED) {
+      throw new Error('Live reminder sending is not enabled.');
+    }
     const today = body.date || localIsoDate(new Date());
     parseIsoDate(today);
 
@@ -350,6 +354,8 @@ Deno.serve(async (request) => {
         mode,
         date: today,
         senderConfigured: Boolean(Deno.env.get('MICROSOFT_CLIENT_SECRET')),
+        approvedSender: DEFAULT_SENDER,
+        liveSendingEnabled: LIVE_SENDING_ENABLED,
         candidates: candidates.map((candidate) => ({
           eventKey: candidate.eventKey,
           topicId: candidate.topicId,
