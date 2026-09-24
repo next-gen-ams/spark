@@ -828,7 +828,9 @@ export default function Home() {
     remindersOn && currentMember
       ? [
           ...topics
-            .filter((topic) => topic.lead === currentMember)
+            .filter(
+              (topic) => topic.lead === currentMember && topic.remindLead,
+            )
             .map((topic) => ({
               id: `agenda-${topic.id}`,
               timing: agendaReminderTiming,
@@ -838,7 +840,10 @@ export default function Home() {
           ...recordedDecisions
             .filter(
               (topic) =>
-                topic.followUpOwner === currentMember && topic.followUpAction,
+                topic.followUpOwner === currentMember &&
+                topic.followUpAction &&
+                topic.dueDate &&
+                topic.remindFollowup,
             )
             .map((topic) => ({
               id: `followup-${topic.id}`,
