@@ -2,3 +2,5 @@ allowBuilds:
   esbuild: true
   sharp: true
   workerd: true
+minimumReleaseAgeExclude:
+  - '@azure/msal-browser@5.23.0'

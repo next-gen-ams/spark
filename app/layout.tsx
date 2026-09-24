@@ -2,9 +2,9 @@ import type { Metadata } from 'next';
 import './globals.css';
 
 export const metadata: Metadata = {
-  title: 'GMS Executive Project Tracker',
+  title: 'EMT Tracker',
   description:
-    'Interactive mockup for fortnightly executive discussions, decisions, ownership and Microsoft-connected reminders.',
+    'Fortnightly GMS executive discussions, decisions, ownership and Microsoft-connected reminders.',
 };
 
 const directionContract = `THESIS: A fortnightly decision ledger makes every topic travel visibly from agenda to editable decision to named follow-up owner; it refuses the generic metric-card dashboard.

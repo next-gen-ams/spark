@@ -60,6 +60,7 @@ button { cursor: pointer; }
 .microsoft-button { min-height: 44px; padding: 0 15px; color: #fff; border-color: rgb(255 255 255 / .28); background: rgb(255 255 255 / .12); }
 .microsoft-button:hover { background: rgb(255 255 255 / .2); color: #fff; }
 .microsoft-button.is-connected { background: rgb(176 226 206 / .17); }
+.spin { animation: spin 1s linear infinite; }
 
 .workspace-provider { min-height: auto; display: block; background: transparent; }
 .workspace-layout { width: min(1480px,100%); margin: 0 auto; padding: 26px clamp(20px,4vw,58px) 70px; display: grid; grid-template-columns: 210px minmax(0,1fr); gap: 24px; }
@@ -270,6 +271,10 @@ h1 { margin-bottom: 8px; color: #25282b; font-size: clamp(2rem,4vw,3.15rem); lin
 .permission-list strong { font-size: .88rem; }
 .permission-list small { color: #464546; font-size: .78rem; }
 .signin-icon { margin-bottom: 4px; }
+.connection-status-note { margin: 2px 0 14px; padding: 12px 14px; border-radius: 10px; color: #39536f; background: #eaf7fd; font-size: .78rem; line-height: 1.45; }
+.connection-status-note.is-pending { color: #6f4e38; background: #fff3e8; }
+.connection-status-note.is-error { color: #8b2f27; background: #fdeceb; }
+.connection-status-note.is-success { color: #286450; background: #e4f4ed; }
 
 .mobile-nav-sheet { width: min(320px,86vw); padding: 16px; background: #f4f7f8; }
 .mobile-nav-sheet .nav-content { margin-top: 12px; }
@@ -310,6 +315,8 @@ h1 { margin-bottom: 8px; color: #25282b; font-size: clamp(2rem,4vw,3.15rem); lin
 .integration-callout svg { width: 20px; height: 20px; flex: 0 0 auto; }
 .integration-callout p { display: grid; gap: 3px; margin: 0; }
 .integration-callout span { color: #446b82; font-size: .78rem; line-height: 1.45; }
+
+@keyframes spin { to { transform: rotate(360deg); } }
 
 @supports not (backdrop-filter: blur(1px)) { .workspace-sidebar,.agenda-panel,.decisions-panel,.reminder-panel,.settings-panel,.reminder-preview { background: #f4f7f8; } }
 @media (max-width:1120px) { .workspace-layout { grid-template-columns: 178px minmax(0,1fr); gap: 18px; } .workspace-sidebar { width: 178px; } .content-grid { grid-template-columns: minmax(0,1fr) 260px; } .agenda-topline { align-items: flex-start; flex-direction: column; gap: 6px; } .settings-layout { grid-template-columns: minmax(0,1fr) 300px; } }

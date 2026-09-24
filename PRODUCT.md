@@ -8,7 +8,7 @@ web
 
 ## Stack
 
-Delegated: Vinext/React Sites scaffold for a private interactive mockup.
+Vinext/React application published through ChatGPT Sites and as a static build in the GMS Spark repository.
 
 ## Users
 
@@ -28,9 +28,9 @@ Used before, during and after a fortnightly executive meeting. Microsoft work ac
 
 ## Capabilities and Constraints
 
-- This first version is a mockup. It must not authenticate a real Microsoft account, send email or create calendar events.
+- Microsoft work-account sign-in uses a tenant-scoped Entra single-page application and verifies the signed-in profile through Microsoft Graph.
 - The primary workflow is: capture a topic, place it on an upcoming agenda, assign a lead, record a decision and track follow-up.
-- Microsoft sign-in, Outlook reminders and calendar linking are represented as clear interactive mock states.
+- Outlook email and calendar reminder delivery remain inactive until the required delegated permissions and delivery workflow are separately enabled.
 - Illustrative topics, dates and team members must be labelled as sample data.
 - The initial interface language is English.
 
@@ -41,13 +41,13 @@ Use the established GMS dashboard design language and authentic supplied GMS 10 
 ## Evidence on Hand
 
 - Approved GMS Frosted Workspace design system and authentic logo assets.
-- No confirmed production data, team roster, Microsoft tenant configuration or reminder rules are available; the mockup must not fabricate them as live facts.
+- The EMT roster is Lisa Xu, George Pesutto, Coco Hu and Brenda Cugley. Sample agenda and decision content remains illustrative until a persistent data store is connected.
 
 ## Product Principles
 
 - Make the next discussion and its owner obvious.
 - Keep meeting preparation and follow-up in one continuous journey.
-- Distinguish sample content and simulated integrations from live organisational data.
+- Distinguish sample content and inactive reminder delivery from verified Microsoft sign-in.
 - Preserve executive-level scanability while keeping item-level detail close at hand.
 
 ## Accessibility & Inclusion
