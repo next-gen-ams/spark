@@ -1,14 +1,26 @@
 {
   "schemaVersion": 2,
-  "generatedAt": "2026-09-08T07:30:29Z",
+  "generatedAt": "2026-09-24T07:09:23Z",
   "title": "Design System: GMS Executive Project Tracker",
   "extensions": {
     "colorMeta": {
-      "brand-navy": {
+      "active-blue": {
         "role": "primary",
-        "displayName": "GMS Institutional Navy",
-        "canonical": "#243e63",
-        "tonalRamp": ["oklch(15% 0.045 255)", "oklch(25% 0.06 255)", "oklch(35% 0.075 255)", "oklch(45% 0.085 255)", "oklch(58% 0.07 255)", "oklch(72% 0.05 255)", "oklch(84% 0.03 255)", "oklch(95% 0.012 255)"]
+        "displayName": "GMS Active Blue",
+        "canonical": "#007fc8",
+        "tonalRamp": ["oklch(15% 0.065 240)", "oklch(25% 0.09 240)", "oklch(35% 0.115 240)", "oklch(48% 0.14 240)", "oklch(60% 0.12 240)", "oklch(72% 0.09 240)", "oklch(84% 0.055 240)", "oklch(95% 0.02 240)"]
+      },
+      "focus-sky": {
+        "role": "primary",
+        "displayName": "Focus Sky",
+        "canonical": "#009ae6",
+        "tonalRamp": ["oklch(15% 0.07 235)", "oklch(25% 0.1 235)", "oklch(35% 0.13 235)", "oklch(48% 0.16 235)", "oklch(60% 0.135 235)", "oklch(72% 0.1 235)", "oklch(84% 0.06 235)", "oklch(95% 0.022 235)"]
+      },
+      "orange-primary": {
+        "role": "primary",
+        "displayName": "GMS Primary Orange",
+        "canonical": "#ff6632",
+        "tonalRamp": ["oklch(15% 0.06 38)", "oklch(25% 0.1 38)", "oklch(35% 0.15 38)", "oklch(48% 0.2 38)", "oklch(60% 0.19 38)", "oklch(72% 0.145 38)", "oklch(84% 0.09 38)", "oklch(95% 0.03 38)"]
       },
       "action-blue": {
         "role": "primary",
@@ -49,14 +61,14 @@
       "canvas-mist": {
         "role": "neutral",
         "displayName": "Canvas Mist",
-        "canonical": "#eef2f8",
+        "canonical": "#f4f7f8",
         "tonalRamp": ["oklch(15% 0.008 250)", "oklch(27% 0.012 250)", "oklch(40% 0.016 250)", "oklch(54% 0.02 250)", "oklch(67% 0.018 250)", "oklch(78% 0.015 250)", "oklch(87% 0.012 250)", "oklch(95% 0.008 250)"]
       },
       "glass-surface": {
         "role": "neutral",
         "displayName": "Frosted Working Surface",
-        "canonical": "rgb(255 255 255 / .54)",
-        "tonalRamp": ["oklch(15% 0.004 250 / .54)", "oklch(27% 0.004 250 / .54)", "oklch(40% 0.004 250 / .54)", "oklch(54% 0.004 250 / .54)", "oklch(67% 0.004 250 / .54)", "oklch(78% 0.004 250 / .54)", "oklch(87% 0.004 250 / .54)", "oklch(95% 0.004 250 / .54)"]
+        "canonical": "rgb(255 255 255 / .66)",
+        "tonalRamp": ["oklch(15% 0.004 250 / .66)", "oklch(27% 0.004 250 / .66)", "oklch(40% 0.004 250 / .66)", "oklch(54% 0.004 250 / .66)", "oklch(67% 0.004 250 / .66)", "oklch(78% 0.004 250 / .66)", "oklch(87% 0.004 250 / .66)", "oklch(95% 0.004 250 / .66)"]
       },
       "solid-surface": {
         "role": "neutral",
@@ -67,13 +79,13 @@
       "ink": {
         "role": "neutral",
         "displayName": "Executive Ink",
-        "canonical": "#2c3345",
+        "canonical": "#25282b",
         "tonalRamp": ["oklch(15% 0.018 260)", "oklch(25% 0.025 260)", "oklch(35% 0.03 260)", "oklch(45% 0.032 260)", "oklch(58% 0.028 260)", "oklch(72% 0.02 260)", "oklch(84% 0.012 260)", "oklch(95% 0.005 260)"]
       },
       "ink-soft": {
         "role": "neutral",
         "displayName": "Soft Executive Ink",
-        "canonical": "#4b596d",
+        "canonical": "#464546",
         "tonalRamp": ["oklch(15% 0.016 255)", "oklch(27% 0.024 255)", "oklch(40% 0.032 255)", "oklch(54% 0.035 255)", "oklch(67% 0.028 255)", "oklch(78% 0.02 255)", "oklch(87% 0.012 255)", "oklch(95% 0.005 255)"]
       },
       "ink-muted": {
@@ -85,7 +97,7 @@
       "border-cool": {
         "role": "neutral",
         "displayName": "Cool Divider",
-        "canonical": "#ccd5e1",
+        "canonical": "#d8e0e4",
         "tonalRamp": ["oklch(15% 0.012 250)", "oklch(27% 0.02 250)", "oklch(40% 0.028 250)", "oklch(54% 0.035 250)", "oklch(67% 0.032 250)", "oklch(78% 0.026 250)", "oklch(87% 0.018 250)", "oklch(95% 0.008 250)"]
       },
       "success-text": {
@@ -133,11 +145,13 @@
       "label": { "displayName": "Operational Label", "purpose": "Dates, form labels, counts and metadata." }
     },
     "shadows": [
-      { "name": "brand-header", "value": "0 8px 30px rgb(17 34 58 / .18)", "purpose": "Separates the institutional masthead from the workspace." },
-      { "name": "working-panel", "value": "0 16px 40px rgb(37 58 85 / .11)", "purpose": "Quiet ambient lift for agenda and support panels." },
-      { "name": "primary-action", "value": "0 8px 22px rgb(0 111 171 / .18)", "purpose": "Reinforces the single dominant action." },
+      { "name": "brand-header", "value": "0 8px 30px rgb(0 127 200 / .2)", "purpose": "Separates the Active Blue masthead from the workspace." },
+      { "name": "working-panel", "value": "0 16px 40px rgb(37 40 43 / .1)", "purpose": "Quiet ambient lift for agenda and support panels." },
+      { "name": "primary-action", "value": "0 8px 22px rgb(255 102 50 / .22)", "purpose": "Reinforces the signed-in workspace's Orange primary action." },
       { "name": "field-lift", "value": "0 4px 14px rgb(37 58 85 / .07)", "purpose": "Separates the search input from its translucent toolbar." },
-      { "name": "modal", "value": "0 28px 80px rgb(24 42 65 / .22)", "purpose": "Strongest depth, reserved for temporary modal layers." }
+      { "name": "modal", "value": "0 28px 80px rgb(24 42 65 / .22)", "purpose": "Strongest depth, reserved for temporary modal layers." },
+      { "name": "access-gate", "value": "0 24px 70px rgb(37 58 85 / .15)", "purpose": "Lifts the single Microsoft entry card from the access canvas." },
+      { "name": "account-menu", "value": "0 18px 48px rgb(24 42 65 / .2)", "purpose": "Separates the verified Graph identity menu from the Active Blue header." }
     ],
     "motion": [
       { "name": "ledger-state", "value": "160ms ease-out", "purpose": "Hover backgrounds, chevron translation and other direct row feedback." },
@@ -154,9 +168,9 @@
       "name": "Primary Action Button",
       "kind": "button",
       "refersTo": "button-primary",
-      "description": "The single high-confidence action used to add or save executive work.",
-      "html": "<button class=\"ds-btn-primary\" type=\"button\"><svg viewBox=\"0 0 24 24\" aria-hidden=\"true\"><path d=\"M5 12h14M12 5v14\"/></svg><span>Add discussion</span></button>",
-      "css": ".ds-btn-primary{min-height:44px;display:inline-flex;align-items:center;justify-content:center;gap:6px;padding:0 16px;border:1px solid transparent;border-radius:12px;background:var(--primary,#006fab);color:#fff;font-family:'DM Sans','PingFang SC','Microsoft YaHei',sans-serif;font-size:.875rem;font-weight:500;box-shadow:0 8px 22px rgb(0 111 171 / .18);transition:background 160ms ease-out,transform 160ms ease-out}.ds-btn-primary svg{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round}.ds-btn-primary:hover{background:#005c90}.ds-btn-primary:focus-visible{outline:3px solid rgb(0 111 171 / .3);outline-offset:2px}.ds-btn-primary:active{transform:translateY(1px)}"
+      "description": "The single high-confidence Orange action used to add or save executive work after access is verified.",
+      "html": "<button class=\"ds-btn-primary\" type=\"button\"><svg viewBox=\"0 0 24 24\" aria-hidden=\"true\"><path d=\"M5 12h14M12 5v14\"/></svg><span>Add topic</span></button>",
+      "css": ".ds-btn-primary{min-height:44px;display:inline-flex;align-items:center;justify-content:center;gap:6px;padding:0 16px;border:1px solid transparent;border-radius:12px;background:#ff6632;color:#fff;font-family:'DM Sans','PingFang SC','Microsoft YaHei',sans-serif;font-size:.875rem;font-weight:500;box-shadow:0 8px 22px rgb(255 102 50 / .22);transition:background 160ms ease-out,transform 160ms ease-out}.ds-btn-primary svg{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round}.ds-btn-primary:hover{background:#e85224}.ds-btn-primary:focus-visible{outline:3px solid rgb(0 154 230 / .32);outline-offset:2px}.ds-btn-primary:active{transform:translateY(1px)}"
     },
     {
       "name": "Secondary Action Button",
@@ -172,7 +186,7 @@
       "refersTo": "input",
       "description": "A compact, lifted search field embedded inside the translucent agenda toolbar.",
       "html": "<label class=\"ds-search-field\"><svg viewBox=\"0 0 24 24\" aria-hidden=\"true\"><circle cx=\"11\" cy=\"11\" r=\"8\"/><path d=\"m21 21-4.35-4.35\"/></svg><span class=\"ds-sr-only\">Search agenda</span><input type=\"search\" placeholder=\"Search agenda\" /></label>",
-      "css": ".ds-search-field{position:relative;display:block;width:230px;font-family:'DM Sans','PingFang SC','Microsoft YaHei',sans-serif}.ds-search-field svg{position:absolute;left:12px;top:50%;width:16px;height:16px;transform:translateY(-50%);fill:none;stroke:#536076;stroke-width:2;stroke-linecap:round}.ds-search-field input{width:100%;height:42px;padding:0 12px 0 36px;border:1px solid rgb(255 255 255 / .92);border-radius:12px;background:rgb(255 255 255 / .74);color:#2c3345;font:inherit;font-size:.875rem;box-shadow:0 4px 14px rgb(37 58 85 / .07);outline:none;transition:border-color 160ms ease-out,box-shadow 160ms ease-out}.ds-search-field input:hover{border-color:#ccd5e1}.ds-search-field input:focus-visible{border-color:#006fab;box-shadow:0 0 0 3px rgb(0 111 171 / .3)}.ds-sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap}"
+      "css": ".ds-search-field{position:relative;display:block;width:230px;font-family:'DM Sans','PingFang SC','Microsoft YaHei',sans-serif}.ds-search-field svg{position:absolute;left:12px;top:50%;width:16px;height:16px;transform:translateY(-50%);fill:none;stroke:#464546;stroke-width:2;stroke-linecap:round}.ds-search-field input{width:100%;height:42px;padding:0 12px 0 36px;border:1px solid rgb(255 255 255 / .92);border-radius:12px;background:rgb(255 255 255 / .74);color:#25282b;font:inherit;font-size:.875rem;box-shadow:0 4px 14px rgb(37 58 85 / .07);outline:none;transition:border-color 160ms ease-out,box-shadow 160ms ease-out}.ds-search-field input:hover{border-color:#d8e0e4}.ds-search-field input:focus-visible{border-color:#009ae6;box-shadow:0 0 0 3px rgb(0 154 230 / .32)}.ds-sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap}"
     },
     {
       "name": "Sidebar Navigation",
@@ -180,15 +194,15 @@
       "refersTo": "nav-item-active",
       "description": "A compact warm-white navigation group with pale-sky current-state emphasis.",
       "html": "<nav class=\"ds-nav\" aria-label=\"Workspace\"><button class=\"ds-nav-item\" data-active=\"true\" type=\"button\"><svg viewBox=\"0 0 24 24\" aria-hidden=\"true\"><path d=\"M8 2v4M16 2v4M3 9h18M5 4h14a2 2 0 0 1 2 2v13a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2Z\"/></svg><span>Next meeting</span></button><button class=\"ds-nav-item\" type=\"button\"><svg viewBox=\"0 0 24 24\" aria-hidden=\"true\"><path d=\"M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01\"/></svg><span>Discussion backlog</span><span class=\"ds-nav-count\">2</span></button></nav>",
-      "css": ".ds-nav{width:210px;display:grid;gap:4px;padding:10px;border:1px solid rgb(255 255 255 / .84);border-radius:16px;background:rgb(244 243 239 / .9);font-family:'DM Sans','PingFang SC','Microsoft YaHei',sans-serif;box-shadow:0 16px 40px rgb(37 58 85 / .06);backdrop-filter:blur(26px) saturate(120%)}.ds-nav-item{min-height:44px;display:flex;align-items:center;gap:10px;padding:0 11px;border:0;border-radius:10px;background:transparent;color:#4b596d;font:inherit;font-size:.9rem;font-weight:560;text-align:left;transition:background 160ms ease-out,color 160ms ease-out}.ds-nav-item svg{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}.ds-nav-item:hover{background:rgb(255 255 255 / .7);color:#2c3345}.ds-nav-item:focus-visible{outline:3px solid rgb(0 111 171 / .3);outline-offset:-3px}.ds-nav-item[data-active='true']{background:#eaf7fd;color:#235c7b;font-weight:700}.ds-nav-item[data-active='true'] svg{color:#006fab}.ds-nav-count{margin-left:auto;min-width:22px;height:22px;display:grid;place-items:center;border-radius:999px;background:rgb(255 255 255 / .76);color:#536076;font-size:.75rem;font-variant-numeric:tabular-nums}"
+      "css": ".ds-nav{width:210px;display:grid;gap:4px;padding:10px;border:1px solid rgb(255 255 255 / .84);border-radius:16px;background:rgb(244 247 248 / .92);font-family:'DM Sans','PingFang SC','Microsoft YaHei',sans-serif;box-shadow:0 16px 40px rgb(37 40 43 / .06);backdrop-filter:blur(26px) saturate(120%)}.ds-nav-item{min-height:44px;display:flex;align-items:center;gap:10px;padding:0 11px;border:0;border-radius:10px;background:transparent;color:#464546;font:inherit;font-size:.9rem;font-weight:560;text-align:left;transition:background 160ms ease-out,color 160ms ease-out}.ds-nav-item svg{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}.ds-nav-item:hover{background:rgb(255 255 255 / .7);color:#25282b}.ds-nav-item:focus-visible{outline:3px solid rgb(0 154 230 / .32);outline-offset:-3px}.ds-nav-item[data-active='true']{background:#eaf7fd;color:#25282b;font-weight:700}.ds-nav-item[data-active='true'] svg{color:#009ae6}.ds-nav-count{margin-left:auto;min-width:22px;height:22px;display:grid;place-items:center;border-radius:999px;background:rgb(255 255 255 / .76);color:#464546;font-size:.75rem;font-variant-numeric:tabular-nums}"
     },
     {
       "name": "Agenda Ledger Row",
       "kind": "custom",
       "refersTo": "panel-glass",
-      "description": "The signature executive-ledger row joining order, discussion, owner, status and time.",
-      "html": "<button class=\"ds-agenda-row\" type=\"button\"><span class=\"ds-agenda-order\">01</span><span class=\"ds-agenda-summary\"><span class=\"ds-agenda-topline\"><span class=\"ds-agenda-title\">Confirm Q4 all-hands owners and format</span><span class=\"ds-agenda-status-ready\">Ready</span></span><span class=\"ds-agenda-meta\">People &amp; culture <i></i> Maya Chen</span></span><span class=\"ds-agenda-duration\">10 min</span><svg class=\"ds-agenda-chevron\" viewBox=\"0 0 24 24\" aria-hidden=\"true\"><path d=\"m9 18 6-6-6-6\"/></svg></button>",
-      "css": ".ds-agenda-row{width:100%;min-height:88px;display:grid;grid-template-columns:36px minmax(0,1fr) auto 20px;gap:14px;align-items:center;padding:17px 20px;border:0;border-bottom:1px solid rgb(155 170 188 / .36);background:transparent;color:#2c3345;font-family:'DM Sans','PingFang SC','Microsoft YaHei',sans-serif;text-align:left;transition:background 160ms ease-out,box-shadow 160ms ease-out}.ds-agenda-row:hover{background:rgb(255 255 255 / .72)}.ds-agenda-row:focus-visible{outline:3px solid rgb(0 111 171 / .3);outline-offset:-3px;background:rgb(255 255 255 / .75)}.ds-agenda-order{color:#6a788a;font-size:.78rem;font-weight:700;font-variant-numeric:tabular-nums}.ds-agenda-summary{min-width:0}.ds-agenda-topline{display:flex;align-items:center;justify-content:space-between;gap:12px}.ds-agenda-title{overflow:hidden;color:#25334a;font-size:.97rem;font-weight:680;line-height:1.35;text-overflow:ellipsis;white-space:nowrap}.ds-agenda-meta{display:flex;align-items:center;gap:8px;margin-top:8px;color:#536076;font-size:.78rem}.ds-agenda-meta i{width:3px;height:3px;border-radius:50%;background:#8290a0}.ds-agenda-status-ready{height:24px;display:inline-flex;align-items:center;padding:0 8px;border:1px solid #b8dccc;border-radius:999px;background:#e4f4ed;color:#286450;font-size:.75rem;font-weight:500}.ds-agenda-duration{color:#536076;font-size:.8rem;font-weight:620;white-space:nowrap}.ds-agenda-chevron{width:16px;height:16px;fill:none;stroke:#7a899b;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;transition:transform 160ms ease-out,color 160ms ease-out}.ds-agenda-row:hover .ds-agenda-chevron{transform:translateX(3px);stroke:#006fab}"
+      "description": "The signature executive-ledger row joining order, topic, proposer, category and time.",
+      "html": "<button class=\"ds-agenda-row\" type=\"button\"><span class=\"ds-agenda-order\">01</span><span class=\"ds-agenda-summary\"><span class=\"ds-agenda-title\">Confirm Q4 all-hands owners and format</span><span class=\"ds-agenda-meta\"><span class=\"ds-topic-tag\">People &amp; culture</span><span>Proposed by Lisa Xu</span></span></span><span class=\"ds-agenda-duration\">10 min</span><svg class=\"ds-agenda-chevron\" viewBox=\"0 0 24 24\" aria-hidden=\"true\"><path d=\"m9 18 6-6-6-6\"/></svg></button>",
+      "css": ".ds-agenda-row{width:100%;min-height:88px;display:grid;grid-template-columns:36px minmax(0,1fr) auto 20px;gap:14px;align-items:center;padding:17px 20px;border:0;border-bottom:1px solid rgb(216 224 228 / .8);background:transparent;color:#25282b;font-family:'DM Sans','PingFang SC','Microsoft YaHei',sans-serif;text-align:left;transition:background 160ms ease-out,box-shadow 160ms ease-out}.ds-agenda-row:hover{background:rgb(255 255 255 / .72)}.ds-agenda-row:focus-visible{outline:3px solid rgb(0 154 230 / .32);outline-offset:-3px;background:rgb(255 255 255 / .75)}.ds-agenda-order{color:#6a788a;font-size:.78rem;font-weight:700;font-variant-numeric:tabular-nums}.ds-agenda-summary{min-width:0}.ds-agenda-title{display:block;overflow:hidden;color:#25334a;font-size:.97rem;font-weight:680;line-height:1.35;text-overflow:ellipsis;white-space:nowrap}.ds-agenda-meta{display:flex;align-items:center;gap:8px;margin-top:8px;color:#464546;font-size:.78rem}.ds-topic-tag{width:max-content;padding:4px 8px;border-radius:999px;color:#235c7b;background:#eaf7fd;font-size:.7rem;font-weight:720}.ds-agenda-duration{color:#464546;font-size:.8rem;font-weight:620;white-space:nowrap}.ds-agenda-chevron{width:16px;height:16px;fill:none;stroke:#7a899b;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;transition:transform 160ms ease-out,color 160ms ease-out}.ds-agenda-row:hover .ds-agenda-chevron{transform:translateX(3px);stroke:#009ae6}"
     },
     {
       "name": "Status Chips",
@@ -204,38 +218,38 @@
       "refersTo": "panel-glass",
       "description": "The stable translucent container used for the agenda and meeting-support surfaces.",
       "html": "<section class=\"ds-glass-panel\"><div class=\"ds-panel-heading\"><h3>Agenda</h3><p>4 discussions · 40 minutes planned</p></div><div class=\"ds-panel-rule\"></div><p class=\"ds-panel-copy\">Working content stays orderly and legible while the atmosphere remains visible behind the surface.</p></section>",
-      "css": ".ds-glass-panel{overflow:hidden;width:min(420px,100%);border:0;border-radius:16px;background:rgb(255 255 255 / .54);color:#2c3345;font-family:'DM Sans','PingFang SC','Microsoft YaHei',sans-serif;box-shadow:0 16px 40px rgb(37 58 85 / .11);backdrop-filter:blur(26px) saturate(120%);transition:background 160ms ease-out}.ds-glass-panel:hover{background:rgb(255 255 255 / .6)}.ds-glass-panel:focus-within{outline:3px solid rgb(0 111 171 / .3);outline-offset:2px}.ds-panel-heading{padding:20px 22px}.ds-panel-heading h3{margin:0 0 3px;color:#243e63;font-size:1.05rem;letter-spacing:-.015em}.ds-panel-heading p,.ds-panel-copy{margin:0;color:#536076;font-size:.82rem;line-height:1.45}.ds-panel-rule{height:1px;background:rgb(155 170 188 / .45)}.ds-panel-copy{padding:20px 22px}@supports not (backdrop-filter:blur(1px)){.ds-glass-panel{background:#eef2f8}}"
+      "css": ".ds-glass-panel{overflow:hidden;width:min(420px,100%);border:0;border-radius:16px;background:rgb(255 255 255 / .66);color:#25282b;font-family:'DM Sans','PingFang SC','Microsoft YaHei',sans-serif;box-shadow:0 16px 40px rgb(37 40 43 / .1);backdrop-filter:blur(26px) saturate(120%);transition:background 160ms ease-out}.ds-glass-panel:hover{background:rgb(255 255 255 / .72)}.ds-glass-panel:focus-within{outline:3px solid rgb(0 154 230 / .32);outline-offset:2px}.ds-panel-heading{padding:20px 22px}.ds-panel-heading h3{margin:0 0 3px;color:#25282b;font-size:1.05rem;letter-spacing:-.015em}.ds-panel-heading p,.ds-panel-copy{margin:0;color:#464546;font-size:.82rem;line-height:1.45}.ds-panel-rule{height:1px;background:rgb(155 170 188 / .45)}.ds-panel-copy{padding:20px 22px}@supports not (backdrop-filter:blur(1px)){.ds-glass-panel{background:#f4f7f8}}"
     },
     {
-      "name": "Meeting Readiness Tally",
-      "kind": "custom",
-      "refersTo": "panel-glass",
-      "description": "A compact sky-wash summary that balances ready work against unresolved work.",
-      "html": "<div class=\"ds-readiness-tally\" aria-label=\"2 of 4 discussions ready\"><strong>2 ready</strong><span>2 to review</span></div>",
-      "css": ".ds-readiness-tally{display:flex;align-items:baseline;justify-content:space-between;gap:12px;padding:13px 14px;border-radius:12px;background:rgb(234 247 253 / .78);color:#243e63;font-family:'DM Sans','PingFang SC','Microsoft YaHei',sans-serif;font-variant-numeric:tabular-nums;transition:background 160ms ease-out}.ds-readiness-tally strong{font-size:1rem}.ds-readiness-tally span{color:#536076;font-size:.78rem;font-weight:650}.ds-readiness-tally:hover{background:#eaf7fd}.ds-readiness-tally:focus-visible{outline:3px solid rgb(0 111 171 / .3);outline-offset:2px}"
+      "name": "Microsoft Access Gate",
+      "kind": "card",
+      "refersTo": "access-gate",
+      "description": "The minimal centred entry card; set data-state to disconnected, checking, unconfigured, auth-error or workspace-error to reveal the corresponding gate treatment.",
+      "html": "<section class=\"ds-access-card\" data-state=\"disconnected\"><header class=\"ds-access-brand\"><span class=\"ds-access-wordmark\">GMS <b>10 YEARS</b></span><i class=\"ds-access-divider\"></i><span class=\"ds-access-product\">EMT Tracker</span></header><div class=\"ds-access-body\"><span class=\"ds-ms-tile\"><span class=\"ds-ms-mark\"><i></i><i></i><i></i><i></i></span></span><div class=\"ds-access-copy\"><h3>Sign in to EMT Tracker</h3><p>Use your GMS Microsoft account to access the executive meeting workspace.</p></div><div class=\"ds-access-account\"><span class=\"ds-access-avatar\">CH</span><span><strong>Coco Hu</strong><small>coco@example.com</small></span></div><div class=\"ds-access-status\"><span class=\"ds-access-spinner\"></span>Secure connection in progress</div><div class=\"ds-access-config\">Microsoft Entra setup is required before this workspace can be opened.</div><button class=\"ds-access-action\" type=\"button\"><span class=\"ds-ms-mark ds-ms-mark-small\"><i></i><i></i><i></i><i></i></span><span>Continue with Microsoft</span><svg viewBox=\"0 0 24 24\" aria-hidden=\"true\"><path d=\"M5 12h14m-6-6 6 6-6 6\"/></svg></button><button class=\"ds-access-signout\" type=\"button\">Sign out and use another account</button><div class=\"ds-access-assurance\"><strong>Protected by Microsoft</strong><small>Basic profile only. Outlook and calendar access are not enabled.</small></div></div></section>",
+      "css": ".ds-access-card{overflow:hidden;width:min(430px,100%);border-radius:16px;background:rgb(255 255 255 / .92);color:#25282b;font-family:'DM Sans','PingFang SC','Microsoft YaHei',sans-serif;box-shadow:0 24px 70px rgb(37 58 85 / .15)}.ds-access-brand{min-height:72px;display:flex;align-items:center;gap:12px;padding:15px 24px;color:#fff;background:#007fc8}.ds-access-wordmark{font-size:1.1rem;font-weight:780;letter-spacing:-.02em}.ds-access-wordmark b{font-size:.65rem;letter-spacing:.04em}.ds-access-divider{width:1px;height:27px;background:rgb(255 255 255 / .3)}.ds-access-product{font-size:1rem;font-weight:650}.ds-access-body{display:grid;gap:20px;padding:30px}.ds-ms-tile{width:52px;height:52px;display:grid;place-items:center;border-radius:14px;background:#eaf7fd}.ds-ms-mark{width:22px;height:22px;display:grid;grid-template-columns:1fr 1fr;grid-template-rows:1fr 1fr;gap:2px}.ds-ms-mark i:nth-child(1){background:#f25022}.ds-ms-mark i:nth-child(2){background:#7fba00}.ds-ms-mark i:nth-child(3){background:#00a4ef}.ds-ms-mark i:nth-child(4){background:#ffb900}.ds-access-copy{display:grid;gap:9px}.ds-access-copy h3{margin:0;color:#172e4c;font-size:1.65rem;line-height:1.18;letter-spacing:-.025em}.ds-access-copy p{margin:0;color:#536076;font-size:.96rem;line-height:1.55}.ds-access-action{min-height:50px;width:100%;display:flex;align-items:center;justify-content:flex-start;gap:12px;padding:0 16px;border:0;border-radius:12px;color:#fff;background:#006fab;font:inherit;box-shadow:0 10px 24px rgb(0 111 171 / .2);transition:background 160ms ease-out,transform 160ms ease-out}.ds-access-action>span:nth-child(2){flex:1;text-align:left}.ds-access-action svg{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round}.ds-ms-mark-small{width:20px;height:20px;padding:2px;border-radius:3px;background:#fff}.ds-access-action:hover{background:#005c90}.ds-access-action:focus-visible,.ds-access-signout:focus-visible{outline:3px solid rgb(0 154 230 / .32);outline-offset:2px}.ds-access-action:active{transform:translateY(1px)}.ds-access-status,.ds-access-config,.ds-access-account,.ds-access-signout{display:none}.ds-access-status,.ds-access-config{min-height:50px;align-items:center;gap:11px;padding:0 14px;border-radius:12px;color:#235c7b;background:#eaf7fd;font-size:.88rem;font-weight:650}.ds-access-config{align-items:flex-start;padding-block:14px;color:#7b4c31;background:#fff0e8;line-height:1.45}.ds-access-account{align-items:center;gap:12px;padding:13px 14px;border-radius:12px;background:#f0f5f9}.ds-access-account>span:last-child{min-width:0;display:grid;gap:2px}.ds-access-account strong,.ds-access-account small{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.ds-access-account strong{color:#172e4c;font-size:.9rem}.ds-access-account small{color:#617086;font-size:.76rem}.ds-access-avatar{width:40px;height:40px;display:grid;place-items:center;border-radius:50%;color:#fff;background:#007fc8;font-size:.75rem;font-weight:760}.ds-access-signout{min-height:42px;justify-self:start;padding:0;border:0;background:transparent;color:#536076;font:inherit}.ds-access-signout:hover{color:#172e4c}.ds-access-assurance{display:grid;gap:3px;padding-top:20px;border-top:1px solid #d8e0e4}.ds-access-assurance strong{color:#34435a;font-size:.8rem}.ds-access-assurance small{color:#617086;font-size:.74rem;line-height:1.45}.ds-access-card[data-state='checking'] .ds-access-status{display:flex}.ds-access-card[data-state='checking'] .ds-access-action,.ds-access-card[data-state='unconfigured'] .ds-access-action{display:none}.ds-access-card[data-state='unconfigured'] .ds-access-config{display:flex}.ds-access-card[data-state='workspace-error'] .ds-access-account,.ds-access-card[data-state='workspace-error'] .ds-access-signout{display:flex}.ds-access-spinner{width:18px;height:18px;border:2px solid rgb(0 111 171 / .25);border-top-color:#006fab;border-radius:50%}@media(max-width:680px){.ds-access-brand{min-height:66px;padding-inline:20px}.ds-access-body{gap:18px;padding:24px 20px}.ds-access-copy h3{font-size:1.45rem}}"
     },
     {
       "name": "Topic Drawer Tabs",
       "kind": "nav",
       "refersTo": "nav-item-active",
-      "description": "A warm-white, underline-led tab rail for overview, decision and reminder context.",
-      "html": "<div class=\"ds-topic-tabs\" role=\"tablist\" aria-label=\"Topic details\"><button class=\"ds-topic-tab\" role=\"tab\" aria-selected=\"true\" type=\"button\">Overview</button><button class=\"ds-topic-tab\" role=\"tab\" aria-selected=\"false\" type=\"button\">Decision</button><button class=\"ds-topic-tab\" role=\"tab\" aria-selected=\"false\" type=\"button\">Reminders</button></div>",
-      "css": ".ds-topic-tabs{height:52px;display:flex;align-items:stretch;gap:20px;padding:0 28px;background:#f4f3ef;font-family:'DM Sans','PingFang SC','Microsoft YaHei',sans-serif}.ds-topic-tab{position:relative;height:100%;padding:0 2px;border:0;background:transparent;color:#536076;font:inherit;font-size:.875rem;font-weight:500}.ds-topic-tab:hover{color:#243e63}.ds-topic-tab:focus-visible{outline:3px solid rgb(0 111 171 / .3);outline-offset:-3px}.ds-topic-tab[aria-selected='true']{color:#243e63}.ds-topic-tab[aria-selected='true']::after{content:'';position:absolute;right:0;bottom:0;left:0;height:3px;background:#006fab}.ds-topic-tab:active{transform:translateY(1px)}"
+      "description": "A warm-white, Focus Sky underline-led tab rail for decision and reminder context.",
+      "html": "<div class=\"ds-topic-tabs\" role=\"tablist\" aria-label=\"Topic details\"><button class=\"ds-topic-tab\" role=\"tab\" aria-selected=\"true\" type=\"button\">Decision</button><button class=\"ds-topic-tab\" role=\"tab\" aria-selected=\"false\" type=\"button\">Reminders</button></div>",
+      "css": ".ds-topic-tabs{height:52px;display:flex;align-items:stretch;gap:20px;padding:0 28px;background:#f4f3ef;font-family:'DM Sans','PingFang SC','Microsoft YaHei',sans-serif}.ds-topic-tab{position:relative;height:100%;padding:0 2px;border:0;background:transparent;color:#464546;font:inherit;font-size:.875rem;font-weight:500}.ds-topic-tab:hover{color:#25282b}.ds-topic-tab:focus-visible{outline:3px solid rgb(0 154 230 / .32);outline-offset:-3px}.ds-topic-tab[aria-selected='true']{color:#25282b}.ds-topic-tab[aria-selected='true']::after{content:'';position:absolute;right:0;bottom:0;left:0;height:3px;background:#009ae6}.ds-topic-tab:active{transform:translateY(1px)}"
     },
     {
-      "name": "Reminder Switch",
-      "kind": "custom",
-      "refersTo": "button-primary",
-      "description": "A compact action-blue switch for Microsoft-connected reminder preferences.",
-      "html": "<button class=\"ds-switch\" type=\"button\" role=\"switch\" aria-checked=\"true\" aria-label=\"Automatic reminders\"><span class=\"ds-switch-thumb\"></span></button>",
-      "css": ".ds-switch{position:relative;width:32px;height:18.4px;display:inline-flex;align-items:center;padding:0;border:1px solid transparent;border-radius:999px;background:#006fab;transition:background 160ms ease-out;outline:none}.ds-switch-thumb{display:block;width:16px;height:16px;border-radius:50%;background:#eef2f8;transform:translateX(14px);transition:transform 160ms ease-out}.ds-switch[aria-checked='false']{background:#9baabc}.ds-switch[aria-checked='false'] .ds-switch-thumb{transform:translateX(0)}.ds-switch:hover{filter:saturate(1.08)}.ds-switch:focus-visible{border-color:#006fab;box-shadow:0 0 0 3px rgb(0 111 171 / .3)}.ds-switch:active .ds-switch-thumb{width:17px}"
+      "name": "Graph Account Control and Menu",
+      "kind": "nav",
+      "refersTo": "profile-control",
+      "description": "The signed-in Active Blue header control and open menu for the verified Graph display name, email and sign-out action.",
+      "html": "<div class=\"ds-account-preview\"><button class=\"ds-profile-control\" type=\"button\" aria-expanded=\"true\"><span class=\"ds-profile-avatar\">CH</span><span class=\"ds-profile-copy\"><strong>Coco Hu</strong><small>Microsoft account</small></span><svg class=\"ds-profile-chevron\" viewBox=\"0 0 24 24\" aria-hidden=\"true\"><path d=\"m6 9 6 6 6-6\"/></svg></button><div class=\"ds-profile-menu\" role=\"menu\"><div class=\"ds-profile-identity\"><span class=\"ds-profile-menu-avatar\">CH</span><span><strong>Coco Hu</strong><small>coco@example.com</small></span></div><i class=\"ds-profile-separator\"></i><button class=\"ds-profile-signout\" type=\"button\" role=\"menuitem\"><svg viewBox=\"0 0 24 24\" aria-hidden=\"true\"><path d=\"M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4m7 14 5-5-5-5m5 5H9\"/></svg>Sign out</button></div></div>",
+      "css": ".ds-account-preview{position:relative;min-height:170px;display:flex;justify-content:flex-end;align-items:flex-start;padding:14px;border-radius:16px;background:#007fc8;font-family:'DM Sans','PingFang SC','Microsoft YaHei',sans-serif}.ds-profile-control{min-height:48px;display:flex;align-items:center;gap:10px;padding:5px 10px 5px 7px;border:1px solid rgb(255 255 255 / .28);border-radius:12px;color:#fff;background:rgb(255 255 255 / .2);font:inherit;transition:background 160ms ease-out}.ds-profile-control:hover{background:rgb(255 255 255 / .24)}.ds-profile-control:focus-visible{outline:3px solid rgb(255 255 255 / .45);outline-offset:2px}.ds-profile-control:active{transform:translateY(1px)}.ds-profile-avatar{width:34px;height:34px;display:grid;place-items:center;border-radius:50%;color:#0071b4;background:#fff;font-size:.72rem;font-weight:780}.ds-profile-copy{min-width:0;display:grid;text-align:left}.ds-profile-copy strong{max-width:180px;overflow:hidden;color:#fff;font-size:.84rem;font-weight:700;text-overflow:ellipsis;white-space:nowrap}.ds-profile-copy small{color:rgb(255 255 255 / .7);font-size:.66rem;font-weight:520}.ds-profile-chevron{width:15px;height:15px;fill:none;stroke:rgb(255 255 255 / .7);stroke-width:2;stroke-linecap:round;stroke-linejoin:round;transform:rotate(180deg)}.ds-profile-menu{position:absolute;top:70px;right:14px;width:286px;padding:7px;border:1px solid rgb(204 213 225 / .88);border-radius:14px;background:rgb(255 255 255 / .98);box-shadow:0 18px 48px rgb(24 42 65 / .2)}.ds-profile-identity{display:flex;align-items:center;gap:11px;padding:10px}.ds-profile-menu-avatar{width:40px;height:40px;display:grid;place-items:center;border-radius:50%;color:#fff;background:#007fc8;font-size:.74rem;font-weight:760}.ds-profile-identity>span:last-child{min-width:0;display:grid;gap:2px}.ds-profile-identity strong,.ds-profile-identity small{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.ds-profile-identity strong{color:#172e4c;font-size:.88rem}.ds-profile-identity small{color:#617086;font-size:.72rem;font-weight:500}.ds-profile-separator{display:block;height:1px;margin:3px -7px;background:#d8e0e4}.ds-profile-signout{min-height:40px;width:100%;display:flex;align-items:center;gap:9px;padding:0 10px;border:0;border-radius:8px;color:#42546a;background:transparent;font:inherit;text-align:left}.ds-profile-signout svg{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}.ds-profile-signout:hover,.ds-profile-signout:focus-visible{color:#172e4c;background:#eaf7fd;outline:none}.ds-profile-signout:active{transform:translateY(1px)}@media(max-width:680px){.ds-profile-control{min-width:44px;max-width:150px;padding:4px 9px 4px 4px}.ds-profile-copy strong{max-width:92px}.ds-profile-copy small,.ds-profile-chevron{display:none}.ds-profile-menu{right:8px;width:min(286px,calc(100% - 16px))}}"
     }
   ],
   "narrative": {
     "northStar": "The Executive Operating Ledger",
-    "overview": "The tracker is a calm, accountable workspace rather than a generic metric dashboard. A solid GMS navy header establishes institutional identity; beneath it, a short warm-white navigation rail and a chronological agenda ledger keep attention on the next discussion, its owner and its follow-up.\n\nThe material language is frosted but disciplined. Coral, sky and lavender atmospheric bands sit behind translucent working surfaces, while crisp dividers, moderate radii and compact status marks preserve operational clarity. Decorative effects never compete with meeting preparation or decision capture.",
+    "overview": "The tracker is a calm, accountable workspace rather than a generic metric dashboard. A solid GMS Active Blue header establishes institutional identity; beneath it, a short mist navigation rail and a chronological agenda ledger keep attention on the next discussion, its owner and its follow-up.\n\nThe material language is frosted but disciplined. Coral, sky and lavender atmospheric bands sit behind translucent working surfaces, while crisp dividers, moderate radii and compact status marks preserve operational clarity. Decorative effects never compete with meeting preparation or decision capture.",
     "keyCharacteristics": [
-      "GMS navy identity anchored by the authentic white GMS 10 Years logo.",
+      "GMS Active Blue identity anchored by the authentic white GMS 10 Years logo.",
       "DM Sans throughout, with compact labels and decisive display headings.",
       "A warm-white sticky sidebar beside a ledger-first central workspace.",
       "Frosted panels over coral, sky and lavender atmospheric fields.",
@@ -244,13 +258,16 @@
     ],
     "rules": [
       { "name": "The Atmosphere, Not Alert Rule", "body": "Coral, sky and lavender belong to the background field; interactive urgency is expressed through restrained semantic washes, never large saturated blocks.", "section": "colors" },
-      { "name": "The One Action Blue Rule", "body": "Use action blue for genuine controls, focus and current state; do not scatter it across passive decoration.", "section": "colors" },
+      { "name": "The Action Role Rule", "body": "Active Blue brands the shell, Orange drives signed-in workspace actions, and Operational Action Blue is reserved for Microsoft access and selected ledger state.", "section": "colors" },
       { "name": "The Ledger Voice Rule", "body": "Keep interface copy in sentence case and use weight before colour to establish hierarchy; reserve tabular numerals for counts, agenda order and time values.", "section": "typography" },
       { "name": "The Next Decision Rule", "body": "The agenda ledger remains the widest and most legible surface; supporting readiness and reminder controls must not outgrow the work they explain.", "section": "layout" },
-      { "name": "The Working Glass Rule", "body": "Blur belongs to stable workspace surfaces, not every control; forms and detail cells remain solid, and the no-blur fallback returns panels to Canvas Mist.", "section": "elevation" }
+      { "name": "The Working Glass Rule", "body": "Blur belongs to stable workspace surfaces, not every control; forms and detail cells remain solid, and the no-blur fallback returns panels to Canvas Mist.", "section": "elevation" },
+      { "name": "The Verified Workspace Rule", "body": "Render the operating ledger only after both Microsoft profile verification and shared-workspace access succeed; every earlier state stays inside the centred gate.", "section": "components" }
     ],
     "dos": [
-      "Do keep the authentic white GMS 10 Years logo on the solid navy header.",
+      "Do keep the authentic white GMS 10 Years logo on the solid Active Blue header and access-card masthead.",
+      "Do keep the pre-authentication experience to one centred card with one dominant Microsoft action.",
+      "Do use the Microsoft Graph display name in the signed-in account control and show the email only inside the account menu or a relevant error state.",
       "Do preserve the ledger sequence: order, discussion, state, owner, duration and entry to detail.",
       "Do use 1px dividers and muted metadata to make dense information scannable.",
       "Do reserve the 16px panel radius for major surfaces and 10–14px radii for nested controls.",
@@ -261,7 +278,9 @@
       "Don't use coral, sky or lavender atmospheric colours as competing primary actions.",
       "Don't apply frosted blur to forms, detail cells or every small control.",
       "Don't introduce oversized pills, excessive shadows or ornamental gradients inside operational content.",
-      "Don't imply that sample data or simulated Microsoft integrations are live."
+      "Don't imply that sample data or simulated Microsoft integrations are live.",
+      "Don't reveal the operating ledger until both the Microsoft profile and shared workspace access have been verified.",
+      "Don't add feature lists, dashboard previews or promotional content to the access gate."
     ]
   }
 }

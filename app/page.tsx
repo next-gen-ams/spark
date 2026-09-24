@@ -3,16 +3,25 @@
 import * as React from 'react';
 import Image from 'next/image';
 import {
-  Archive, Bell, CalendarDays, Check, CheckCircle2, ChevronRight, CircleAlert,
+  Archive, ArrowRight, Bell, CalendarDays, Check, CheckCircle2, ChevronDown, ChevronRight, CircleAlert,
   ClipboardCheck, Clock3, LayoutList, LoaderCircle, LogIn, LogOut, Mail, Menu,
-  MessageSquareText, Plus, Search, Sparkles, UserRound,
+  MessageSquareText, Plus, Search, ShieldCheck, Sparkles, UserRound,
 } from 'lucide-react';
+import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
   Dialog, DialogClose, DialogContent, DialogDescription, DialogFooter,
   DialogHeader, DialogTitle,
 } from '@/components/ui/dialog';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 import { Input } from '@/components/ui/input';
 import { NativeSelect, NativeSelectOption } from '@/components/ui/native-select';
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from '@/components/ui/sheet';
@@ -43,6 +52,7 @@ import {
 type TopicStatus = 'Scheduled' | 'Needs lead' | 'Needs input';
 type WorkspaceView = 'meeting' | 'backlog' | 'decisions' | 'reminders';
 type DecisionTab = 'People & culture' | 'Operations' | 'Governance' | 'Finance' | 'Archived';
+type MicrosoftStatus = 'loading' | 'unconfigured' | 'disconnected' | 'connected' | 'error';
 type WebMCPContext = {
   registerTool: (
     tool: {
@@ -92,6 +102,15 @@ function formatDecisionDate(value: string | undefined, fallback: string | undefi
 
 function normalizeSearch(value: string) {
   return value.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9\s&]/g, ' ');
+}
+
+function profileInitials(displayName: string) {
+  return displayName
+    .split(/\s+/)
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((part) => part[0]?.toUpperCase())
+    .join('') || 'GMS';
 }
 
 function editDistance(left: string, right: string) {
@@ -176,6 +195,78 @@ function Navigation({ activeView, backlogCount, decisionCount, onSelect }: { act
   );
 }
 
+function MicrosoftMark() {
+  return <span className="microsoft-mark" aria-hidden="true"><i /><i /><i /><i /></span>;
+}
+
+function AccessGate({
+  microsoftStatus,
+  microsoftProfile,
+  microsoftError,
+  workspaceStatus,
+  workspaceError,
+  onSignIn,
+  onRetryWorkspace,
+  onSignOut,
+}: {
+  microsoftStatus: MicrosoftStatus;
+  microsoftProfile: MicrosoftProfile | null;
+  microsoftError: string;
+  workspaceStatus: 'idle' | 'loading' | 'ready' | 'saving' | 'error';
+  workspaceError: string;
+  onSignIn: () => void;
+  onRetryWorkspace: () => void;
+  onSignOut: () => void;
+}) {
+  const signedIn = microsoftStatus === 'connected';
+  const checking = microsoftStatus === 'loading' || (signedIn && workspaceStatus !== 'error');
+  const setupMissing = microsoftStatus === 'unconfigured';
+  const workspaceBlocked = signedIn && workspaceStatus === 'error';
+  const authFailed = microsoftStatus === 'error';
+
+  const title = checking
+    ? 'Checking your Microsoft account'
+    : workspaceBlocked
+      ? 'We could not open the EMT workspace'
+      : authFailed
+        ? 'We could not verify your Microsoft account'
+        : setupMissing
+          ? 'Microsoft sign-in is not configured'
+          : 'Sign in to EMT Tracker';
+  const description = checking
+    ? 'Verifying your GMS profile and EMT access.'
+    : workspaceBlocked
+      ? workspaceError || 'Your Microsoft profile is connected, but shared workspace access could not be verified.'
+      : authFailed
+        ? microsoftError || 'Please try signing in again with your GMS work account.'
+        : setupMissing
+          ? 'The Microsoft Entra application details need to be added before this workspace can be opened.'
+          : 'Use your GMS Microsoft account to access the executive meeting workspace.';
+
+  return (
+    <main className="access-gate">
+      <section className="access-stage" aria-labelledby="access-title">
+        <div className="access-panel">
+          <div className="access-panel-brand"><Image src={`${APP_BASE_PATH}/assets/gms-logo-white.png`} alt="GMS 10 Years" className="gms-logo" width={150} height={34} priority /><span className="brand-divider" aria-hidden="true" /><span className="product-name">EMT Tracker</span></div>
+          <div className="access-panel-body">
+            <div className="access-panel-icon"><MicrosoftMark /></div>
+            <div className="access-panel-copy">
+              <h1 id="access-title">{title}</h1>
+              <p>{description}</p>
+            </div>
+            {microsoftProfile && workspaceBlocked ? <div className="access-account"><Avatar><AvatarFallback>{profileInitials(microsoftProfile.displayName)}</AvatarFallback></Avatar><span><strong>{microsoftProfile.displayName}</strong><small>{microsoftProfile.email}</small></span></div> : null}
+            {checking ? <div className="access-progress" role="status"><LoaderCircle className="spin" aria-hidden="true" /><span>Secure connection in progress</span></div> : null}
+            {!checking && !setupMissing ? <Button className="access-primary" size="lg" onClick={workspaceBlocked ? onRetryWorkspace : onSignIn}><MicrosoftMark /><span>{workspaceBlocked ? 'Try workspace again' : authFailed ? 'Try Microsoft sign-in again' : 'Continue with Microsoft'}</span><ArrowRight aria-hidden="true" /></Button> : null}
+            {setupMissing ? <div className="access-configuration" role="status"><CircleAlert aria-hidden="true" /><span>Ask the project administrator to complete the Microsoft Entra setup.</span></div> : null}
+            {workspaceBlocked ? <Button variant="ghost" className="access-signout" onClick={onSignOut}><LogOut aria-hidden="true" />Sign out and use another account</Button> : null}
+            <div className="access-assurance"><ShieldCheck aria-hidden="true" /><span><strong>Protected by Microsoft</strong><small>Basic profile only. Outlook and calendar access are not enabled.</small></span></div>
+          </div>
+        </div>
+      </section>
+    </main>
+  );
+}
+
 export default function Home() {
   const [topics, setTopics] = React.useState(initialTopics);
   const [backlog, setBacklog] = React.useState(initialBacklog);
@@ -185,11 +276,13 @@ export default function Home() {
   const [addOpen, setAddOpen] = React.useState(false);
   const [signInOpen, setSignInOpen] = React.useState(false);
   const [mobileNavOpen, setMobileNavOpen] = React.useState(false);
-  const [microsoftStatus, setMicrosoftStatus] = React.useState<'loading' | 'unconfigured' | 'disconnected' | 'connected' | 'error'>(microsoftAuthConfigured ? 'loading' : 'unconfigured');
+  const [microsoftStatus, setMicrosoftStatus] = React.useState<MicrosoftStatus>(microsoftAuthConfigured ? 'loading' : 'unconfigured');
   const [microsoftProfile, setMicrosoftProfile] = React.useState<MicrosoftProfile | null>(null);
   const [microsoftError, setMicrosoftError] = React.useState('');
   const [workspaceStatus, setWorkspaceStatus] = React.useState<'idle' | 'loading' | 'ready' | 'saving' | 'error'>('idle');
   const [workspaceError, setWorkspaceError] = React.useState('');
+  const [workspaceVerified, setWorkspaceVerified] = React.useState(false);
+  const [workspaceLoadAttempt, setWorkspaceLoadAttempt] = React.useState(0);
   const [remindersOn, setRemindersOn] = React.useState(true);
   const [agendaReminderTiming, setAgendaReminderTiming] = React.useState('2 business days before');
   const [followupReminderTiming, setFollowupReminderTiming] = React.useState('1 business day before');
@@ -266,6 +359,7 @@ export default function Home() {
   React.useEffect(() => {
     if (microsoftStatus !== 'connected') {
       setWorkspaceStatus('idle');
+      setWorkspaceVerified(false);
       return;
     }
     let active = true;
@@ -284,6 +378,7 @@ export default function Home() {
         setFollowupReminderTiming(settings.followupReminderTiming);
         setOverdueRemindersOn(settings.overdueRemindersOn);
         setBusinessDaysOnly(settings.businessDaysOnly);
+        setWorkspaceVerified(true);
         setWorkspaceStatus('ready');
       })
       .catch((error: unknown) => {
@@ -298,7 +393,7 @@ export default function Home() {
     return () => {
       active = false;
     };
-  }, [microsoftStatus]);
+  }, [microsoftStatus, workspaceLoadAttempt]);
 
   React.useEffect(() => {
     const context = (document as Document & { modelContext?: WebMCPContext }).modelContext;
@@ -534,9 +629,32 @@ export default function Home() {
     }
   }
 
+  function retryWorkspaceAccess() {
+    setWorkspaceError('');
+    setWorkspaceStatus('loading');
+    setWorkspaceLoadAttempt((attempt) => attempt + 1);
+  }
+
+  if (!workspaceVerified) {
+    return (
+      <Toaster>
+        <AccessGate
+          microsoftStatus={microsoftStatus}
+          microsoftProfile={microsoftProfile}
+          microsoftError={microsoftError}
+          workspaceStatus={workspaceStatus}
+          workspaceError={workspaceError}
+          onSignIn={() => void startMicrosoftConnection()}
+          onRetryWorkspace={retryWorkspaceAccess}
+          onSignOut={() => void endMicrosoftConnection()}
+        />
+      </Toaster>
+    );
+  }
+
   return (
     <Toaster><div className="app-shell">
-      <header className="brand-header"><div className="brand-lockup"><Image src={`${APP_BASE_PATH}/assets/gms-logo-white.png`} alt="GMS 10 Years" className="gms-logo" width={150} height={34} priority /><span className="brand-divider" aria-hidden="true" /><span className="product-name">EMT Tracker</span></div><div className="header-actions"><Badge className="demo-badge">{workspaceLabel}</Badge><Button variant="ghost" className={`microsoft-button ${signedIn ? 'is-connected' : ''}`} onClick={() => setSignInOpen(true)}>{microsoftStatus === 'loading' ? <LoaderCircle className="spin" aria-hidden="true" /> : signedIn ? <Check aria-hidden="true" /> : <LogIn aria-hidden="true" />}<span>{microsoftStatus === 'loading' ? 'Checking Microsoft' : signedIn ? 'Microsoft connected' : 'Sign in with Microsoft'}</span></Button></div></header>
+      <header className="brand-header"><div className="brand-lockup"><Image src={`${APP_BASE_PATH}/assets/gms-logo-white.png`} alt="GMS 10 Years" className="gms-logo" width={150} height={34} priority /><span className="brand-divider" aria-hidden="true" /><span className="product-name">EMT Tracker</span></div><div className="header-actions"><Badge className="demo-badge">{workspaceLabel}</Badge><DropdownMenu><DropdownMenuTrigger render={<Button variant="ghost" className="profile-button" aria-label={`Open account menu for ${microsoftProfile?.displayName || 'Microsoft account'}`} />}><Avatar size="sm" className="profile-avatar"><AvatarFallback>{profileInitials(microsoftProfile?.displayName || '')}</AvatarFallback></Avatar><span className="profile-copy"><strong>{microsoftProfile?.displayName || 'Microsoft account'}</strong><small>Microsoft account</small></span><ChevronDown className="profile-chevron" aria-hidden="true" /></DropdownMenuTrigger><DropdownMenuContent align="end" sideOffset={8} className="profile-menu"><DropdownMenuLabel className="profile-menu-identity"><Avatar className="profile-menu-avatar"><AvatarFallback>{profileInitials(microsoftProfile?.displayName || '')}</AvatarFallback></Avatar><span><strong>{microsoftProfile?.displayName}</strong><small>{microsoftProfile?.email}</small></span></DropdownMenuLabel><DropdownMenuSeparator /><DropdownMenuItem className="profile-menu-item" onClick={() => void endMicrosoftConnection()}><LogOut aria-hidden="true" />Sign out</DropdownMenuItem></DropdownMenuContent></DropdownMenu></div></header>
 
       <SidebarProvider className="workspace-provider"><div className="workspace-layout"><Sidebar collapsible="none" className="workspace-sidebar"><Navigation activeView={activeView} backlogCount={backlog.length} decisionCount={recordedDecisions.length} onSelect={selectView} /></Sidebar><main className="workspace-main" id="workspace-main">
         <div className="mobile-topbar"><Button variant="outline" className="mobile-menu-button" aria-expanded={mobileNavOpen} aria-controls="mobile-navigation" onClick={() => setMobileNavOpen(true)}><Menu aria-hidden="true" />Menu</Button><Badge className="demo-badge mobile-demo">{workspaceStatus === 'ready' ? 'Live data' : workspaceLabel}</Badge></div>
