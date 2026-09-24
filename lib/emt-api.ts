@@ -1,7 +1,12 @@
-import { getMicrosoftAccessToken } from '@/lib/microsoft-auth';
+import {
+  getMicrosoftAccessToken,
+  getMicrosoftMailAccessToken,
+} from '@/lib/microsoft-auth';
 
 const EMT_API_URL =
   'https://agpggomwormexgjzbjtv.supabase.co/functions/v1/emt-workspace';
+const EMT_USER_MAIL_URL =
+  'https://agpggomwormexgjzbjtv.supabase.co/functions/v1/emt-user-mail';
 
 export type WorkspaceTopic = {
   id: number;
@@ -13,7 +18,6 @@ export type WorkspaceTopic = {
   leadInitials: string;
   time: string;
   note: string;
-  reminder: string;
   decision: string;
   followUpOwner: string;
   dueDate: string;
@@ -22,8 +26,6 @@ export type WorkspaceTopic = {
   decisionDate?: string;
   decisionDateIso?: string;
   source?: 'Agenda';
-  remindLead: boolean;
-  remindFollowup: boolean;
 };
 
 export type WorkspaceSettings = {
@@ -43,10 +45,34 @@ export type WorkspaceCategory = {
   usageCount: number;
 };
 
+export type WorkspaceMember = {
+  displayName: string;
+  email: string;
+};
+
 type WorkspaceResponse = {
+  profile: {
+    id: string;
+    displayName: string;
+    email: string;
+  };
   topics: WorkspaceTopic[];
   settings: WorkspaceSettings;
   categories: WorkspaceCategory[];
+  members: WorkspaceMember[];
+};
+
+export type MemberMailPreview = {
+  requestId: string;
+  sender: {
+    id: string;
+    displayName: string;
+    email: string;
+  };
+  recipients: WorkspaceMember[];
+  subject: string;
+  html: string;
+  text: string;
 };
 
 async function request<T>(method: 'GET' | 'POST', body?: unknown) {
@@ -129,4 +155,54 @@ export async function deleteEmtCategory(id: number) {
     action: 'delete_category',
     id,
   });
+}
+
+async function memberMailRequest<T>(
+  body: Record<string, unknown>,
+  mailPermission = false,
+) {
+  const accessToken = mailPermission
+    ? await getMicrosoftMailAccessToken()
+    : await getMicrosoftAccessToken();
+  const response = await fetch(EMT_USER_MAIL_URL, {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${accessToken}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(body),
+  });
+  const result = (await response.json().catch(() => ({}))) as {
+    data?: T;
+    error?: { code?: string; message?: string };
+  };
+  if (!response.ok || !result.data)
+    throw new Error(
+      result.error?.message || `EMT email request failed (${response.status}).`,
+    );
+  return result.data;
+}
+
+export function previewMemberTopicEmail(
+  topicId: number,
+  recipientEmails: string[],
+) {
+  return memberMailRequest<MemberMailPreview>({
+    action: 'preview',
+    topicId,
+    recipientEmails,
+  });
+}
+
+export function sendMemberTopicEmail(
+  topicId: number,
+  recipientEmails: string[],
+  requestId: string,
+) {
+  return memberMailRequest<{
+    accepted: true;
+    requestId: string;
+    recipientCount?: number;
+    alreadySent?: boolean;
+  }>({ action: 'send', topicId, recipientEmails, requestId }, true);
 }

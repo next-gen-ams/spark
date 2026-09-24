@@ -24,7 +24,6 @@ import {
   Search,
   Settings2,
   ShieldCheck,
-  Sparkles,
   Trash2,
   UserRound,
 } from 'lucide-react';
@@ -79,8 +78,9 @@ import { Toaster, toast } from '@/components/ui/toast';
 import {
   connectMicrosoft,
   disconnectMicrosoft,
-  isApprovedEmtProfile,
+  hasMicrosoftMailPermission,
   microsoftAuthConfigured,
+  requestMicrosoftMailPermission,
   restoreMicrosoftSession,
   type MicrosoftProfile,
 } from '@/lib/microsoft-auth';
@@ -90,10 +90,14 @@ import {
   deleteEmtCategory,
   deleteEmtTopic,
   loadEmtWorkspace,
+  previewMemberTopicEmail,
   renameEmtCategory,
   saveEmtSettings,
   saveEmtTopic,
+  sendMemberTopicEmail,
+  type MemberMailPreview,
   type WorkspaceCategory,
+  type WorkspaceMember,
   type WorkspaceSettings,
   type WorkspaceTopic as Topic,
 } from '@/lib/emt-api';
@@ -110,10 +114,8 @@ type MicrosoftStatus =
   | 'unconfigured'
   | 'disconnected'
   | 'connected'
-  | 'denied'
   | 'error';
 
-const EMT_MEMBERS = ['Lisa Xu', 'George Pesutto', 'Coco Hu', 'Brenda Cugley'];
 const DEFAULT_TOPIC_CATEGORIES = [
   'People & culture',
   'Operations',
@@ -143,7 +145,6 @@ const initialTopics: Topic[] = [
     leadInitials: 'LX',
     time: '10 min',
     note: 'Agree the host, business updates and questions format before the October invitation is drafted.',
-    reminder: '2 business days before meeting',
     prepAction: 'Bring the proposed host and three business update owners.',
     decision:
       'Run a 45-minute all-hands with one host, three business updates and a moderated team Q&A.',
@@ -154,8 +155,6 @@ const initialTopics: Topic[] = [
     decisionDate: '3 September 2026',
     decisionDateIso: '2026-09-03',
     source: 'Agenda',
-    remindLead: false,
-    remindFollowup: false,
   },
   {
     id: 2,
@@ -167,7 +166,6 @@ const initialTopics: Topic[] = [
     leadInitials: 'GP',
     time: '15 min',
     note: 'Review current thresholds and decide whether the operating policy needs a 2026 update.',
-    reminder: '1 business day before meeting',
     prepAction:
       'Bring the current signing thresholds and flagged policy gaps to the meeting.',
     decision: '',
@@ -175,8 +173,6 @@ const initialTopics: Topic[] = [
     followUpAction: '',
     dueDate: '',
     source: 'Agenda',
-    remindLead: false,
-    remindFollowup: false,
   },
   {
     id: 3,
@@ -188,15 +184,12 @@ const initialTopics: Topic[] = [
     leadInitials: 'CH',
     time: '8 min',
     note: 'Agree who will return with timing, location options and a proposed working agenda.',
-    reminder: '2 business days before meeting',
     prepAction: 'Bring timing, location options and a draft working agenda.',
     decision: '',
     followUpOwner: '',
     followUpAction: '',
     dueDate: '',
     source: 'Agenda',
-    remindLead: false,
-    remindFollowup: false,
   },
   {
     id: 4,
@@ -208,7 +201,6 @@ const initialTopics: Topic[] = [
     leadInitials: 'BC',
     time: '7 min',
     note: 'Confirm the minimum handover information and who owns the shared coverage calendar.',
-    reminder: '2 business days before meeting',
     prepAction: 'Bring the draft handover template for a final check.',
     decision:
       'Use one shared coverage calendar and require a named backup plus a short handover note for leave longer than two days.',
@@ -219,8 +211,6 @@ const initialTopics: Topic[] = [
     decisionDate: '20 August 2026',
     decisionDateIso: '2026-08-20',
     source: 'Agenda',
-    remindLead: false,
-    remindFollowup: false,
   },
 ];
 
@@ -235,15 +225,12 @@ const initialBacklog: Topic[] = [
     leadInitials: 'LX',
     time: '10 min',
     note: 'Confirm the budget information needed before this moves to a meeting.',
-    reminder: 'Not scheduled',
     prepAction: 'Identify the budget input needed.',
     decision: '',
     followUpOwner: '',
     followUpAction: '',
     dueDate: '',
     source: 'Agenda',
-    remindLead: false,
-    remindFollowup: false,
   },
   {
     id: 102,
@@ -255,15 +242,12 @@ const initialBacklog: Topic[] = [
     leadInitials: 'CH',
     time: '10 min',
     note: 'Review whether the current process still matches the team’s operating pattern.',
-    reminder: 'Not scheduled',
     prepAction: 'Bring the current access process and recent exceptions.',
     decision: '',
     followUpOwner: '',
     followUpAction: '',
     dueDate: '',
     source: 'Agenda',
-    remindLead: false,
-    remindFollowup: false,
   },
 ];
 
@@ -278,7 +262,6 @@ const initialHistoricalDecisions: Topic[] = [
     leadInitials: 'GP',
     time: '12 min',
     note: 'Review core subscriptions and the evidence needed for any plan upgrades.',
-    reminder: 'Completed',
     prepAction: '',
     decision:
       'Keep core tools on standard plans and review upgrade requests against measured team usage.',
@@ -288,8 +271,6 @@ const initialHistoricalDecisions: Topic[] = [
     decisionDate: '18 June 2026',
     decisionDateIso: '2026-06-18',
     source: 'Agenda',
-    remindLead: false,
-    remindFollowup: false,
   },
 ];
 
@@ -531,6 +512,50 @@ function MicrosoftMark() {
   );
 }
 
+function WorkspaceRestoring({ profile }: { profile: MicrosoftProfile | null }) {
+  return (
+    <main className="workspace-restoring" aria-busy="true">
+      <header className="brand-header">
+        <div className="brand-lockup">
+          <Image
+            src={`${APP_BASE_PATH}/assets/gms-logo-white.png`}
+            alt="GMS 10 Years"
+            className="gms-logo"
+            width={150}
+            height={34}
+            priority
+          />
+          <span className="brand-divider" aria-hidden="true" />
+          <span className="product-name">EMT Tracker</span>
+        </div>
+        {profile ? (
+          <div className="restoring-profile">
+            <Avatar size="sm">
+              <AvatarFallback>
+                {profileInitials(profile.displayName)}
+              </AvatarFallback>
+            </Avatar>
+            <span>{profile.displayName}</span>
+          </div>
+        ) : null}
+      </header>
+      <section className="restoring-stage" aria-live="polite">
+        <div className="restoring-sidebar" aria-hidden="true" />
+        <div className="restoring-content">
+          <div className="restoring-kicker" />
+          <div className="restoring-title" />
+          <div className="restoring-meeting-card" />
+          <div className="restoring-agenda-card" />
+          <output className="restoring-status">
+            <LoaderCircle className="spin" aria-hidden="true" />
+            Restoring your secure workspace
+          </output>
+        </div>
+      </section>
+    </main>
+  );
+}
+
 function AccessGate({
   microsoftStatus,
   microsoftProfile,
@@ -555,33 +580,28 @@ function AccessGate({
     microsoftStatus === 'loading' || (signedIn && workspaceStatus !== 'error');
   const setupMissing = microsoftStatus === 'unconfigured';
   const workspaceBlocked = signedIn && workspaceStatus === 'error';
-  const accountBlocked = microsoftStatus === 'denied';
   const authFailed = microsoftStatus === 'error';
 
   const title = checking
     ? 'Checking your Microsoft account'
-    : accountBlocked
-      ? 'This account does not have access'
-      : workspaceBlocked
-        ? 'We could not open the EMT workspace'
-        : authFailed
-          ? 'We could not verify your Microsoft account'
-          : setupMissing
-            ? 'Microsoft sign-in is not configured'
-            : 'Sign in to EMT Tracker';
+    : workspaceBlocked
+      ? 'We could not open the EMT workspace'
+      : authFailed
+        ? 'We could not verify your Microsoft account'
+        : setupMissing
+          ? 'Microsoft sign-in is not configured'
+          : 'Sign in to EMT Tracker';
   const description = checking
     ? 'Verifying your GMS profile and EMT access.'
-    : accountBlocked
-      ? microsoftError || 'Use one of the four approved EMT Microsoft accounts.'
-      : workspaceBlocked
-        ? workspaceError ||
-          'Your Microsoft profile is connected, but shared workspace access could not be verified.'
-        : authFailed
-          ? microsoftError ||
-            'Please try signing in again with your GMS work account.'
-          : setupMissing
-            ? 'The Microsoft Entra application details need to be added before this workspace can be opened.'
-            : 'Use your GMS Microsoft account to access the executive meeting workspace.';
+    : workspaceBlocked
+      ? workspaceError ||
+        'Your Microsoft profile is connected, but shared workspace access could not be verified.'
+      : authFailed
+        ? microsoftError ||
+          'Please try signing in again with your GMS work account.'
+        : setupMissing
+          ? 'The Microsoft Entra application details need to be added before this workspace can be opened.'
+          : 'Use your GMS Microsoft account to access the executive meeting workspace.';
 
   return (
     <main className="access-gate">
@@ -607,7 +627,7 @@ function AccessGate({
               <h1 id="access-title">{title}</h1>
               <p>{description}</p>
             </div>
-            {microsoftProfile && (workspaceBlocked || accountBlocked) ? (
+            {microsoftProfile && workspaceBlocked ? (
               <div className="access-account">
                 <Avatar>
                   <AvatarFallback>
@@ -621,12 +641,12 @@ function AccessGate({
               </div>
             ) : null}
             {checking ? (
-              <div className="access-progress" role="status">
+              <output className="access-progress">
                 <LoaderCircle className="spin" aria-hidden="true" />
                 <span>Secure connection in progress</span>
-              </div>
+              </output>
             ) : null}
-            {!checking && !setupMissing && !accountBlocked ? (
+            {!checking && !setupMissing ? (
               <Button
                 className="access-primary"
                 size="lg"
@@ -644,15 +664,15 @@ function AccessGate({
               </Button>
             ) : null}
             {setupMissing ? (
-              <div className="access-configuration" role="status">
+              <output className="access-configuration">
                 <CircleAlert aria-hidden="true" />
                 <span>
                   Ask the project administrator to complete the Microsoft Entra
                   setup.
                 </span>
-              </div>
+              </output>
             ) : null}
-            {workspaceBlocked || accountBlocked ? (
+            {workspaceBlocked ? (
               <Button
                 variant="ghost"
                 className="access-signout"
@@ -687,6 +707,7 @@ export default function Home() {
   );
   const [categories, setCategories] =
     React.useState<WorkspaceCategory[]>(initialCategories);
+  const [members, setMembers] = React.useState<WorkspaceMember[]>([]);
   const [categoryDrafts, setCategoryDrafts] = React.useState<
     Record<number, string>
   >(() =>
@@ -716,6 +737,19 @@ export default function Home() {
   const [workspaceError, setWorkspaceError] = React.useState('');
   const [workspaceVerified, setWorkspaceVerified] = React.useState(false);
   const [workspaceLoadAttempt, setWorkspaceLoadAttempt] = React.useState(0);
+  const [mailPermission, setMailPermission] = React.useState<
+    'idle' | 'checking' | 'needed' | 'ready' | 'authorising' | 'error'
+  >('idle');
+  const [mailTopicId, setMailTopicId] = React.useState('');
+  const [mailRecipientEmails, setMailRecipientEmails] = React.useState<
+    string[]
+  >([]);
+  const [mailPreview, setMailPreview] =
+    React.useState<MemberMailPreview | null>(null);
+  const [mailPreviewOpen, setMailPreviewOpen] = React.useState(false);
+  const [mailActionStatus, setMailActionStatus] = React.useState<
+    'idle' | 'previewing' | 'sending'
+  >('idle');
   const [remindersOn, setRemindersOn] = React.useState(true);
   const [agendaReminderTiming, setAgendaReminderTiming] = React.useState(
     '2 business days before',
@@ -727,7 +761,7 @@ export default function Home() {
   const [businessDaysOnly, setBusinessDaysOnly] = React.useState(true);
   const [newTitle, setNewTitle] = React.useState('');
   const [newCategory, setNewCategory] = React.useState('Operations');
-  const [newLead, setNewLead] = React.useState('Coco Hu');
+  const [newLead, setNewLead] = React.useState('');
   const [newContext, setNewContext] = React.useState('');
   const [newDestination, setNewDestination] =
     React.useState<WorkspaceView>('meeting');
@@ -737,7 +771,6 @@ export default function Home() {
     followUpAction: '',
     dueDate: '',
   });
-  const [activeTopicTab, setActiveTopicTab] = React.useState('decision');
   const [search, setSearch] = React.useState('');
   const [decisionSearch, setDecisionSearch] = React.useState('');
   const [activeDecisionTab, setActiveDecisionTab] =
@@ -793,11 +826,9 @@ export default function Home() {
       : scopedDecisions.filter(
           (topic) => topic.followUpOwner === decisionOwner,
         );
-  const decisionCategoryNames = [
-    ...categories
-      .filter((category) => category.active && !category.system)
-      .map((category) => category.name),
-  ];
+  const decisionCategoryNames = categories
+    .filter((category) => category.active && !category.system)
+    .map((category) => category.name);
   for (const category of activeDecisions.map((topic) => topic.category))
     if (!decisionCategoryNames.includes(category))
       decisionCategoryNames.push(category);
@@ -809,17 +840,16 @@ export default function Home() {
     { label: 'Archived', count: archivedDecisions.length },
   ];
   const signedIn = microsoftStatus === 'connected';
-  const currentMember =
-    EMT_MEMBERS.find(
-      (member) =>
-        normalizeSearch(member) ===
-        normalizeSearch(microsoftProfile?.displayName || ''),
-    ) || '';
+  const currentMember = members.find(
+    (member) =>
+      member.email.toLowerCase() ===
+      (microsoftProfile?.email || '').toLowerCase(),
+  );
   const personalReminders =
     remindersOn && currentMember
       ? [
           ...topics
-            .filter((topic) => topic.lead === currentMember && topic.remindLead)
+            .filter((topic) => topic.lead === currentMember.displayName)
             .map((topic) => ({
               id: `agenda-${topic.id}`,
               timing: agendaReminderTiming,
@@ -829,10 +859,9 @@ export default function Home() {
           ...recordedDecisions
             .filter(
               (topic) =>
-                topic.followUpOwner === currentMember &&
+                topic.followUpOwner === currentMember.displayName &&
                 topic.followUpAction &&
-                topic.dueDate &&
-                topic.remindFollowup,
+                topic.dueDate,
             )
             .map((topic) => ({
               id: `followup-${topic.id}`,
@@ -842,6 +871,13 @@ export default function Home() {
             })),
         ].slice(0, 4)
       : [];
+
+  const selectView = React.useCallback((view: WorkspaceView) => {
+    setActiveView(view);
+    const url = new URL(window.location.href);
+    url.searchParams.set('view', view);
+    window.history.replaceState({}, '', url);
+  }, []);
 
   React.useEffect(() => {
     const requestedView = new URLSearchParams(window.location.search).get(
@@ -859,7 +895,7 @@ export default function Home() {
       requestedView === 'reminders'
     )
       queueMicrotask(() => setActiveView(requestedView));
-  }, []);
+  }, [selectView]);
 
   React.useEffect(() => {
     const timer = window.setInterval(() => setNow(new Date()), 60_000);
@@ -873,13 +909,6 @@ export default function Home() {
       .then((profile) => {
         if (!active) return;
         setMicrosoftProfile(profile);
-        if (profile && !isApprovedEmtProfile(profile)) {
-          setMicrosoftError(
-            'Only the four approved EMT Microsoft accounts can open this workspace.',
-          );
-          setMicrosoftStatus('denied');
-          return;
-        }
         setMicrosoftStatus(profile ? 'connected' : 'disconnected');
       })
       .catch((error: unknown) => {
@@ -897,24 +926,54 @@ export default function Home() {
   }, []);
 
   React.useEffect(() => {
-    if (microsoftStatus !== 'connected') {
-      setWorkspaceStatus('idle');
-      setWorkspaceVerified(false);
-      return;
-    }
     let active = true;
-    setWorkspaceStatus('loading');
-    setWorkspaceError('');
+    if (microsoftStatus !== 'connected') {
+      queueMicrotask(() => {
+        if (!active) return;
+        setWorkspaceStatus('idle');
+        setWorkspaceVerified(false);
+      });
+      return () => {
+        active = false;
+      };
+    }
+    queueMicrotask(() => {
+      if (!active) return;
+      setWorkspaceStatus('loading');
+      setWorkspaceError('');
+    });
     void loadEmtWorkspace()
       .then(
-        ({ topics: sharedTopics, settings, categories: sharedCategories }) => {
+        ({
+          profile,
+          topics: sharedTopics,
+          settings,
+          categories: sharedCategories,
+          members: sharedMembers,
+        }) => {
           if (!active) return;
+          setMicrosoftProfile(profile);
+          setMembers(sharedMembers);
+          setNewLead((current) =>
+            sharedMembers.some((member) => member.displayName === current)
+              ? current
+              : profile.displayName || sharedMembers[0]?.displayName || '',
+          );
           setTopics(sharedTopics.filter((topic) => topic.bucket === 'agenda'));
           setBacklog(
             sharedTopics.filter((topic) => topic.bucket === 'backlog'),
           );
           setHistoricalDecisions(
             sharedTopics.filter((topic) => topic.bucket === 'history'),
+          );
+          setMailTopicId((current) =>
+            sharedTopics.some((topic) => String(topic.id) === current)
+              ? current
+              : String(
+                  sharedTopics.find((topic) => topic.bucket === 'agenda')?.id ||
+                    sharedTopics[0]?.id ||
+                    '',
+                ),
           );
           if (sharedCategories?.length) {
             setCategories(sharedCategories);
@@ -968,6 +1027,27 @@ export default function Home() {
     };
   }, [microsoftStatus, workspaceLoadAttempt]);
 
+  React.useEffect(() => {
+    if (
+      activeView !== 'reminders' ||
+      microsoftStatus !== 'connected' ||
+      mailPermission !== 'idle'
+    )
+      return;
+    let active = true;
+    queueMicrotask(() => setMailPermission('checking'));
+    void hasMicrosoftMailPermission()
+      .then((granted) => {
+        if (active) setMailPermission(granted ? 'ready' : 'needed');
+      })
+      .catch(() => {
+        if (active) setMailPermission('error');
+      });
+    return () => {
+      active = false;
+    };
+  }, [activeView, mailPermission, microsoftStatus]);
+
   async function addTopic(event: React.SyntheticEvent<HTMLFormElement>) {
     event.preventDefault();
     const title = newTitle.trim();
@@ -988,7 +1068,6 @@ export default function Home() {
         .join(''),
       time: '10 min',
       note: newContext.trim() || 'No preparation context has been added yet.',
-      reminder: 'Not scheduled',
       prepAction:
         newContext.trim() || 'Add the material needed for discussion.',
       decision: '',
@@ -996,8 +1075,6 @@ export default function Home() {
       followUpAction: '',
       dueDate: '',
       source: 'Agenda',
-      remindLead: false,
-      remindFollowup: false,
     };
     setWorkspaceStatus('saving');
     try {
@@ -1029,16 +1106,8 @@ export default function Home() {
     }
   }
 
-  function selectView(view: WorkspaceView) {
-    setActiveView(view);
-    const url = new URL(window.location.href);
-    url.searchParams.set('view', view);
-    window.history.replaceState({}, '', url);
-  }
-
-  function openTopic(topic: Topic, tab = 'decision') {
+  function openTopic(topic: Topic) {
     setSelectedTopic(topic);
-    setActiveTopicTab(tab);
     setDecisionDraft({
       decision: topic.decision,
       followUpOwner: topic.followUpOwner,
@@ -1183,6 +1252,95 @@ export default function Home() {
         title: 'Settings not saved',
         description: error instanceof Error ? error.message : 'Try again.',
       });
+    }
+  }
+
+  function toggleMailRecipient(email: string) {
+    setMailPreview(null);
+    setMailRecipientEmails((current) => {
+      if (current.includes(email))
+        return current.filter((recipient) => recipient !== email);
+      if (current.length >= 3) {
+        toast.add({
+          type: 'error',
+          title: 'Choose up to three recipients',
+          description: 'Send another email if you need a different group.',
+        });
+        return current;
+      }
+      return [...current, email];
+    });
+  }
+
+  async function prepareMemberMail() {
+    const topicId = Number(mailTopicId);
+    if (!Number.isSafeInteger(topicId) || mailRecipientEmails.length === 0) {
+      toast.add({
+        type: 'error',
+        title: 'Choose a topic and recipient',
+        description: 'A preview is required before any email can be sent.',
+      });
+      return;
+    }
+    setMailActionStatus('previewing');
+    try {
+      const preview = await previewMemberTopicEmail(
+        topicId,
+        mailRecipientEmails,
+      );
+      setMailPreview(preview);
+      setMailPreviewOpen(true);
+    } catch (error) {
+      toast.add({
+        type: 'error',
+        title: 'Preview unavailable',
+        description: error instanceof Error ? error.message : 'Try again.',
+      });
+    } finally {
+      setMailActionStatus('idle');
+    }
+  }
+
+  async function enableMemberMail() {
+    setMailPermission('authorising');
+    try {
+      await requestMicrosoftMailPermission();
+    } catch (error) {
+      setMailPermission('error');
+      toast.add({
+        type: 'error',
+        title: 'Mail permission not enabled',
+        description: error instanceof Error ? error.message : 'Try again.',
+      });
+    }
+  }
+
+  async function sendPreviewedMemberMail() {
+    if (!mailPreview) return;
+    setMailActionStatus('sending');
+    try {
+      const result = await sendMemberTopicEmail(
+        Number(mailTopicId),
+        mailRecipientEmails,
+        mailPreview.requestId,
+      );
+      setMailPreviewOpen(false);
+      setMailPreview(null);
+      toast.add({
+        type: 'success',
+        title: result.alreadySent ? 'Email already sent' : 'Email accepted',
+        description: result.alreadySent
+          ? 'This preview was already used; no duplicate was sent.'
+          : `Microsoft accepted ${result.recipientCount || mailRecipientEmails.length} email${(result.recipientCount || mailRecipientEmails.length) === 1 ? '' : 's'} for delivery.`,
+      });
+    } catch (error) {
+      toast.add({
+        type: 'error',
+        title: 'Email not sent',
+        description: error instanceof Error ? error.message : 'Try again.',
+      });
+    } finally {
+      setMailActionStatus('idle');
     }
   }
 
@@ -1352,6 +1510,13 @@ export default function Home() {
   }
 
   if (!workspaceVerified) {
+    if (microsoftStatus === 'connected' && workspaceStatus !== 'error') {
+      return (
+        <Toaster>
+          <WorkspaceRestoring profile={microsoftProfile} />
+        </Toaster>
+      );
+    }
     return (
       <Toaster>
         <AccessGate
@@ -1698,9 +1863,9 @@ export default function Home() {
                             }
                           >
                             <NativeSelectOption>All owners</NativeSelectOption>
-                            {EMT_MEMBERS.map((member) => (
-                              <NativeSelectOption key={member}>
-                                {member}
+                            {members.map((member) => (
+                              <NativeSelectOption key={member.email}>
+                                {member.displayName}
                               </NativeSelectOption>
                             ))}
                           </NativeSelect>
@@ -1760,7 +1925,7 @@ export default function Home() {
                                 type="button"
                                 className="decision-row"
                                 key={topic.id}
-                                onClick={() => openTopic(topic, 'decision')}
+                                onClick={() => openTopic(topic)}
                               >
                                 <span className="decision-date">
                                   {formatDecisionDate(
@@ -1963,7 +2128,11 @@ export default function Home() {
                 >
                   <div className="meeting-intro">
                     <div>
-                      <h1 id="reminders-title">Reminder settings</h1>
+                      <h1 id="reminders-title">Your reminder settings</h1>
+                      <p>
+                        These preferences apply to your assigned topics and
+                        follow-up actions across the workspace.
+                      </p>
                     </div>
                   </div>
                   <div className="settings-layout">
@@ -2019,8 +2188,8 @@ export default function Home() {
                         <div>
                           <h2 id="reminder-rules-title">Automatic reminders</h2>
                           <p>
-                            Apply the rules below to topic proposers and
-                            follow-up owners.
+                            Apply these rules only to reminders assigned to your
+                            Microsoft account.
                           </p>
                         </div>
                         <Switch
@@ -2162,8 +2331,10 @@ export default function Home() {
                             Your scheduled reminders
                           </h2>
                           <p>
-                            Only topics and actions assigned to{' '}
-                            {currentMember || 'the signed-in account'}.
+                            Topics and actions assigned to{' '}
+                            {currentMember?.displayName ||
+                              'the signed-in account'}
+                            .
                           </p>
                         </div>
                       </div>
@@ -2193,6 +2364,108 @@ export default function Home() {
                       </div>
                     </aside>
                   </div>
+                  <section
+                    className="member-mail-panel"
+                    aria-labelledby="member-mail-title"
+                  >
+                    <div className="member-mail-head">
+                      <span className="icon-tile">
+                        <Mail aria-hidden="true" />
+                      </span>
+                      <div>
+                        <h2 id="member-mail-title">Send from your account</h2>
+                        <p>
+                          Share one EMT topic with up to three active members. A
+                          preview is always required before sending.
+                        </p>
+                      </div>
+                      <span
+                        className={`mail-permission-state is-${mailPermission}`}
+                      >
+                        {mailPermission === 'ready'
+                          ? 'Mail sending enabled'
+                          : mailPermission === 'checking'
+                            ? 'Checking permission'
+                            : mailPermission === 'authorising'
+                              ? 'Opening Microsoft'
+                              : 'Permission requested at send'}
+                      </span>
+                    </div>
+                    <div className="member-mail-form">
+                      <label className="member-mail-field">
+                        <span>Topic</span>
+                        <NativeSelect
+                          value={mailTopicId}
+                          onChange={(event) => {
+                            setMailTopicId(event.target.value);
+                            setMailPreview(null);
+                          }}
+                        >
+                          {workspaceTopics.map((topic) => (
+                            <NativeSelectOption
+                              key={topic.id}
+                              value={String(topic.id)}
+                            >
+                              {topic.title}
+                            </NativeSelectOption>
+                          ))}
+                        </NativeSelect>
+                      </label>
+                      <fieldset className="member-mail-recipients">
+                        <legend>Recipients</legend>
+                        <div>
+                          {members.map((member) => (
+                            <label
+                              key={member.email}
+                              aria-label={`Send to ${member.displayName}`}
+                            >
+                              <input
+                                type="checkbox"
+                                checked={mailRecipientEmails.includes(
+                                  member.email,
+                                )}
+                                onChange={() =>
+                                  toggleMailRecipient(member.email)
+                                }
+                              />
+                              <span>
+                                <strong>{member.displayName}</strong>
+                                <small>{member.email}</small>
+                              </span>
+                            </label>
+                          ))}
+                        </div>
+                      </fieldset>
+                      <div className="member-mail-actions">
+                        <p>
+                          Automatic reminders still come from
+                          insights@gms.global. Manual shares come from your
+                          signed-in GMS account.
+                        </p>
+                        <Button
+                          className="primary-action"
+                          disabled={
+                            mailActionStatus !== 'idle' ||
+                            !mailTopicId ||
+                            mailRecipientEmails.length === 0
+                          }
+                          onClick={() => void prepareMemberMail()}
+                        >
+                          {mailActionStatus === 'previewing' ? (
+                            <>
+                              <LoaderCircle
+                                className="spin"
+                                aria-hidden="true"
+                              />
+                              Preparing preview
+                            </>
+                          ) : (
+                            'Preview email'
+                          )}
+                        </Button>
+                      </div>
+                    </div>
+                  </section>
                 </section>
               )}
             </main>
@@ -2262,9 +2535,9 @@ export default function Home() {
                       value={newLead}
                       onChange={(event) => setNewLead(event.target.value)}
                     >
-                      {EMT_MEMBERS.map((member) => (
-                        <NativeSelectOption key={member}>
-                          {member}
+                      {members.map((member) => (
+                        <NativeSelectOption key={member.email}>
+                          {member.displayName}
                         </NativeSelectOption>
                       ))}
                     </NativeSelect>
@@ -2326,8 +2599,9 @@ export default function Home() {
                 <span>
                   <strong>Reminder sender</strong>
                   <small>
-                    Sent by insights@gms.global after separate admin approval;
-                    no mailbox access is requested from your account
+                    Automatic reminders use insights@gms.global. Manual topic
+                    shares ask for Microsoft Mail.Send only when you choose to
+                    send.
                   </small>
                 </span>
               </div>
@@ -2383,6 +2657,88 @@ export default function Home() {
                   ) : (
                     'Continue with Microsoft'
                   )}
+                </Button>
+              )}
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+
+        <Dialog open={mailPreviewOpen} onOpenChange={setMailPreviewOpen}>
+          <DialogContent className="mail-preview-dialog">
+            <DialogHeader>
+              <DialogTitle>Review email before sending</DialogTitle>
+              <DialogDescription>
+                Nothing is sent until you select the final send button below.
+              </DialogDescription>
+            </DialogHeader>
+            {mailPreview ? (
+              <div className="mail-preview-content">
+                <dl className="mail-preview-meta">
+                  <div>
+                    <dt>From</dt>
+                    <dd>
+                      {mailPreview.sender.displayName} ·{' '}
+                      {mailPreview.sender.email}
+                    </dd>
+                  </div>
+                  <div>
+                    <dt>To</dt>
+                    <dd>
+                      {mailPreview.recipients
+                        .map((recipient) => recipient.displayName)
+                        .join(', ')}
+                    </dd>
+                  </div>
+                  <div>
+                    <dt>Subject</dt>
+                    <dd>{mailPreview.subject}</dd>
+                  </div>
+                </dl>
+                <iframe
+                  title="EMT email preview"
+                  sandbox=""
+                  srcDoc={mailPreview.html}
+                />
+              </div>
+            ) : null}
+            <DialogFooter>
+              <DialogClose
+                render={
+                  <Button
+                    variant="ghost"
+                    disabled={mailActionStatus === 'sending'}
+                  />
+                }
+              >
+                Cancel
+              </DialogClose>
+              {mailPermission === 'ready' ? (
+                <Button
+                  className="primary-action"
+                  disabled={mailActionStatus === 'sending'}
+                  onClick={() => void sendPreviewedMemberMail()}
+                >
+                  {mailActionStatus === 'sending' ? (
+                    <>
+                      <LoaderCircle className="spin" aria-hidden="true" />
+                      Sending
+                    </>
+                  ) : (
+                    'Send this email'
+                  )}
+                </Button>
+              ) : (
+                <Button
+                  className="primary-action"
+                  disabled={
+                    mailPermission === 'checking' ||
+                    mailPermission === 'authorising'
+                  }
+                  onClick={() => void enableMemberMail()}
+                >
+                  {mailPermission === 'authorising'
+                    ? 'Opening Microsoft'
+                    : 'Enable sending with Microsoft'}
                 </Button>
               )}
             </DialogFooter>
@@ -2454,8 +2810,8 @@ export default function Home() {
               <p>
                 <strong>This cannot be undone</strong>
                 <span>
-                  The discussion, its recorded decision, reminder settings and
-                  prepared reminder history will all be removed.
+                  The discussion and its recorded decision will be removed. Your
+                  personal reminder settings will not be affected.
                 </span>
               </p>
             </div>
@@ -2511,23 +2867,12 @@ export default function Home() {
                   <SheetHeader>
                     <SheetTitle>{selectedTopic.title}</SheetTitle>
                     <SheetDescription>
-                      Decision and reminder record · shared workspace
+                      Decision record · shared workspace
                     </SheetDescription>
                   </SheetHeader>
                 </div>
-                <Tabs
-                  value={activeTopicTab}
-                  onValueChange={setActiveTopicTab}
-                  className="topic-tabs"
-                >
-                  <TabsList className="topic-tab-list">
-                    <TabsTrigger value="decision">Decision</TabsTrigger>
-                    <TabsTrigger value="reminders">Reminders</TabsTrigger>
-                  </TabsList>
-                  <TabsContent
-                    value="decision"
-                    className="tab-panel tab-panel-with-footer"
-                  >
+                <div className="topic-tabs">
+                  <div className="tab-panel tab-panel-with-footer">
                     <div className="decision-placeholder">
                       <MessageSquareText aria-hidden="true" />
                       <h3>Review and edit the decision</h3>
@@ -2603,9 +2948,9 @@ export default function Home() {
                             <NativeSelectOption value="">
                               Not assigned
                             </NativeSelectOption>
-                            {EMT_MEMBERS.map((member) => (
-                              <NativeSelectOption key={member}>
-                                {member}
+                            {members.map((member) => (
+                              <NativeSelectOption key={member.email}>
+                                {member.displayName}
                               </NativeSelectOption>
                             ))}
                           </NativeSelect>
@@ -2648,96 +2993,8 @@ export default function Home() {
                         Save decision
                       </Button>
                     </SheetFooter>
-                  </TabsContent>
-                  <TabsContent value="reminders" className="tab-panel">
-                    <div className="reminder-setting-row">
-                      <div>
-                        <Bell aria-hidden="true" />
-                        <span>
-                          <strong>Proposer reminder</strong>
-                          <small>
-                            {signedIn && remindersOn
-                              ? 'Send before the meeting'
-                              : signedIn
-                                ? 'Automatic reminders are paused'
-                                : 'Connect Microsoft to activate'}
-                          </small>
-                        </span>
-                      </div>
-                      <Switch
-                        checked={
-                          signedIn && remindersOn && selectedTopic.remindLead
-                        }
-                        disabled={!signedIn || !remindersOn}
-                        onCheckedChange={(checked) =>
-                          void updateTopic({
-                            ...selectedTopic,
-                            remindLead: checked,
-                          })
-                        }
-                        aria-label="Proposer reminder"
-                      />
-                    </div>
-                    <div className="reminder-setting-row">
-                      <div>
-                        <ClipboardCheck aria-hidden="true" />
-                        <span>
-                          <strong>Follow-up reminder</strong>
-                          <small>
-                            {signedIn && remindersOn
-                              ? 'Send before the action due date'
-                              : signedIn
-                                ? 'Automatic reminders are paused'
-                                : 'Connect Microsoft to activate'}
-                          </small>
-                        </span>
-                      </div>
-                      <Switch
-                        checked={
-                          signedIn &&
-                          remindersOn &&
-                          selectedTopic.remindFollowup
-                        }
-                        disabled={!signedIn || !remindersOn}
-                        onCheckedChange={(checked) =>
-                          void updateTopic({
-                            ...selectedTopic,
-                            remindFollowup: checked,
-                          })
-                        }
-                        aria-label="Follow-up reminder"
-                      />
-                    </div>
-                    <div className="integration-callout">
-                      <Sparkles aria-hidden="true" />
-                      <p>
-                        <strong>
-                          {signedIn
-                            ? 'Reminder workflow prepared'
-                            : 'Microsoft connection needed'}
-                        </strong>
-                        <span>
-                          {signedIn
-                            ? remindersOn
-                              ? 'Preferences are saved. Email delivery starts after the admin-managed insights@gms.global sender is authorised.'
-                              : 'The Microsoft connection is ready, but automatic reminders are paused.'
-                            : 'Sign in to save reminder preferences for this topic.'}
-                        </span>
-                      </p>
-                    </div>
-                    <SheetFooter className="topic-action-bar reminder-action-bar">
-                      <Button
-                        variant="destructive"
-                        onClick={() =>
-                          setDiscussionPendingDelete(selectedTopic)
-                        }
-                      >
-                        <Trash2 aria-hidden="true" />
-                        Delete discussion
-                      </Button>
-                    </SheetFooter>
-                  </TabsContent>
-                </Tabs>
+                  </div>
+                </div>
               </>
             ) : null}
           </SheetContent>

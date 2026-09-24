@@ -300,9 +300,9 @@ After Microsoft Graph verifies the user, the header replaces a generic sign-in l
 
 The signature row uses an 88px minimum height, a fixed two-digit order column, a flexible title-and-metadata column, duration and a directional chevron. Fine 1px dividers create continuity; hover adds a white veil and nudges the chevron 3px toward the detail drawer. Keyboard focus stays inside the row with a 3px inset blue outline.
 
-### Topic Drawer Tabs
+### Topic Decision Drawer
 
-The 640px topic drawer uses an Active Blue masthead, a warm-white 52px tab rail and a solid cool-white body. Tabs are square to the rail and identify the active section with a 3px Focus Sky underline, keeping decision and reminder work close to the selected agenda item.
+The 640px topic drawer uses an Active Blue masthead and a solid cool-white body. It opens directly into the editable decision record; reminder preferences live only in the global Reminder settings view and are saved per signed-in Microsoft account.
 
 ## Do's and Don'ts
 

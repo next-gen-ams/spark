@@ -141,3 +141,4 @@ revoke all on function public.emt_rename_category(bigint, text, text) from publi
 revoke all on function public.emt_delete_category(bigint, text) from public, anon, authenticated;
 grant execute on function public.emt_rename_category(bigint, text, text) to service_role;
 grant execute on function public.emt_delete_category(bigint, text) to service_role;
+;

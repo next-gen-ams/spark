@@ -31,8 +31,8 @@ Used before, during and after a fortnightly executive meeting. Microsoft work ac
 - Microsoft work-account sign-in uses a tenant-scoped Entra single-page application and verifies the signed-in profile through Microsoft Graph.
 - The primary workflow is: capture a topic, place it on an upcoming agenda, assign a lead, record a decision and track follow-up.
 - Topic groups are managed from a dedicated settings view. The four initial groups can be renamed, new groups can be added, and deletion requires confirmation; linked agenda and decision records are preserved under `Uncategorised`.
-- The shared workspace persists topics, topic groups and reminder preferences in Supabase behind the Microsoft-authenticated workspace API.
-- Outlook email delivery uses an app-only Microsoft Graph sender scoped to `insights@gms.global`; the prepared delivery function remains inactive until Exchange Application RBAC, production secrets and the scheduled job are separately approved and enabled.
+- The shared workspace persists topics and topic groups in Supabase, while reminder preferences are saved separately for each approved Microsoft account behind the authenticated workspace API.
+- Outlook email delivery uses an app-only Microsoft Graph sender fixed to `insights@gms.global`; production delivery has been validated, while recurring scheduled execution remains disabled until separately enabled.
 - Illustrative topics, dates and team members must be labelled as sample data.
 - The initial interface language is English.
 

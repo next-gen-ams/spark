@@ -10,6 +10,7 @@ const clientId = process.env.NEXT_PUBLIC_MICROSOFT_CLIENT_ID ?? '';
 const tenantId = process.env.NEXT_PUBLIC_MICROSOFT_TENANT_ID ?? '';
 
 const loginScopes = ['User.Read'];
+const mailScopes = ['User.Read', 'Mail.Send'];
 let clientPromise: Promise<PublicClientApplication> | null = null;
 
 export type MicrosoftProfile = {
@@ -17,17 +18,6 @@ export type MicrosoftProfile = {
   email: string;
   id: string;
 };
-
-const approvedEmtEmails = new Set([
-  'lisa.xu@gms.global',
-  'george@gms.global',
-  'brenda@gms.global',
-  'coco.hu@gms.global',
-]);
-
-export function isApprovedEmtProfile(profile: MicrosoftProfile) {
-  return approvedEmtEmails.has(profile.email.trim().toLowerCase());
-}
 
 export const microsoftAuthConfigured = Boolean(clientId && tenantId);
 
@@ -47,7 +37,7 @@ async function getClient() {
           redirectUri: redirectUri(),
           postLogoutRedirectUri: redirectUri(),
         },
-        cache: { cacheLocation: 'sessionStorage' },
+        cache: { cacheLocation: 'localStorage' },
       });
       await client.initialize();
       return client;
@@ -56,47 +46,38 @@ async function getClient() {
   return clientPromise;
 }
 
-async function acquireProfile(
-  client: PublicClientApplication,
-  account: AccountInfo,
-) {
+function profileFromAccount(account: AccountInfo): MicrosoftProfile {
+  return {
+    id: account.localAccountId || account.homeAccountId,
+    displayName: account.name || account.username || 'Microsoft user',
+    email: account.username,
+  };
+}
+
+async function acquireToken(scopes: string[], interactive = false) {
+  const client = await getClient();
+  const account = client.getActiveAccount() ?? client.getAllAccounts()[0];
+  if (!account)
+    throw new Error(
+      'Connect Microsoft before accessing the shared EMT workspace.',
+    );
   client.setActiveAccount(account);
-  let accessToken: string;
   try {
     const response = await client.acquireTokenSilent({
       account,
-      scopes: loginScopes,
+      scopes,
     });
-    accessToken = response.accessToken;
+    return response.accessToken;
   } catch (error) {
-    if (!(error instanceof InteractionRequiredAuthError)) throw error;
+    if (!(error instanceof InteractionRequiredAuthError) || !interactive)
+      throw error;
     await client.acquireTokenRedirect({
       account,
-      scopes: loginScopes,
+      scopes,
       redirectUri: redirectUri(),
     });
     return null;
   }
-
-  const response = await fetch(
-    'https://graph.microsoft.com/v1.0/me?$select=id,displayName,mail,userPrincipalName',
-    { headers: { Authorization: `Bearer ${accessToken}` } },
-  );
-  if (!response.ok)
-    throw new Error(
-      `Microsoft Graph profile check failed (${response.status}).`,
-    );
-  const profile = (await response.json()) as {
-    id: string;
-    displayName?: string;
-    mail?: string;
-    userPrincipalName?: string;
-  };
-  return {
-    id: profile.id,
-    displayName: profile.displayName || account.name || 'Microsoft user',
-    email: profile.mail || profile.userPrincipalName || account.username,
-  } satisfies MicrosoftProfile;
 }
 
 export async function restoreMicrosoftSession() {
@@ -107,7 +88,9 @@ export async function restoreMicrosoftSession() {
     redirectResponse?.account ??
     client.getActiveAccount() ??
     client.getAllAccounts()[0];
-  return account ? acquireProfile(client, account) : null;
+  if (!account) return null;
+  client.setActiveAccount(account);
+  return profileFromAccount(account);
 }
 
 export async function connectMicrosoft() {
@@ -119,21 +102,37 @@ export async function connectMicrosoft() {
 }
 
 export async function getMicrosoftAccessToken() {
-  const client = await getClient();
-  const account = client.getActiveAccount() ?? client.getAllAccounts()[0];
-  if (!account)
-    throw new Error(
-      'Connect Microsoft before accessing the shared EMT workspace.',
-    );
   try {
-    const response = await client.acquireTokenSilent({
-      account,
-      scopes: loginScopes,
-    });
-    return response.accessToken;
+    return await acquireToken(loginScopes);
   } catch (error) {
     if (error instanceof InteractionRequiredAuthError) {
       throw new Error('Your Microsoft session needs to be reconnected.');
+    }
+    throw error;
+  }
+}
+
+export async function hasMicrosoftMailPermission() {
+  try {
+    return Boolean(await acquireToken(mailScopes));
+  } catch (error) {
+    if (error instanceof InteractionRequiredAuthError) return false;
+    throw error;
+  }
+}
+
+export async function requestMicrosoftMailPermission() {
+  return acquireToken(mailScopes, true);
+}
+
+export async function getMicrosoftMailAccessToken() {
+  try {
+    const token = await acquireToken(mailScopes);
+    if (!token) throw new Error('Microsoft mail permission is required.');
+    return token;
+  } catch (error) {
+    if (error instanceof InteractionRequiredAuthError) {
+      throw new Error('Microsoft mail permission is required.');
     }
     throw error;
   }

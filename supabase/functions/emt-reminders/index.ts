@@ -11,15 +11,19 @@ const MELBOURNE_TIME_ZONE = 'Australia/Melbourne';
 const TRACKER_URL = 'https://spark.kmt.global/emt-tracker/';
 const PREFERENCES_URL = `${TRACKER_URL}?view=reminders`;
 const DEFAULT_SENDER = 'insights@gms.global';
-const LIVE_SENDING_ENABLED = false;
+const LIVE_SENDING_ENABLED = true;
 
-type SettingsRow = {
+type WorkspaceSettingsRow = {
+  meeting_anchor_date: string;
+};
+
+type MemberSettingsRow = {
+  member_email: string;
   reminders_on: boolean;
   agenda_reminder_timing: string;
   followup_reminder_timing: string;
   overdue_reminders_on: boolean;
   business_days_only: boolean;
-  meeting_anchor_date: string;
 };
 
 type MemberRow = {
@@ -39,8 +43,6 @@ type TopicRow = {
   follow_up_owner: string;
   follow_up_action: string;
   due_date: string | null;
-  remind_lead: boolean;
-  remind_followup: boolean;
 };
 
 type Candidate = {
@@ -52,6 +54,10 @@ type Candidate = {
   scheduledFor: string;
   input: ReminderEmailInput;
 };
+
+function renderCandidateEmail(candidate: Candidate) {
+  return renderReminderEmail(candidate.input);
+}
 
 function json(body: unknown, status = 200) {
   return new Response(JSON.stringify(body), {
@@ -67,12 +73,15 @@ function localIsoDate(now: Date) {
     month: '2-digit',
     day: '2-digit',
   }).formatToParts(now);
-  const values = Object.fromEntries(parts.map((part) => [part.type, part.value]));
+  const values = Object.fromEntries(
+    parts.map((part) => [part.type, part.value]),
+  );
   return `${values.year}-${values.month}-${values.day}`;
 }
 
 function parseIsoDate(value: string) {
-  if (!/^\d{4}-\d{2}-\d{2}$/.test(value)) throw new Error('Date must use YYYY-MM-DD.');
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(value))
+    throw new Error('Date must use YYYY-MM-DD.');
   const date = new Date(`${value}T00:00:00Z`);
   if (Number.isNaN(date.getTime())) throw new Error('Date is invalid.');
   return date;
@@ -133,7 +142,9 @@ function formatLongDate(value: string) {
 }
 
 function safeMessage(value: unknown) {
-  return value instanceof Error ? value.message : 'Unknown reminder delivery error.';
+  return value instanceof Error
+    ? value.message
+    : 'Unknown reminder delivery error.';
 }
 
 function constantTimeEqual(left: string, right: string) {
@@ -151,8 +162,10 @@ function constantTimeEqual(left: string, right: string) {
 function assertJobAuthorization(request: Request) {
   const expected = Deno.env.get('EMT_REMINDER_JOB_SECRET') || '';
   const provided = request.headers.get('x-emt-reminder-key') || '';
-  if (!expected) throw new Error('Reminder job authorization is not configured.');
-  if (!constantTimeEqual(provided, expected)) throw new Error('Reminder job authorization failed.');
+  if (!expected)
+    throw new Error('Reminder job authorization is not configured.');
+  if (!constantTimeEqual(provided, expected))
+    throw new Error('Reminder job authorization failed.');
 }
 
 async function graphAccessToken() {
@@ -181,15 +194,20 @@ async function graphAccessToken() {
     error_description?: string;
   };
   if (!response.ok || !payload.access_token) {
-    throw new Error(payload.error_description || 'Microsoft Graph token request failed.');
+    throw new Error(
+      payload.error_description || 'Microsoft Graph token request failed.',
+    );
   }
   return payload.access_token;
 }
 
 async function sendGraphMail(candidate: Candidate, accessToken: string) {
-  const sender = (Deno.env.get('EMT_REMINDER_SENDER') || DEFAULT_SENDER).toLowerCase();
-  if (sender !== DEFAULT_SENDER) throw new Error('The configured sender is not approved for EMT Tracker.');
-  const email = renderReminderEmail(candidate.input);
+  const sender = (
+    Deno.env.get('EMT_REMINDER_SENDER') || DEFAULT_SENDER
+  ).toLowerCase();
+  if (sender !== DEFAULT_SENDER)
+    throw new Error('The configured sender is not approved for EMT Tracker.');
+  const email = renderCandidateEmail(candidate);
   const response = await fetch(
     `https://graph.microsoft.com/v1.0/users/${encodeURIComponent(sender)}/sendMail`,
     {
@@ -212,14 +230,20 @@ async function sendGraphMail(candidate: Candidate, accessToken: string) {
   );
   if (response.status !== 202) {
     const detail = (await response.text()).slice(0, 500);
-    throw new Error(`Microsoft Graph sendMail failed (${response.status}): ${detail}`);
+    throw new Error(
+      `Microsoft Graph sendMail failed (${response.status}): ${detail}`,
+    );
   }
-  return response.headers.get('request-id') || response.headers.get('client-request-id');
+  return (
+    response.headers.get('request-id') ||
+    response.headers.get('client-request-id')
+  );
 }
 
 function buildCandidates(
   today: string,
-  settings: SettingsRow,
+  workspaceSettings: WorkspaceSettingsRow,
+  memberSettings: MemberSettingsRow[],
   members: MemberRow[],
   topics: TopicRow[],
 ) {
@@ -228,21 +252,31 @@ function buildCandidates(
       .filter((member) => member.active && member.email)
       .map((member) => [member.display_name, member]),
   );
-  const meetingDate = nextMeetingDate(settings.meeting_anchor_date, today);
-  const agendaDate = subtractBusinessDays(
-    meetingDate,
-    timingDays(settings.agenda_reminder_timing),
+  const settingsByEmail = new Map(
+    memberSettings.map((settings) => [
+      settings.member_email.toLowerCase(),
+      settings,
+    ]),
+  );
+  const meetingDate = nextMeetingDate(
+    workspaceSettings.meeting_anchor_date,
+    today,
   );
   const candidates: Candidate[] = [];
 
   for (const topic of topics) {
-    if (
-      topic.bucket === 'agenda' &&
-      topic.remind_lead &&
-      agendaDate === today
-    ) {
+    if (topic.bucket === 'agenda') {
       const member = memberByName.get(topic.lead);
-      if (member) {
+      const settings = member
+        ? settingsByEmail.get(member.email.toLowerCase())
+        : undefined;
+      const agendaDate = settings?.reminders_on
+        ? subtractBusinessDays(
+            meetingDate,
+            timingDays(settings.agenda_reminder_timing),
+          )
+        : '';
+      if (member && settings && agendaDate === today) {
         candidates.push({
           eventKey: `agenda:${topic.id}:${meetingDate}:${member.email}`,
           topicId: topic.id,
@@ -255,7 +289,9 @@ function buildCandidates(
             recipientName: member.display_name,
             topicTitle: topic.title,
             category: topic.category,
-            action: topic.prep_action || 'Review the topic and prepare the input needed for discussion.',
+            action:
+              topic.prep_action ||
+              'Review the topic and prepare the input needed for discussion.',
             meetingDate: formatLongDate(meetingDate),
             trackerUrl: TRACKER_URL,
             preferencesUrl: PREFERENCES_URL,
@@ -264,9 +300,11 @@ function buildCandidates(
       }
     }
 
-    if (!topic.remind_followup || !topic.due_date || !topic.follow_up_owner) continue;
+    if (!topic.due_date || !topic.follow_up_owner) continue;
     const member = memberByName.get(topic.follow_up_owner);
     if (!member) continue;
+    const settings = settingsByEmail.get(member.email.toLowerCase());
+    if (!settings?.reminders_on) continue;
     const dueReminderDate = subtractBusinessDays(
       topic.due_date,
       timingDays(settings.followup_reminder_timing),
@@ -275,7 +313,9 @@ function buildCandidates(
       recipientName: member.display_name,
       topicTitle: topic.title,
       category: topic.category,
-      action: topic.follow_up_action || 'Review and update the agreed follow-up action.',
+      action:
+        topic.follow_up_action ||
+        'Review and update the agreed follow-up action.',
       decision: topic.decision,
       dueDate: formatLongDate(topic.due_date),
       trackerUrl: TRACKER_URL,
@@ -312,7 +352,8 @@ function buildCandidates(
 }
 
 Deno.serve(async (request) => {
-  if (request.method !== 'POST') return json({ error: 'Method not allowed.' }, 405);
+  if (request.method !== 'POST')
+    return json({ error: 'Method not allowed.' }, 405);
   try {
     assertJobAuthorization(request);
     const body = (await request.json().catch(() => ({}))) as {
@@ -320,7 +361,9 @@ Deno.serve(async (request) => {
       date?: string;
     };
     const mode = body.mode || 'dry_run';
-    if (mode !== 'dry_run' && mode !== 'send') throw new Error('Mode must be dry_run or send.');
+    if (mode !== 'dry_run' && mode !== 'send') {
+      throw new Error('Mode must be dry_run or send.');
+    }
     if (mode === 'send' && !LIVE_SENDING_ENABLED) {
       throw new Error('Live reminder sending is not enabled.');
     }
@@ -329,25 +372,44 @@ Deno.serve(async (request) => {
 
     const supabaseUrl = Deno.env.get('SUPABASE_URL');
     const serviceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
-    if (!supabaseUrl || !serviceRoleKey) throw new Error('Database service is not configured.');
+    if (!supabaseUrl || !serviceRoleKey)
+      throw new Error('Database service is not configured.');
     const database = createClient(supabaseUrl, serviceRoleKey, {
       auth: { persistSession: false, autoRefreshToken: false },
     });
-    const [settingsResult, membersResult, topicsResult] = await Promise.all([
-      database.from('emt_settings').select('*').eq('workspace_id', WORKSPACE_ID).single(),
-      database.from('emt_members').select('display_name,email,active').eq('active', true),
-      database.from('emt_topics').select('id,bucket,title,category,lead,prep_action,decision,follow_up_owner,follow_up_action,due_date,remind_lead,remind_followup'),
-    ]);
+    const [settingsResult, memberSettingsResult, membersResult, topicsResult] =
+      await Promise.all([
+        database
+          .from('emt_settings')
+          .select('meeting_anchor_date')
+          .eq('workspace_id', WORKSPACE_ID)
+          .single(),
+        database.from('emt_member_settings').select('*'),
+        database
+          .from('emt_members')
+          .select('display_name,email,active')
+          .eq('active', true),
+        database
+          .from('emt_topics')
+          .select(
+            'id,bucket,title,category,lead,prep_action,decision,follow_up_owner,follow_up_action,due_date',
+          ),
+      ]);
     if (settingsResult.error) throw settingsResult.error;
+    if (memberSettingsResult.error) throw memberSettingsResult.error;
     if (membersResult.error) throw membersResult.error;
     if (topicsResult.error) throw topicsResult.error;
-    const settings = settingsResult.data as SettingsRow;
-    if (!settings.reminders_on) return json({ mode, date: today, status: 'paused', candidates: [] });
+    const settings = settingsResult.data as WorkspaceSettingsRow;
+    const memberSettings = (memberSettingsResult.data ||
+      []) as MemberSettingsRow[];
+    const members = (membersResult.data || []) as MemberRow[];
+    const topics = (topicsResult.data || []) as TopicRow[];
     const candidates = buildCandidates(
       today,
       settings,
-      (membersResult.data || []) as MemberRow[],
-      (topicsResult.data || []) as TopicRow[],
+      memberSettings,
+      members,
+      topics,
     );
     if (mode === 'dry_run') {
       return json({
@@ -363,7 +425,7 @@ Deno.serve(async (request) => {
           recipientName: candidate.recipientName,
           recipientEmail: candidate.recipientEmail,
           scheduledFor: candidate.scheduledFor,
-          subject: renderReminderEmail(candidate.input).subject,
+          subject: renderCandidateEmail(candidate).subject,
         })),
       });
     }
@@ -371,7 +433,7 @@ Deno.serve(async (request) => {
     const accessToken = await graphAccessToken();
     const deliveries: Array<Record<string, unknown>> = [];
     for (const candidate of candidates) {
-      const email = renderReminderEmail(candidate.input);
+      const email = renderCandidateEmail(candidate);
       const { data: prepared, error: prepareError } = await database
         .from('emt_reminder_deliveries')
         .insert({
@@ -388,10 +450,14 @@ Deno.serve(async (request) => {
         .select('id')
         .maybeSingle();
       if (prepareError?.code === '23505') {
-        deliveries.push({ eventKey: candidate.eventKey, status: 'duplicate_skipped' });
+        deliveries.push({
+          eventKey: candidate.eventKey,
+          status: 'duplicate_skipped',
+        });
         continue;
       }
-      if (prepareError || !prepared) throw prepareError || new Error('Delivery record was not created.');
+      if (prepareError || !prepared)
+        throw prepareError || new Error('Delivery record was not created.');
       try {
         const graphRequestId = await sendGraphMail(candidate, accessToken);
         const { error: updateError } = await database
@@ -404,13 +470,26 @@ Deno.serve(async (request) => {
           })
           .eq('id', prepared.id);
         if (updateError) throw updateError;
-        deliveries.push({ eventKey: candidate.eventKey, status: 'sent' });
+        deliveries.push({
+          eventKey: candidate.eventKey,
+          recipientEmail: candidate.recipientEmail,
+          status: 'sent',
+        });
       } catch (error) {
         await database
           .from('emt_reminder_deliveries')
-          .update({ status: 'failed', error_message: safeMessage(error).slice(0, 1000), attempt_count: 1 })
+          .update({
+            status: 'failed',
+            error_message: safeMessage(error).slice(0, 1000),
+            attempt_count: 1,
+          })
           .eq('id', prepared.id);
-        deliveries.push({ eventKey: candidate.eventKey, status: 'failed', error: safeMessage(error) });
+        deliveries.push({
+          eventKey: candidate.eventKey,
+          recipientEmail: candidate.recipientEmail,
+          status: 'failed',
+          error: safeMessage(error),
+        });
       }
     }
     return json({ mode, date: today, deliveries });

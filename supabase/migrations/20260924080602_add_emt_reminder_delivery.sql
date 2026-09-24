@@ -44,3 +44,4 @@ grant usage, select on sequence public.emt_reminder_deliveries_id_seq to service
 
 comment on table public.emt_reminder_deliveries is
   'Auditable EMT reminder delivery attempts. Real sends require separately approved Microsoft Graph credentials and a scheduled job.';
+;

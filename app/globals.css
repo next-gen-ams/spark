@@ -144,6 +144,104 @@ button {
     linear-gradient(145deg, #f4f7f8 10%, #fff 54%, #eaf7fd 100%);
   background-attachment: fixed;
 }
+.workspace-restoring {
+  min-height: 100dvh;
+  background:
+    radial-gradient(
+      ellipse 70% 65% at 2% 38%,
+      rgb(255 138 92 / 0.24),
+      transparent 68%
+    ),
+    radial-gradient(
+      ellipse 67% 64% at 94% 14%,
+      rgb(0 154 230 / 0.18),
+      transparent 68%
+    ),
+    #f4f7f8;
+}
+.restoring-profile {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: #fff;
+  font-size: 0.88rem;
+  font-weight: 700;
+}
+.restoring-stage {
+  width: min(1380px, calc(100% - 40px));
+  display: grid;
+  grid-template-columns: 210px minmax(0, 1fr);
+  gap: 28px;
+  margin: 34px auto;
+}
+.restoring-sidebar,
+.restoring-meeting-card,
+.restoring-agenda-card,
+.restoring-kicker,
+.restoring-title {
+  overflow: hidden;
+  position: relative;
+  background: rgb(255 255 255 / 0.68);
+}
+.restoring-sidebar::after,
+.restoring-meeting-card::after,
+.restoring-agenda-card::after,
+.restoring-kicker::after,
+.restoring-title::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  translate: -100% 0;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgb(255 255 255 / 0.72),
+    transparent
+  );
+  animation: restoring-shimmer 1.5s ease-in-out infinite;
+}
+.restoring-sidebar {
+  min-height: 270px;
+  border: 1px solid rgb(255 255 255 / 0.8);
+  border-radius: 16px;
+}
+.restoring-content {
+  display: grid;
+  align-content: start;
+  gap: 16px;
+}
+.restoring-kicker {
+  width: 180px;
+  height: 14px;
+  border-radius: 999px;
+}
+.restoring-title {
+  width: min(520px, 70%);
+  height: 48px;
+  border-radius: 12px;
+}
+.restoring-meeting-card {
+  height: 145px;
+  border-radius: 18px;
+  background: rgb(0 127 200 / 0.25);
+}
+.restoring-agenda-card {
+  height: 310px;
+  border: 1px solid rgb(255 255 255 / 0.8);
+  border-radius: 18px;
+}
+.restoring-status {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  color: #536076;
+  font-size: 0.88rem;
+}
+@keyframes restoring-shimmer {
+  to {
+    translate: 100% 0;
+  }
+}
 .access-gate {
   min-height: 100dvh;
   display: grid;
@@ -383,9 +481,6 @@ button {
 .switch-row,
 .next-reminder,
 .permission-list > div,
-.reminder-setting-row,
-.reminder-setting-row > div,
-.integration-callout,
 .mobile-topbar,
 .owner-head,
 .ownership-legend,
@@ -877,7 +972,8 @@ h1 {
 .decisions-panel,
 .reminder-panel,
 .settings-panel,
-.reminder-preview {
+.reminder-preview,
+.member-mail-panel {
   border: 0;
   border-radius: 16px;
   background: rgb(255 255 255 / 0.66);
@@ -1580,6 +1676,181 @@ h1 {
   line-height: 1.45;
 }
 
+.member-mail-panel {
+  overflow: hidden;
+  margin-top: 22px;
+}
+.member-mail-head {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 12px;
+  padding: 20px 22px;
+  border-bottom: 1px solid rgb(216 224 228 / 0.9);
+}
+.member-mail-head h2 {
+  margin: 0 0 4px;
+  font-size: 1rem;
+}
+.member-mail-head p {
+  margin: 0;
+  color: #536076;
+  font-size: 0.8rem;
+  line-height: 1.45;
+}
+.mail-permission-state {
+  padding: 6px 10px;
+  border-radius: 999px;
+  color: #536076;
+  background: #f0f4f8;
+  font-size: 0.7rem;
+  font-weight: 700;
+  white-space: nowrap;
+}
+.mail-permission-state.is-ready {
+  color: #286450;
+  background: #e4f4ed;
+}
+.member-mail-form {
+  display: grid;
+  grid-template-columns: minmax(240px, 0.85fr) minmax(320px, 1.15fr);
+  gap: 22px;
+  padding: 22px;
+}
+.member-mail-field,
+.member-mail-recipients {
+  display: grid;
+  align-content: start;
+  gap: 8px;
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+.member-mail-field > span,
+.member-mail-recipients legend {
+  color: #34435a;
+  font-size: 0.76rem;
+  font-weight: 700;
+}
+.member-mail-field [data-slot='native-select-wrapper'] {
+  width: 100%;
+}
+.member-mail-field select {
+  background: #fff;
+}
+.member-mail-recipients > div {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+.member-mail-recipients label {
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 10px 11px;
+  border: 1px solid #d8e0e4;
+  border-radius: 10px;
+  background: rgb(255 255 255 / 0.72);
+  cursor: pointer;
+}
+.member-mail-recipients input {
+  width: 16px;
+  height: 16px;
+  flex: 0 0 auto;
+  accent-color: #007fc8;
+}
+.member-mail-recipients label > span {
+  min-width: 0;
+  display: grid;
+  gap: 1px;
+}
+.member-mail-recipients strong,
+.member-mail-recipients small {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.member-mail-recipients strong {
+  font-size: 0.78rem;
+}
+.member-mail-recipients small {
+  color: #687483;
+  font-size: 0.68rem;
+}
+.member-mail-actions {
+  grid-column: 1 / -1;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  padding-top: 4px;
+}
+.member-mail-actions p {
+  max-width: 64ch;
+  margin: 0;
+  color: #687483;
+  font-size: 0.74rem;
+  line-height: 1.45;
+}
+.mail-preview-dialog {
+  width: min(920px, calc(100% - 32px));
+  max-width: none;
+  padding: 22px;
+  border: 0;
+  background: #f8fafc;
+  box-shadow: 0 28px 80px rgb(24 42 65 / 0.22);
+}
+.mail-preview-content {
+  display: grid;
+  gap: 14px;
+  min-height: 0;
+}
+.mail-preview-meta {
+  display: grid;
+  gap: 7px;
+  margin: 0;
+  padding: 14px 16px;
+  border: 1px solid #d8e0e4;
+  border-radius: 12px;
+  background: #fff;
+}
+.mail-preview-meta > div {
+  display: grid;
+  grid-template-columns: 64px minmax(0, 1fr);
+  gap: 10px;
+}
+.mail-preview-meta dt {
+  color: #687483;
+  font-size: 0.72rem;
+  font-weight: 700;
+}
+.mail-preview-meta dd {
+  min-width: 0;
+  margin: 0;
+  color: #25282b;
+  font-size: 0.78rem;
+  overflow-wrap: anywhere;
+}
+.mail-preview-content iframe {
+  width: 100%;
+  height: min(54vh, 560px);
+  border: 1px solid #d8e0e4;
+  border-radius: 12px;
+  background: #fff;
+}
+.mail-preview-dialog [data-slot='dialog-footer'] {
+  min-height: 76px;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+  margin: 4px -22px -22px;
+  padding: 16px 22px;
+  border-color: #d8e0e4;
+  background: #f0f4f8;
+}
+
 .form-dialog,
 .signin-dialog {
   width: min(560px, calc(100% - 32px));
@@ -1791,32 +2062,6 @@ h1 {
   min-height: 0;
   overflow: hidden;
 }
-.topic-tab-list {
-  width: 100%;
-  height: 52px;
-  justify-content: flex-start;
-  gap: 20px;
-  padding: 0 28px;
-  border-radius: 0;
-  background: #f4f3ef;
-}
-.topic-tab-list [data-slot='tabs-trigger'] {
-  height: 100%;
-  flex: 0 0 auto;
-  padding: 0 2px;
-  border-radius: 0;
-  color: #464546;
-}
-.topic-tab-list [data-slot='tabs-trigger'][data-active] {
-  color: #25282b;
-  background: transparent;
-  box-shadow: none;
-}
-.topic-tab-list [data-slot='tabs-trigger'][data-active]::after {
-  bottom: 0;
-  height: 3px;
-  background: #009ae6;
-}
 .tab-panel {
   min-height: 0;
   margin: 0;
@@ -1895,9 +2140,6 @@ h1 {
 .topic-save-action {
   margin-left: auto;
 }
-.reminder-action-bar {
-  margin: 20px -28px -28px;
-}
 .topic-action-bar button {
   min-width: 132px;
   min-height: 44px;
@@ -1909,56 +2151,6 @@ h1 {
   color: #34435a;
   font-size: 0.78rem;
   font-weight: 700;
-}
-.reminder-setting-row {
-  justify-content: space-between;
-  gap: 18px;
-  padding: 18px 0;
-  border-bottom: 1px solid #d8e0e9;
-}
-.reminder-setting-row > div {
-  align-items: flex-start;
-  gap: 11px;
-}
-.reminder-setting-row svg {
-  width: 19px;
-  height: 19px;
-  color: #009ae6;
-}
-.reminder-setting-row span {
-  display: grid;
-  gap: 3px;
-}
-.reminder-setting-row strong {
-  font-size: 0.88rem;
-}
-.reminder-setting-row small {
-  color: #464546;
-  font-size: 0.76rem;
-}
-.integration-callout {
-  align-items: flex-start;
-  gap: 12px;
-  margin-top: 22px;
-  padding: 16px;
-  border-radius: 14px;
-  color: #235c7b;
-  background: #eaf7fd;
-}
-.integration-callout svg {
-  width: 20px;
-  height: 20px;
-  flex: 0 0 auto;
-}
-.integration-callout p {
-  display: grid;
-  gap: 3px;
-  margin: 0;
-}
-.integration-callout span {
-  color: #446b82;
-  font-size: 0.78rem;
-  line-height: 1.45;
 }
 
 @keyframes spin {
@@ -1973,7 +2165,8 @@ h1 {
   .decisions-panel,
   .reminder-panel,
   .settings-panel,
-  .reminder-preview {
+  .reminder-preview,
+  .member-mail-panel {
     background: #f4f7f8;
   }
 }
@@ -1998,6 +2191,12 @@ h1 {
   }
 }
 @media (max-width: 900px) {
+  .restoring-stage {
+    grid-template-columns: 1fr;
+  }
+  .restoring-sidebar {
+    display: none;
+  }
   .workspace-layout {
     display: block;
     padding-top: 18px;
@@ -2012,11 +2211,25 @@ h1 {
   .settings-layout {
     grid-template-columns: minmax(0, 1fr);
   }
+  .member-mail-form {
+    grid-template-columns: minmax(0, 1fr);
+  }
   .brand-header {
     min-height: 68px;
   }
 }
 @media (max-width: 680px) {
+  .restoring-stage {
+    width: calc(100% - 28px);
+    margin-block: 24px;
+  }
+  .restoring-title {
+    width: 86%;
+    height: 40px;
+  }
+  .restoring-profile span {
+    display: none;
+  }
   .access-gate {
     align-items: center;
     padding: 18px 14px;
@@ -2219,6 +2432,23 @@ h1 {
   .connection-section > [data-slot='button'] {
     width: 100%;
   }
+  .member-mail-head {
+    grid-template-columns: auto minmax(0, 1fr);
+  }
+  .mail-permission-state {
+    grid-column: 2;
+    justify-self: start;
+  }
+  .member-mail-recipients > div {
+    grid-template-columns: 1fr;
+  }
+  .member-mail-actions {
+    align-items: stretch;
+    flex-direction: column;
+  }
+  .member-mail-actions button {
+    width: 100%;
+  }
   .setting-row {
     grid-template-columns: 1fr;
     gap: 12px;
@@ -2265,20 +2495,14 @@ h1 {
   .topic-action-bar {
     padding-inline: 20px;
   }
-  .reminder-action-bar {
-    margin: 20px -20px -28px;
-  }
-  .topic-tab-list {
-    gap: 14px;
-    padding-inline: 20px;
-    overflow-x: auto;
-  }
   .form-dialog [data-slot='dialog-footer'],
-  .signin-dialog [data-slot='dialog-footer'] {
+  .signin-dialog [data-slot='dialog-footer'],
+  .mail-preview-dialog [data-slot='dialog-footer'] {
     flex-direction: column;
   }
   .form-dialog [data-slot='dialog-footer'] button,
-  .signin-dialog [data-slot='dialog-footer'] button {
+  .signin-dialog [data-slot='dialog-footer'] button,
+  .mail-preview-dialog [data-slot='dialog-footer'] button {
     width: 100%;
   }
 }
