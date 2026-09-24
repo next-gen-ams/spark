@@ -79,6 +79,16 @@ function localIsoDate(now: Date) {
   return `${values.year}-${values.month}-${values.day}`;
 }
 
+function localHour(now: Date) {
+  return Number(
+    new Intl.DateTimeFormat('en-AU', {
+      timeZone: MELBOURNE_TIME_ZONE,
+      hour: '2-digit',
+      hourCycle: 'h23',
+    }).format(now),
+  );
+}
+
 function parseIsoDate(value: string) {
   if (!/^\d{4}-\d{2}-\d{2}$/.test(value))
     throw new Error('Date must use YYYY-MM-DD.');
@@ -359,6 +369,7 @@ Deno.serve(async (request) => {
     const body = (await request.json().catch(() => ({}))) as {
       mode?: 'dry_run' | 'send';
       date?: string;
+      scheduled?: boolean;
     };
     const mode = body.mode || 'dry_run';
     if (mode !== 'dry_run' && mode !== 'send') {
@@ -366,6 +377,17 @@ Deno.serve(async (request) => {
     }
     if (mode === 'send' && !LIVE_SENDING_ENABLED) {
       throw new Error('Live reminder sending is not enabled.');
+    }
+    if (body.scheduled && body.date) {
+      throw new Error('Scheduled runs cannot override the processing date.');
+    }
+    if (body.scheduled && localHour(new Date()) !== 9) {
+      return json({
+        mode,
+        scheduled: true,
+        skipped: true,
+        reason: 'Outside the 09:00 Australia/Melbourne delivery window.',
+      });
     }
     const today = body.date || localIsoDate(new Date());
     parseIsoDate(today);

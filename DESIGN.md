@@ -2,140 +2,140 @@
 name: GMS Executive Project Tracker
 description: A frosted executive operating ledger that carries discussions from agenda to owner to follow-up.
 colors:
-  active-blue: "#007fc8"
-  focus-sky: "#009ae6"
-  orange-primary: "#ff6632"
-  action-blue: "#006fab"
-  action-blue-hover: "#005c90"
-  coral-atmosphere: "rgb(245 173 145 / .82)"
-  sky-atmosphere: "rgb(131 191 229 / .82)"
-  lavender-atmosphere: "rgb(173 164 207 / .72)"
-  warm-white: "#f4f3ef"
-  canvas-mist: "#f4f7f8"
-  glass-surface: "rgb(255 255 255 / .66)"
-  solid-surface: "#fff"
-  ink: "#25282b"
-  ink-soft: "#464546"
-  ink-muted: "#536076"
-  border-cool: "#d8e0e4"
-  success-text: "#286450"
-  success-wash: "#e4f4ed"
-  review-text: "#345f7d"
-  review-wash: "#e7f2f9"
-  warning-text: "#8b472f"
-  warning-wash: "#fff0e8"
+  active-blue: '#007fc8'
+  focus-sky: '#009ae6'
+  orange-primary: '#ff6632'
+  action-blue: '#006fab'
+  action-blue-hover: '#005c90'
+  coral-atmosphere: 'rgb(245 173 145 / .82)'
+  sky-atmosphere: 'rgb(131 191 229 / .82)'
+  lavender-atmosphere: 'rgb(173 164 207 / .72)'
+  warm-white: '#f4f3ef'
+  canvas-mist: '#f4f7f8'
+  glass-surface: 'rgb(255 255 255 / .66)'
+  solid-surface: '#fff'
+  ink: '#25282b'
+  ink-soft: '#464546'
+  ink-muted: '#536076'
+  border-cool: '#d8e0e4'
+  success-text: '#286450'
+  success-wash: '#e4f4ed'
+  review-text: '#345f7d'
+  review-wash: '#e7f2f9'
+  warning-text: '#8b472f'
+  warning-wash: '#fff0e8'
 typography:
   display:
-    fontFamily: "DM Sans, PingFang SC, Microsoft YaHei, sans-serif"
-    fontSize: "clamp(2rem, 4vw, 3.15rem)"
+    fontFamily: 'DM Sans, PingFang SC, Microsoft YaHei, sans-serif'
+    fontSize: 'clamp(2rem, 4vw, 3.15rem)'
     fontWeight: 760
     lineHeight: 1.02
-    letterSpacing: "-.035em"
+    letterSpacing: '-.035em'
   headline:
-    fontFamily: "DM Sans, PingFang SC, Microsoft YaHei, sans-serif"
-    fontSize: "1.55rem"
+    fontFamily: 'DM Sans, PingFang SC, Microsoft YaHei, sans-serif'
+    fontSize: '1.55rem'
     fontWeight: 740
     lineHeight: 1.18
-    letterSpacing: "-.025em"
+    letterSpacing: '-.025em'
   title:
-    fontFamily: "DM Sans, PingFang SC, Microsoft YaHei, sans-serif"
-    fontSize: "1.05rem"
-    letterSpacing: "-.015em"
+    fontFamily: 'DM Sans, PingFang SC, Microsoft YaHei, sans-serif'
+    fontSize: '1.05rem'
+    letterSpacing: '-.015em'
   body:
-    fontFamily: "DM Sans, PingFang SC, Microsoft YaHei, sans-serif"
-    fontSize: "1rem"
+    fontFamily: 'DM Sans, PingFang SC, Microsoft YaHei, sans-serif'
+    fontSize: '1rem'
     lineHeight: 1.55
   label:
-    fontFamily: "DM Sans, PingFang SC, Microsoft YaHei, sans-serif"
-    fontSize: ".82rem"
+    fontFamily: 'DM Sans, PingFang SC, Microsoft YaHei, sans-serif'
+    fontSize: '.82rem'
     fontWeight: 700
 rounded:
-  nav: "10px"
-  inset: "12px"
-  detail: "14px"
-  panel: "16px"
-  pill: "999px"
+  nav: '10px'
+  inset: '12px'
+  detail: '14px'
+  panel: '16px'
+  pill: '999px'
 spacing:
-  xs: "4px"
-  sm: "8px"
-  md: "12px"
-  lg: "16px"
-  xl: "20px"
-  2xl: "24px"
-  3xl: "28px"
+  xs: '4px'
+  sm: '8px'
+  md: '12px'
+  lg: '16px'
+  xl: '20px'
+  2xl: '24px'
+  3xl: '28px'
 components:
   button-primary:
-    backgroundColor: "{colors.orange-primary}"
-    textColor: "{colors.solid-surface}"
-    rounded: "{rounded.inset}"
-    padding: "0 16px"
-    height: "44px"
+    backgroundColor: '{colors.orange-primary}'
+    textColor: '{colors.solid-surface}'
+    rounded: '{rounded.inset}'
+    padding: '0 16px'
+    height: '44px'
   button-primary-hover:
-    backgroundColor: "#e85224"
-    textColor: "{colors.solid-surface}"
+    backgroundColor: '#e85224'
+    textColor: '{colors.solid-surface}'
   button-secondary:
-    backgroundColor: "#eaf7fd"
-    textColor: "#235c7b"
-    rounded: "{rounded.inset}"
-    padding: "0 16px"
-    height: "44px"
+    backgroundColor: '#eaf7fd'
+    textColor: '#235c7b'
+    rounded: '{rounded.inset}'
+    padding: '0 16px'
+    height: '44px'
   input:
-    backgroundColor: "{colors.solid-surface}"
-    textColor: "{colors.ink}"
-    rounded: "{rounded.inset}"
-    padding: "0 12px"
-    height: "42px"
+    backgroundColor: '{colors.solid-surface}'
+    textColor: '{colors.ink}'
+    rounded: '{rounded.inset}'
+    padding: '0 12px'
+    height: '42px'
   nav-item:
-    backgroundColor: "transparent"
-    textColor: "{colors.ink-soft}"
-    rounded: "{rounded.nav}"
-    padding: "0 11px"
-    height: "44px"
+    backgroundColor: 'transparent'
+    textColor: '{colors.ink-soft}'
+    rounded: '{rounded.nav}'
+    padding: '0 11px'
+    height: '44px'
   nav-item-active:
-    backgroundColor: "#eaf7fd"
-    textColor: "#235c7b"
+    backgroundColor: '#eaf7fd'
+    textColor: '#235c7b'
   panel-glass:
-    backgroundColor: "{colors.glass-surface}"
-    textColor: "{colors.ink}"
-    rounded: "{rounded.panel}"
-    padding: "20px"
+    backgroundColor: '{colors.glass-surface}'
+    textColor: '{colors.ink}'
+    rounded: '{rounded.panel}'
+    padding: '20px'
   access-gate:
-    backgroundColor: "rgb(255 255 255 / .92)"
-    textColor: "{colors.ink}"
-    rounded: "{rounded.panel}"
-    padding: "30px"
-    width: "430px"
+    backgroundColor: 'rgb(255 255 255 / .92)'
+    textColor: '{colors.ink}'
+    rounded: '{rounded.panel}'
+    padding: '30px'
+    width: '430px'
   access-gate-primary:
-    backgroundColor: "{colors.action-blue}"
-    textColor: "{colors.solid-surface}"
-    rounded: "{rounded.inset}"
-    padding: "0 16px"
-    height: "50px"
-    width: "100%"
+    backgroundColor: '{colors.action-blue}'
+    textColor: '{colors.solid-surface}'
+    rounded: '{rounded.inset}'
+    padding: '0 16px'
+    height: '50px'
+    width: '100%'
   profile-control:
-    backgroundColor: "rgb(255 255 255 / .12)"
-    textColor: "{colors.solid-surface}"
-    rounded: "{rounded.inset}"
-    padding: "5px 10px 5px 7px"
-    height: "48px"
+    backgroundColor: 'rgb(255 255 255 / .12)'
+    textColor: '{colors.solid-surface}'
+    rounded: '{rounded.inset}'
+    padding: '5px 10px 5px 7px'
+    height: '48px'
   status-ready:
-    backgroundColor: "{colors.success-wash}"
-    textColor: "{colors.success-text}"
-    rounded: "{rounded.pill}"
-    padding: "0 8px"
-    height: "24px"
+    backgroundColor: '{colors.success-wash}'
+    textColor: '{colors.success-text}'
+    rounded: '{rounded.pill}'
+    padding: '0 8px'
+    height: '24px'
   status-in-review:
-    backgroundColor: "{colors.review-wash}"
-    textColor: "{colors.review-text}"
-    rounded: "{rounded.pill}"
-    padding: "0 8px"
-    height: "24px"
+    backgroundColor: '{colors.review-wash}'
+    textColor: '{colors.review-text}'
+    rounded: '{rounded.pill}'
+    padding: '0 8px'
+    height: '24px'
   status-needs-owner:
-    backgroundColor: "{colors.warning-wash}"
-    textColor: "{colors.warning-text}"
-    rounded: "{rounded.pill}"
-    padding: "0 8px"
-    height: "24px"
+    backgroundColor: '{colors.warning-wash}'
+    textColor: '{colors.warning-text}'
+    rounded: '{rounded.pill}'
+    padding: '0 8px'
+    height: '24px'
 ---
 
 # Design System: GMS Executive Project Tracker

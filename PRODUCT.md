@@ -32,7 +32,7 @@ Used before, during and after a fortnightly executive meeting. Microsoft work ac
 - The primary workflow is: capture a topic, place it on an upcoming agenda, assign a lead, record a decision and track follow-up.
 - Topic groups are managed from a dedicated settings view. The four initial groups can be renamed, new groups can be added, and deletion requires confirmation; linked agenda and decision records are preserved under `Uncategorised`.
 - The shared workspace persists topics and topic groups in Supabase, while reminder preferences are saved separately for each approved Microsoft account behind the authenticated workspace API.
-- Outlook email delivery uses an app-only Microsoft Graph sender fixed to `insights@gms.global`; production delivery has been validated, while recurring scheduled execution remains disabled until separately enabled.
+- Outlook email delivery uses an app-only Microsoft Graph sender fixed to `insights@gms.global`; the evaluator runs hourly and sends only in the 09:00 Australia/Melbourne window when a member's global settings produce a due reminder.
 - Illustrative topics, dates and team members must be labelled as sample data.
 - The initial interface language is English.
 

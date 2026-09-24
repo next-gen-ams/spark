@@ -8,154 +8,403 @@
         "role": "primary",
         "displayName": "GMS Active Blue",
         "canonical": "#007fc8",
-        "tonalRamp": ["oklch(15% 0.065 240)", "oklch(25% 0.09 240)", "oklch(35% 0.115 240)", "oklch(48% 0.14 240)", "oklch(60% 0.12 240)", "oklch(72% 0.09 240)", "oklch(84% 0.055 240)", "oklch(95% 0.02 240)"]
+        "tonalRamp": [
+          "oklch(15% 0.065 240)",
+          "oklch(25% 0.09 240)",
+          "oklch(35% 0.115 240)",
+          "oklch(48% 0.14 240)",
+          "oklch(60% 0.12 240)",
+          "oklch(72% 0.09 240)",
+          "oklch(84% 0.055 240)",
+          "oklch(95% 0.02 240)"
+        ]
       },
       "focus-sky": {
         "role": "primary",
         "displayName": "Focus Sky",
         "canonical": "#009ae6",
-        "tonalRamp": ["oklch(15% 0.07 235)", "oklch(25% 0.1 235)", "oklch(35% 0.13 235)", "oklch(48% 0.16 235)", "oklch(60% 0.135 235)", "oklch(72% 0.1 235)", "oklch(84% 0.06 235)", "oklch(95% 0.022 235)"]
+        "tonalRamp": [
+          "oklch(15% 0.07 235)",
+          "oklch(25% 0.1 235)",
+          "oklch(35% 0.13 235)",
+          "oklch(48% 0.16 235)",
+          "oklch(60% 0.135 235)",
+          "oklch(72% 0.1 235)",
+          "oklch(84% 0.06 235)",
+          "oklch(95% 0.022 235)"
+        ]
       },
       "orange-primary": {
         "role": "primary",
         "displayName": "GMS Primary Orange",
         "canonical": "#ff6632",
-        "tonalRamp": ["oklch(15% 0.06 38)", "oklch(25% 0.1 38)", "oklch(35% 0.15 38)", "oklch(48% 0.2 38)", "oklch(60% 0.19 38)", "oklch(72% 0.145 38)", "oklch(84% 0.09 38)", "oklch(95% 0.03 38)"]
+        "tonalRamp": [
+          "oklch(15% 0.06 38)",
+          "oklch(25% 0.1 38)",
+          "oklch(35% 0.15 38)",
+          "oklch(48% 0.2 38)",
+          "oklch(60% 0.19 38)",
+          "oklch(72% 0.145 38)",
+          "oklch(84% 0.09 38)",
+          "oklch(95% 0.03 38)"
+        ]
       },
       "action-blue": {
         "role": "primary",
         "displayName": "Operational Action Blue",
         "canonical": "#006fab",
-        "tonalRamp": ["oklch(15% 0.07 240)", "oklch(25% 0.1 240)", "oklch(35% 0.12 240)", "oklch(48% 0.14 240)", "oklch(60% 0.12 240)", "oklch(72% 0.09 240)", "oklch(84% 0.055 240)", "oklch(95% 0.02 240)"]
+        "tonalRamp": [
+          "oklch(15% 0.07 240)",
+          "oklch(25% 0.1 240)",
+          "oklch(35% 0.12 240)",
+          "oklch(48% 0.14 240)",
+          "oklch(60% 0.12 240)",
+          "oklch(72% 0.09 240)",
+          "oklch(84% 0.055 240)",
+          "oklch(95% 0.02 240)"
+        ]
       },
       "action-blue-hover": {
         "role": "primary",
         "displayName": "Deep Action Blue",
         "canonical": "#005c90",
-        "tonalRamp": ["oklch(15% 0.06 240)", "oklch(24% 0.085 240)", "oklch(33% 0.105 240)", "oklch(43% 0.12 240)", "oklch(56% 0.105 240)", "oklch(70% 0.08 240)", "oklch(83% 0.048 240)", "oklch(95% 0.018 240)"]
+        "tonalRamp": [
+          "oklch(15% 0.06 240)",
+          "oklch(24% 0.085 240)",
+          "oklch(33% 0.105 240)",
+          "oklch(43% 0.12 240)",
+          "oklch(56% 0.105 240)",
+          "oklch(70% 0.08 240)",
+          "oklch(83% 0.048 240)",
+          "oklch(95% 0.018 240)"
+        ]
       },
       "coral-atmosphere": {
         "role": "secondary",
         "displayName": "Coral Atmosphere",
         "canonical": "rgb(245 173 145 / .82)",
-        "tonalRamp": ["oklch(15% 0.05 35)", "oklch(27% 0.08 35)", "oklch(40% 0.11 35)", "oklch(54% 0.14 35)", "oklch(67% 0.13 35)", "oklch(78% 0.1 35)", "oklch(87% 0.065 35)", "oklch(95% 0.025 35)"]
+        "tonalRamp": [
+          "oklch(15% 0.05 35)",
+          "oklch(27% 0.08 35)",
+          "oklch(40% 0.11 35)",
+          "oklch(54% 0.14 35)",
+          "oklch(67% 0.13 35)",
+          "oklch(78% 0.1 35)",
+          "oklch(87% 0.065 35)",
+          "oklch(95% 0.025 35)"
+        ]
       },
       "sky-atmosphere": {
         "role": "secondary",
         "displayName": "Sky Atmosphere",
         "canonical": "rgb(131 191 229 / .82)",
-        "tonalRamp": ["oklch(15% 0.035 235)", "oklch(27% 0.055 235)", "oklch(40% 0.075 235)", "oklch(54% 0.09 235)", "oklch(67% 0.085 235)", "oklch(78% 0.07 235)", "oklch(87% 0.045 235)", "oklch(95% 0.018 235)"]
+        "tonalRamp": [
+          "oklch(15% 0.035 235)",
+          "oklch(27% 0.055 235)",
+          "oklch(40% 0.075 235)",
+          "oklch(54% 0.09 235)",
+          "oklch(67% 0.085 235)",
+          "oklch(78% 0.07 235)",
+          "oklch(87% 0.045 235)",
+          "oklch(95% 0.018 235)"
+        ]
       },
       "lavender-atmosphere": {
         "role": "tertiary",
         "displayName": "Lavender Atmosphere",
         "canonical": "rgb(173 164 207 / .72)",
-        "tonalRamp": ["oklch(15% 0.025 290)", "oklch(27% 0.045 290)", "oklch(40% 0.065 290)", "oklch(54% 0.08 290)", "oklch(67% 0.075 290)", "oklch(78% 0.06 290)", "oklch(87% 0.04 290)", "oklch(95% 0.015 290)"]
+        "tonalRamp": [
+          "oklch(15% 0.025 290)",
+          "oklch(27% 0.045 290)",
+          "oklch(40% 0.065 290)",
+          "oklch(54% 0.08 290)",
+          "oklch(67% 0.075 290)",
+          "oklch(78% 0.06 290)",
+          "oklch(87% 0.04 290)",
+          "oklch(95% 0.015 290)"
+        ]
       },
       "warm-white": {
         "role": "neutral",
         "displayName": "Warm Navigation White",
         "canonical": "#f4f3ef",
-        "tonalRamp": ["oklch(15% 0.008 85)", "oklch(27% 0.01 85)", "oklch(40% 0.012 85)", "oklch(54% 0.014 85)", "oklch(67% 0.013 85)", "oklch(78% 0.011 85)", "oklch(87% 0.009 85)", "oklch(95% 0.006 85)"]
+        "tonalRamp": [
+          "oklch(15% 0.008 85)",
+          "oklch(27% 0.01 85)",
+          "oklch(40% 0.012 85)",
+          "oklch(54% 0.014 85)",
+          "oklch(67% 0.013 85)",
+          "oklch(78% 0.011 85)",
+          "oklch(87% 0.009 85)",
+          "oklch(95% 0.006 85)"
+        ]
       },
       "canvas-mist": {
         "role": "neutral",
         "displayName": "Canvas Mist",
         "canonical": "#f4f7f8",
-        "tonalRamp": ["oklch(15% 0.008 250)", "oklch(27% 0.012 250)", "oklch(40% 0.016 250)", "oklch(54% 0.02 250)", "oklch(67% 0.018 250)", "oklch(78% 0.015 250)", "oklch(87% 0.012 250)", "oklch(95% 0.008 250)"]
+        "tonalRamp": [
+          "oklch(15% 0.008 250)",
+          "oklch(27% 0.012 250)",
+          "oklch(40% 0.016 250)",
+          "oklch(54% 0.02 250)",
+          "oklch(67% 0.018 250)",
+          "oklch(78% 0.015 250)",
+          "oklch(87% 0.012 250)",
+          "oklch(95% 0.008 250)"
+        ]
       },
       "glass-surface": {
         "role": "neutral",
         "displayName": "Frosted Working Surface",
         "canonical": "rgb(255 255 255 / .66)",
-        "tonalRamp": ["oklch(15% 0.004 250 / .66)", "oklch(27% 0.004 250 / .66)", "oklch(40% 0.004 250 / .66)", "oklch(54% 0.004 250 / .66)", "oklch(67% 0.004 250 / .66)", "oklch(78% 0.004 250 / .66)", "oklch(87% 0.004 250 / .66)", "oklch(95% 0.004 250 / .66)"]
+        "tonalRamp": [
+          "oklch(15% 0.004 250 / .66)",
+          "oklch(27% 0.004 250 / .66)",
+          "oklch(40% 0.004 250 / .66)",
+          "oklch(54% 0.004 250 / .66)",
+          "oklch(67% 0.004 250 / .66)",
+          "oklch(78% 0.004 250 / .66)",
+          "oklch(87% 0.004 250 / .66)",
+          "oklch(95% 0.004 250 / .66)"
+        ]
       },
       "solid-surface": {
         "role": "neutral",
         "displayName": "Solid Working White",
         "canonical": "#fff",
-        "tonalRamp": ["oklch(15% 0 0)", "oklch(27% 0 0)", "oklch(40% 0 0)", "oklch(54% 0 0)", "oklch(67% 0 0)", "oklch(78% 0 0)", "oklch(87% 0 0)", "oklch(95% 0 0)"]
+        "tonalRamp": [
+          "oklch(15% 0 0)",
+          "oklch(27% 0 0)",
+          "oklch(40% 0 0)",
+          "oklch(54% 0 0)",
+          "oklch(67% 0 0)",
+          "oklch(78% 0 0)",
+          "oklch(87% 0 0)",
+          "oklch(95% 0 0)"
+        ]
       },
       "ink": {
         "role": "neutral",
         "displayName": "Executive Ink",
         "canonical": "#25282b",
-        "tonalRamp": ["oklch(15% 0.018 260)", "oklch(25% 0.025 260)", "oklch(35% 0.03 260)", "oklch(45% 0.032 260)", "oklch(58% 0.028 260)", "oklch(72% 0.02 260)", "oklch(84% 0.012 260)", "oklch(95% 0.005 260)"]
+        "tonalRamp": [
+          "oklch(15% 0.018 260)",
+          "oklch(25% 0.025 260)",
+          "oklch(35% 0.03 260)",
+          "oklch(45% 0.032 260)",
+          "oklch(58% 0.028 260)",
+          "oklch(72% 0.02 260)",
+          "oklch(84% 0.012 260)",
+          "oklch(95% 0.005 260)"
+        ]
       },
       "ink-soft": {
         "role": "neutral",
         "displayName": "Soft Executive Ink",
         "canonical": "#464546",
-        "tonalRamp": ["oklch(15% 0.016 255)", "oklch(27% 0.024 255)", "oklch(40% 0.032 255)", "oklch(54% 0.035 255)", "oklch(67% 0.028 255)", "oklch(78% 0.02 255)", "oklch(87% 0.012 255)", "oklch(95% 0.005 255)"]
+        "tonalRamp": [
+          "oklch(15% 0.016 255)",
+          "oklch(27% 0.024 255)",
+          "oklch(40% 0.032 255)",
+          "oklch(54% 0.035 255)",
+          "oklch(67% 0.028 255)",
+          "oklch(78% 0.02 255)",
+          "oklch(87% 0.012 255)",
+          "oklch(95% 0.005 255)"
+        ]
       },
       "ink-muted": {
         "role": "neutral",
         "displayName": "Muted Ledger Ink",
         "canonical": "#536076",
-        "tonalRamp": ["oklch(15% 0.015 255)", "oklch(27% 0.024 255)", "oklch(40% 0.034 255)", "oklch(54% 0.038 255)", "oklch(67% 0.03 255)", "oklch(78% 0.021 255)", "oklch(87% 0.013 255)", "oklch(95% 0.005 255)"]
+        "tonalRamp": [
+          "oklch(15% 0.015 255)",
+          "oklch(27% 0.024 255)",
+          "oklch(40% 0.034 255)",
+          "oklch(54% 0.038 255)",
+          "oklch(67% 0.03 255)",
+          "oklch(78% 0.021 255)",
+          "oklch(87% 0.013 255)",
+          "oklch(95% 0.005 255)"
+        ]
       },
       "border-cool": {
         "role": "neutral",
         "displayName": "Cool Divider",
         "canonical": "#d8e0e4",
-        "tonalRamp": ["oklch(15% 0.012 250)", "oklch(27% 0.02 250)", "oklch(40% 0.028 250)", "oklch(54% 0.035 250)", "oklch(67% 0.032 250)", "oklch(78% 0.026 250)", "oklch(87% 0.018 250)", "oklch(95% 0.008 250)"]
+        "tonalRamp": [
+          "oklch(15% 0.012 250)",
+          "oklch(27% 0.02 250)",
+          "oklch(40% 0.028 250)",
+          "oklch(54% 0.035 250)",
+          "oklch(67% 0.032 250)",
+          "oklch(78% 0.026 250)",
+          "oklch(87% 0.018 250)",
+          "oklch(95% 0.008 250)"
+        ]
       },
       "success-text": {
         "role": "secondary",
         "displayName": "Ready Green",
         "canonical": "#286450",
-        "tonalRamp": ["oklch(15% 0.04 160)", "oklch(27% 0.065 160)", "oklch(40% 0.08 160)", "oklch(54% 0.09 160)", "oklch(67% 0.075 160)", "oklch(78% 0.055 160)", "oklch(87% 0.032 160)", "oklch(95% 0.012 160)"]
+        "tonalRamp": [
+          "oklch(15% 0.04 160)",
+          "oklch(27% 0.065 160)",
+          "oklch(40% 0.08 160)",
+          "oklch(54% 0.09 160)",
+          "oklch(67% 0.075 160)",
+          "oklch(78% 0.055 160)",
+          "oklch(87% 0.032 160)",
+          "oklch(95% 0.012 160)"
+        ]
       },
       "success-wash": {
         "role": "secondary",
         "displayName": "Ready Wash",
         "canonical": "#e4f4ed",
-        "tonalRamp": ["oklch(15% 0.025 160)", "oklch(27% 0.04 160)", "oklch(40% 0.055 160)", "oklch(54% 0.065 160)", "oklch(67% 0.055 160)", "oklch(78% 0.042 160)", "oklch(87% 0.028 160)", "oklch(95% 0.012 160)"]
+        "tonalRamp": [
+          "oklch(15% 0.025 160)",
+          "oklch(27% 0.04 160)",
+          "oklch(40% 0.055 160)",
+          "oklch(54% 0.065 160)",
+          "oklch(67% 0.055 160)",
+          "oklch(78% 0.042 160)",
+          "oklch(87% 0.028 160)",
+          "oklch(95% 0.012 160)"
+        ]
       },
       "review-text": {
         "role": "secondary",
         "displayName": "Review Blue",
         "canonical": "#345f7d",
-        "tonalRamp": ["oklch(15% 0.035 235)", "oklch(27% 0.055 235)", "oklch(40% 0.075 235)", "oklch(54% 0.085 235)", "oklch(67% 0.07 235)", "oklch(78% 0.05 235)", "oklch(87% 0.03 235)", "oklch(95% 0.012 235)"]
+        "tonalRamp": [
+          "oklch(15% 0.035 235)",
+          "oklch(27% 0.055 235)",
+          "oklch(40% 0.075 235)",
+          "oklch(54% 0.085 235)",
+          "oklch(67% 0.07 235)",
+          "oklch(78% 0.05 235)",
+          "oklch(87% 0.03 235)",
+          "oklch(95% 0.012 235)"
+        ]
       },
       "review-wash": {
         "role": "secondary",
         "displayName": "Review Wash",
         "canonical": "#e7f2f9",
-        "tonalRamp": ["oklch(15% 0.02 235)", "oklch(27% 0.035 235)", "oklch(40% 0.05 235)", "oklch(54% 0.06 235)", "oklch(67% 0.05 235)", "oklch(78% 0.038 235)", "oklch(87% 0.024 235)", "oklch(95% 0.01 235)"]
+        "tonalRamp": [
+          "oklch(15% 0.02 235)",
+          "oklch(27% 0.035 235)",
+          "oklch(40% 0.05 235)",
+          "oklch(54% 0.06 235)",
+          "oklch(67% 0.05 235)",
+          "oklch(78% 0.038 235)",
+          "oklch(87% 0.024 235)",
+          "oklch(95% 0.01 235)"
+        ]
       },
       "warning-text": {
         "role": "secondary",
         "displayName": "Ownership Coral",
         "canonical": "#8b472f",
-        "tonalRamp": ["oklch(15% 0.04 38)", "oklch(27% 0.07 38)", "oklch(40% 0.095 38)", "oklch(54% 0.11 38)", "oklch(67% 0.09 38)", "oklch(78% 0.065 38)", "oklch(87% 0.038 38)", "oklch(95% 0.014 38)"]
+        "tonalRamp": [
+          "oklch(15% 0.04 38)",
+          "oklch(27% 0.07 38)",
+          "oklch(40% 0.095 38)",
+          "oklch(54% 0.11 38)",
+          "oklch(67% 0.09 38)",
+          "oklch(78% 0.065 38)",
+          "oklch(87% 0.038 38)",
+          "oklch(95% 0.014 38)"
+        ]
       },
       "warning-wash": {
         "role": "secondary",
         "displayName": "Ownership Wash",
         "canonical": "#fff0e8",
-        "tonalRamp": ["oklch(15% 0.025 38)", "oklch(27% 0.045 38)", "oklch(40% 0.065 38)", "oklch(54% 0.078 38)", "oklch(67% 0.065 38)", "oklch(78% 0.048 38)", "oklch(87% 0.03 38)", "oklch(95% 0.012 38)"]
+        "tonalRamp": [
+          "oklch(15% 0.025 38)",
+          "oklch(27% 0.045 38)",
+          "oklch(40% 0.065 38)",
+          "oklch(54% 0.078 38)",
+          "oklch(67% 0.065 38)",
+          "oklch(78% 0.048 38)",
+          "oklch(87% 0.03 38)",
+          "oklch(95% 0.012 38)"
+        ]
       }
     },
     "typographyMeta": {
-      "display": { "displayName": "Meeting Display", "purpose": "Page-level meeting and backlog titles." },
-      "headline": { "displayName": "Discussion Headline", "purpose": "Selected-topic title in the detail drawer." },
-      "title": { "displayName": "Panel Title", "purpose": "Agenda, readiness and reminder headings." },
-      "body": { "displayName": "Executive Body", "purpose": "Introduction and explanatory copy." },
-      "label": { "displayName": "Operational Label", "purpose": "Dates, form labels, counts and metadata." }
+      "display": {
+        "displayName": "Meeting Display",
+        "purpose": "Page-level meeting and backlog titles."
+      },
+      "headline": {
+        "displayName": "Discussion Headline",
+        "purpose": "Selected-topic title in the detail drawer."
+      },
+      "title": {
+        "displayName": "Panel Title",
+        "purpose": "Agenda, readiness and reminder headings."
+      },
+      "body": {
+        "displayName": "Executive Body",
+        "purpose": "Introduction and explanatory copy."
+      },
+      "label": {
+        "displayName": "Operational Label",
+        "purpose": "Dates, form labels, counts and metadata."
+      }
     },
     "shadows": [
-      { "name": "brand-header", "value": "0 8px 30px rgb(0 127 200 / .2)", "purpose": "Separates the Active Blue masthead from the workspace." },
-      { "name": "working-panel", "value": "0 16px 40px rgb(37 40 43 / .1)", "purpose": "Quiet ambient lift for agenda and support panels." },
-      { "name": "primary-action", "value": "0 8px 22px rgb(255 102 50 / .22)", "purpose": "Reinforces the signed-in workspace's Orange primary action." },
-      { "name": "field-lift", "value": "0 4px 14px rgb(37 58 85 / .07)", "purpose": "Separates the search input from its translucent toolbar." },
-      { "name": "modal", "value": "0 28px 80px rgb(24 42 65 / .22)", "purpose": "Strongest depth, reserved for temporary modal layers." },
-      { "name": "access-gate", "value": "0 24px 70px rgb(37 58 85 / .15)", "purpose": "Lifts the single Microsoft entry card from the access canvas." },
-      { "name": "account-menu", "value": "0 18px 48px rgb(24 42 65 / .2)", "purpose": "Separates the verified Graph identity menu from the Active Blue header." }
+      {
+        "name": "brand-header",
+        "value": "0 8px 30px rgb(0 127 200 / .2)",
+        "purpose": "Separates the Active Blue masthead from the workspace."
+      },
+      {
+        "name": "working-panel",
+        "value": "0 16px 40px rgb(37 40 43 / .1)",
+        "purpose": "Quiet ambient lift for agenda and support panels."
+      },
+      {
+        "name": "primary-action",
+        "value": "0 8px 22px rgb(255 102 50 / .22)",
+        "purpose": "Reinforces the signed-in workspace's Orange primary action."
+      },
+      {
+        "name": "field-lift",
+        "value": "0 4px 14px rgb(37 58 85 / .07)",
+        "purpose": "Separates the search input from its translucent toolbar."
+      },
+      {
+        "name": "modal",
+        "value": "0 28px 80px rgb(24 42 65 / .22)",
+        "purpose": "Strongest depth, reserved for temporary modal layers."
+      },
+      {
+        "name": "access-gate",
+        "value": "0 24px 70px rgb(37 58 85 / .15)",
+        "purpose": "Lifts the single Microsoft entry card from the access canvas."
+      },
+      {
+        "name": "account-menu",
+        "value": "0 18px 48px rgb(24 42 65 / .2)",
+        "purpose": "Separates the verified Graph identity menu from the Active Blue header."
+      }
     ],
     "motion": [
-      { "name": "ledger-state", "value": "160ms ease-out", "purpose": "Hover backgrounds, chevron translation and other direct row feedback." },
-      { "name": "reduced-motion", "value": ".01ms", "purpose": "Near-instant transition and animation duration under prefers-reduced-motion." }
+      {
+        "name": "ledger-state",
+        "value": "160ms ease-out",
+        "purpose": "Hover backgrounds, chevron translation and other direct row feedback."
+      },
+      {
+        "name": "reduced-motion",
+        "value": ".01ms",
+        "purpose": "Near-instant transition and animation duration under prefers-reduced-motion."
+      }
     ],
     "breakpoints": [
       { "name": "compact-desktop", "value": "1120px" },
@@ -257,12 +506,36 @@
       "Semantic status washes that communicate readiness without visual alarm."
     ],
     "rules": [
-      { "name": "The Atmosphere, Not Alert Rule", "body": "Coral, sky and lavender belong to the background field; interactive urgency is expressed through restrained semantic washes, never large saturated blocks.", "section": "colors" },
-      { "name": "The Action Role Rule", "body": "Active Blue brands the shell, Orange drives signed-in workspace actions, and Operational Action Blue is reserved for Microsoft access and selected ledger state.", "section": "colors" },
-      { "name": "The Ledger Voice Rule", "body": "Keep interface copy in sentence case and use weight before colour to establish hierarchy; reserve tabular numerals for counts, agenda order and time values.", "section": "typography" },
-      { "name": "The Next Decision Rule", "body": "The agenda ledger remains the widest and most legible surface; supporting readiness and reminder controls must not outgrow the work they explain.", "section": "layout" },
-      { "name": "The Working Glass Rule", "body": "Blur belongs to stable workspace surfaces, not every control; forms and detail cells remain solid, and the no-blur fallback returns panels to Canvas Mist.", "section": "elevation" },
-      { "name": "The Verified Workspace Rule", "body": "Render the operating ledger only after the Microsoft profile email matches the four-account EMT allowlist and shared-workspace access succeeds; repeat the allowlist check at the Edge Function before data access.", "section": "components" }
+      {
+        "name": "The Atmosphere, Not Alert Rule",
+        "body": "Coral, sky and lavender belong to the background field; interactive urgency is expressed through restrained semantic washes, never large saturated blocks.",
+        "section": "colors"
+      },
+      {
+        "name": "The Action Role Rule",
+        "body": "Active Blue brands the shell, Orange drives signed-in workspace actions, and Operational Action Blue is reserved for Microsoft access and selected ledger state.",
+        "section": "colors"
+      },
+      {
+        "name": "The Ledger Voice Rule",
+        "body": "Keep interface copy in sentence case and use weight before colour to establish hierarchy; reserve tabular numerals for counts, agenda order and time values.",
+        "section": "typography"
+      },
+      {
+        "name": "The Next Decision Rule",
+        "body": "The agenda ledger remains the widest and most legible surface; supporting readiness and reminder controls must not outgrow the work they explain.",
+        "section": "layout"
+      },
+      {
+        "name": "The Working Glass Rule",
+        "body": "Blur belongs to stable workspace surfaces, not every control; forms and detail cells remain solid, and the no-blur fallback returns panels to Canvas Mist.",
+        "section": "elevation"
+      },
+      {
+        "name": "The Verified Workspace Rule",
+        "body": "Render the operating ledger only after the Microsoft profile email matches the four-account EMT allowlist and shared-workspace access succeeds; repeat the allowlist check at the Edge Function before data access.",
+        "section": "components"
+      }
     ],
     "dos": [
       "Do keep the authentic white GMS 10 Years logo on the solid Active Blue header and access-card masthead.",

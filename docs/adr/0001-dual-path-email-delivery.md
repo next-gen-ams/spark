@@ -1,6 +1,6 @@
 # ADR 0001: Separate automatic and member-initiated email delivery
 
-- Status: Accepted
+- Status: Superseded by [ADR 0002](0002-automatic-reminders-only.md)
 - Date: 2026-09-25
 - Owners: GMS EMT Tracker
 

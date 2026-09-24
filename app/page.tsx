@@ -78,9 +78,7 @@ import { Toaster, toast } from '@/components/ui/toast';
 import {
   connectMicrosoft,
   disconnectMicrosoft,
-  hasMicrosoftMailPermission,
   microsoftAuthConfigured,
-  requestMicrosoftMailPermission,
   restoreMicrosoftSession,
   type MicrosoftProfile,
 } from '@/lib/microsoft-auth';
@@ -90,12 +88,9 @@ import {
   deleteEmtCategory,
   deleteEmtTopic,
   loadEmtWorkspace,
-  previewMemberTopicEmail,
   renameEmtCategory,
   saveEmtSettings,
   saveEmtTopic,
-  sendMemberTopicEmail,
-  type MemberMailPreview,
   type WorkspaceCategory,
   type WorkspaceMember,
   type WorkspaceSettings,
@@ -737,19 +732,6 @@ export default function Home() {
   const [workspaceError, setWorkspaceError] = React.useState('');
   const [workspaceVerified, setWorkspaceVerified] = React.useState(false);
   const [workspaceLoadAttempt, setWorkspaceLoadAttempt] = React.useState(0);
-  const [mailPermission, setMailPermission] = React.useState<
-    'idle' | 'checking' | 'needed' | 'ready' | 'authorising' | 'error'
-  >('idle');
-  const [mailTopicId, setMailTopicId] = React.useState('');
-  const [mailRecipientEmails, setMailRecipientEmails] = React.useState<
-    string[]
-  >([]);
-  const [mailPreview, setMailPreview] =
-    React.useState<MemberMailPreview | null>(null);
-  const [mailPreviewOpen, setMailPreviewOpen] = React.useState(false);
-  const [mailActionStatus, setMailActionStatus] = React.useState<
-    'idle' | 'previewing' | 'sending'
-  >('idle');
   const [remindersOn, setRemindersOn] = React.useState(true);
   const [agendaReminderTiming, setAgendaReminderTiming] = React.useState(
     '2 business days before',
@@ -966,15 +948,6 @@ export default function Home() {
           setHistoricalDecisions(
             sharedTopics.filter((topic) => topic.bucket === 'history'),
           );
-          setMailTopicId((current) =>
-            sharedTopics.some((topic) => String(topic.id) === current)
-              ? current
-              : String(
-                  sharedTopics.find((topic) => topic.bucket === 'agenda')?.id ||
-                    sharedTopics[0]?.id ||
-                    '',
-                ),
-          );
           if (sharedCategories?.length) {
             setCategories(sharedCategories);
             setCategoryDrafts(
@@ -1026,27 +999,6 @@ export default function Home() {
       active = false;
     };
   }, [microsoftStatus, workspaceLoadAttempt]);
-
-  React.useEffect(() => {
-    if (
-      activeView !== 'reminders' ||
-      microsoftStatus !== 'connected' ||
-      mailPermission !== 'idle'
-    )
-      return;
-    let active = true;
-    queueMicrotask(() => setMailPermission('checking'));
-    void hasMicrosoftMailPermission()
-      .then((granted) => {
-        if (active) setMailPermission(granted ? 'ready' : 'needed');
-      })
-      .catch(() => {
-        if (active) setMailPermission('error');
-      });
-    return () => {
-      active = false;
-    };
-  }, [activeView, mailPermission, microsoftStatus]);
 
   async function addTopic(event: React.SyntheticEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -1252,95 +1204,6 @@ export default function Home() {
         title: 'Settings not saved',
         description: error instanceof Error ? error.message : 'Try again.',
       });
-    }
-  }
-
-  function toggleMailRecipient(email: string) {
-    setMailPreview(null);
-    setMailRecipientEmails((current) => {
-      if (current.includes(email))
-        return current.filter((recipient) => recipient !== email);
-      if (current.length >= 3) {
-        toast.add({
-          type: 'error',
-          title: 'Choose up to three recipients',
-          description: 'Send another email if you need a different group.',
-        });
-        return current;
-      }
-      return [...current, email];
-    });
-  }
-
-  async function prepareMemberMail() {
-    const topicId = Number(mailTopicId);
-    if (!Number.isSafeInteger(topicId) || mailRecipientEmails.length === 0) {
-      toast.add({
-        type: 'error',
-        title: 'Choose a topic and recipient',
-        description: 'A preview is required before any email can be sent.',
-      });
-      return;
-    }
-    setMailActionStatus('previewing');
-    try {
-      const preview = await previewMemberTopicEmail(
-        topicId,
-        mailRecipientEmails,
-      );
-      setMailPreview(preview);
-      setMailPreviewOpen(true);
-    } catch (error) {
-      toast.add({
-        type: 'error',
-        title: 'Preview unavailable',
-        description: error instanceof Error ? error.message : 'Try again.',
-      });
-    } finally {
-      setMailActionStatus('idle');
-    }
-  }
-
-  async function enableMemberMail() {
-    setMailPermission('authorising');
-    try {
-      await requestMicrosoftMailPermission();
-    } catch (error) {
-      setMailPermission('error');
-      toast.add({
-        type: 'error',
-        title: 'Mail permission not enabled',
-        description: error instanceof Error ? error.message : 'Try again.',
-      });
-    }
-  }
-
-  async function sendPreviewedMemberMail() {
-    if (!mailPreview) return;
-    setMailActionStatus('sending');
-    try {
-      const result = await sendMemberTopicEmail(
-        Number(mailTopicId),
-        mailRecipientEmails,
-        mailPreview.requestId,
-      );
-      setMailPreviewOpen(false);
-      setMailPreview(null);
-      toast.add({
-        type: 'success',
-        title: result.alreadySent ? 'Email already sent' : 'Email accepted',
-        description: result.alreadySent
-          ? 'This preview was already used; no duplicate was sent.'
-          : `Microsoft accepted ${result.recipientCount || mailRecipientEmails.length} email${(result.recipientCount || mailRecipientEmails.length) === 1 ? '' : 's'} for delivery.`,
-      });
-    } catch (error) {
-      toast.add({
-        type: 'error',
-        title: 'Email not sent',
-        description: error instanceof Error ? error.message : 'Try again.',
-      });
-    } finally {
-      setMailActionStatus('idle');
     }
   }
 
@@ -2364,108 +2227,6 @@ export default function Home() {
                       </div>
                     </aside>
                   </div>
-                  <section
-                    className="member-mail-panel"
-                    aria-labelledby="member-mail-title"
-                  >
-                    <div className="member-mail-head">
-                      <span className="icon-tile">
-                        <Mail aria-hidden="true" />
-                      </span>
-                      <div>
-                        <h2 id="member-mail-title">Send from your account</h2>
-                        <p>
-                          Share one EMT topic with up to three active members. A
-                          preview is always required before sending.
-                        </p>
-                      </div>
-                      <span
-                        className={`mail-permission-state is-${mailPermission}`}
-                      >
-                        {mailPermission === 'ready'
-                          ? 'Mail sending enabled'
-                          : mailPermission === 'checking'
-                            ? 'Checking permission'
-                            : mailPermission === 'authorising'
-                              ? 'Opening Microsoft'
-                              : 'Permission requested at send'}
-                      </span>
-                    </div>
-                    <div className="member-mail-form">
-                      <label className="member-mail-field">
-                        <span>Topic</span>
-                        <NativeSelect
-                          value={mailTopicId}
-                          onChange={(event) => {
-                            setMailTopicId(event.target.value);
-                            setMailPreview(null);
-                          }}
-                        >
-                          {workspaceTopics.map((topic) => (
-                            <NativeSelectOption
-                              key={topic.id}
-                              value={String(topic.id)}
-                            >
-                              {topic.title}
-                            </NativeSelectOption>
-                          ))}
-                        </NativeSelect>
-                      </label>
-                      <fieldset className="member-mail-recipients">
-                        <legend>Recipients</legend>
-                        <div>
-                          {members.map((member) => (
-                            <label
-                              key={member.email}
-                              aria-label={`Send to ${member.displayName}`}
-                            >
-                              <input
-                                type="checkbox"
-                                checked={mailRecipientEmails.includes(
-                                  member.email,
-                                )}
-                                onChange={() =>
-                                  toggleMailRecipient(member.email)
-                                }
-                              />
-                              <span>
-                                <strong>{member.displayName}</strong>
-                                <small>{member.email}</small>
-                              </span>
-                            </label>
-                          ))}
-                        </div>
-                      </fieldset>
-                      <div className="member-mail-actions">
-                        <p>
-                          Automatic reminders still come from
-                          insights@gms.global. Manual shares come from your
-                          signed-in GMS account.
-                        </p>
-                        <Button
-                          className="primary-action"
-                          disabled={
-                            mailActionStatus !== 'idle' ||
-                            !mailTopicId ||
-                            mailRecipientEmails.length === 0
-                          }
-                          onClick={() => void prepareMemberMail()}
-                        >
-                          {mailActionStatus === 'previewing' ? (
-                            <>
-                              <LoaderCircle
-                                className="spin"
-                                aria-hidden="true"
-                              />
-                              Preparing preview
-                            </>
-                          ) : (
-                            'Preview email'
-                          )}
-                        </Button>
-                      </div>
-                    </div>
-                  </section>
                 </section>
               )}
             </main>
@@ -2599,9 +2360,8 @@ export default function Home() {
                 <span>
                   <strong>Reminder sender</strong>
                   <small>
-                    Automatic reminders use insights@gms.global. Manual topic
-                    shares ask for Microsoft Mail.Send only when you choose to
-                    send.
+                    Automatic reminders use insights@gms.global. Your account is
+                    never used to send email.
                   </small>
                 </span>
               </div>
@@ -2657,88 +2417,6 @@ export default function Home() {
                   ) : (
                     'Continue with Microsoft'
                   )}
-                </Button>
-              )}
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
-
-        <Dialog open={mailPreviewOpen} onOpenChange={setMailPreviewOpen}>
-          <DialogContent className="mail-preview-dialog">
-            <DialogHeader>
-              <DialogTitle>Review email before sending</DialogTitle>
-              <DialogDescription>
-                Nothing is sent until you select the final send button below.
-              </DialogDescription>
-            </DialogHeader>
-            {mailPreview ? (
-              <div className="mail-preview-content">
-                <dl className="mail-preview-meta">
-                  <div>
-                    <dt>From</dt>
-                    <dd>
-                      {mailPreview.sender.displayName} ·{' '}
-                      {mailPreview.sender.email}
-                    </dd>
-                  </div>
-                  <div>
-                    <dt>To</dt>
-                    <dd>
-                      {mailPreview.recipients
-                        .map((recipient) => recipient.displayName)
-                        .join(', ')}
-                    </dd>
-                  </div>
-                  <div>
-                    <dt>Subject</dt>
-                    <dd>{mailPreview.subject}</dd>
-                  </div>
-                </dl>
-                <iframe
-                  title="EMT email preview"
-                  sandbox=""
-                  srcDoc={mailPreview.html}
-                />
-              </div>
-            ) : null}
-            <DialogFooter>
-              <DialogClose
-                render={
-                  <Button
-                    variant="ghost"
-                    disabled={mailActionStatus === 'sending'}
-                  />
-                }
-              >
-                Cancel
-              </DialogClose>
-              {mailPermission === 'ready' ? (
-                <Button
-                  className="primary-action"
-                  disabled={mailActionStatus === 'sending'}
-                  onClick={() => void sendPreviewedMemberMail()}
-                >
-                  {mailActionStatus === 'sending' ? (
-                    <>
-                      <LoaderCircle className="spin" aria-hidden="true" />
-                      Sending
-                    </>
-                  ) : (
-                    'Send this email'
-                  )}
-                </Button>
-              ) : (
-                <Button
-                  className="primary-action"
-                  disabled={
-                    mailPermission === 'checking' ||
-                    mailPermission === 'authorising'
-                  }
-                  onClick={() => void enableMemberMail()}
-                >
-                  {mailPermission === 'authorising'
-                    ? 'Opening Microsoft'
-                    : 'Enable sending with Microsoft'}
                 </Button>
               )}
             </DialogFooter>

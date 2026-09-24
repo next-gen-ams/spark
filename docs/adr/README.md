@@ -2,8 +2,9 @@
 
 ADRs capture decisions that affect EMT Tracker's security, data or operating model. They are immutable once accepted; later changes should supersede an earlier ADR rather than rewriting its history.
 
-| ADR                                      | Status   | Decision                                                                    |
-| ---------------------------------------- | -------- | --------------------------------------------------------------------------- |
-| [0001](0001-dual-path-email-delivery.md) | Accepted | Separate automatic Insights reminders from member-initiated delegated email |
+| ADR                                      | Status     | Decision                                                                    |
+| ---------------------------------------- | ---------- | --------------------------------------------------------------------------- |
+| [0001](0001-dual-path-email-delivery.md) | Superseded | Separate automatic Insights reminders from member-initiated delegated email |
+| [0002](0002-automatic-reminders-only.md) | Accepted   | Use automatic Insights reminders only                                       |
 
 Use [template.md](template.md) for future decisions.

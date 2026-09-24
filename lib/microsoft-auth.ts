@@ -10,7 +10,6 @@ const clientId = process.env.NEXT_PUBLIC_MICROSOFT_CLIENT_ID ?? '';
 const tenantId = process.env.NEXT_PUBLIC_MICROSOFT_TENANT_ID ?? '';
 
 const loginScopes = ['User.Read'];
-const mailScopes = ['User.Read', 'Mail.Send'];
 let clientPromise: Promise<PublicClientApplication> | null = null;
 
 export type MicrosoftProfile = {
@@ -54,7 +53,7 @@ function profileFromAccount(account: AccountInfo): MicrosoftProfile {
   };
 }
 
-async function acquireToken(scopes: string[], interactive = false) {
+async function acquireToken(scopes: string[]) {
   const client = await getClient();
   const account = client.getActiveAccount() ?? client.getAllAccounts()[0];
   if (!account)
@@ -62,22 +61,11 @@ async function acquireToken(scopes: string[], interactive = false) {
       'Connect Microsoft before accessing the shared EMT workspace.',
     );
   client.setActiveAccount(account);
-  try {
-    const response = await client.acquireTokenSilent({
-      account,
-      scopes,
-    });
-    return response.accessToken;
-  } catch (error) {
-    if (!(error instanceof InteractionRequiredAuthError) || !interactive)
-      throw error;
-    await client.acquireTokenRedirect({
-      account,
-      scopes,
-      redirectUri: redirectUri(),
-    });
-    return null;
-  }
+  const response = await client.acquireTokenSilent({
+    account,
+    scopes,
+  });
+  return response.accessToken;
 }
 
 export async function restoreMicrosoftSession() {
@@ -107,32 +95,6 @@ export async function getMicrosoftAccessToken() {
   } catch (error) {
     if (error instanceof InteractionRequiredAuthError) {
       throw new Error('Your Microsoft session needs to be reconnected.');
-    }
-    throw error;
-  }
-}
-
-export async function hasMicrosoftMailPermission() {
-  try {
-    return Boolean(await acquireToken(mailScopes));
-  } catch (error) {
-    if (error instanceof InteractionRequiredAuthError) return false;
-    throw error;
-  }
-}
-
-export async function requestMicrosoftMailPermission() {
-  return acquireToken(mailScopes, true);
-}
-
-export async function getMicrosoftMailAccessToken() {
-  try {
-    const token = await acquireToken(mailScopes);
-    if (!token) throw new Error('Microsoft mail permission is required.');
-    return token;
-  } catch (error) {
-    if (error instanceof InteractionRequiredAuthError) {
-      throw new Error('Microsoft mail permission is required.');
     }
     throw error;
   }
