@@ -641,6 +641,7 @@ h1 {
 .primary-action {
   min-height: 44px;
   padding: 0 16px;
+  border-radius: 12px;
   background: #ff6632;
   color: #fff;
   box-shadow: 0 8px 22px rgb(255 102 50 / 0.22);
@@ -1069,6 +1070,7 @@ h1 {
 }
 .backlog-row > [data-slot='button'] {
   min-height: 44px;
+  border-radius: 12px;
 }
 
 .decisions-view {
@@ -1159,7 +1161,7 @@ h1 {
   gap: 10px;
 }
 .decision-toolbar-actions > [data-slot='button'] {
-  min-height: 40px;
+  min-height: 44px;
   color: #006fab;
 }
 .decision-owner-filter {
@@ -1443,7 +1445,7 @@ h1 {
   gap: 8px;
 }
 .topic-row-actions button {
-  min-height: 42px;
+  min-height: 44px;
   padding-inline: 14px;
 }
 .reminder-preview {
