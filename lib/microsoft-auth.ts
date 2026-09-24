@@ -25,7 +25,8 @@ function redirectUri() {
 }
 
 async function getClient() {
-  if (!microsoftAuthConfigured) throw new Error('Microsoft sign-in is not configured.');
+  if (!microsoftAuthConfigured)
+    throw new Error('Microsoft sign-in is not configured.');
   if (!clientPromise) {
     clientPromise = (async () => {
       const client = new PublicClientApplication({
@@ -44,15 +45,25 @@ async function getClient() {
   return clientPromise;
 }
 
-async function acquireProfile(client: PublicClientApplication, account: AccountInfo) {
+async function acquireProfile(
+  client: PublicClientApplication,
+  account: AccountInfo,
+) {
   client.setActiveAccount(account);
   let accessToken: string;
   try {
-    const response = await client.acquireTokenSilent({ account, scopes: loginScopes });
+    const response = await client.acquireTokenSilent({
+      account,
+      scopes: loginScopes,
+    });
     accessToken = response.accessToken;
   } catch (error) {
     if (!(error instanceof InteractionRequiredAuthError)) throw error;
-    await client.acquireTokenRedirect({ account, scopes: loginScopes, redirectUri: redirectUri() });
+    await client.acquireTokenRedirect({
+      account,
+      scopes: loginScopes,
+      redirectUri: redirectUri(),
+    });
     return null;
   }
 
@@ -60,7 +71,10 @@ async function acquireProfile(client: PublicClientApplication, account: AccountI
     'https://graph.microsoft.com/v1.0/me?$select=id,displayName,mail,userPrincipalName',
     { headers: { Authorization: `Bearer ${accessToken}` } },
   );
-  if (!response.ok) throw new Error(`Microsoft Graph profile check failed (${response.status}).`);
+  if (!response.ok)
+    throw new Error(
+      `Microsoft Graph profile check failed (${response.status}).`,
+    );
   const profile = (await response.json()) as {
     id: string;
     displayName?: string;
@@ -78,17 +92,47 @@ export async function restoreMicrosoftSession() {
   if (!microsoftAuthConfigured) return null;
   const client = await getClient();
   const redirectResponse = await client.handleRedirectPromise();
-  const account = redirectResponse?.account ?? client.getActiveAccount() ?? client.getAllAccounts()[0];
+  const account =
+    redirectResponse?.account ??
+    client.getActiveAccount() ??
+    client.getAllAccounts()[0];
   return account ? acquireProfile(client, account) : null;
 }
 
 export async function connectMicrosoft() {
   const client = await getClient();
-  await client.loginRedirect({ scopes: loginScopes, redirectUri: redirectUri() });
+  await client.loginRedirect({
+    scopes: loginScopes,
+    redirectUri: redirectUri(),
+  });
+}
+
+export async function getMicrosoftAccessToken() {
+  const client = await getClient();
+  const account = client.getActiveAccount() ?? client.getAllAccounts()[0];
+  if (!account)
+    throw new Error(
+      'Connect Microsoft before accessing the shared EMT workspace.',
+    );
+  try {
+    const response = await client.acquireTokenSilent({
+      account,
+      scopes: loginScopes,
+    });
+    return response.accessToken;
+  } catch (error) {
+    if (error instanceof InteractionRequiredAuthError) {
+      throw new Error('Your Microsoft session needs to be reconnected.');
+    }
+    throw error;
+  }
 }
 
 export async function disconnectMicrosoft() {
   const client = await getClient();
   const account = client.getActiveAccount() ?? client.getAllAccounts()[0];
-  await client.logoutRedirect({ account, postLogoutRedirectUri: redirectUri() });
+  await client.logoutRedirect({
+    account,
+    postLogoutRedirectUri: redirectUri(),
+  });
 }
