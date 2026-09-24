@@ -376,8 +376,9 @@ function fuzzyMatch(value: string, query: string) {
     .filter(Boolean)
     .every((queryWord) =>
       words.some((word) => {
-        if (word.includes(queryWord) || queryWord.includes(word)) return true;
+        if (word.includes(queryWord)) return true;
         if (queryWord.length < 4 || word.length < 4) return false;
+        if (queryWord.includes(word)) return true;
         return editDistance(word, queryWord) <= (queryWord.length >= 8 ? 2 : 1);
       }),
     );
