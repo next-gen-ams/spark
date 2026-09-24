@@ -18,6 +18,17 @@ export type MicrosoftProfile = {
   id: string;
 };
 
+const approvedEmtEmails = new Set([
+  'lisa.xu@gms.global',
+  'george@gms.global',
+  'brenda@gms.global',
+  'coco.hu@gms.global',
+]);
+
+export function isApprovedEmtProfile(profile: MicrosoftProfile) {
+  return approvedEmtEmails.has(profile.email.trim().toLowerCase());
+}
+
 export const microsoftAuthConfigured = Boolean(clientId && tenantId);
 
 function redirectUri() {

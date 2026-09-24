@@ -222,7 +222,7 @@ At 1120px, the sidebar contracts to 178px and the readiness rail to 260px. At 90
 
 Before workspace verification, the app becomes a full-height access stage (`100dvh`) with one centered card capped at 430px. Desktop stage padding is 32px by 18px; at 680px and below it becomes 18px by 14px, the Active Blue masthead contracts from 72px to 66px, and body padding contracts from 30px to 24px by 20px. The card remains vertically centred and does not expose the workspace underneath.
 
-The signed-in header is 76px high on desktop and 68px at tablet size. On mobile, the logo remains visible while the divider, product name and status badge recede; the account control retains the verified Graph display name within a 150px maximum, hides its secondary label and chevron, and truncates the visible name at 92px.
+The signed-in header is 76px high on desktop and 68px at tablet size. It contains only the brand lockup and verified Microsoft account control; workspace-status labels are intentionally omitted. On mobile, the logo remains visible while the divider and product name recede; the account control retains the verified Graph display name within a 150px maximum, hides its secondary label and chevron, and truncates the visible name at 92px.
 
 Spacing uses an 8px-led rhythm with compact 4px increments where dense operational controls need them. Agenda rows are deliberately generous at a minimum 88px high, while buttons and core controls preserve a 42–44px touch target.
 
@@ -288,13 +288,13 @@ The shipped header is a solid GMS Active Blue band (`#007fc8`) with a 76px deskt
 
 ### Microsoft Access Gate
 
-The gate is intentionally minimal: one centered 430px card, one Active Blue brand masthead, one Microsoft mark, one state-specific heading and explanation, one dominant action or progress/configuration notice, and one short assurance block. It supports disconnected, checking, authentication error, unconfigured and workspace-error states. Only the workspace-error state adds the verified profile row and a quiet sign-out alternative; no dashboard previews, feature lists or marketing copy appear before access is verified.
+The gate is intentionally minimal: one centered 430px card, one Active Blue brand masthead, one Microsoft mark, one state-specific heading and explanation, one dominant action or progress/configuration notice, and one short assurance block. It supports disconnected, checking, authentication error, unconfigured, unapproved-account and workspace-error states. The unapproved-account and workspace-error states add the verified profile row plus a quiet sign-out alternative; no dashboard previews, feature lists or marketing copy appear before access is verified.
 
 ### Header Account Control and Menu
 
 After Microsoft Graph verifies the user, the header replaces a generic sign-in label with a 48px translucent account control containing a 34px initials avatar, the Graph display name, a quiet “Microsoft account” label and a chevron. Opening the control rotates the chevron and reveals a 286px solid menu with the verified display name and email, followed by one 40px sign-out item. Long identity strings truncate rather than widening the header.
 
-**The Verified Workspace Rule.** Render the operating ledger only after both Microsoft profile verification and shared-workspace access succeed; every earlier state stays inside the centred gate.
+**The Verified Workspace Rule.** Render the operating ledger only after the Microsoft profile email matches the four-account EMT allowlist and shared-workspace access succeeds; the Supabase Edge Function repeats the email allowlist check before any read or write. Every earlier state stays inside the centred gate.
 
 ### Agenda Ledger Row
 

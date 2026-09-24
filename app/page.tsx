@@ -37,6 +37,7 @@ import { Toaster, toast } from '@/components/ui/toast';
 import {
   connectMicrosoft,
   disconnectMicrosoft,
+  isApprovedEmtProfile,
   microsoftAuthConfigured,
   restoreMicrosoftSession,
   type MicrosoftProfile,
@@ -52,7 +53,7 @@ import {
 
 type WorkspaceView = 'meeting' | 'backlog' | 'decisions' | 'reminders';
 type DecisionTab = 'People & culture' | 'Operations' | 'Governance' | 'Finance' | 'Archived';
-type MicrosoftStatus = 'loading' | 'unconfigured' | 'disconnected' | 'connected' | 'error';
+type MicrosoftStatus = 'loading' | 'unconfigured' | 'disconnected' | 'connected' | 'denied' | 'error';
 type WebMCPContext = {
   registerTool: (
     tool: {
@@ -186,7 +187,7 @@ function Navigation({ activeView, backlogCount, decisionCount, onSelect }: { act
         { label: 'Decision log', icon: ClipboardCheck, view: 'decisions' as WorkspaceView, count: decisionCount },
         { label: 'Reminder settings', icon: Bell, view: 'reminders' as WorkspaceView },
       ].map(({ label, icon: Icon, view, count }) => <SidebarMenuItem key={label}><SidebarMenuButton isActive={activeView === view} className="nav-button" onClick={() => onSelect(view)}><Icon aria-hidden="true" /><span>{label}</span>{count ? <span className="nav-count">{count}</span> : null}</SidebarMenuButton></SidebarMenuItem>)}
-    </SidebarMenu></SidebarGroupContent></SidebarGroup><div className="nav-foot"><span className="sample-dot" /><span>Microsoft-secured workspace</span></div></SidebarContent>
+    </SidebarMenu></SidebarGroupContent></SidebarGroup></SidebarContent>
   );
 }
 
@@ -217,10 +218,13 @@ function AccessGate({
   const checking = microsoftStatus === 'loading' || (signedIn && workspaceStatus !== 'error');
   const setupMissing = microsoftStatus === 'unconfigured';
   const workspaceBlocked = signedIn && workspaceStatus === 'error';
+  const accountBlocked = microsoftStatus === 'denied';
   const authFailed = microsoftStatus === 'error';
 
   const title = checking
     ? 'Checking your Microsoft account'
+    : accountBlocked
+      ? 'This account does not have access'
     : workspaceBlocked
       ? 'We could not open the EMT workspace'
       : authFailed
@@ -230,6 +234,8 @@ function AccessGate({
           : 'Sign in to EMT Tracker';
   const description = checking
     ? 'Verifying your GMS profile and EMT access.'
+    : accountBlocked
+      ? microsoftError || 'Use one of the four approved EMT Microsoft accounts.'
     : workspaceBlocked
       ? workspaceError || 'Your Microsoft profile is connected, but shared workspace access could not be verified.'
       : authFailed
@@ -249,11 +255,11 @@ function AccessGate({
               <h1 id="access-title">{title}</h1>
               <p>{description}</p>
             </div>
-            {microsoftProfile && workspaceBlocked ? <div className="access-account"><Avatar><AvatarFallback>{profileInitials(microsoftProfile.displayName)}</AvatarFallback></Avatar><span><strong>{microsoftProfile.displayName}</strong><small>{microsoftProfile.email}</small></span></div> : null}
+            {microsoftProfile && (workspaceBlocked || accountBlocked) ? <div className="access-account"><Avatar><AvatarFallback>{profileInitials(microsoftProfile.displayName)}</AvatarFallback></Avatar><span><strong>{microsoftProfile.displayName}</strong><small>{microsoftProfile.email}</small></span></div> : null}
             {checking ? <div className="access-progress" role="status"><LoaderCircle className="spin" aria-hidden="true" /><span>Secure connection in progress</span></div> : null}
-            {!checking && !setupMissing ? <Button className="access-primary" size="lg" onClick={workspaceBlocked ? onRetryWorkspace : onSignIn}><MicrosoftMark /><span>{workspaceBlocked ? 'Try workspace again' : authFailed ? 'Try Microsoft sign-in again' : 'Continue with Microsoft'}</span><ArrowRight aria-hidden="true" /></Button> : null}
+            {!checking && !setupMissing && !accountBlocked ? <Button className="access-primary" size="lg" onClick={workspaceBlocked ? onRetryWorkspace : onSignIn}><MicrosoftMark /><span>{workspaceBlocked ? 'Try workspace again' : authFailed ? 'Try Microsoft sign-in again' : 'Continue with Microsoft'}</span><ArrowRight aria-hidden="true" /></Button> : null}
             {setupMissing ? <div className="access-configuration" role="status"><CircleAlert aria-hidden="true" /><span>Ask the project administrator to complete the Microsoft Entra setup.</span></div> : null}
-            {workspaceBlocked ? <Button variant="ghost" className="access-signout" onClick={onSignOut}><LogOut aria-hidden="true" />Sign out and use another account</Button> : null}
+            {workspaceBlocked || accountBlocked ? <Button variant="ghost" className="access-signout" onClick={onSignOut}><LogOut aria-hidden="true" />Sign out and use another account</Button> : null}
             <div className="access-assurance"><ShieldCheck aria-hidden="true" /><span><strong>Protected by Microsoft</strong><small>Basic profile only. Outlook and calendar access are not enabled.</small></span></div>
           </div>
         </div>
@@ -321,7 +327,6 @@ export default function Home() {
   ];
   const totalMinutes = topics.reduce((sum, topic) => sum + Number.parseInt(topic.time, 10), 0);
   const signedIn = microsoftStatus === 'connected';
-  const workspaceLabel = workspaceStatus === 'loading' ? 'Syncing data' : workspaceStatus === 'saving' ? 'Saving' : workspaceStatus === 'ready' ? 'Shared workspace' : workspaceStatus === 'error' ? 'Sync unavailable' : 'Microsoft-secured';
 
   React.useEffect(() => {
     const requestedView = new URLSearchParams(window.location.search).get('view');
@@ -341,6 +346,11 @@ export default function Home() {
       .then((profile) => {
         if (!active) return;
         setMicrosoftProfile(profile);
+        if (profile && !isApprovedEmtProfile(profile)) {
+          setMicrosoftError('Only the four approved EMT Microsoft accounts can open this workspace.');
+          setMicrosoftStatus('denied');
+          return;
+        }
         setMicrosoftStatus(profile ? 'connected' : 'disconnected');
       })
       .catch((error: unknown) => {
@@ -649,10 +659,10 @@ export default function Home() {
 
   return (
     <Toaster><div className="app-shell">
-      <header className="brand-header"><div className="brand-lockup"><Image src={`${APP_BASE_PATH}/assets/gms-logo-white.png`} alt="GMS 10 Years" className="gms-logo" width={150} height={34} priority /><span className="brand-divider" aria-hidden="true" /><span className="product-name">EMT Tracker</span></div><div className="header-actions"><Badge className="demo-badge">{workspaceLabel}</Badge><DropdownMenu><DropdownMenuTrigger render={<Button variant="ghost" className="profile-button" aria-label={`Open account menu for ${microsoftProfile?.displayName || 'Microsoft account'}`} />}><Avatar size="sm" className="profile-avatar"><AvatarFallback>{profileInitials(microsoftProfile?.displayName || '')}</AvatarFallback></Avatar><span className="profile-copy"><strong>{microsoftProfile?.displayName || 'Microsoft account'}</strong><small>Microsoft account</small></span><ChevronDown className="profile-chevron" aria-hidden="true" /></DropdownMenuTrigger><DropdownMenuContent align="end" sideOffset={8} className="profile-menu"><DropdownMenuGroup><DropdownMenuLabel className="profile-menu-identity"><Avatar className="profile-menu-avatar"><AvatarFallback>{profileInitials(microsoftProfile?.displayName || '')}</AvatarFallback></Avatar><span><strong>{microsoftProfile?.displayName}</strong><small>{microsoftProfile?.email}</small></span></DropdownMenuLabel></DropdownMenuGroup><DropdownMenuSeparator /><DropdownMenuItem className="profile-menu-item" onClick={() => void endMicrosoftConnection()}><LogOut aria-hidden="true" />Sign out</DropdownMenuItem></DropdownMenuContent></DropdownMenu></div></header>
+      <header className="brand-header"><div className="brand-lockup"><Image src={`${APP_BASE_PATH}/assets/gms-logo-white.png`} alt="GMS 10 Years" className="gms-logo" width={150} height={34} priority /><span className="brand-divider" aria-hidden="true" /><span className="product-name">EMT Tracker</span></div><div className="header-actions"><DropdownMenu><DropdownMenuTrigger render={<Button variant="ghost" className="profile-button" aria-label={`Open account menu for ${microsoftProfile?.displayName || 'Microsoft account'}`} />}><Avatar size="sm" className="profile-avatar"><AvatarFallback>{profileInitials(microsoftProfile?.displayName || '')}</AvatarFallback></Avatar><span className="profile-copy"><strong>{microsoftProfile?.displayName || 'Microsoft account'}</strong><small>Microsoft account</small></span><ChevronDown className="profile-chevron" aria-hidden="true" /></DropdownMenuTrigger><DropdownMenuContent align="end" sideOffset={8} className="profile-menu"><DropdownMenuGroup><DropdownMenuLabel className="profile-menu-identity"><Avatar className="profile-menu-avatar"><AvatarFallback>{profileInitials(microsoftProfile?.displayName || '')}</AvatarFallback></Avatar><span><strong>{microsoftProfile?.displayName}</strong><small>{microsoftProfile?.email}</small></span></DropdownMenuLabel></DropdownMenuGroup><DropdownMenuSeparator /><DropdownMenuItem className="profile-menu-item" onClick={() => void endMicrosoftConnection()}><LogOut aria-hidden="true" />Sign out</DropdownMenuItem></DropdownMenuContent></DropdownMenu></div></header>
 
       <SidebarProvider className="workspace-provider"><div className="workspace-layout"><Sidebar collapsible="none" className="workspace-sidebar"><Navigation activeView={activeView} backlogCount={backlog.length} decisionCount={recordedDecisions.length} onSelect={selectView} /></Sidebar><main className="workspace-main" id="workspace-main">
-        <div className="mobile-topbar"><Button variant="outline" className="mobile-menu-button" aria-expanded={mobileNavOpen} aria-controls="mobile-navigation" onClick={() => setMobileNavOpen(true)}><Menu aria-hidden="true" />Menu</Button><Badge className="demo-badge mobile-demo">{workspaceStatus === 'ready' ? 'Live data' : workspaceLabel}</Badge></div>
+        <div className="mobile-topbar"><Button variant="outline" className="mobile-menu-button" aria-expanded={mobileNavOpen} aria-controls="mobile-navigation" onClick={() => setMobileNavOpen(true)}><Menu aria-hidden="true" />Menu</Button></div>
 
         {activeView === 'meeting' ? <><section className="meeting-intro" aria-labelledby="meeting-title"><div><p className="meeting-date">Biweekly · every second Monday</p><h1 id="meeting-title">Next executive meeting</h1></div><Button className="primary-action" size="lg" onClick={() => { setNewDestination('meeting'); setAddOpen(true); }}><Plus aria-hidden="true" />Add topic</Button></section>
           <section className="next-meeting-card" aria-label="Next executive meeting date"><div><span>Next executive meeting</span><strong>{meetingDateLong}</strong></div><Badge className="countdown-badge">{meetingSchedule.countdownDays === 0 ? 'Today' : `${meetingSchedule.countdownDays} days to go`}</Badge></section>

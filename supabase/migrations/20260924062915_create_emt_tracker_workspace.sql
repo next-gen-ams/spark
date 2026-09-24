@@ -68,10 +68,10 @@ grant select, insert, update, delete on table public.emt_settings to service_rol
 grant usage, select on sequence public.emt_topics_id_seq to service_role;
 
 insert into public.emt_members (display_name, email) values
-  ('Lisa Xu', null),
-  ('George Pesutto', null),
+  ('Lisa Xu', 'lisa.xu@gms.global'),
+  ('George Pesutto', 'george@gms.global'),
   ('Coco Hu', 'coco.hu@gms.global'),
-  ('Brenda Cugley', null)
+  ('Brenda Cugley', 'brenda@gms.global')
 on conflict (display_name) do nothing;
 
 insert into public.emt_topics (

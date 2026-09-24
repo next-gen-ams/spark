@@ -17,6 +17,12 @@ const CATEGORIES = new Set([
   'Finance',
 ]);
 const STATUSES = new Set(['Scheduled', 'Needs lead', 'Needs input']);
+const APPROVED_EMAILS = new Set([
+  'lisa.xu@gms.global',
+  'george@gms.global',
+  'brenda@gms.global',
+  'coco.hu@gms.global',
+]);
 
 type MicrosoftProfile = {
   id: string;
@@ -221,16 +227,16 @@ async function authenticate(
   ).toLowerCase();
   const displayName = graphProfile.displayName || '';
   const id = graphProfile.id || '';
-  if (!id || !displayName || !email.endsWith('@gms.global')) {
+  if (!id || !displayName || !APPROVED_EMAILS.has(email)) {
     throw new Error(
-      'Only approved GMS work accounts can access this workspace.',
+      'This Microsoft account is not approved for EMT Tracker.',
     );
   }
 
   const { data: member, error } = await database
     .from('emt_members')
     .select('display_name,email,microsoft_object_id,active,first_connected_at')
-    .eq('display_name', displayName)
+    .eq('email', email)
     .maybeSingle();
   if (error) throw error;
   if (!member?.active)
@@ -255,7 +261,7 @@ async function authenticate(
       first_connected_at: member.first_connected_at || now,
       last_connected_at: now,
     })
-    .eq('display_name', displayName);
+    .eq('email', email);
   if (memberUpdateError) throw memberUpdateError;
   return { id, displayName, email };
 }
