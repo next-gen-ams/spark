@@ -112,19 +112,6 @@ type MicrosoftStatus =
   | 'connected'
   | 'denied'
   | 'error';
-type WebMCPContext = {
-  registerTool: (
-    tool: {
-      name: string;
-      title: string;
-      description: string;
-      inputSchema: Record<string, unknown>;
-      annotations: { readOnlyHint: boolean; untrustedContentHint: boolean };
-      execute: (input: unknown) => Promise<Record<string, unknown>>;
-    },
-    options?: { signal?: AbortSignal },
-  ) => void | Promise<void>;
-};
 
 const EMT_MEMBERS = ['Lisa Xu', 'George Pesutto', 'Coco Hu', 'Brenda Cugley'];
 const DEFAULT_TOPIC_CATEGORIES = [
@@ -981,67 +968,6 @@ export default function Home() {
     };
   }, [microsoftStatus, workspaceLoadAttempt]);
 
-  React.useEffect(() => {
-    const context = (document as Document & { modelContext?: WebMCPContext })
-      .modelContext;
-    if (!context?.registerTool) return;
-    const lifecycle = new AbortController();
-    void Promise.resolve(
-      context.registerTool(
-        {
-          name: 'stage_discussion',
-          title: 'Stage a discussion',
-          description:
-            'Add a sample discussion to the visible GMS executive meeting agenda. This changes only the current prototype session.',
-          inputSchema: {
-            type: 'object',
-            properties: {
-              title: { type: 'string', minLength: 1, maxLength: 120 },
-            },
-            required: ['title'],
-            additionalProperties: false,
-          },
-          annotations: { readOnlyHint: false, untrustedContentHint: false },
-          async execute(input) {
-            const value = input as { title?: unknown };
-            if (
-              typeof value?.title !== 'string' ||
-              !value.title.trim() ||
-              value.title.trim().length > 120
-            )
-              throw new Error(
-                'Provide a discussion title between 1 and 120 characters.',
-              );
-            const topic: Topic = {
-              id: Date.now(),
-              bucket: 'agenda',
-              title: value.title.trim(),
-              category: 'Operations',
-              status: 'Scheduled',
-              lead: 'Coco Hu',
-              leadInitials: 'CH',
-              time: '10 min',
-              note: 'New sample discussion staged by a browser tool.',
-              reminder: 'Not scheduled',
-              prepAction: 'Add preparation notes.',
-              decision: '',
-              followUpOwner: '',
-              followUpAction: '',
-              dueDate: '',
-              source: 'Agenda',
-              remindLead: false,
-              remindFollowup: false,
-            };
-            setTopics((current) => [...current, topic]);
-            return { id: topic.id, status: 'staged', mock: true };
-          },
-        },
-        { signal: lifecycle.signal },
-      ),
-    ).catch(() => undefined);
-    return () => lifecycle.abort();
-  }, []);
-
   async function addTopic(event: React.SyntheticEvent<HTMLFormElement>) {
     event.preventDefault();
     const title = newTitle.trim();
@@ -1654,7 +1580,10 @@ export default function Home() {
                     <div className="panel-toolbar">
                       <div>
                         <h2>Waiting for discussion</h2>
-                        <p>{backlog.length} prototype topics</p>
+                        <p>
+                          {backlog.length}{' '}
+                          {backlog.length === 1 ? 'topic' : 'topics'}
+                        </p>
                       </div>
                       <Button
                         className="primary-action"
