@@ -9,7 +9,7 @@ export const metadata: Metadata = {
 
 const directionContract = `THESIS: A fortnightly decision ledger makes every topic travel visibly from agenda to editable decision to named follow-up owner; it refuses the generic metric-card dashboard.
 OWN-WORLD: GMS Active Blue identity, Mist navigation, Orange primary actions and Sky frosted working surfaces with the authentic GMS anniversary logo.
-STORY: Executives see the next meeting date and simple day countdown, review the agenda, then turn a reviewed Wispr Flow summary into editable decision drafts and owned follow-ups.
+STORY: Executives see the next meeting date and simple day countdown, review the agenda, then browse editable decisions through horizontal topic tabs; records older than two months archive automatically but remain fuzzy-searchable.
 FIRST VIEWPORT: Active Blue brand header above a short left rail, one next-meeting date card, then the agenda ledger; Add topic is the primary action.
 FORM: Grounded structure candidate 4, assigned by seed 5afa5f67.
 FINISH: unreviewed and undocumented is unfinished; this build ends with the finish review, the verdict, and DESIGN.md`;

@@ -171,11 +171,21 @@ h1 { margin-bottom: 8px; color: #25282b; font-size: clamp(2rem,4vw,3.15rem); lin
 .decisions-view { min-width: 0; }
 .decisions-panel { max-width: 1120px; overflow: hidden; }
 .decision-search { width: min(280px,46%); }
-.decision-groups { background: rgb(255 255 255 / .3); }
-.decision-group { border-bottom: 1px solid rgb(216 224 228 / .9); }
-.decision-group:last-child { border-bottom: 0; }
-.decision-group-head { min-height: 48px; display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 10px 22px; background: rgb(234 247 253 / .55); }
-.decision-group-head>span:last-child { color: #687483; font-size: .72rem; font-weight: 650; }
+.decision-tabs { background: rgb(255 255 255 / .3); }
+.decision-tab-scroll { overflow-x: auto; border-bottom: 1px solid rgb(216 224 228 / .95); background: rgb(234 247 253 / .46); scrollbar-width: thin; }
+.decision-tab-list { width: max-content; min-width: 100%; height: 62px; display: flex; align-items: stretch; justify-content: flex-start; gap: 0; padding: 0 14px; border-radius: 0; background: transparent; }
+.decision-tab { min-width: max-content; height: 100%; gap: 8px; padding: 0 18px; border-radius: 0; color: #405068; background: transparent; font-size: .82rem; font-weight: 700; box-shadow: none; }
+.decision-tab svg { width: 15px; height: 15px; }
+.decision-tab:hover { color: #005c90; background: rgb(255 255 255 / .55); }
+.decision-tab[data-active] { color: #fff; background: #006fab; box-shadow: none; }
+.decision-tab[data-active]::after { display: none; }
+.decision-tab-count { min-width: 22px; height: 22px; display: grid; place-items: center; padding: 0 6px; border-radius: 999px; color: #005c90; background: #fff; font-size: .68rem; font-weight: 780; }
+.decision-tab[data-active] .decision-tab-count { color: #a44019; background: #fff0ea; }
+.decision-tab-panel { margin: 0; outline: none; }
+.decision-view-head { min-height: 62px; display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 12px 22px; border-bottom: 1px solid rgb(216 224 228 / .86); background: rgb(255 255 255 / .56); }
+.decision-view-head>div { min-width: 0; display: grid; gap: 4px; }
+.decision-view-head p { margin: 0; color: #687483; font-size: .74rem; line-height: 1.4; }
+.decision-view-head>[data-slot='button'] { min-height: 40px; color: #006fab; }
 .decision-list { background: rgb(255 255 255 / .36); }
 .decision-row { width: 100%; min-height: 132px; display: grid; grid-template-columns: 126px minmax(0,1fr) 180px 20px; gap: 20px; align-items: center; padding: 22px; border: 0; border-bottom: 1px solid rgb(216 224 228 / .9); color: #25282b; background: transparent; text-align: left; transition: background 160ms ease-out; }
 .decision-row:last-child { border-bottom: 0; }
@@ -184,6 +194,10 @@ h1 { margin-bottom: 8px; color: #25282b; font-size: clamp(2rem,4vw,3.15rem); lin
 .decision-row:hover .row-chevron { color: #009ae6; transform: translateX(3px); }
 .decision-date { display: grid; gap: 5px; color: #464546; font-size: .8rem; font-weight: 650; line-height: 1.35; }
 .decision-date small { color: #007fc8; font-size: .68rem; font-weight: 720; }
+.decision-date-meta { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
+.decision-date-meta .archive-label,.decision-date-meta .current-label { width: max-content; padding: 2px 6px; border-radius: 999px; font-size: .62rem; }
+.decision-date-meta .archive-label { color: #6b5360; background: #f1e8ef; }
+.decision-date-meta .current-label { color: #286450; background: #e4f4ed; }
 .decision-summary { min-width: 0; display: grid; gap: 7px; }
 .decision-topic { color: #25282b; font-size: 1rem; font-weight: 720; line-height: 1.35; }
 .decision-copy { color: #464546; font-size: .9rem; line-height: 1.5; }
@@ -387,6 +401,7 @@ h1 { margin-bottom: 8px; color: #25282b; font-size: clamp(2rem,4vw,3.15rem); lin
   .fortnight-planner { grid-template-columns: 1fr; } .calendar-pane { padding: 16px 14px 18px; } .calendar-heading { align-items: flex-start; } .cadence-badge { display: none; } .calendar-week { grid-template-columns: 42px minmax(0,1fr); gap: 6px; } .calendar-week ol { gap: 3px; } .calendar-week li { height: 48px; padding: 6px 4px; text-align: center; } .calendar-week li>span,.calendar-week li>strong { grid-column: 1/-1; } .calendar-week li>small { display: none; } .meeting-countdown { padding: 18px 20px; } .countdown-title { justify-content: center; } .countdown-values { width: min(310px,100%); margin-inline: auto; }
   .backlog-row { grid-template-columns: 1fr; padding: 0 14px 16px; gap: 4px; } .backlog-open { width: calc(100% + 28px); margin-inline: -14px; grid-template-columns: 30px minmax(0,1fr); padding: 16px 14px; } .backlog-row>[data-slot='button'] { width: 100%; }
   .summary-shortcut { grid-template-columns: auto minmax(0,1fr); } .summary-shortcut>[data-slot='button'] { grid-column: 1/-1; width: 100%; } .summary-form-row { align-items: stretch; flex-direction: column; } .summary-form-row>label { width: 100%; } .summary-form-row>[data-slot='button'] { align-self: flex-start; } .draft-grid { grid-template-columns: 1fr; }
+  .decision-tab-list { height: 58px; padding-inline: 8px; } .decision-tab { padding-inline: 14px; } .decision-view-head { align-items: flex-start; flex-direction: column; padding: 14px 18px; } .decision-view-head>[data-slot='button'] { width: auto; }
   .decision-row { min-height: 0; grid-template-columns: minmax(0,1fr) 18px; gap: 12px; padding: 18px; } .decision-date,.decision-summary,.decision-followup { grid-column: 1; } .decision-date { margin-bottom: -4px; } .decision-followup { padding: 12px 0 0; border-left: 0; border-top: 1px solid #d8e0e4; } .decision-row>.row-chevron { grid-column: 2; grid-row: 1/4; align-self: center; }
   .ownership-legend { display: none; } .owner-group { display: block; } .owner-head { padding: 18px; } .ownership-list { border-left: 0; border-top: 1px solid rgb(216 224 228 / .9); } .ownership-item { grid-template-columns: minmax(0,1fr) 18px; gap: 10px; padding: 16px 18px; } .ownership-kind,.ownership-copy,.ownership-due { grid-column: 1; } .ownership-item>.row-chevron { grid-column: 2; grid-row: 1/4; } .ownership-due { margin-top: 2px; }
   .connection-section,.global-setting { align-items: stretch; flex-direction: column; } .connection-section>[data-slot='button'] { width: 100%; } .setting-row { grid-template-columns: 1fr; gap: 12px; } .setting-row>[data-slot='switch'] { justify-self: start; }
