@@ -1174,8 +1174,18 @@ h1 {
   z-index: 9999;
   width: 286px;
   height: 96px;
+  isolation: isolate;
   pointer-events: none;
-  transform: translate(-120%, -120%);
+  will-change: transform;
+}
+.topic-drag-native-shim {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 1px;
+  height: 1px;
+  opacity: 0.001;
+  pointer-events: none;
 }
 .topic-drag-layer,
 .topic-drag-card {
@@ -2595,5 +2605,8 @@ h1 {
     transition-duration: 0.01ms !important;
     animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;
+  }
+  .topic-drag-card {
+    transform: none !important;
   }
 }

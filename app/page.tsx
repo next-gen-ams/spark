@@ -3,6 +3,12 @@
 import * as React from 'react';
 import Image from 'next/image';
 import {
+  motion,
+  useMotionValue,
+  useReducedMotion,
+  useSpring,
+} from 'motion/react';
+import {
   Archive,
   ArrowRight,
   Bell,
@@ -75,6 +81,7 @@ import { Switch } from '@/components/ui/switch';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Textarea } from '@/components/ui/textarea';
 import { Toaster, toast } from '@/components/ui/toast';
+import { motionTokens, springs } from '@/lib/motion-tokens';
 import {
   connectMicrosoft,
   disconnectMicrosoft,
@@ -721,7 +728,13 @@ export default function Home() {
     null,
   );
   const [dragTargetDate, setDragTargetDate] = React.useState('');
-  const dragPreviewRef = React.useRef<HTMLDivElement | null>(null);
+  const nativeDragShimRef = React.useRef<HTMLCanvasElement | null>(null);
+  const dragPreviewLockedRef = React.useRef(false);
+  const dragPreviewX = useMotionValue(-400);
+  const dragPreviewY = useMotionValue(-400);
+  const dragPreviewSpringX = useSpring(dragPreviewX, springs.snappy);
+  const dragPreviewSpringY = useSpring(dragPreviewY, springs.snappy);
+  const prefersReducedMotion = useReducedMotion();
   const [activeTopicTab, setActiveTopicTab] = React.useState('topic');
   const [topicDraft, setTopicDraft] = React.useState({
     title: '',
@@ -742,6 +755,35 @@ export default function Home() {
     React.useState<DecisionTab>('People & culture');
   const [decisionOwner, setDecisionOwner] = React.useState('All owners');
   const [now, setNow] = React.useState(() => new Date());
+
+  const positionTopicDragPreview = React.useCallback(
+    (clientX: number, clientY: number) => {
+      if (
+        typeof window === 'undefined' ||
+        (clientX === 0 && clientY === 0) ||
+        (prefersReducedMotion && dragPreviewLockedRef.current)
+      ) {
+        return;
+      }
+
+      const previewWidth = 286;
+      const previewHeight = 96;
+      const inset = motionTokens.distance.md;
+      const nextX = Math.min(
+        Math.max(inset, clientX + inset),
+        Math.max(inset, window.innerWidth - previewWidth - inset),
+      );
+      const nextY = Math.min(
+        Math.max(inset, clientY + inset),
+        Math.max(inset, window.innerHeight - previewHeight - inset),
+      );
+
+      dragPreviewX.set(nextX);
+      dragPreviewY.set(nextY);
+      if (prefersReducedMotion) dragPreviewLockedRef.current = true;
+    },
+    [dragPreviewX, dragPreviewY, prefersReducedMotion],
+  );
 
   function beginMutation(action: Exclude<PendingMutation, null>) {
     if (mutationLockRef.current) return false;
@@ -770,6 +812,10 @@ export default function Home() {
   const filteredTopics = selectedMeetingTopics.filter((topic) =>
     fuzzyMatch(`${topic.title} ${topic.category} ${topic.lead}`, search),
   );
+  const draggedTopic =
+    draggedTopicId === null
+      ? null
+      : topics.find((topic) => topic.id === draggedTopicId) || null;
   const archiveThreshold = React.useMemo(
     () => decisionArchiveThreshold(now),
     [now],
@@ -888,6 +934,21 @@ export default function Home() {
     const timer = window.setInterval(() => setNow(new Date()), 60_000);
     return () => window.clearInterval(timer);
   }, []);
+
+  React.useEffect(() => {
+    if (draggedTopicId === null) return;
+
+    const followPointer = (event: DragEvent) => {
+      positionTopicDragPreview(event.clientX, event.clientY);
+    };
+
+    document.addEventListener('drag', followPointer, { passive: true });
+    document.addEventListener('dragover', followPointer, { passive: true });
+    return () => {
+      document.removeEventListener('drag', followPointer);
+      document.removeEventListener('dragover', followPointer);
+    };
+  }, [draggedTopicId, positionTopicDragPreview]);
 
   React.useEffect(() => {
     if (!microsoftAuthConfigured) return;
@@ -1255,42 +1316,26 @@ export default function Home() {
     event.dataTransfer.effectAllowed = 'move';
     event.dataTransfer.setData('text/plain', String(topic.id));
 
-    dragPreviewRef.current?.remove();
-    const preview = document.createElement('div');
-    const rearLayer = document.createElement('span');
-    const middleLayer = document.createElement('span');
-    const card = document.createElement('div');
-    const category = document.createElement('span');
-    const title = document.createElement('strong');
-    const meta = document.createElement('div');
-    const movementCue = document.createElement('span');
-    preview.className = 'topic-drag-preview';
-    rearLayer.className = 'topic-drag-layer topic-drag-layer-rear';
-    middleLayer.className = 'topic-drag-layer topic-drag-layer-middle';
-    card.className = 'topic-drag-card';
-    category.className = 'topic-drag-category';
-    meta.className = 'topic-drag-meta';
-    movementCue.className = 'topic-drag-cue';
-    category.textContent = topic.category;
-    title.textContent = topic.title;
-    movementCue.textContent = 'Moving topic';
-    meta.appendChild(category);
-    meta.appendChild(movementCue);
-    card.appendChild(title);
-    card.appendChild(meta);
-    preview.appendChild(rearLayer);
-    preview.appendChild(middleLayer);
-    preview.appendChild(card);
-    document.body.appendChild(preview);
-    preview.getBoundingClientRect();
-    event.dataTransfer.setDragImage(preview, 38, 22);
-    dragPreviewRef.current = preview;
+    nativeDragShimRef.current?.remove();
+    const nativeDragShim = document.createElement('canvas');
+    nativeDragShim.className = 'topic-drag-native-shim';
+    nativeDragShim.width = 1;
+    nativeDragShim.height = 1;
+    document.body.appendChild(nativeDragShim);
+    nativeDragShim.getBoundingClientRect();
+    event.dataTransfer.setDragImage(nativeDragShim, 0, 0);
+    nativeDragShimRef.current = nativeDragShim;
+    dragPreviewLockedRef.current = false;
+    positionTopicDragPreview(event.clientX, event.clientY);
     setDraggedTopicId(topic.id);
   }
 
   function removeTopicDragPreview() {
-    dragPreviewRef.current?.remove();
-    dragPreviewRef.current = null;
+    nativeDragShimRef.current?.remove();
+    nativeDragShimRef.current = null;
+    dragPreviewLockedRef.current = false;
+    dragPreviewX.set(-400);
+    dragPreviewY.set(-400);
   }
 
   function clearTopicDrag() {
@@ -1606,6 +1651,29 @@ export default function Home() {
   return (
     <Toaster>
       <div className="app-shell">
+        {draggedTopic ? (
+          <motion.div
+            aria-hidden="true"
+            className="topic-drag-preview"
+            initial={false}
+            style={{
+              x: prefersReducedMotion ? dragPreviewX : dragPreviewSpringX,
+              y: prefersReducedMotion ? dragPreviewY : dragPreviewSpringY,
+            }}
+          >
+            <span className="topic-drag-layer topic-drag-layer-rear" />
+            <span className="topic-drag-layer topic-drag-layer-middle" />
+            <div className="topic-drag-card">
+              <strong>{draggedTopic.title}</strong>
+              <div className="topic-drag-meta">
+                <span className="topic-drag-category">
+                  {draggedTopic.category}
+                </span>
+                <span className="topic-drag-cue">Moving topic</span>
+              </div>
+            </div>
+          </motion.div>
+        ) : null}
         <header className="brand-header">
           <div className="brand-lockup">
             <Image
