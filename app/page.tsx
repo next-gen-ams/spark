@@ -721,6 +721,7 @@ export default function Home() {
     null,
   );
   const [dragTargetDate, setDragTargetDate] = React.useState('');
+  const dragPreviewRef = React.useRef<HTMLDivElement | null>(null);
   const [activeTopicTab, setActiveTopicTab] = React.useState('topic');
   const [topicDraft, setTopicDraft] = React.useState({
     title: '',
@@ -1253,10 +1254,30 @@ export default function Home() {
     }
     event.dataTransfer.effectAllowed = 'move';
     event.dataTransfer.setData('text/plain', String(topic.id));
+
+    dragPreviewRef.current?.remove();
+    const preview = document.createElement('div');
+    const category = document.createElement('span');
+    const title = document.createElement('strong');
+    preview.className = 'topic-drag-preview';
+    category.textContent = topic.category;
+    title.textContent = topic.title;
+    preview.appendChild(category);
+    preview.appendChild(title);
+    document.body.appendChild(preview);
+    preview.getBoundingClientRect();
+    event.dataTransfer.setDragImage(preview, 18, 18);
+    dragPreviewRef.current = preview;
     setDraggedTopicId(topic.id);
   }
 
+  function removeTopicDragPreview() {
+    dragPreviewRef.current?.remove();
+    dragPreviewRef.current = null;
+  }
+
   function clearTopicDrag() {
+    removeTopicDragPreview();
     setDraggedTopicId(null);
     setDragTargetDate('');
   }
@@ -1272,6 +1293,7 @@ export default function Home() {
       : draggedTopicId;
     const topic = topics.find((item) => item.id === topicId);
     setDragTargetDate('');
+    removeTopicDragPreview();
     if (!topic || topic.meetingDate === targetMeeting) {
       setDraggedTopicId(null);
       return;
