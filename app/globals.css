@@ -832,6 +832,15 @@ h1 {
   background: linear-gradient(140deg, #f77025, #ff875d);
   box-shadow: 0 16px 34px rgb(247 112 37 / 0.24);
 }
+.meeting-option-card.is-drop-target {
+  outline: 3px solid #ff6632;
+  outline-offset: 3px;
+  transform: translateY(-2px);
+  box-shadow: 0 18px 38px rgb(37 40 43 / 0.18);
+}
+.meeting-option-card.is-today.is-drop-target {
+  outline-color: #0e1f3f;
+}
 .meeting-card-select {
   min-width: 0;
   display: grid;
@@ -883,7 +892,17 @@ h1 {
   color: #d94d1e;
 }
 .meeting-option-card .meeting-card-action {
-  width: 100%;
+  width: auto;
+  min-height: 38px;
+  justify-self: start;
+  padding-inline: 12px;
+  border-radius: 10px;
+  font-size: 0.79rem;
+  box-shadow: 0 6px 16px rgb(255 102 50 / 0.18);
+}
+.meeting-option-card .meeting-card-action svg {
+  width: 15px;
+  height: 15px;
 }
 .meeting-option-card.is-today .meeting-card-action {
   color: #d94d1e;
@@ -1127,12 +1146,11 @@ h1 {
   background: rgb(248 250 252 / 0.35);
 }
 .agenda-topic-row {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
-  align-items: center;
-  gap: 12px;
-  padding-right: 16px;
   border-bottom: 1px solid rgb(216 224 228 / 0.8);
+  cursor: grab;
+  transition:
+    opacity 140ms ease-out,
+    background 140ms ease-out;
 }
 .agenda-topic-row:last-child {
   border-bottom: 0;
@@ -1140,9 +1158,18 @@ h1 {
 .agenda-topic-row .agenda-row {
   border-bottom: 0;
 }
-.agenda-move-action {
-  min-height: 42px;
-  border-radius: 12px;
+.agenda-topic-row:active {
+  cursor: grabbing;
+}
+.agenda-topic-row.is-dragging {
+  opacity: 0.46;
+  background: rgb(0 139 212 / 0.08);
+}
+.agenda-drag-hint {
+  margin-top: 4px;
+  color: #66758a;
+  font-size: 0.75rem;
+  line-height: 1.35;
 }
 .agenda-row {
   width: 100%;
@@ -1251,11 +1278,6 @@ h1 {
   max-width: 880px;
 }
 .backlog-row {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
-  align-items: center;
-  gap: 14px;
-  padding: 0 16px 0 0;
   border-bottom: 1px solid rgb(155 170 188 / 0.36);
 }
 .backlog-row:last-child {
@@ -1280,10 +1302,6 @@ h1 {
 .backlog-open:focus-visible {
   outline: 3px solid rgb(0 154 230 / 0.32);
   outline-offset: -3px;
-}
-.backlog-row > [data-slot='button'] {
-  min-height: 44px;
-  border-radius: 12px;
 }
 
 .decisions-view {
@@ -2294,16 +2312,13 @@ h1 {
     padding: 16px 14px;
   }
   .agenda-topic-row {
-    grid-template-columns: 1fr;
-    gap: 0;
-    padding: 0 14px 14px;
+    padding: 0;
   }
   .agenda-topic-row .agenda-row {
-    width: calc(100% + 28px);
-    margin-inline: -14px;
-  }
-  .agenda-move-action {
     width: 100%;
+  }
+  .agenda-drag-hint {
+    display: none;
   }
   .agenda-topline {
     gap: 7px;
@@ -2359,18 +2374,12 @@ h1 {
     margin-inline: auto;
   }
   .backlog-row {
-    grid-template-columns: 1fr;
-    padding: 0 14px 16px;
-    gap: 4px;
+    padding: 0;
   }
   .backlog-open {
-    width: calc(100% + 28px);
-    margin-inline: -14px;
+    width: 100%;
     grid-template-columns: 30px minmax(0, 1fr);
     padding: 16px 14px;
-  }
-  .backlog-row > [data-slot='button'] {
-    width: 100%;
   }
   .decision-tab-list {
     height: 58px;

@@ -98,7 +98,6 @@ import {
   type WorkspaceTopic as Topic,
 } from '@/lib/emt-api';
 import {
-  addMeetingFortnight,
   buildMeetingSchedule,
   meetingDateLong,
   MELBOURNE_TIME_ZONE,
@@ -718,6 +717,10 @@ export default function Home() {
   );
   const [activeMeetingDate, setActiveMeetingDate] = React.useState('');
   const [newMeetingDate, setNewMeetingDate] = React.useState('');
+  const [draggedTopicId, setDraggedTopicId] = React.useState<number | null>(
+    null,
+  );
+  const [dragTargetDate, setDragTargetDate] = React.useState('');
   const [activeTopicTab, setActiveTopicTab] = React.useState('topic');
   const [topicDraft, setTopicDraft] = React.useState({
     title: '',
@@ -1103,7 +1106,9 @@ export default function Home() {
     setTopics((current) => placeInBucket(current, 'agenda'));
     setBacklog((current) => placeInBucket(current, 'backlog'));
     setHistoricalDecisions((current) => placeInBucket(current, 'history'));
-    setSelectedTopic(updated);
+    setSelectedTopic((current) =>
+      current?.id === updated.id ? updated : current,
+    );
   }
 
   async function updateTopic(
@@ -1241,32 +1246,47 @@ export default function Home() {
     }
   }
 
-  async function moveToAgenda(topic: Topic) {
-    const targetMeeting = meetingSchedule[0]?.iso;
-    if (!targetMeeting) return;
-    const saved = await updateTopic(
-      { ...topic, bucket: 'agenda', meetingDate: targetMeeting },
-      'move-topic',
-    );
-    if (!saved) return;
-    toast.add({
-      type: 'success',
-      title: 'Moved to next meeting',
-      description: `${topic.title} · ${meetingDateLong(targetMeeting)}`,
-    });
+  function beginTopicDrag(event: React.DragEvent<HTMLElement>, topic: Topic) {
+    if (pendingMutation !== null) {
+      event.preventDefault();
+      return;
+    }
+    event.dataTransfer.effectAllowed = 'move';
+    event.dataTransfer.setData('text/plain', String(topic.id));
+    setDraggedTopicId(topic.id);
   }
 
-  async function moveToFollowingMeeting(topic: Topic) {
-    if (!topic.meetingDate) return;
-    const targetMeeting = addMeetingFortnight(topic.meetingDate);
+  function clearTopicDrag() {
+    setDraggedTopicId(null);
+    setDragTargetDate('');
+  }
+
+  async function assignDraggedTopic(
+    event: React.DragEvent<HTMLElement>,
+    targetMeeting: string,
+  ) {
+    event.preventDefault();
+    const transferredId = Number(event.dataTransfer.getData('text/plain'));
+    const topicId = Number.isFinite(transferredId)
+      ? transferredId
+      : draggedTopicId;
+    const topic = topics.find((item) => item.id === topicId);
+    setDragTargetDate('');
+    if (!topic || topic.meetingDate === targetMeeting) {
+      setDraggedTopicId(null);
+      return;
+    }
+
     const saved = await updateTopic(
       { ...topic, bucket: 'agenda', meetingDate: targetMeeting },
       'move-topic',
     );
+    setDraggedTopicId(null);
     if (!saved) return;
+    setActiveMeetingDate(targetMeeting);
     toast.add({
       type: 'success',
-      title: 'Moved to the following meeting',
+      title: 'Meeting updated',
       description: `${topic.title} · ${meetingDateLong(targetMeeting)}`,
     });
   }
@@ -1661,9 +1681,10 @@ export default function Home() {
                         (topic) => topic.meetingDate === meeting.iso,
                       ).length;
                       const isSelected = selectedMeetingDate === meeting.iso;
+                      const isDropTarget = dragTargetDate === meeting.iso;
                       return (
                         <article
-                          className={`meeting-option-card${meeting.isToday ? ' is-today' : ''}${isSelected ? ' is-selected' : ''}`}
+                          className={`meeting-option-card${meeting.isToday ? ' is-today' : ''}${isSelected ? ' is-selected' : ''}${isDropTarget ? ' is-drop-target' : ''}`}
                           key={meeting.iso}
                         >
                           <button
@@ -1671,6 +1692,29 @@ export default function Home() {
                             className="meeting-card-select"
                             aria-pressed={isSelected}
                             onClick={() => setActiveMeetingDate(meeting.iso)}
+                            onDragEnter={(event) => {
+                              if (draggedTopicId === null) return;
+                              event.preventDefault();
+                              setDragTargetDate(meeting.iso);
+                            }}
+                            onDragOver={(event) => {
+                              if (draggedTopicId === null) return;
+                              event.preventDefault();
+                              event.dataTransfer.dropEffect = 'move';
+                            }}
+                            onDragLeave={(event) => {
+                              const nextTarget = event.relatedTarget;
+                              if (
+                                nextTarget instanceof Node &&
+                                event.currentTarget.contains(nextTarget)
+                              ) {
+                                return;
+                              }
+                              setDragTargetDate('');
+                            }}
+                            onDrop={(event) =>
+                              void assignDraggedTopic(event, meeting.iso)
+                            }
                           >
                             <span>
                               {meeting.isToday
@@ -1681,8 +1725,9 @@ export default function Home() {
                             </span>
                             <strong>{meeting.longDate}</strong>
                             <small>
-                              {meetingTopicCount}{' '}
-                              {meetingTopicCount === 1 ? 'topic' : 'topics'}
+                              {isDropTarget
+                                ? 'Drop topic here'
+                                : `${meetingTopicCount} ${meetingTopicCount === 1 ? 'topic' : 'topics'}`}
                             </small>
                             <Badge className="countdown-badge">
                               {meeting.isToday
@@ -1724,6 +1769,10 @@ export default function Home() {
                             ? 'topic'
                             : 'topics'}
                         </p>
+                        <p className="agenda-drag-hint">
+                          Drag a topic onto another meeting card, or open it to
+                          choose a meeting.
+                        </p>
                       </div>
                       <label className="search-field" htmlFor="agenda-search">
                         <Search aria-hidden="true" />
@@ -1738,7 +1787,13 @@ export default function Home() {
                     </div>
                     <div className="agenda-list">
                       {filteredTopics.map((topic, index) => (
-                        <div className="agenda-topic-row" key={topic.id}>
+                        <div
+                          className={`agenda-topic-row${draggedTopicId === topic.id ? ' is-dragging' : ''}`}
+                          draggable={pendingMutation === null}
+                          key={topic.id}
+                          onDragStart={(event) => beginTopicDrag(event, topic)}
+                          onDragEnd={clearTopicDrag}
+                        >
                           <button
                             type="button"
                             className="agenda-row"
@@ -1763,22 +1818,6 @@ export default function Home() {
                               aria-hidden="true"
                             />
                           </button>
-                          <Button
-                            variant="secondary"
-                            className="agenda-move-action"
-                            disabled={pendingMutation !== null}
-                            onClick={() => void moveToFollowingMeeting(topic)}
-                          >
-                            {pendingMutation === 'move-topic' ? (
-                              <LoaderCircle
-                                className="spin"
-                                aria-hidden="true"
-                              />
-                            ) : (
-                              <ArrowRight aria-hidden="true" />
-                            )}
-                            Move to next meeting
-                          </Button>
                         </div>
                       ))}
                       {filteredTopics.length === 0 ? (
@@ -1807,8 +1846,7 @@ export default function Home() {
                       </p>
                       <h1 id="backlog-title">Discussion backlog</h1>
                       <p className="intro-copy">
-                        Move a topic into the next meeting when it is ready for
-                        the EMT.
+                        Open a topic to assign it to an upcoming EMT meeting.
                       </p>
                     </div>
                   </div>
@@ -1855,12 +1893,6 @@ export default function Home() {
                               </span>
                             </span>
                           </button>
-                          <Button
-                            variant="secondary"
-                            onClick={() => moveToAgenda(topic)}
-                          >
-                            Move to next meeting
-                          </Button>
                         </div>
                       ))}
                       {backlog.length === 0 ? (
