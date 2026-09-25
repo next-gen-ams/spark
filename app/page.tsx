@@ -1257,16 +1257,33 @@ export default function Home() {
 
     dragPreviewRef.current?.remove();
     const preview = document.createElement('div');
+    const rearLayer = document.createElement('span');
+    const middleLayer = document.createElement('span');
+    const card = document.createElement('div');
     const category = document.createElement('span');
     const title = document.createElement('strong');
+    const meta = document.createElement('div');
+    const movementCue = document.createElement('span');
     preview.className = 'topic-drag-preview';
+    rearLayer.className = 'topic-drag-layer topic-drag-layer-rear';
+    middleLayer.className = 'topic-drag-layer topic-drag-layer-middle';
+    card.className = 'topic-drag-card';
+    category.className = 'topic-drag-category';
+    meta.className = 'topic-drag-meta';
+    movementCue.className = 'topic-drag-cue';
     category.textContent = topic.category;
     title.textContent = topic.title;
-    preview.appendChild(category);
-    preview.appendChild(title);
+    movementCue.textContent = 'Moving topic';
+    meta.appendChild(category);
+    meta.appendChild(movementCue);
+    card.appendChild(title);
+    card.appendChild(meta);
+    preview.appendChild(rearLayer);
+    preview.appendChild(middleLayer);
+    preview.appendChild(card);
     document.body.appendChild(preview);
     preview.getBoundingClientRect();
-    event.dataTransfer.setDragImage(preview, 18, 18);
+    event.dataTransfer.setDragImage(preview, 38, 22);
     dragPreviewRef.current = preview;
     setDraggedTopicId(topic.id);
   }
