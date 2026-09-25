@@ -876,6 +876,12 @@ h1 {
 .meeting-option-card.is-today .meeting-card-select small {
   color: #fff;
 }
+.meeting-option-card.is-selected .meeting-card-select .countdown-badge {
+  color: #0071b4;
+}
+.meeting-option-card.is-today .meeting-card-select .countdown-badge {
+  color: #d94d1e;
+}
 .meeting-option-card .meeting-card-action {
   width: 100%;
 }
