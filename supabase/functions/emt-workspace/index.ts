@@ -26,8 +26,11 @@ type TopicInput = {
   followUpAction?: string;
   dueDate?: string;
   decisionDateIso?: string;
+  meetingDate?: string;
   source?: string;
 };
+
+const MELBOURNE_TIME_ZONE = 'Australia/Melbourne';
 
 function corsHeaders(origin: string) {
   return {
@@ -65,7 +68,45 @@ function optionalDate(value: unknown, field: string) {
   if (typeof value !== 'string' || !/^\d{4}-\d{2}-\d{2}$/.test(value)) {
     throw new Error(`${field} must use YYYY-MM-DD.`);
   }
+  const parsed = new Date(`${value}T00:00:00Z`);
+  if (
+    Number.isNaN(parsed.getTime()) ||
+    parsed.toISOString().slice(0, 10) !== value
+  )
+    throw new Error(`${field} is invalid.`);
   return value;
+}
+
+function localIsoDate(now = new Date()) {
+  const parts = new Intl.DateTimeFormat('en-AU', {
+    timeZone: MELBOURNE_TIME_ZONE,
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+  }).formatToParts(now);
+  const values = Object.fromEntries(
+    parts.map((part) => [part.type, part.value]),
+  );
+  return `${values.year}-${values.month}-${values.day}`;
+}
+
+function validateMeetingDate(
+  value: unknown,
+  bucket: string,
+  meetingAnchorDate: string,
+) {
+  const meetingDate = optionalDate(value, 'Meeting date');
+  if (bucket === 'backlog') return null;
+  if (bucket === 'agenda' && !meetingDate)
+    throw new Error('Agenda topics require a meeting date.');
+  if (!meetingDate) return null;
+  const date = new Date(`${meetingDate}T00:00:00Z`).getTime();
+  const anchor = new Date(`${meetingAnchorDate}T00:00:00Z`).getTime();
+  if ((date - anchor) % (14 * 86_400_000) !== 0)
+    throw new Error('Meeting date must follow the fortnightly EMT schedule.');
+  if (bucket === 'agenda' && meetingDate < localIsoDate())
+    throw new Error('Past meetings cannot receive agenda topics.');
+  return meetingDate;
 }
 
 function minutesFrom(value: unknown) {
@@ -81,6 +122,8 @@ function topicPayload(
   input: TopicInput,
   profile: MicrosoftProfile,
   allowedCategories: Set<string>,
+  allowedLeads: Set<string>,
+  meetingAnchorDate: string,
   includeId = false,
 ) {
   const bucket = requiredString(input.bucket ?? 'agenda', 'Bucket', 20);
@@ -89,13 +132,16 @@ function topicPayload(
   if (!BUCKETS.has(bucket)) throw new Error('Bucket is invalid.');
   if (!allowedCategories.has(category)) throw new Error('Category is invalid.');
   if (!STATUSES.has(status)) throw new Error('Status is invalid.');
+  const lead = requiredString(input.lead, 'Lead', 120);
+  if (!allowedLeads.has(lead))
+    throw new Error('Proposer is not an active EMT member.');
 
   const payload: Record<string, unknown> = {
     bucket,
     title: requiredString(input.title, 'Title', 160),
     category,
     status,
-    lead: requiredString(input.lead, 'Lead', 120),
+    lead,
     lead_initials: requiredString(input.leadInitials, 'Lead initials', 8),
     time_minutes: minutesFrom(input.time),
     note: optionalString(input.note, 'Note', 4000),
@@ -114,6 +160,11 @@ function topicPayload(
     ),
     due_date: optionalDate(input.dueDate, 'Due date'),
     decision_date: optionalDate(input.decisionDateIso, 'Decision date'),
+    meeting_date: validateMeetingDate(
+      input.meetingDate,
+      bucket,
+      meetingAnchorDate,
+    ),
     source: optionalString(input.source || 'Agenda', 'Source', 80),
     remind_lead: false,
     remind_followup: false,
@@ -146,6 +197,7 @@ function mapTopic(row: Record<string, unknown>) {
     dueDate: row.due_date || '',
     decisionDateIso: row.decision_date || undefined,
     decisionDate: row.decision_date || undefined,
+    meetingDate: row.meeting_date || undefined,
     source: row.source,
   };
 }
@@ -183,6 +235,25 @@ async function getAllowedCategories(database: ReturnType<typeof createClient>) {
   );
 }
 
+async function getAllowedLeads(database: ReturnType<typeof createClient>) {
+  const { data, error } = await database
+    .from('emt_members')
+    .select('display_name')
+    .eq('active', true);
+  if (error) throw error;
+  return new Set((data || []).map((member) => String(member.display_name)));
+}
+
+async function getMeetingAnchorDate(database: ReturnType<typeof createClient>) {
+  const { data, error } = await database
+    .from('emt_settings')
+    .select('meeting_anchor_date')
+    .eq('workspace_id', 'gms-emt')
+    .single();
+  if (error) throw error;
+  return String(data.meeting_anchor_date);
+}
+
 Deno.serve(async (request) => {
   const origin = request.headers.get('origin') || '';
   if (!EMT_ALLOWED_ORIGINS.has(origin))
@@ -204,30 +275,47 @@ Deno.serve(async (request) => {
     const profile = await authenticateEmtMember(request, database);
 
     if (request.method === 'GET') {
-      const [topicsResult, settingsResult, categoriesResult, membersResult] =
-        await Promise.all([
-          database
-            .from('emt_topics')
-            .select('*')
-            .order('id', { ascending: true }),
-          database
-            .from('emt_member_settings')
-            .select('*')
-            .eq('member_email', profile.email)
-            .maybeSingle(),
-          database
-            .from('emt_topic_categories')
-            .select('*')
-            .order('sort_order', { ascending: true }),
-          database
-            .from('emt_members')
-            .select('display_name,email')
-            .eq('active', true)
-            .not('email', 'is', null)
-            .order('created_at', { ascending: true }),
-        ]);
+      const today = localIsoDate();
+      const { error: rolloverError } = await database.rpc(
+        'emt_recycle_expired_agenda',
+        { reference_date: today },
+      );
+      if (rolloverError) throw rolloverError;
+      const [
+        topicsResult,
+        settingsResult,
+        workspaceSettingsResult,
+        categoriesResult,
+        membersResult,
+      ] = await Promise.all([
+        database
+          .from('emt_topics')
+          .select('*')
+          .order('id', { ascending: true }),
+        database
+          .from('emt_member_settings')
+          .select('*')
+          .eq('member_email', profile.email)
+          .maybeSingle(),
+        database
+          .from('emt_settings')
+          .select('meeting_anchor_date')
+          .eq('workspace_id', 'gms-emt')
+          .single(),
+        database
+          .from('emt_topic_categories')
+          .select('*')
+          .order('sort_order', { ascending: true }),
+        database
+          .from('emt_members')
+          .select('display_name,email')
+          .eq('active', true)
+          .not('email', 'is', null)
+          .order('created_at', { ascending: true }),
+      ]);
       if (topicsResult.error) throw topicsResult.error;
       if (settingsResult.error) throw settingsResult.error;
+      if (workspaceSettingsResult.error) throw workspaceSettingsResult.error;
       if (categoriesResult.error) throw categoriesResult.error;
       if (membersResult.error) throw membersResult.error;
       const categoryUsage = new Map<string, number>();
@@ -254,6 +342,11 @@ Deno.serve(async (request) => {
           mapTopic(row as Record<string, unknown>),
         ),
         settings: mapSettings(memberSettings as Record<string, unknown>),
+        schedule: {
+          meetingAnchorDate: String(
+            workspaceSettingsResult.data.meeting_anchor_date,
+          ),
+        },
         categories: (categoriesResult.data || []).map((row) =>
           mapCategory(
             row as Record<string, unknown>,
@@ -276,10 +369,18 @@ Deno.serve(async (request) => {
     };
 
     if (body.action === 'create_topic') {
+      const [allowedCategories, allowedLeads, meetingAnchorDate] =
+        await Promise.all([
+          getAllowedCategories(database),
+          getAllowedLeads(database),
+          getMeetingAnchorDate(database),
+        ]);
       const payload = topicPayload(
         body.topic || {},
         profile,
-        await getAllowedCategories(database),
+        allowedCategories,
+        allowedLeads,
+        meetingAnchorDate,
       );
       const { data, error } = await database
         .from('emt_topics')
@@ -295,10 +396,18 @@ Deno.serve(async (request) => {
     }
 
     if (body.action === 'save_topic') {
+      const [allowedCategories, allowedLeads, meetingAnchorDate] =
+        await Promise.all([
+          getAllowedCategories(database),
+          getAllowedLeads(database),
+          getMeetingAnchorDate(database),
+        ]);
       const payload = topicPayload(
         body.topic || {},
         profile,
-        await getAllowedCategories(database),
+        allowedCategories,
+        allowedLeads,
+        meetingAnchorDate,
         true,
       );
       const id = payload.id;
@@ -327,18 +436,20 @@ Deno.serve(async (request) => {
         throw new Error('This discussion does not have a recorded decision.');
 
       const movedToBacklog = existing.bucket === 'history';
+      const decisionReset: Record<string, unknown> = {
+        bucket: movedToBacklog ? 'backlog' : existing.bucket,
+        decision: '',
+        follow_up_owner: '',
+        follow_up_action: '',
+        due_date: null,
+        decision_date: null,
+        updated_by: profile.email,
+        updated_at: new Date().toISOString(),
+      };
+      if (movedToBacklog) decisionReset.meeting_date = null;
       const { data, error } = await database
         .from('emt_topics')
-        .update({
-          bucket: movedToBacklog ? 'backlog' : existing.bucket,
-          decision: '',
-          follow_up_owner: '',
-          follow_up_action: '',
-          due_date: null,
-          decision_date: null,
-          updated_by: profile.email,
-          updated_at: new Date().toISOString(),
-        })
+        .update(decisionReset)
         .eq('id', body.id)
         .neq('decision', '')
         .select('*')

@@ -97,6 +97,12 @@ import {
   type WorkspaceSettings,
   type WorkspaceTopic as Topic,
 } from '@/lib/emt-api';
+import {
+  addMeetingFortnight,
+  buildMeetingSchedule,
+  meetingDateLong,
+  MELBOURNE_TIME_ZONE,
+} from '@/lib/meeting-schedule';
 
 type WorkspaceView =
   | 'meeting'
@@ -117,6 +123,9 @@ type PendingMutation =
   | 'delete-category'
   | 'delete-decision'
   | 'delete-discussion'
+  | 'move-topic'
+  | 'save-decision'
+  | 'save-topic'
   | null;
 
 const DEFAULT_TOPIC_CATEGORIES = [
@@ -157,6 +166,7 @@ const initialTopics: Topic[] = [
     dueDate: '2026-09-22',
     decisionDate: '3 September 2026',
     decisionDateIso: '2026-09-03',
+    meetingDate: '2026-09-28',
     source: 'Agenda',
   },
   {
@@ -175,6 +185,7 @@ const initialTopics: Topic[] = [
     followUpOwner: '',
     followUpAction: '',
     dueDate: '',
+    meetingDate: '2026-09-28',
     source: 'Agenda',
   },
   {
@@ -192,6 +203,7 @@ const initialTopics: Topic[] = [
     followUpOwner: '',
     followUpAction: '',
     dueDate: '',
+    meetingDate: '2026-09-28',
     source: 'Agenda',
   },
   {
@@ -213,6 +225,7 @@ const initialTopics: Topic[] = [
     dueDate: '2026-09-18',
     decisionDate: '20 August 2026',
     decisionDateIso: '2026-08-20',
+    meetingDate: '2026-09-28',
     source: 'Agenda',
   },
 ];
@@ -355,10 +368,7 @@ function fuzzyMatch(value: string, query: string) {
     );
 }
 
-const DAY_MS = 86_400_000;
-const FORTNIGHT_MS = DAY_MS * 14;
-const MEETING_ANCHOR = Date.UTC(2026, 8, 14);
-const MELBOURNE_TIME_ZONE = 'Australia/Melbourne';
+const DEFAULT_MEETING_ANCHOR = '2026-09-14';
 
 function melbourneDateSerial(date: Date) {
   const parts = new Intl.DateTimeFormat('en-AU', {
@@ -381,63 +391,6 @@ function decisionArchiveThreshold(now: Date) {
   const threshold = new Date(melbourneDateSerial(now));
   threshold.setUTCMonth(threshold.getUTCMonth() - 2);
   return threshold.toISOString().slice(0, 10);
-}
-
-function melbourneDateTime(dateSerial: number, hour: number, minute: number) {
-  const date = new Date(dateSerial);
-  const desired = Date.UTC(
-    date.getUTCFullYear(),
-    date.getUTCMonth(),
-    date.getUTCDate(),
-    hour,
-    minute,
-  );
-  let guess = desired;
-  const formatter = new Intl.DateTimeFormat('en-AU', {
-    timeZone: MELBOURNE_TIME_ZONE,
-    year: 'numeric',
-    month: 'numeric',
-    day: 'numeric',
-    hour: 'numeric',
-    minute: 'numeric',
-    hourCycle: 'h23',
-  });
-  for (let pass = 0; pass < 2; pass += 1) {
-    const parts = Object.fromEntries(
-      formatter
-        .formatToParts(new Date(guess))
-        .map((part) => [part.type, part.value]),
-    );
-    const represented = Date.UTC(
-      Number(parts.year),
-      Number(parts.month) - 1,
-      Number(parts.day),
-      Number(parts.hour),
-      Number(parts.minute),
-    );
-    guess += desired - represented;
-  }
-  return new Date(guess);
-}
-
-function buildMeetingSchedule(now: Date) {
-  const todaySerial = melbourneDateSerial(now);
-  const cyclesSinceAnchor = Math.floor(
-    (todaySerial - MEETING_ANCHOR) / FORTNIGHT_MS,
-  );
-  const cycleMeetingSerial = MEETING_ANCHOR + cyclesSinceAnchor * FORTNIGHT_MS;
-  const cycleMeetingTime = melbourneDateTime(cycleMeetingSerial, 9, 30);
-  const nextMeetingSerial =
-    cycleMeetingTime.getTime() > now.getTime()
-      ? cycleMeetingSerial
-      : cycleMeetingSerial + FORTNIGHT_MS;
-  return {
-    nextMeetingSerial,
-    countdownDays: Math.max(
-      0,
-      Math.round((nextMeetingSerial - todaySerial) / DAY_MS),
-    ),
-  };
 }
 
 function Navigation({
@@ -760,6 +713,19 @@ export default function Home() {
   const [newContext, setNewContext] = React.useState('');
   const [newDestination, setNewDestination] =
     React.useState<WorkspaceView>('meeting');
+  const [meetingAnchorDate, setMeetingAnchorDate] = React.useState(
+    DEFAULT_MEETING_ANCHOR,
+  );
+  const [activeMeetingDate, setActiveMeetingDate] = React.useState('');
+  const [newMeetingDate, setNewMeetingDate] = React.useState('');
+  const [activeTopicTab, setActiveTopicTab] = React.useState('topic');
+  const [topicDraft, setTopicDraft] = React.useState({
+    title: '',
+    category: 'Operations',
+    lead: '',
+    note: '',
+    destination: 'backlog',
+  });
   const [decisionDraft, setDecisionDraft] = React.useState({
     decision: '',
     followUpOwner: '',
@@ -785,18 +751,19 @@ export default function Home() {
     setPendingMutation(null);
   }
 
-  const meetingSchedule = React.useMemo(() => buildMeetingSchedule(now), [now]);
-  const meetingDateLong = new Intl.DateTimeFormat('en-AU', {
-    weekday: 'long',
-    day: 'numeric',
-    month: 'long',
-    year: 'numeric',
-    timeZone: 'UTC',
-  }).format(new Date(meetingSchedule.nextMeetingSerial));
-  const meetingDateIso = new Date(meetingSchedule.nextMeetingSerial)
-    .toISOString()
-    .slice(0, 10);
-  const filteredTopics = topics.filter((topic) =>
+  const meetingSchedule = React.useMemo(
+    () => buildMeetingSchedule(now, meetingAnchorDate),
+    [meetingAnchorDate, now],
+  );
+  const selectedMeetingDate =
+    activeMeetingDate || meetingSchedule[0]?.iso || '';
+  const selectedMeeting =
+    meetingSchedule.find((meeting) => meeting.iso === selectedMeetingDate) ||
+    meetingSchedule[0];
+  const selectedMeetingTopics = topics.filter(
+    (topic) => topic.meetingDate === selectedMeetingDate,
+  );
+  const filteredTopics = selectedMeetingTopics.filter((topic) =>
     fuzzyMatch(`${topic.title} ${topic.category} ${topic.lead}`, search),
   );
   const archiveThreshold = React.useMemo(
@@ -879,6 +846,15 @@ export default function Home() {
         ].slice(0, 4)
       : [];
 
+  React.useEffect(() => {
+    if (
+      meetingSchedule.length &&
+      !meetingSchedule.some((meeting) => meeting.iso === activeMeetingDate)
+    ) {
+      queueMicrotask(() => setActiveMeetingDate(meetingSchedule[0].iso));
+    }
+  }, [activeMeetingDate, meetingSchedule]);
+
   const selectView = React.useCallback((view: WorkspaceView) => {
     setActiveView(view);
     const url = new URL(window.location.href);
@@ -955,11 +931,13 @@ export default function Home() {
           profile,
           topics: sharedTopics,
           settings,
+          schedule,
           categories: sharedCategories,
           members: sharedMembers,
         }) => {
           if (!active) return;
           setMicrosoftProfile(profile);
+          setMeetingAnchorDate(schedule.meetingAnchorDate);
           setMembers(sharedMembers);
           setNewLead((current) =>
             sharedMembers.some((member) => member.displayName === current)
@@ -1052,6 +1030,10 @@ export default function Home() {
       followUpOwner: '',
       followUpAction: '',
       dueDate: '',
+      meetingDate:
+        newDestination === 'backlog'
+          ? undefined
+          : newMeetingDate || selectedMeetingDate,
       source: 'Agenda',
     };
     setWorkspaceStatus('saving');
@@ -1088,6 +1070,17 @@ export default function Home() {
 
   function openTopic(topic: Topic) {
     setSelectedTopic(topic);
+    setActiveTopicTab('topic');
+    setTopicDraft({
+      title: topic.title,
+      category: topic.category,
+      lead: topic.lead,
+      note: topic.note,
+      destination:
+        topic.bucket === 'backlog'
+          ? 'backlog'
+          : topic.meetingDate || selectedMeetingDate,
+    });
     setDecisionDraft({
       decision: topic.decision,
       followUpOwner: topic.followUpOwner,
@@ -1097,24 +1090,31 @@ export default function Home() {
   }
 
   function applyTopic(updated: Topic) {
-    setTopics((current) =>
-      current.map((topic) => (topic.id === updated.id ? updated : topic)),
-    );
-    setBacklog((current) =>
-      current.map((topic) => (topic.id === updated.id ? updated : topic)),
-    );
-    setHistoricalDecisions((current) =>
-      current.map((topic) => (topic.id === updated.id ? updated : topic)),
-    );
+    const placeInBucket = (
+      items: Topic[],
+      bucket: Topic['bucket'],
+    ): Topic[] => {
+      if (updated.bucket !== bucket)
+        return items.filter((topic) => topic.id !== updated.id);
+      return items.some((topic) => topic.id === updated.id)
+        ? items.map((topic) => (topic.id === updated.id ? updated : topic))
+        : [...items, updated];
+    };
+    setTopics((current) => placeInBucket(current, 'agenda'));
+    setBacklog((current) => placeInBucket(current, 'backlog'));
+    setHistoricalDecisions((current) => placeInBucket(current, 'history'));
     setSelectedTopic(updated);
   }
 
-  async function updateTopic(updated: Topic) {
+  async function updateTopic(
+    updated: Topic,
+    mutation: 'move-topic' | 'save-decision' | 'save-topic',
+  ) {
     if (!signedIn) {
       setSignInOpen(true);
       return null;
     }
-    applyTopic(updated);
+    if (!beginMutation(mutation)) return null;
     setWorkspaceStatus('saving');
     try {
       const saved = await saveEmtTopic(updated);
@@ -1129,21 +1129,28 @@ export default function Home() {
         description: error instanceof Error ? error.message : 'Try again.',
       });
       return null;
+    } finally {
+      finishMutation();
     }
   }
 
   async function saveDecision() {
     if (!selectedTopic) return;
-    const saved = await updateTopic({
-      ...selectedTopic,
-      ...decisionDraft,
-      decisionDate: decisionDraft.decision
-        ? selectedTopic.decisionDate || meetingDateLong
-        : undefined,
-      decisionDateIso: decisionDraft.decision
-        ? selectedTopic.decisionDateIso || meetingDateIso
-        : undefined,
-    });
+    const decisionMeetingDate =
+      selectedTopic.meetingDate || selectedMeetingDate;
+    const saved = await updateTopic(
+      {
+        ...selectedTopic,
+        ...decisionDraft,
+        decisionDate: decisionDraft.decision
+          ? selectedTopic.decisionDate || meetingDateLong(decisionMeetingDate)
+          : undefined,
+        decisionDateIso: decisionDraft.decision
+          ? selectedTopic.decisionDateIso || decisionMeetingDate
+          : undefined,
+      },
+      'save-decision',
+    );
     if (saved)
       toast.add({
         type: 'success',
@@ -1235,19 +1242,73 @@ export default function Home() {
   }
 
   async function moveToAgenda(topic: Topic) {
-    const saved = await updateTopic({ ...topic, bucket: 'agenda' });
-    if (!saved) return;
-    setBacklog((current) => current.filter((item) => item.id !== saved.id));
-    setTopics((current) =>
-      current.some((item) => item.id === saved.id)
-        ? current
-        : [...current, saved],
+    const targetMeeting = meetingSchedule[0]?.iso;
+    if (!targetMeeting) return;
+    const saved = await updateTopic(
+      { ...topic, bucket: 'agenda', meetingDate: targetMeeting },
+      'move-topic',
     );
+    if (!saved) return;
     toast.add({
       type: 'success',
       title: 'Moved to next meeting',
-      description: topic.title,
+      description: `${topic.title} · ${meetingDateLong(targetMeeting)}`,
     });
+  }
+
+  async function moveToFollowingMeeting(topic: Topic) {
+    if (!topic.meetingDate) return;
+    const targetMeeting = addMeetingFortnight(topic.meetingDate);
+    const saved = await updateTopic(
+      { ...topic, bucket: 'agenda', meetingDate: targetMeeting },
+      'move-topic',
+    );
+    if (!saved) return;
+    toast.add({
+      type: 'success',
+      title: 'Moved to the following meeting',
+      description: `${topic.title} · ${meetingDateLong(targetMeeting)}`,
+    });
+  }
+
+  async function saveTopicDetails() {
+    if (!selectedTopic || !topicDraft.title.trim()) return;
+    const destinationIsBacklog = topicDraft.destination === 'backlog';
+    const isHistorical = selectedTopic.bucket === 'history';
+    const leadInitials = topicDraft.lead
+      .split(/\s+/)
+      .filter(Boolean)
+      .map((part) => part[0])
+      .join('');
+    const saved = await updateTopic(
+      {
+        ...selectedTopic,
+        bucket: isHistorical
+          ? 'history'
+          : destinationIsBacklog
+            ? 'backlog'
+            : 'agenda',
+        meetingDate: isHistorical
+          ? selectedTopic.meetingDate
+          : destinationIsBacklog
+            ? undefined
+            : topicDraft.destination,
+        title: topicDraft.title.trim(),
+        category: topicDraft.category,
+        lead: topicDraft.lead,
+        leadInitials,
+        note: topicDraft.note.trim(),
+        prepAction: topicDraft.note.trim(),
+      },
+      'save-topic',
+    );
+    if (saved)
+      toast.add({
+        type: 'success',
+        title: 'Topic updated',
+        description:
+          'The discussion details and meeting assignment were saved.',
+      });
   }
 
   function currentSettings(
@@ -1588,33 +1649,62 @@ export default function Home() {
                       <p className="meeting-date">
                         Biweekly · every second Monday
                       </p>
-                      <h1 id="meeting-title">Next executive meeting</h1>
+                      <h1 id="meeting-title">Executive meeting schedule</h1>
                     </div>
                   </section>
                   <section
-                    className="next-meeting-card"
-                    aria-label="Next executive meeting date"
+                    className="meeting-card-grid"
+                    aria-label="Upcoming meetings"
                   >
-                    <div className="meeting-card-copy">
-                      <span>Next executive meeting</span>
-                      <strong>{meetingDateLong}</strong>
-                      <Badge className="countdown-badge">
-                        {meetingSchedule.countdownDays === 0
-                          ? 'Today'
-                          : `${meetingSchedule.countdownDays} days to go`}
-                      </Badge>
-                    </div>
-                    <Button
-                      className="primary-action meeting-card-action"
-                      size="lg"
-                      onClick={() => {
-                        setNewDestination('meeting');
-                        setAddOpen(true);
-                      }}
-                    >
-                      <Plus aria-hidden="true" />
-                      Add topic
-                    </Button>
+                    {meetingSchedule.map((meeting, index) => {
+                      const meetingTopicCount = topics.filter(
+                        (topic) => topic.meetingDate === meeting.iso,
+                      ).length;
+                      const isSelected = selectedMeetingDate === meeting.iso;
+                      return (
+                        <article
+                          className={`meeting-option-card${meeting.isToday ? ' is-today' : ''}${isSelected ? ' is-selected' : ''}`}
+                          key={meeting.iso}
+                        >
+                          <button
+                            type="button"
+                            className="meeting-card-select"
+                            aria-pressed={isSelected}
+                            onClick={() => setActiveMeetingDate(meeting.iso)}
+                          >
+                            <span>
+                              {meeting.isToday
+                                ? 'Today’s meeting'
+                                : index === 0
+                                  ? 'Next meeting'
+                                  : `Meeting ${index + 1}`}
+                            </span>
+                            <strong>{meeting.longDate}</strong>
+                            <small>
+                              {meetingTopicCount}{' '}
+                              {meetingTopicCount === 1 ? 'topic' : 'topics'}
+                            </small>
+                            <Badge className="countdown-badge">
+                              {meeting.isToday
+                                ? 'Today'
+                                : `${meeting.countdownDays} days to go`}
+                            </Badge>
+                          </button>
+                          <Button
+                            className="primary-action meeting-card-action"
+                            onClick={() => {
+                              setActiveMeetingDate(meeting.iso);
+                              setNewMeetingDate(meeting.iso);
+                              setNewDestination('meeting');
+                              setAddOpen(true);
+                            }}
+                          >
+                            <Plus aria-hidden="true" />
+                            Add topic
+                          </Button>
+                        </article>
+                      );
+                    })}
                   </section>
                   <section
                     className="agenda-panel"
@@ -1623,9 +1713,17 @@ export default function Home() {
                     <div className="panel-toolbar">
                       <div>
                         <h2 id="agenda-heading">
-                          Next executive meeting agenda
+                          {selectedMeeting?.isToday
+                            ? 'Today’s agenda'
+                            : 'Meeting agenda'}
                         </h2>
-                        <p>{topics.length} topics</p>
+                        <p>
+                          {selectedMeeting?.longDate} ·{' '}
+                          {selectedMeetingTopics.length}{' '}
+                          {selectedMeetingTopics.length === 1
+                            ? 'topic'
+                            : 'topics'}
+                        </p>
                       </div>
                       <label className="search-field" htmlFor="agenda-search">
                         <Search aria-hidden="true" />
@@ -1640,35 +1738,58 @@ export default function Home() {
                     </div>
                     <div className="agenda-list">
                       {filteredTopics.map((topic, index) => (
-                        <button
-                          type="button"
-                          className="agenda-row"
-                          key={topic.id}
-                          onClick={() => openTopic(topic)}
-                        >
-                          <span className="agenda-order">
-                            {String(index + 1).padStart(2, '0')}
-                          </span>
-                          <span className="agenda-summary">
-                            <span className="agenda-title">{topic.title}</span>
-                            <span className="agenda-meta">
-                              <span className="topic-tag">
-                                {topic.category}
-                              </span>
-                              <span>Proposed by {topic.lead}</span>
+                        <div className="agenda-topic-row" key={topic.id}>
+                          <button
+                            type="button"
+                            className="agenda-row"
+                            onClick={() => openTopic(topic)}
+                          >
+                            <span className="agenda-order">
+                              {String(index + 1).padStart(2, '0')}
                             </span>
-                          </span>
-                          <ChevronRight
-                            className="row-chevron"
-                            aria-hidden="true"
-                          />
-                        </button>
+                            <span className="agenda-summary">
+                              <span className="agenda-title">
+                                {topic.title}
+                              </span>
+                              <span className="agenda-meta">
+                                <span className="topic-tag">
+                                  {topic.category}
+                                </span>
+                                <span>Proposed by {topic.lead}</span>
+                              </span>
+                            </span>
+                            <ChevronRight
+                              className="row-chevron"
+                              aria-hidden="true"
+                            />
+                          </button>
+                          <Button
+                            variant="secondary"
+                            className="agenda-move-action"
+                            disabled={pendingMutation !== null}
+                            onClick={() => void moveToFollowingMeeting(topic)}
+                          >
+                            {pendingMutation === 'move-topic' ? (
+                              <LoaderCircle
+                                className="spin"
+                                aria-hidden="true"
+                              />
+                            ) : (
+                              <ArrowRight aria-hidden="true" />
+                            )}
+                            Move to next meeting
+                          </Button>
+                        </div>
                       ))}
                       {filteredTopics.length === 0 ? (
                         <div className="empty-state">
                           <Search aria-hidden="true" />
                           <strong>No matching topics</strong>
-                          <span>Try another title, category or proposer.</span>
+                          <span>
+                            {search
+                              ? 'Try another title, category or proposer.'
+                              : 'Add a topic to this meeting or choose another meeting card.'}
+                          </span>
                         </div>
                       ) : null}
                     </div>
@@ -2369,14 +2490,27 @@ export default function Home() {
                   <span>Destination</span>
                   <NativeSelect
                     id="discussion-destination"
-                    value={newDestination}
-                    onChange={(event) =>
-                      setNewDestination(event.target.value as WorkspaceView)
+                    value={
+                      newDestination === 'backlog'
+                        ? 'backlog'
+                        : newMeetingDate || selectedMeetingDate
                     }
+                    onChange={(event) => {
+                      const destination = event.target.value;
+                      if (destination === 'backlog') {
+                        setNewDestination('backlog');
+                        setNewMeetingDate('');
+                        return;
+                      }
+                      setNewDestination('meeting');
+                      setNewMeetingDate(destination);
+                    }}
                   >
-                    <NativeSelectOption value="meeting">
-                      Next executive meeting
-                    </NativeSelectOption>
+                    {meetingSchedule.map((meeting) => (
+                      <NativeSelectOption value={meeting.iso} key={meeting.iso}>
+                        {meeting.isToday ? 'Today' : meeting.longDate}
+                      </NativeSelectOption>
+                    ))}
                     <NativeSelectOption value="backlog">
                       Discussion backlog
                     </NativeSelectOption>
@@ -2794,12 +2928,189 @@ export default function Home() {
                   <SheetHeader>
                     <SheetTitle>{selectedTopic.title}</SheetTitle>
                     <SheetDescription>
-                      Decision record · shared workspace
+                      Topic and decision record · shared workspace
                     </SheetDescription>
                   </SheetHeader>
                 </div>
-                <div className="topic-tabs">
-                  <div className="tab-panel tab-panel-with-footer">
+                <Tabs
+                  className="topic-tabs"
+                  value={activeTopicTab}
+                  onValueChange={setActiveTopicTab}
+                >
+                  <TabsList
+                    className="topic-tab-list"
+                    aria-label="Topic record"
+                  >
+                    <TabsTrigger value="topic">Topic</TabsTrigger>
+                    <TabsTrigger value="decision">Decision</TabsTrigger>
+                  </TabsList>
+                  <TabsContent
+                    value="topic"
+                    className="tab-panel tab-panel-with-footer"
+                  >
+                    <div className="decision-placeholder topic-edit-panel">
+                      <LayoutList aria-hidden="true" />
+                      <h3>Review and edit the topic</h3>
+                      <p>
+                        Update what will be discussed, its topic group, proposer
+                        and meeting assignment.
+                      </p>
+                      <label className="decision-field" htmlFor="topic-title">
+                        <span>Topic title</span>
+                        <Input
+                          id="topic-title"
+                          value={topicDraft.title}
+                          onChange={(event) =>
+                            setTopicDraft((draft) => ({
+                              ...draft,
+                              title: event.target.value,
+                            }))
+                          }
+                        />
+                      </label>
+                      <div className="form-pair">
+                        <label
+                          className="decision-field"
+                          htmlFor="topic-category"
+                        >
+                          <span>Topic</span>
+                          <NativeSelect
+                            id="topic-category"
+                            value={topicDraft.category}
+                            onChange={(event) =>
+                              setTopicDraft((draft) => ({
+                                ...draft,
+                                category: event.target.value,
+                              }))
+                            }
+                          >
+                            {categories
+                              .filter(
+                                (category) =>
+                                  category.active && !category.system,
+                              )
+                              .map((category) => (
+                                <NativeSelectOption key={category.id}>
+                                  {category.name}
+                                </NativeSelectOption>
+                              ))}
+                          </NativeSelect>
+                        </label>
+                        <label
+                          className="decision-field"
+                          htmlFor="topic-proposer"
+                        >
+                          <span>Proposed by</span>
+                          <NativeSelect
+                            id="topic-proposer"
+                            value={topicDraft.lead}
+                            onChange={(event) =>
+                              setTopicDraft((draft) => ({
+                                ...draft,
+                                lead: event.target.value,
+                              }))
+                            }
+                          >
+                            {members.map((member) => (
+                              <NativeSelectOption key={member.email}>
+                                {member.displayName}
+                              </NativeSelectOption>
+                            ))}
+                          </NativeSelect>
+                        </label>
+                      </div>
+                      {selectedTopic.bucket !== 'history' ? (
+                        <label
+                          className="decision-field"
+                          htmlFor="topic-destination"
+                        >
+                          <span>Meeting assignment</span>
+                          <NativeSelect
+                            id="topic-destination"
+                            value={topicDraft.destination}
+                            onChange={(event) =>
+                              setTopicDraft((draft) => ({
+                                ...draft,
+                                destination: event.target.value,
+                              }))
+                            }
+                          >
+                            {selectedTopic.meetingDate &&
+                            !meetingSchedule.some(
+                              (meeting) =>
+                                meeting.iso === selectedTopic.meetingDate,
+                            ) ? (
+                              <NativeSelectOption
+                                value={selectedTopic.meetingDate}
+                              >
+                                {meetingDateLong(selectedTopic.meetingDate)}
+                              </NativeSelectOption>
+                            ) : null}
+                            {meetingSchedule.map((meeting) => (
+                              <NativeSelectOption
+                                value={meeting.iso}
+                                key={meeting.iso}
+                              >
+                                {meeting.isToday ? 'Today' : meeting.longDate}
+                              </NativeSelectOption>
+                            ))}
+                            <NativeSelectOption value="backlog">
+                              Discussion backlog
+                            </NativeSelectOption>
+                          </NativeSelect>
+                        </label>
+                      ) : null}
+                      <label className="decision-field" htmlFor="topic-context">
+                        <span>Context for the meeting</span>
+                        <Textarea
+                          id="topic-context"
+                          value={topicDraft.note}
+                          onChange={(event) =>
+                            setTopicDraft((draft) => ({
+                              ...draft,
+                              note: event.target.value,
+                            }))
+                          }
+                          placeholder="Add the decision needed, useful links or preparation notes."
+                        />
+                      </label>
+                    </div>
+                    <SheetFooter className="topic-action-bar">
+                      <Button
+                        variant="destructive"
+                        onClick={() =>
+                          setDiscussionPendingDelete(selectedTopic)
+                        }
+                      >
+                        <Trash2 aria-hidden="true" />
+                        Delete discussion
+                      </Button>
+                      <Button
+                        className="primary-action topic-save-action mutation-button"
+                        disabled={
+                          !topicDraft.title.trim() || pendingMutation !== null
+                        }
+                        aria-busy={pendingMutation === 'save-topic'}
+                        onClick={() => void saveTopicDetails()}
+                      >
+                        {pendingMutation === 'save-topic' ? (
+                          <>
+                            <LoaderCircle className="spin" aria-hidden="true" />
+                            Saving…
+                          </>
+                        ) : (
+                          <>
+                            <Check aria-hidden="true" />
+                            Save topic
+                          </>
+                        )}
+                      </Button>
+                    </SheetFooter>
+                  </TabsContent>
+                  <TabsContent
+                    value="decision"
+                    className="tab-panel tab-panel-with-footer"
+                  >
                     <div className="decision-placeholder">
                       <MessageSquareText aria-hidden="true" />
                       <h3>Review and edit the decision</h3>
@@ -2925,16 +3236,26 @@ export default function Home() {
                         </Button>
                       </div>
                       <Button
-                        className="primary-action topic-save-action"
-                        disabled={workspaceStatus === 'saving'}
-                        onClick={saveDecision}
+                        className="primary-action topic-save-action mutation-button"
+                        disabled={pendingMutation !== null}
+                        aria-busy={pendingMutation === 'save-decision'}
+                        onClick={() => void saveDecision()}
                       >
-                        <Check aria-hidden="true" />
-                        Save decision
+                        {pendingMutation === 'save-decision' ? (
+                          <>
+                            <LoaderCircle className="spin" aria-hidden="true" />
+                            Saving…
+                          </>
+                        ) : (
+                          <>
+                            <Check aria-hidden="true" />
+                            Save decision
+                          </>
+                        )}
                       </Button>
                     </SheetFooter>
-                  </div>
-                </div>
+                  </TabsContent>
+                </Tabs>
               </>
             ) : null}
           </SheetContent>

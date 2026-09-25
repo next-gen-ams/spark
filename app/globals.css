@@ -801,6 +801,90 @@ h1 {
   box-shadow: 0 10px 24px rgb(109 42 18 / 0.22);
 }
 
+.meeting-card-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px;
+  margin: -4px 0 22px;
+}
+.meeting-option-card {
+  min-width: 0;
+  display: grid;
+  grid-template-rows: minmax(0, 1fr) auto;
+  gap: 12px;
+  padding: 18px;
+  border: 1px solid rgb(0 127 200 / 0.16);
+  border-radius: 16px;
+  background: rgb(255 255 255 / 0.7);
+  box-shadow: 0 12px 30px rgb(37 40 43 / 0.08);
+  transition:
+    transform 160ms ease-out,
+    border-color 160ms ease-out,
+    box-shadow 160ms ease-out;
+}
+.meeting-option-card.is-selected {
+  border-color: #008bd4;
+  background: linear-gradient(140deg, #007fc8, #009ae6);
+  box-shadow: 0 16px 34px rgb(0 127 200 / 0.2);
+}
+.meeting-option-card.is-today {
+  border-color: #ff6632;
+  background: linear-gradient(140deg, #f77025, #ff875d);
+  box-shadow: 0 16px 34px rgb(247 112 37 / 0.24);
+}
+.meeting-card-select {
+  min-width: 0;
+  display: grid;
+  justify-items: start;
+  gap: 6px;
+  padding: 0;
+  border: 0;
+  color: #25334a;
+  background: transparent;
+  text-align: left;
+}
+.meeting-card-select:focus-visible {
+  outline: 3px solid rgb(0 154 230 / 0.34);
+  outline-offset: 5px;
+  border-radius: 8px;
+}
+.meeting-card-select span,
+.meeting-card-select small {
+  color: #5e6d80;
+  font-size: 0.74rem;
+  font-weight: 650;
+}
+.meeting-card-select strong {
+  color: inherit;
+  font-size: clamp(1rem, 1.55vw, 1.24rem);
+  line-height: 1.28;
+  letter-spacing: -0.02em;
+}
+.meeting-card-select .countdown-badge {
+  min-height: 26px;
+  margin-top: 4px;
+  padding: 0 10px;
+  color: #0071b4;
+  background: #fff;
+  border: 1px solid rgb(0 127 200 / 0.15);
+}
+.meeting-option-card.is-selected .meeting-card-select,
+.meeting-option-card.is-selected .meeting-card-select span,
+.meeting-option-card.is-selected .meeting-card-select small,
+.meeting-option-card.is-today .meeting-card-select,
+.meeting-option-card.is-today .meeting-card-select span,
+.meeting-option-card.is-today .meeting-card-select small {
+  color: #fff;
+}
+.meeting-option-card .meeting-card-action {
+  width: 100%;
+}
+.meeting-option-card.is-today .meeting-card-action {
+  color: #d94d1e;
+  background: #fff;
+  box-shadow: 0 8px 20px rgb(114 41 18 / 0.18);
+}
+
 .fortnight-planner {
   display: grid;
   grid-template-columns: minmax(0, 1fr) 286px;
@@ -1035,6 +1119,24 @@ h1 {
 }
 .agenda-list {
   background: rgb(248 250 252 / 0.35);
+}
+.agenda-topic-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 12px;
+  padding-right: 16px;
+  border-bottom: 1px solid rgb(216 224 228 / 0.8);
+}
+.agenda-topic-row:last-child {
+  border-bottom: 0;
+}
+.agenda-topic-row .agenda-row {
+  border-bottom: 0;
+}
+.agenda-move-action {
+  min-height: 42px;
+  border-radius: 12px;
 }
 .agenda-row {
   width: 100%;
@@ -1896,6 +1998,30 @@ h1 {
   min-height: 0;
   overflow: hidden;
 }
+.topic-tab-list {
+  width: 100%;
+  height: 58px;
+  justify-content: flex-start;
+  gap: 4px;
+  padding: 8px 20px;
+  border-radius: 0;
+  border-bottom: 1px solid #d8e0e4;
+  background: #fff;
+}
+.topic-tab-list [data-slot='tabs-trigger'] {
+  min-width: 104px;
+  min-height: 40px;
+  border-radius: 10px;
+  color: #53647a;
+}
+.topic-tab-list [data-slot='tabs-trigger'][data-state='active'] {
+  color: #075a89;
+  background: #eaf7fd;
+  box-shadow: none;
+}
+.topic-edit-panel textarea {
+  min-height: 150px;
+}
 .tab-panel {
   min-height: 0;
   margin: 0;
@@ -2049,6 +2175,17 @@ h1 {
   .settings-layout {
     grid-template-columns: minmax(0, 1fr);
   }
+  .meeting-card-grid {
+    grid-template-columns: none;
+    grid-auto-flow: column;
+    grid-auto-columns: minmax(250px, 72vw);
+    overflow-x: auto;
+    padding: 2px 2px 8px;
+    scroll-snap-type: x proximity;
+  }
+  .meeting-option-card {
+    scroll-snap-align: start;
+  }
   .brand-header {
     min-height: 68px;
   }
@@ -2149,6 +2286,18 @@ h1 {
     grid-template-columns: 30px minmax(0, 1fr) 18px;
     gap: 10px;
     padding: 16px 14px;
+  }
+  .agenda-topic-row {
+    grid-template-columns: 1fr;
+    gap: 0;
+    padding: 0 14px 14px;
+  }
+  .agenda-topic-row .agenda-row {
+    width: calc(100% + 28px);
+    margin-inline: -14px;
+  }
+  .agenda-move-action {
+    width: 100%;
   }
   .agenda-topline {
     gap: 7px;

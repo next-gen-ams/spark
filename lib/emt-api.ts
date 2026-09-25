@@ -20,7 +20,12 @@ export type WorkspaceTopic = {
   prepAction: string;
   decisionDate?: string;
   decisionDateIso?: string;
+  meetingDate?: string;
   source?: 'Agenda';
+};
+
+export type WorkspaceSchedule = {
+  meetingAnchorDate: string;
 };
 
 export type WorkspaceSettings = {
@@ -53,6 +58,7 @@ type WorkspaceResponse = {
   };
   topics: WorkspaceTopic[];
   settings: WorkspaceSettings;
+  schedule: WorkspaceSchedule;
   categories: WorkspaceCategory[];
   members: WorkspaceMember[];
 };

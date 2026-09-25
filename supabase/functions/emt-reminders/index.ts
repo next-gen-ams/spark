@@ -13,10 +13,6 @@ const PREFERENCES_URL = `${TRACKER_URL}?view=reminders`;
 const DEFAULT_SENDER = 'insights@gms.global';
 const LIVE_SENDING_ENABLED = true;
 
-type WorkspaceSettingsRow = {
-  meeting_anchor_date: string;
-};
-
 type MemberSettingsRow = {
   member_email: string;
   reminders_on: boolean;
@@ -43,6 +39,7 @@ type TopicRow = {
   follow_up_owner: string;
   follow_up_action: string;
   due_date: string | null;
+  meeting_date: string | null;
 };
 
 type Candidate = {
@@ -127,18 +124,6 @@ function timingDays(value: string) {
   const match = value.match(/^(\d+) business days? before/i);
   if (!match) throw new Error(`Unsupported reminder timing: ${value}`);
   return Number(match[1]);
-}
-
-function nextMeetingDate(anchor: string, today: string) {
-  let meeting = anchor;
-  if (meeting >= today) return meeting;
-  const elapsed = Math.floor(
-    (parseIsoDate(today).getTime() - parseIsoDate(anchor).getTime()) /
-      86_400_000,
-  );
-  meeting = addDays(anchor, Math.floor(elapsed / 14) * 14);
-  while (meeting < today) meeting = addDays(meeting, 14);
-  return meeting;
 }
 
 function formatLongDate(value: string) {
@@ -252,7 +237,6 @@ async function sendGraphMail(candidate: Candidate, accessToken: string) {
 
 function buildCandidates(
   today: string,
-  workspaceSettings: WorkspaceSettingsRow,
   memberSettings: MemberSettingsRow[],
   members: MemberRow[],
   topics: TopicRow[],
@@ -268,14 +252,11 @@ function buildCandidates(
       settings,
     ]),
   );
-  const meetingDate = nextMeetingDate(
-    workspaceSettings.meeting_anchor_date,
-    today,
-  );
   const candidates: Candidate[] = [];
 
   for (const topic of topics) {
-    if (topic.bucket === 'agenda') {
+    if (topic.bucket === 'agenda' && topic.meeting_date) {
+      const meetingDate = topic.meeting_date;
       const member = memberByName.get(topic.lead);
       const settings = member
         ? settingsByEmail.get(member.email.toLowerCase())
@@ -399,13 +380,15 @@ Deno.serve(async (request) => {
     const database = createClient(supabaseUrl, serviceRoleKey, {
       auth: { persistSession: false, autoRefreshToken: false },
     });
-    const [settingsResult, memberSettingsResult, membersResult, topicsResult] =
+    if (body.scheduled) {
+      const { error: rolloverError } = await database.rpc(
+        'emt_recycle_expired_agenda',
+        { reference_date: today },
+      );
+      if (rolloverError) throw rolloverError;
+    }
+    const [memberSettingsResult, membersResult, topicsResult] =
       await Promise.all([
-        database
-          .from('emt_settings')
-          .select('meeting_anchor_date')
-          .eq('workspace_id', WORKSPACE_ID)
-          .single(),
         database.from('emt_member_settings').select('*'),
         database
           .from('emt_members')
@@ -414,25 +397,17 @@ Deno.serve(async (request) => {
         database
           .from('emt_topics')
           .select(
-            'id,bucket,title,category,lead,prep_action,decision,follow_up_owner,follow_up_action,due_date',
+            'id,bucket,title,category,lead,prep_action,decision,follow_up_owner,follow_up_action,due_date,meeting_date',
           ),
       ]);
-    if (settingsResult.error) throw settingsResult.error;
     if (memberSettingsResult.error) throw memberSettingsResult.error;
     if (membersResult.error) throw membersResult.error;
     if (topicsResult.error) throw topicsResult.error;
-    const settings = settingsResult.data as WorkspaceSettingsRow;
     const memberSettings = (memberSettingsResult.data ||
       []) as MemberSettingsRow[];
     const members = (membersResult.data || []) as MemberRow[];
     const topics = (topicsResult.data || []) as TopicRow[];
-    const candidates = buildCandidates(
-      today,
-      settings,
-      memberSettings,
-      members,
-      topics,
-    );
+    const candidates = buildCandidates(today, memberSettings, members, topics);
     if (mode === 'dry_run') {
       return json({
         mode,

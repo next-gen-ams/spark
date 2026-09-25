@@ -10,6 +10,7 @@
     "build": "vinext build",
     "build:github": "node scripts/require-public-auth-env.mjs && GITHUB_PAGES=true NEXT_PUBLIC_APP_BASE_PATH=/emt-tracker vinext build",
     "start": "wrangler dev --config dist/server/wrangler.json",
+    "test": "node --experimental-strip-types --test tests/*.test.ts",
     "lint": "oxlint",
     "format": "oxfmt"
   },

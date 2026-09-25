@@ -1,0 +1,43 @@
+import assert from 'node:assert/strict';
+import test from 'node:test';
+import {
+  addMeetingFortnight,
+  buildMeetingSchedule,
+} from '../lib/meeting-schedule.ts';
+
+const ANCHOR = '2026-09-14';
+
+void test('shows the next three fortnightly meetings on a normal day', () => {
+  const schedule = buildMeetingSchedule(
+    new Date('2026-09-25T03:00:00Z'),
+    ANCHOR,
+  );
+  assert.deepEqual(
+    schedule.map((meeting) => meeting.iso),
+    ['2026-09-28', '2026-10-12', '2026-10-26'],
+  );
+  assert.equal(schedule[0].countdownDays, 3);
+  assert.equal(schedule[0].isToday, false);
+});
+
+void test('keeps the current meeting first for the full Melbourne calendar day', () => {
+  const early = buildMeetingSchedule(new Date('2026-09-27T16:30:00Z'), ANCHOR);
+  const late = buildMeetingSchedule(new Date('2026-09-28T13:30:00Z'), ANCHOR);
+  assert.equal(early[0].iso, '2026-09-28');
+  assert.equal(late[0].iso, '2026-09-28');
+  assert.equal(early[0].isToday, true);
+  assert.equal(late[0].isToday, true);
+});
+
+void test('advances to the next meeting after the Melbourne meeting day', () => {
+  const schedule = buildMeetingSchedule(
+    new Date('2026-09-28T14:30:00Z'),
+    ANCHOR,
+  );
+  assert.equal(schedule[0].iso, '2026-10-12');
+  assert.equal(schedule[0].isToday, false);
+});
+
+void test('moves a topic exactly one fortnight forward', () => {
+  assert.equal(addMeetingFortnight('2026-10-12'), '2026-10-26');
+});
