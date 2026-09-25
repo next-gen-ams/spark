@@ -111,6 +111,13 @@ type MicrosoftStatus =
   | 'disconnected'
   | 'connected'
   | 'error';
+type PendingMutation =
+  | 'add-discussion'
+  | 'add-category'
+  | 'delete-category'
+  | 'delete-decision'
+  | 'delete-discussion'
+  | null;
 
 const DEFAULT_TOPIC_CATEGORIES = [
   'People & culture',
@@ -718,6 +725,9 @@ export default function Home() {
     React.useState<Topic | null>(null);
   const [decisionPendingDelete, setDecisionPendingDelete] =
     React.useState<Topic | null>(null);
+  const [pendingMutation, setPendingMutation] =
+    React.useState<PendingMutation>(null);
+  const mutationLockRef = React.useRef(false);
   const [activeView, setActiveView] = React.useState<WorkspaceView>('meeting');
   const [selectedTopic, setSelectedTopic] = React.useState<Topic | null>(null);
   const [addOpen, setAddOpen] = React.useState(false);
@@ -762,6 +772,18 @@ export default function Home() {
     React.useState<DecisionTab>('People & culture');
   const [decisionOwner, setDecisionOwner] = React.useState('All owners');
   const [now, setNow] = React.useState(() => new Date());
+
+  function beginMutation(action: Exclude<PendingMutation, null>) {
+    if (mutationLockRef.current) return false;
+    mutationLockRef.current = true;
+    setPendingMutation(action);
+    return true;
+  }
+
+  function finishMutation() {
+    mutationLockRef.current = false;
+    setPendingMutation(null);
+  }
 
   const meetingSchedule = React.useMemo(() => buildMeetingSchedule(now), [now]);
   const meetingDateLong = new Intl.DateTimeFormat('en-AU', {
@@ -1011,6 +1033,7 @@ export default function Home() {
       setSignInOpen(true);
       return;
     }
+    if (!beginMutation('add-discussion')) return;
     const topic: Omit<Topic, 'id'> = {
       bucket: newDestination === 'backlog' ? 'backlog' : 'agenda',
       title,
@@ -1058,6 +1081,8 @@ export default function Home() {
         title: 'Discussion not saved',
         description: error instanceof Error ? error.message : 'Try again.',
       });
+    } finally {
+      finishMutation();
     }
   }
 
@@ -1129,6 +1154,7 @@ export default function Home() {
 
   async function confirmDeleteDiscussion() {
     if (!discussionPendingDelete) return;
+    if (!beginMutation('delete-discussion')) return;
     const discussion = discussionPendingDelete;
     setWorkspaceStatus('saving');
     try {
@@ -1153,11 +1179,14 @@ export default function Home() {
         title: 'Discussion not deleted',
         description: error instanceof Error ? error.message : 'Try again.',
       });
+    } finally {
+      finishMutation();
     }
   }
 
   async function confirmDeleteDecision() {
     if (!decisionPendingDelete) return;
+    if (!beginMutation('delete-decision')) return;
     const decision = decisionPendingDelete;
     setWorkspaceStatus('saving');
     try {
@@ -1200,6 +1229,8 @@ export default function Home() {
         title: 'Decision not deleted',
         description: error instanceof Error ? error.message : 'Try again.',
       });
+    } finally {
+      finishMutation();
     }
   }
 
@@ -1263,6 +1294,7 @@ export default function Home() {
     event.preventDefault();
     const name = newTopicCategory.trim();
     if (!name) return;
+    if (!beginMutation('add-category')) return;
     setWorkspaceStatus('saving');
     try {
       const saved = await createEmtCategory(name);
@@ -1286,6 +1318,8 @@ export default function Home() {
         title: 'Topic not added',
         description: error instanceof Error ? error.message : 'Try again.',
       });
+    } finally {
+      finishMutation();
     }
   }
 
@@ -1330,6 +1364,7 @@ export default function Home() {
 
   async function confirmDeleteTopicCategory() {
     if (!categoryPendingDelete) return;
+    if (!beginMutation('delete-category')) return;
     const category = categoryPendingDelete;
     setWorkspaceStatus('saving');
     try {
@@ -1375,6 +1410,8 @@ export default function Home() {
         title: 'Topic not deleted',
         description: error instanceof Error ? error.message : 'Try again.',
       });
+    } finally {
+      finishMutation();
     }
   }
 
@@ -1945,6 +1982,7 @@ export default function Home() {
                       <form
                         className="topic-add-row"
                         onSubmit={addTopicCategory}
+                        aria-busy={pendingMutation === 'add-category'}
                       >
                         <label htmlFor="new-topic-category">
                           <span className="sr-only">New topic name</span>
@@ -1960,11 +1998,26 @@ export default function Home() {
                         </label>
                         <Button
                           type="submit"
-                          className="primary-action"
-                          disabled={!newTopicCategory.trim()}
+                          className="primary-action mutation-button"
+                          disabled={
+                            !newTopicCategory.trim() || pendingMutation !== null
+                          }
+                          aria-busy={pendingMutation === 'add-category'}
                         >
-                          <Plus aria-hidden="true" />
-                          Add topic
+                          {pendingMutation === 'add-category' ? (
+                            <>
+                              <LoaderCircle
+                                className="spin"
+                                aria-hidden="true"
+                              />
+                              Adding…
+                            </>
+                          ) : (
+                            <>
+                              <Plus aria-hidden="true" />
+                              Add topic
+                            </>
+                          )}
                         </Button>
                       </form>
                     </div>
@@ -2283,9 +2336,18 @@ export default function Home() {
           </div>
         </SidebarProvider>
 
-        <Dialog open={addOpen} onOpenChange={setAddOpen}>
+        <Dialog
+          open={addOpen}
+          onOpenChange={(open) => {
+            if (pendingMutation === 'add-discussion') return;
+            setAddOpen(open);
+          }}
+        >
           <DialogContent className="form-dialog">
-            <form onSubmit={addTopic}>
+            <form
+              onSubmit={addTopic}
+              aria-busy={pendingMutation === 'add-discussion'}
+            >
               <DialogHeader>
                 <DialogTitle>Add a discussion topic</DialogTitle>
                 <DialogDescription>
@@ -2365,11 +2427,34 @@ export default function Home() {
                 </label>
               </div>
               <DialogFooter>
-                <DialogClose render={<Button variant="ghost" type="button" />}>
+                <DialogClose
+                  render={
+                    <Button
+                      variant="ghost"
+                      type="button"
+                      disabled={pendingMutation === 'add-discussion'}
+                    />
+                  }
+                >
                   Cancel
                 </DialogClose>
-                <Button type="submit" className="primary-action">
-                  Add topic
+                <Button
+                  type="submit"
+                  className="primary-action mutation-button"
+                  disabled={!newTitle.trim() || pendingMutation !== null}
+                  aria-busy={pendingMutation === 'add-discussion'}
+                >
+                  {pendingMutation === 'add-discussion' ? (
+                    <>
+                      <LoaderCircle className="spin" aria-hidden="true" />
+                      Adding…
+                    </>
+                  ) : (
+                    <>
+                      <Plus aria-hidden="true" />
+                      Add topic
+                    </>
+                  )}
                 </Button>
               </DialogFooter>
             </form>
@@ -2475,7 +2560,10 @@ export default function Home() {
 
         <Dialog
           open={Boolean(categoryPendingDelete)}
-          onOpenChange={(open) => !open && setCategoryPendingDelete(null)}
+          onOpenChange={(open) => {
+            if (pendingMutation === 'delete-category') return;
+            if (!open) setCategoryPendingDelete(null);
+          }}
         >
           <DialogContent className="form-dialog category-delete-dialog">
             <DialogHeader>
@@ -2505,15 +2593,35 @@ export default function Home() {
               </p>
             </div>
             <DialogFooter>
-              <DialogClose render={<Button variant="ghost" type="button" />}>
+              <DialogClose
+                render={
+                  <Button
+                    variant="ghost"
+                    type="button"
+                    disabled={pendingMutation === 'delete-category'}
+                  />
+                }
+              >
                 Cancel
               </DialogClose>
               <Button
                 variant="destructive"
+                className="mutation-button"
+                disabled={pendingMutation !== null}
+                aria-busy={pendingMutation === 'delete-category'}
                 onClick={() => void confirmDeleteTopicCategory()}
               >
-                <Trash2 aria-hidden="true" />
-                Delete topic
+                {pendingMutation === 'delete-category' ? (
+                  <>
+                    <LoaderCircle className="spin" aria-hidden="true" />
+                    Deleting…
+                  </>
+                ) : (
+                  <>
+                    <Trash2 aria-hidden="true" />
+                    Delete topic
+                  </>
+                )}
               </Button>
             </DialogFooter>
           </DialogContent>
@@ -2521,7 +2629,10 @@ export default function Home() {
 
         <Dialog
           open={Boolean(decisionPendingDelete)}
-          onOpenChange={(open) => !open && setDecisionPendingDelete(null)}
+          onOpenChange={(open) => {
+            if (pendingMutation === 'delete-decision') return;
+            if (!open) setDecisionPendingDelete(null);
+          }}
         >
           <DialogContent className="form-dialog category-delete-dialog">
             <DialogHeader>
@@ -2547,16 +2658,37 @@ export default function Home() {
               </p>
             </div>
             <DialogFooter>
-              <DialogClose render={<Button variant="ghost" type="button" />}>
+              <DialogClose
+                render={
+                  <Button
+                    variant="ghost"
+                    type="button"
+                    disabled={pendingMutation === 'delete-decision'}
+                  />
+                }
+              >
                 Cancel
               </DialogClose>
               <Button
                 variant="destructive"
-                disabled={workspaceStatus === 'saving'}
+                className="mutation-button"
+                disabled={
+                  workspaceStatus === 'saving' || pendingMutation !== null
+                }
+                aria-busy={pendingMutation === 'delete-decision'}
                 onClick={() => void confirmDeleteDecision()}
               >
-                <Trash2 aria-hidden="true" />
-                Delete decision
+                {pendingMutation === 'delete-decision' ? (
+                  <>
+                    <LoaderCircle className="spin" aria-hidden="true" />
+                    Deleting…
+                  </>
+                ) : (
+                  <>
+                    <Trash2 aria-hidden="true" />
+                    Delete decision
+                  </>
+                )}
               </Button>
             </DialogFooter>
           </DialogContent>
@@ -2564,7 +2696,10 @@ export default function Home() {
 
         <Dialog
           open={Boolean(discussionPendingDelete)}
-          onOpenChange={(open) => !open && setDiscussionPendingDelete(null)}
+          onOpenChange={(open) => {
+            if (pendingMutation === 'delete-discussion') return;
+            if (!open) setDiscussionPendingDelete(null);
+          }}
         >
           <DialogContent className="form-dialog category-delete-dialog">
             <DialogHeader>
@@ -2587,16 +2722,37 @@ export default function Home() {
               </p>
             </div>
             <DialogFooter>
-              <DialogClose render={<Button variant="ghost" type="button" />}>
+              <DialogClose
+                render={
+                  <Button
+                    variant="ghost"
+                    type="button"
+                    disabled={pendingMutation === 'delete-discussion'}
+                  />
+                }
+              >
                 Cancel
               </DialogClose>
               <Button
                 variant="destructive"
-                disabled={workspaceStatus === 'saving'}
+                className="mutation-button"
+                disabled={
+                  workspaceStatus === 'saving' || pendingMutation !== null
+                }
+                aria-busy={pendingMutation === 'delete-discussion'}
                 onClick={() => void confirmDeleteDiscussion()}
               >
-                <Trash2 aria-hidden="true" />
-                Delete discussion
+                {pendingMutation === 'delete-discussion' ? (
+                  <>
+                    <LoaderCircle className="spin" aria-hidden="true" />
+                    Deleting…
+                  </>
+                ) : (
+                  <>
+                    <Trash2 aria-hidden="true" />
+                    Delete discussion
+                  </>
+                )}
               </Button>
             </DialogFooter>
           </DialogContent>

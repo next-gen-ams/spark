@@ -744,6 +744,16 @@ h1 {
 .primary-action:hover {
   background: #e85224;
 }
+.mutation-button {
+  min-width: 132px;
+}
+.mutation-button[aria-busy='true'] {
+  cursor: wait;
+  opacity: 0.82;
+}
+.mutation-button[aria-busy='true'] .spin {
+  animation-duration: 0.8s;
+}
 
 .next-meeting-card {
   min-height: 116px;
