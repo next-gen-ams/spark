@@ -1148,6 +1148,8 @@ h1 {
 .agenda-topic-row {
   border-bottom: 1px solid rgb(216 224 228 / 0.8);
   cursor: grab;
+  -webkit-user-select: none;
+  user-select: none;
   transition:
     opacity 140ms ease-out,
     background 140ms ease-out;
@@ -1167,6 +1169,10 @@ h1 {
   outline: 1px dashed rgb(0 139 212 / 0.38);
   outline-offset: -8px;
 }
+body.is-topic-pointer-dragging,
+body.is-topic-pointer-dragging * {
+  cursor: grabbing !important;
+}
 .topic-drag-preview {
   position: fixed;
   top: 0;
@@ -1177,15 +1183,6 @@ h1 {
   isolation: isolate;
   pointer-events: none;
   will-change: transform;
-}
-.topic-drag-native-shim {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 1px;
-  height: 1px;
-  opacity: 0.001;
-  pointer-events: none;
 }
 .topic-drag-layer,
 .topic-drag-card {

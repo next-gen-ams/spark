@@ -728,7 +728,15 @@ export default function Home() {
     null,
   );
   const [dragTargetDate, setDragTargetDate] = React.useState('');
-  const nativeDragShimRef = React.useRef<HTMLCanvasElement | null>(null);
+  const pointerDragRef = React.useRef<{
+    pointerId: number;
+    topicId: number;
+    startX: number;
+    startY: number;
+    dragging: boolean;
+  } | null>(null);
+  const dragTargetDateRef = React.useRef('');
+  const suppressTopicOpenRef = React.useRef(false);
   const dragPreviewLockedRef = React.useRef(false);
   const dragPreviewX = useMotionValue(-400);
   const dragPreviewY = useMotionValue(-400);
@@ -934,21 +942,6 @@ export default function Home() {
     const timer = window.setInterval(() => setNow(new Date()), 60_000);
     return () => window.clearInterval(timer);
   }, []);
-
-  React.useEffect(() => {
-    if (draggedTopicId === null) return;
-
-    const followPointer = (event: DragEvent) => {
-      positionTopicDragPreview(event.clientX, event.clientY);
-    };
-
-    document.addEventListener('drag', followPointer, { passive: true });
-    document.addEventListener('dragover', followPointer, { passive: true });
-    return () => {
-      document.removeEventListener('drag', followPointer);
-      document.removeEventListener('dragover', followPointer);
-    };
-  }, [draggedTopicId, positionTopicDragPreview]);
 
   React.useEffect(() => {
     if (!microsoftAuthConfigured) return;
@@ -1308,56 +1301,77 @@ export default function Home() {
     }
   }
 
-  function beginTopicDrag(event: React.DragEvent<HTMLElement>, topic: Topic) {
-    if (pendingMutation !== null) {
-      event.preventDefault();
-      return;
-    }
-    event.dataTransfer.effectAllowed = 'move';
-    event.dataTransfer.setData('text/plain', String(topic.id));
+  function beginTopicPointerDrag(
+    event: React.PointerEvent<HTMLElement>,
+    topic: Topic,
+  ) {
+    if (pendingMutation !== null || event.button !== 0) return;
+    pointerDragRef.current = {
+      pointerId: event.pointerId,
+      topicId: topic.id,
+      startX: event.clientX,
+      startY: event.clientY,
+      dragging: false,
+    };
+    event.currentTarget.setPointerCapture(event.pointerId);
+  }
 
-    nativeDragShimRef.current?.remove();
-    const nativeDragShim = document.createElement('canvas');
-    nativeDragShim.className = 'topic-drag-native-shim';
-    nativeDragShim.width = 1;
-    nativeDragShim.height = 1;
-    document.body.appendChild(nativeDragShim);
-    nativeDragShim.getBoundingClientRect();
-    event.dataTransfer.setDragImage(nativeDragShim, 0, 0);
-    nativeDragShimRef.current = nativeDragShim;
+  function findMeetingDropTarget(clientX: number, clientY: number) {
+    const target = document
+      .elementFromPoint(clientX, clientY)
+      ?.closest<HTMLElement>('[data-meeting-date]');
+    return target?.dataset.meetingDate ?? '';
+  }
+
+  function moveTopicPointerDrag(event: React.PointerEvent<HTMLElement>) {
+    const activeDrag = pointerDragRef.current;
+    if (!activeDrag || activeDrag.pointerId !== event.pointerId) return;
+
+    if (!activeDrag.dragging) {
+      const distance = Math.hypot(
+        event.clientX - activeDrag.startX,
+        event.clientY - activeDrag.startY,
+      );
+      if (distance < 6) return;
+      activeDrag.dragging = true;
+      suppressTopicOpenRef.current = true;
+      setDraggedTopicId(activeDrag.topicId);
+      document.body.classList.add('is-topic-pointer-dragging');
+    }
+
+    event.preventDefault();
     dragPreviewLockedRef.current = false;
     positionTopicDragPreview(event.clientX, event.clientY);
-    setDraggedTopicId(topic.id);
+    const targetMeeting = findMeetingDropTarget(event.clientX, event.clientY);
+    if (targetMeeting !== dragTargetDateRef.current) {
+      dragTargetDateRef.current = targetMeeting;
+      setDragTargetDate(targetMeeting);
+    }
   }
 
   function removeTopicDragPreview() {
-    nativeDragShimRef.current?.remove();
-    nativeDragShimRef.current = null;
     dragPreviewLockedRef.current = false;
     dragPreviewX.set(-400);
     dragPreviewY.set(-400);
+    document.body.classList.remove('is-topic-pointer-dragging');
   }
 
   function clearTopicDrag() {
+    pointerDragRef.current = null;
+    dragTargetDateRef.current = '';
     removeTopicDragPreview();
     setDraggedTopicId(null);
     setDragTargetDate('');
   }
 
-  async function assignDraggedTopic(
-    event: React.DragEvent<HTMLElement>,
-    targetMeeting: string,
-  ) {
-    event.preventDefault();
-    const transferredId = Number(event.dataTransfer.getData('text/plain'));
-    const topicId = Number.isFinite(transferredId)
-      ? transferredId
-      : draggedTopicId;
+  function cancelTopicPointerDrag() {
+    suppressTopicOpenRef.current = false;
+    clearTopicDrag();
+  }
+
+  async function assignTopicToMeeting(topicId: number, targetMeeting: string) {
     const topic = topics.find((item) => item.id === topicId);
-    setDragTargetDate('');
-    removeTopicDragPreview();
     if (!topic || topic.meetingDate === targetMeeting) {
-      setDraggedTopicId(null);
       return;
     }
 
@@ -1373,6 +1387,30 @@ export default function Home() {
       title: 'Meeting updated',
       description: `${topic.title} · ${meetingDateLong(targetMeeting)}`,
     });
+  }
+
+  function endTopicPointerDrag(event: React.PointerEvent<HTMLElement>) {
+    const activeDrag = pointerDragRef.current;
+    if (!activeDrag || activeDrag.pointerId !== event.pointerId) return;
+
+    if (event.currentTarget.hasPointerCapture(event.pointerId)) {
+      event.currentTarget.releasePointerCapture(event.pointerId);
+    }
+    const targetMeeting = activeDrag.dragging
+      ? findMeetingDropTarget(event.clientX, event.clientY)
+      : '';
+    const topicId = activeDrag.topicId;
+    const wasDragging = activeDrag.dragging;
+    clearTopicDrag();
+
+    if (wasDragging) {
+      window.setTimeout(() => {
+        suppressTopicOpenRef.current = false;
+      }, 0);
+    }
+    if (wasDragging && targetMeeting) {
+      void assignTopicToMeeting(topicId, targetMeeting);
+    }
   }
 
   async function saveTopicDetails() {
@@ -1792,6 +1830,7 @@ export default function Home() {
                       return (
                         <article
                           className={`meeting-option-card${meeting.isToday ? ' is-today' : ''}${isSelected ? ' is-selected' : ''}${isDropTarget ? ' is-drop-target' : ''}`}
+                          data-meeting-date={meeting.iso}
                           key={meeting.iso}
                         >
                           <button
@@ -1799,29 +1838,6 @@ export default function Home() {
                             className="meeting-card-select"
                             aria-pressed={isSelected}
                             onClick={() => setActiveMeetingDate(meeting.iso)}
-                            onDragEnter={(event) => {
-                              if (draggedTopicId === null) return;
-                              event.preventDefault();
-                              setDragTargetDate(meeting.iso);
-                            }}
-                            onDragOver={(event) => {
-                              if (draggedTopicId === null) return;
-                              event.preventDefault();
-                              event.dataTransfer.dropEffect = 'move';
-                            }}
-                            onDragLeave={(event) => {
-                              const nextTarget = event.relatedTarget;
-                              if (
-                                nextTarget instanceof Node &&
-                                event.currentTarget.contains(nextTarget)
-                              ) {
-                                return;
-                              }
-                              setDragTargetDate('');
-                            }}
-                            onDrop={(event) =>
-                              void assignDraggedTopic(event, meeting.iso)
-                            }
                           >
                             <span>
                               {meeting.isToday
@@ -1896,15 +1912,24 @@ export default function Home() {
                       {filteredTopics.map((topic, index) => (
                         <div
                           className={`agenda-topic-row${draggedTopicId === topic.id ? ' is-dragging' : ''}`}
-                          draggable={pendingMutation === null}
                           key={topic.id}
-                          onDragStart={(event) => beginTopicDrag(event, topic)}
-                          onDragEnd={clearTopicDrag}
+                          onPointerCancel={cancelTopicPointerDrag}
+                          onPointerDown={(event) =>
+                            beginTopicPointerDrag(event, topic)
+                          }
+                          onPointerMove={moveTopicPointerDrag}
+                          onPointerUp={endTopicPointerDrag}
                         >
                           <button
                             type="button"
                             className="agenda-row"
-                            onClick={() => openTopic(topic)}
+                            onClick={(event) => {
+                              if (suppressTopicOpenRef.current) {
+                                event.preventDefault();
+                                return;
+                              }
+                              openTopic(topic);
+                            }}
                           >
                             <span className="agenda-order">
                               {String(index + 1).padStart(2, '0')}
