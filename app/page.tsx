@@ -1913,12 +1913,6 @@ export default function Home() {
                         <div
                           className={`agenda-topic-row${draggedTopicId === topic.id ? ' is-dragging' : ''}`}
                           key={topic.id}
-                          onPointerCancel={cancelTopicPointerDrag}
-                          onPointerDown={(event) =>
-                            beginTopicPointerDrag(event, topic)
-                          }
-                          onPointerMove={moveTopicPointerDrag}
-                          onPointerUp={endTopicPointerDrag}
                         >
                           <button
                             type="button"
@@ -1930,6 +1924,12 @@ export default function Home() {
                               }
                               openTopic(topic);
                             }}
+                            onPointerCancel={cancelTopicPointerDrag}
+                            onPointerDown={(event) =>
+                              beginTopicPointerDrag(event, topic)
+                            }
+                            onPointerMove={moveTopicPointerDrag}
+                            onPointerUp={endTopicPointerDrag}
                           >
                             <span className="agenda-order">
                               {String(index + 1).padStart(2, '0')}
