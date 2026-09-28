@@ -2629,6 +2629,38 @@ export default function Home() {
           </div>
         </SidebarProvider>
 
+        <footer className="site-footer" aria-label="Site information">
+          <a
+            className="site-footer-logo-link"
+            href="https://kmt.global/"
+            target="_blank"
+            rel="noopener noreferrer"
+            aria-label="Visit Kaleidoscope Management Technology"
+          >
+            <Image
+              src={`${APP_BASE_PATH}/assets/kmt-logo.png`}
+              alt="KMT"
+              className="site-footer-logo"
+              width={110}
+              height={20}
+            />
+          </a>
+          <p className="site-footer-credit">
+            Design &amp; delivery by{' '}
+            <a
+              href="https://kmt.global/"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              Kaleidoscope Management Technology
+            </a>
+          </p>
+          <p className="site-footer-tagline">See Infinitely.</p>
+          <p className="site-footer-copyright">
+            © 2026 Kaleidoscope Management Technology. All rights reserved.
+          </p>
+        </footer>
+
         <Dialog
           open={addOpen}
           onOpenChange={(open) => {
