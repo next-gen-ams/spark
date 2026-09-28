@@ -708,9 +708,7 @@ button {
   width: 100%;
   margin: 0;
   padding: 8px 20px calc(9px + env(safe-area-inset-bottom));
-  border-top: 1px solid rgb(57 83 111 / 0.14);
   background: rgb(244 247 248 / 0.88);
-  box-shadow: 0 -14px 32px -30px rgb(14 31 63 / 0.7);
   backdrop-filter: blur(18px) saturate(120%);
   -webkit-backdrop-filter: blur(18px) saturate(120%);
   color: #607087;
