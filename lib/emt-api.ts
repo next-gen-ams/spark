@@ -1,4 +1,5 @@
 import { getMicrosoftAccessToken } from '@/lib/microsoft-auth';
+import { MicrosoftReauthenticationRequiredError } from '@/lib/microsoft-auth-policy';
 
 const EMT_API_URL =
   'https://agpggomwormexgjzbjtv.supabase.co/functions/v1/emt-workspace';
@@ -76,6 +77,8 @@ async function request<T>(method: 'GET' | 'POST', body?: unknown) {
   const result = (await response.json().catch(() => ({}))) as T & {
     error?: string;
   };
+  if (response.status === 401)
+    throw new MicrosoftReauthenticationRequiredError('api_unauthorized');
   if (!response.ok)
     throw new Error(
       result.error || `EMT workspace request failed (${response.status}).`,

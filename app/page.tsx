@@ -89,6 +89,7 @@ import {
   restoreMicrosoftSession,
   type MicrosoftProfile,
 } from '@/lib/microsoft-auth';
+import { isMicrosoftReauthenticationRequired } from '@/lib/microsoft-auth-policy';
 import {
   createEmtCategory,
   createEmtTopic,
@@ -549,7 +550,7 @@ function AccessGate({
     : workspaceBlocked
       ? 'We could not open the EMT workspace'
       : authFailed
-        ? 'We could not verify your Microsoft account'
+        ? 'Your Microsoft session needs reconnecting'
         : setupMissing
           ? 'Microsoft sign-in is not configured'
           : 'Sign in to EMT Tracker';
@@ -589,7 +590,7 @@ function AccessGate({
               <h1 id="access-title">{title}</h1>
               <p>{description}</p>
             </div>
-            {microsoftProfile && workspaceBlocked ? (
+            {microsoftProfile && (workspaceBlocked || authFailed) ? (
               <div className="access-account">
                 <Avatar>
                   <AvatarFallback>
@@ -619,7 +620,7 @@ function AccessGate({
                   {workspaceBlocked
                     ? 'Try workspace again'
                     : authFailed
-                      ? 'Try Microsoft sign-in again'
+                      ? 'Reconnect Microsoft'
                       : 'Continue with Microsoft'}
                 </span>
                 <ArrowRight aria-hidden="true" />
@@ -634,7 +635,7 @@ function AccessGate({
                 </span>
               </output>
             ) : null}
-            {workspaceBlocked ? (
+            {microsoftProfile && (workspaceBlocked || authFailed) ? (
               <Button
                 variant="ghost"
                 className="access-signout"
@@ -1049,6 +1050,13 @@ export default function Home() {
       )
       .catch((error: unknown) => {
         if (!active) return;
+        if (isMicrosoftReauthenticationRequired(error)) {
+          setMicrosoftError(error.message);
+          setWorkspaceError('');
+          setWorkspaceStatus('idle');
+          setMicrosoftStatus('error');
+          return;
+        }
         setWorkspaceError(
           error instanceof Error
             ? error.message
