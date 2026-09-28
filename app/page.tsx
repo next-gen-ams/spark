@@ -2645,16 +2645,6 @@ export default function Home() {
               height={20}
             />
           </a>
-          <p className="site-footer-credit">
-            Design &amp; delivery by{' '}
-            <a
-              href="https://kmt.global/"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              Kaleidoscope Management Technology
-            </a>
-          </p>
           <p className="site-footer-tagline">See Infinitely.</p>
           <p className="site-footer-copyright">
             © 2026 Kaleidoscope Management Technology. All rights reserved.
