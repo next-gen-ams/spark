@@ -297,7 +297,7 @@ a.article-link:hover strong { color: var(--rmit-red); text-decoration: underline
 .pickup-fields span { padding: 5px 8px; color: #6b6e72; border: 1px dashed #d6d6d2; border-radius: 6px; background: rgba(248,247,244,.8); font-size: .59rem; font-weight: 700; }
 .dashboard-footer { display: flex; justify-content: space-between; gap: 18px; padding: 10px 4px 0; color: #929498; font-size: .61rem; }
 .kmt-banner { display: flex; align-items: center; flex-direction: column; justify-content: center; gap: 6px; margin: 22px 0 -6px; padding: 20px 8px 9px; color: #6f8094; border-top: 1px solid rgba(96,99,103,.08); background: transparent; text-align: center; }
-.kmt-brand-line { display: flex; align-items: center; flex-direction: column; justify-content: center; gap: 2px; }
+.kmt-brand-line { display: flex; align-items: center; flex-direction: column; justify-content: center; gap: 6px; }
 .kmt-banner a { display: inline-flex; align-items: center; border-radius: 5px; }
 .kmt-banner a:focus-visible { outline: 2px solid var(--rmit-red); outline-offset: 4px; }
 .kmt-banner img { width: 92px; height: auto; display: block; opacity: 1; }
