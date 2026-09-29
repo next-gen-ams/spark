@@ -7,8 +7,11 @@
       name="description"
       content="RMIT DSC China PR tracking dashboard interface mockup"
     />
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; base-uri 'self'; object-src 'none'; script-src 'self'; style-src 'self'; img-src 'self' data: https:; connect-src 'self'; form-action 'self'" />
+    <meta name="referrer" content="strict-origin-when-cross-origin" />
+    <meta name="robots" content="noindex, nofollow, noarchive" />
     <title>RMIT DSC China PR Tracker</title>
-    <link rel="stylesheet" href="./styles.css?v=7" />
+    <link rel="stylesheet" href="./styles.css?v=8" />
   </head>
   <body>
     <div class="access-gate" id="accessGate">
@@ -102,6 +105,9 @@
               Open KMT GEO Dashboard
               <svg viewBox="0 0 24 24"><path d="M7 17 17 7M8 7h9v9"/></svg>
             </button>
+            <button class="lock-button" id="lockDashboard" type="button" aria-label="Lock dashboard" title="Lock dashboard">
+              <svg viewBox="0 0 24 24"><path d="M7 10V8a5 5 0 0 1 10 0v2M6 10h12v10H6z"/></svg>
+            </button>
           </div>
         </div>
       </header>
@@ -160,6 +166,9 @@
               <span class="reporting-tag" aria-label="Meltwater data refreshes weekly">
                 <svg viewBox="0 0 24 24"><path d="M20 6v5h-5M4 18v-5h5"/><path d="M18.5 9a7 7 0 0 0-12-2M5.5 15a7 7 0 0 0 12 2"/></svg>
                 Weekly auto-refresh
+              </span>
+              <span class="reporting-tag reporting-tag-timestamp" id="headerLastUpdated" aria-label="Meltwater snapshot last updated">
+                Updated —
               </span>
             </div>
           </section>
@@ -348,6 +357,6 @@
     </dialog>
 
     <div class="toast" id="toast" role="status" aria-live="polite"></div>
-    <script type="module" src="./dashboard.js?v=7"></script>
+    <script type="module" src="./dashboard.js?v=8"></script>
   </body>
 </html>

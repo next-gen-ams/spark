@@ -101,6 +101,9 @@ svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width:
 .status-chip > span { width: 7px; height: 7px; border-radius: 50%; background: #f4bf45; box-shadow: 0 0 0 4px rgba(244,191,69,.12); }
 .status-chip.is-live > span { background: #55c89b; box-shadow: 0 0 0 4px rgba(85,200,155,.13); }
 .button-geo { min-height: 40px; color: white; background: var(--rmit-red); }
+.lock-button { width: 40px; height: 40px; display: grid; place-items: center; padding: 0; color: rgba(255,255,255,.78); border: 1px solid rgba(255,255,255,.14); border-radius: 10px; background: rgba(255,255,255,.06); }
+.lock-button:hover { color: white; background: rgba(255,255,255,.12); }
+.lock-button svg { width: 17px; height: 17px; }
 
 .workspace { width: min(1480px, calc(100% - 36px)); display: grid; grid-template-columns: 218px minmax(0,1fr); gap: 28px; margin: 0 auto; }
 .sidebar { position: sticky; top: 76px; height: calc(100vh - 76px); display: flex; flex-direction: column; padding: 30px 0 22px; }
@@ -138,6 +141,7 @@ svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width:
 .header-controls { display: flex; align-items: center; gap: 9px; }
 .reporting-tag { min-height: 31px; display: inline-flex; align-items: center; gap: 7px; padding: 0 10px; color: #666a6f; border: 1px solid rgba(108,111,115,.13); border-radius: 999px; background: rgba(235,234,230,.72); font-size: .66rem; font-weight: 740; white-space: nowrap; }
 .reporting-tag svg { width: 14px; height: 14px; color: #6f858e; }
+.reporting-tag-timestamp { color: #85888c; background: rgba(255,255,255,.45); font-weight: 650; }
 .auto-refresh-badge { min-height: 42px; display: inline-flex; align-items: center; gap: 8px; padding: 0 13px; color: #5f6368; border: 1px solid #dededa; border-radius: 10px; background: rgba(255,255,255,.72); font-size: .72rem; font-weight: 750; white-space: nowrap; }
 .auto-refresh-badge svg { width: 16px; height: 16px; color: var(--blue); }
 .auto-refresh-badge-dark { min-height: 40px; color: #e9eaeb; border-color: #303235; background: #303235; }
@@ -192,6 +196,7 @@ svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width:
 .trend-tooltip a strong { display: -webkit-box; overflow: hidden; font-size: .7rem; line-height: 1.35; text-overflow: ellipsis; white-space: normal; -webkit-box-orient: vertical; -webkit-line-clamp: 2; }
 .trend-title-cn { overflow: hidden; color: #777a7e; font-size: .56rem; line-height: 1.35; text-overflow: ellipsis; white-space: nowrap; }
 .trend-tooltip a small { color: #818488; font-size: .55rem; }
+.trend-tooltip-empty { margin: 0; padding: 5px 6px 2px; color: #777b80; font-size: .63rem; line-height: 1.45; }
 .chart-overlay { position: absolute; top: 50%; left: 50%; width: min(320px, 82%); display: grid; justify-items: center; gap: 7px; padding: 16px; border: 1px solid rgba(255,255,255,.9); border-radius: 15px; background: rgba(255,255,255,.87); box-shadow: var(--shadow); backdrop-filter: blur(12px); transform: translate(-50%,-50%); text-align: center; }
 .connection-orb { width: 34px; height: 34px; display: grid; place-items: center; color: var(--blue); border-radius: 50%; background: var(--blue-soft); }
 .connection-orb svg { width: 17px; height: 17px; }

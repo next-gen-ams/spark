@@ -17,6 +17,7 @@ const appModal = document.querySelector('#appModal');
 const mediaSearch = document.querySelector('#mediaSearch');
 const waveFilter = document.querySelector('#waveFilter');
 const loginButton = loginForm.querySelector('button[type="submit"]');
+const lockDashboard = document.querySelector('#lockDashboard');
 let toastTimer;
 let hasLoadedLiveData = false;
 
@@ -154,6 +155,21 @@ togglePassword.addEventListener('click', () => {
 });
 
 if (hasStoredAccess()) showDashboard();
+
+lockDashboard.addEventListener('click', () => {
+  sessionStorage.removeItem(AUTH_SESSION_KEY);
+  try {
+    localStorage.removeItem(AUTH_SESSION_KEY);
+  } catch {
+    // The per-tab state has still been cleared when persistent storage is unavailable.
+  }
+  appShell.classList.add('is-hidden');
+  accessGate.classList.remove('is-hidden');
+  passwordInput.value = '';
+  passwordError.textContent = '';
+  document.title = 'RMIT DSC China PR Tracker';
+  passwordInput.focus();
+});
 
 function storeAccessPreference() {
   if (rememberAccess.checked) {
@@ -339,6 +355,7 @@ function renderMeltwaterData(data) {
   const generatedAt = new Date(meta.generatedAt);
   document.querySelector('#lastRefreshed').textContent = formatDateTime(generatedAt);
   document.querySelector('#nextRefresh').textContent = formatDateTime(new Date(meta.nextRefreshAt));
+  document.querySelector('#headerLastUpdated').textContent = `Updated ${formatDateTime(generatedAt)}`;
   document.querySelector('#dataSourceFooter').textContent = `${meta.searchName} · Meltwater weekly snapshot · Updated ${formatDateTime(generatedAt)}`;
 
   renderTrend(trend, peaks);
@@ -423,7 +440,8 @@ function showPeakTooltip(peak, point, pinned = false) {
   heading.append(label, hint);
   tooltip.append(heading);
 
-  peak.mentions.slice(0, 3).forEach((mention) => {
+  const mentions = Array.isArray(peak.mentions) ? peak.mentions.slice(0, 3) : [];
+  mentions.forEach((mention) => {
     const link = document.createElement('a');
     link.href = mention.url;
     link.target = '_blank';
@@ -438,6 +456,13 @@ function showPeakTooltip(peak, point, pinned = false) {
     link.append(title, titleCn, meta);
     tooltip.append(link);
   });
+
+  if (!mentions.length) {
+    const empty = document.createElement('p');
+    empty.className = 'trend-tooltip-empty';
+    empty.textContent = 'Article-level results were not returned in this weekly Meltwater snapshot.';
+    tooltip.append(empty);
+  }
 
   const pointLeft = Number.parseFloat(point.style.left);
   tooltip.classList.toggle('tip-align-right', pointLeft > 64);

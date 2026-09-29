@@ -46,7 +46,7 @@ export async function fetchMeltwaterDashboard({ apiKey, searchId, now = new Date
       start: range.start,
       end: range.end,
       page: 1,
-      page_size: 24,
+      page_size: 100,
       sort_by: 'date',
       sort_order: 'desc',
       tz: 'Australia/Melbourne',
@@ -68,8 +68,14 @@ export async function fetchMeltwaterDashboard({ apiKey, searchId, now = new Date
   }).catch(() => ({}));
 
   const peakDays = selectPeakDays(analytics.time_series || [], 3);
+  const recentDocuments = mentionsResponse.result?.documents || [];
   const peakResults = [];
   for (const peak of peakDays) {
+    const cachedDocuments = selectDocumentsForDate(recentDocuments, peak.date, 4);
+    if (cachedDocuments.length) {
+      peakResults.push({ ...peak, documents: cachedDocuments });
+      continue;
+    }
     const dayRange = getDayRange(peak.date);
     try {
       const response = await apiRequest(fetchImpl, apiKey, `/v3/search/${searchId}`, {
@@ -98,7 +104,7 @@ export async function fetchMeltwaterDashboard({ apiKey, searchId, now = new Date
     search: searchResponse.search,
     analytics,
     topics: topicsResponse.topics,
-    documents: mentionsResponse.result?.documents,
+    documents: recentDocuments,
     reachAnalytics: reachResponse,
     peakResults,
     range,
@@ -172,11 +178,16 @@ export function normalizeDashboard({ search = {}, analytics = {}, topics = [], d
     trend,
     topics: selectTopics(topics),
     mentions: documents.map(normalizeMention).filter((mention) => mention.title && mention.url),
-    peaks: peakResults.map((peak) => ({
-      date: peak.date,
-      count: numberOrZero(peak.count),
-      mentions: (peak.documents || []).map(normalizeMention).filter((mention) => mention.title && mention.url),
-    })),
+    peaks: peakResults.map((peak) => {
+      const peakDocuments = peak.documents?.length
+        ? peak.documents
+        : selectDocumentsForDate(documents, peak.date, 4);
+      return {
+        date: peak.date,
+        count: numberOrZero(peak.count),
+        mentions: peakDocuments.map(normalizeMention).filter((mention) => mention.title && mention.url),
+      };
+    }),
   };
 }
 
@@ -196,6 +207,13 @@ function getDayRange(dateString) {
     start: `${dateString}T00:00:00`,
     end: toApiDate(end),
   };
+}
+
+function selectDocumentsForDate(documents, dateString, limit) {
+  return documents
+    .filter((document) => String(document.published_date || document.indexed_date || '').slice(0, 10) === dateString)
+    .sort((left, right) => numberOrZero(right.source?.metrics?.reach) - numberOrZero(left.source?.metrics?.reach))
+    .slice(0, limit);
 }
 
 function selectTopics(topics) {

@@ -70,3 +70,20 @@ test('normalizes analytics, topics and safe mention links', () => {
   assert.equal(dashboard.mentions[0].reach, 120000);
   assert.equal(dashboard.peaks[0].mentions[0].titleEn, 'The Next Generation of Design Is Taking Shape in Beijing');
 });
+
+test('reuses same-day search documents when a peak lookup returns no articles', () => {
+  const dashboard = normalizeDashboard({
+    documents: [{
+      id: 'same-day',
+      content: { title: '下一代设计，正在北京发生' },
+      source: { name: 'Example outlet', metrics: { reach: 1200 } },
+      url: 'https://example.com/same-day',
+      published_date: '2026-09-21T08:30:00Z',
+    }],
+    peakResults: [{ date: '2026-09-21', count: 18, documents: [] }],
+    range: { startIso: '2026-06-29T00:00:00Z', endIso: '2026-09-29T00:00:00Z' },
+    generatedAt: '2026-09-29T00:00:00Z',
+  });
+
+  assert.equal(dashboard.peaks[0].mentions[0].url, 'https://example.com/same-day');
+});

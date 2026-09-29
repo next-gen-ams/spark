@@ -37,7 +37,7 @@ npm test
 ## Production handoff notes
 
 - Move authentication to a server-side service with a short-lived `HttpOnly`, `Secure`, `SameSite=Strict` session cookie if the dashboard later contains confidential information.
-- Keep `MELTWATER_API_KEY` only in the GitHub Actions repository secret. Never expose it through browser JavaScript.
+- Keep `MELTWATER_API_KEY` only in the existing 1Password item used by the local weekly automation. Never expose it through browser JavaScript or commit it to Git.
 - The Spark site is served from the `pr-dashboard` directory inside `next-gen-ams/spark`.
 - Replace sample media with a verified source of truth before publishing.
 - Connect the GEO URL through deployment configuration rather than hardcoding a draft link.
