@@ -1819,9 +1819,7 @@ export default function Home() {
                     aria-labelledby="meeting-title"
                   >
                     <div>
-                      <p className="meeting-date">
-                        Weekly · every Monday
-                      </p>
+                      <p className="meeting-date">Weekly · every Monday</p>
                       <h1 id="meeting-title">Executive meeting schedule</h1>
                     </div>
                   </section>
