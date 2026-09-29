@@ -1,0 +1,13 @@
+{
+  "name": "rmit-dsc-pr-tracker",
+  "version": "0.2.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "preview": "node scripts/local-server.mjs",
+    "test": "node --test"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}

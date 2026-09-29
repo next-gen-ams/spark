@@ -1,0 +1,354 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta
+      name="description"
+      content="RMIT DSC China PR tracking dashboard interface mockup"
+    />
+    <title>RMIT DSC China PR Tracker</title>
+    <link rel="stylesheet" href="./styles.css?v=4" />
+  </head>
+  <body>
+    <div class="access-gate" id="accessGate">
+      <div class="access-stage">
+        <section class="access-panel" aria-labelledby="loginTitle">
+          <div class="access-brand">
+            <span class="brand-logo-surface">
+              <img class="rmit-logo" src="./assets/rmit-university-logo.png" alt="RMIT University" />
+            </span>
+            <div class="brand-rule"></div>
+            <div>
+              <strong>RMIT PR Dashboard</strong>
+              <span>DSC Tracking</span>
+            </div>
+          </div>
+          <div class="access-body">
+            <div class="access-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24"><path d="M7 10V8a5 5 0 0 1 10 0v2M6 10h12v10H6z"/></svg>
+            </div>
+            <div class="access-copy">
+              <h1 id="loginTitle">Welcome back</h1>
+              <p>Enter the shared project password to view the latest China PR coverage and monitoring overview.</p>
+            </div>
+            <form id="loginForm" class="login-form" novalidate>
+              <label for="password">Project password</label>
+              <div class="password-field">
+                <input
+                  id="password"
+                  name="password"
+                  type="password"
+                  autocomplete="current-password"
+                  placeholder="Enter password"
+                  aria-describedby="passwordError"
+                />
+                <button class="icon-button" type="button" id="togglePassword" aria-label="Show password">
+                  <svg viewBox="0 0 24 24"><path d="M2.5 12s3.5-6 9.5-6 9.5 6 9.5 6-3.5 6-9.5 6-9.5-6-9.5-6Z"/><circle cx="12" cy="12" r="2.5"/></svg>
+                </button>
+              </div>
+              <p class="field-error" id="passwordError" role="alert"></p>
+              <button class="button button-primary access-submit" type="submit">
+                Enter dashboard
+                <svg viewBox="0 0 24 24"><path d="m9 18 6-6-6-6"/></svg>
+              </button>
+            </form>
+          </div>
+        </section>
+        <div class="access-footer" aria-label="KMT and GMS">
+          <img src="./assets/kmt-logo.png" alt="KMT" />
+          <span aria-hidden="true">×</span>
+          <img src="./assets/gms-logo.png" alt="GMS" />
+        </div>
+      </div>
+    </div>
+
+    <div class="app-shell is-hidden" id="appShell">
+      <header class="topbar">
+        <div class="topbar-inner">
+          <div class="topbar-product-group">
+            <a href="#overview" class="brand-lockup" aria-label="RMIT PR dashboard home">
+              <span class="brand-logo-surface brand-logo-compact">
+                <img class="rmit-logo" src="./assets/rmit-university-logo.png" alt="RMIT University" />
+              </span>
+              <div class="brand-rule"></div>
+              <div class="brand-name">
+                <strong>RMIT PR Dashboard</strong>
+                <span>DSC Tracking</span>
+              </div>
+            </a>
+            <label class="country-control">
+              <span class="sr-only">Market</span>
+              <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3a15 15 0 0 1 0 18M12 3a15 15 0 0 0 0 18"/></svg>
+              <select id="countrySelect" aria-label="Market selector">
+                <option value="china" selected>China</option>
+                <option value="indonesia" disabled>🔒 Indonesia</option>
+                <option value="india" disabled>🔒 India</option>
+                <option value="malaysia" disabled>🔒 Malaysia</option>
+              </select>
+            </label>
+          </div>
+          <div class="topbar-actions">
+            <span class="status-chip" id="connectionStatus"><span></span>Connecting to Meltwater</span>
+            <button class="button button-geo" data-action="geo">
+              <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3a15 15 0 0 1 0 18M12 3a15 15 0 0 0 0 18"/></svg>
+              Open GEO Dashboard
+              <svg viewBox="0 0 24 24"><path d="M7 17 17 7M8 7h9v9"/></svg>
+            </button>
+            <button class="profile-button" id="profileButton" aria-expanded="false" aria-controls="profileMenu">
+              <span class="avatar">CH</span>
+              <span class="profile-copy"><strong>Coco Hu</strong><small>Project admin</small></span>
+              <svg viewBox="0 0 24 24"><path d="m7 10 5 5 5-5"/></svg>
+            </button>
+            <div class="profile-menu" id="profileMenu" hidden>
+              <button id="logoutButton"><svg viewBox="0 0 24 24"><path d="M10 17l5-5-5-5M15 12H3M15 4h5v16h-5"/></svg>Sign out</button>
+            </div>
+          </div>
+        </div>
+      </header>
+
+      <div class="workspace">
+        <aside class="sidebar" aria-label="Dashboard sections">
+          <nav>
+            <span class="nav-label">WORKSPACE</span>
+            <a class="nav-item is-active" href="#overview" data-section="overview">
+              <svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+              Overview
+            </a>
+            <a class="nav-item" href="#coverage" data-section="coverage">
+              <svg viewBox="0 0 24 24"><path d="M4 4h16v16H4zM8 8h8M8 12h8M8 16h5"/></svg>
+              Published media
+              <span class="nav-count">10</span>
+            </a>
+            <a class="nav-item" href="#monitor" data-section="monitor">
+              <svg viewBox="0 0 24 24"><path d="M4 19V9M10 19V5M16 19v-7M22 19V3"/></svg>
+              Mention monitor
+              <span class="soon-dot is-live" title="Meltwater connected"></span>
+            </a>
+            <a class="nav-item" href="#pickups" data-section="pickups">
+              <svg viewBox="0 0 24 24"><path d="m4 13 4 4L20 5M4 5h7M4 9h4"/></svg>
+              Potential pickups
+            </a>
+          </nav>
+          <div class="sidebar-card">
+            <div class="sidebar-card-icon"><svg viewBox="0 0 24 24"><path d="M12 2v6M12 16v6M4.9 4.9l4.2 4.2M14.9 14.9l4.2 4.2M2 12h6M16 12h6M4.9 19.1l4.2-4.2M14.9 9.1l4.2-4.2"/></svg></div>
+            <span>MELTWATER API</span>
+            <strong>Weekly automatic refresh</strong>
+            <p>Mentions, trends and pickup candidates refresh server-side every seven days. Manual refresh is disabled.</p>
+            <div class="auto-refresh-note">
+              <svg viewBox="0 0 24 24"><path d="M20 6v5h-5M4 18v-5h5"/><path d="M18.5 9a7 7 0 0 0-12-2M5.5 15a7 7 0 0 0 12 2"/></svg>
+              <span><small>Next automatic update</small><strong id="nextRefresh">Calculating…</strong></span>
+            </div>
+          </div>
+          <div class="sidebar-footer">
+            <span>Last refreshed</span>
+            <strong id="lastRefreshed">Connecting…</strong>
+          </div>
+        </aside>
+
+        <main class="main-content">
+          <section class="page-header" id="overview">
+            <div>
+              <span class="eyebrow">ROLLING 3-MONTH VIEW · MELTWATER</span>
+              <h1>RMIT DSC PR Performance</h1>
+              <p>A single view of confirmed coverage, earned pickup opportunities and this month’s conversation signals.</p>
+            </div>
+            <div class="header-controls">
+              <span class="reporting-tag" aria-label="Reporting period: Past 3 months">
+                <svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M16 3v4M8 3v4M3 10h18"/></svg>
+                Past 3 months
+              </span>
+              <span class="reporting-tag" aria-label="Meltwater data refreshes weekly">
+                <svg viewBox="0 0 24 24"><path d="M20 6v5h-5M4 18v-5h5"/><path d="M18.5 9a7 7 0 0 0-12-2M5.5 15a7 7 0 0 0 12 2"/></svg>
+                Weekly auto-refresh
+              </span>
+            </div>
+          </section>
+
+          <section class="summary-grid" aria-label="Monthly summary">
+            <article class="summary-card summary-card-featured">
+              <div class="summary-top">
+                <span class="summary-icon"><svg viewBox="0 0 24 24"><path d="M4 5h16v14H4zM8 9h8M8 13h5"/></svg></span>
+                <span class="sample-label">TEMP DATA · 23 SEP</span>
+              </div>
+              <strong class="metric">10</strong>
+              <span class="metric-label">Published placements</span>
+              <p>Temporary tracker records supplied for this layout review.</p>
+            </article>
+            <article class="summary-card">
+              <div class="summary-top">
+                <span class="summary-icon icon-blue"><svg viewBox="0 0 24 24"><path d="M4 19V9M10 19V5M16 19v-7M22 19V3"/></svg></span>
+                <span class="pending-label" id="meltwaterMetricStatus">LIVE API</span>
+              </div>
+              <strong class="metric metric-pending" id="totalMentionsMetric">—</strong>
+              <span class="metric-label">Total mentions</span>
+              <p id="totalMentionsDescription">Loading the rolling three-month window.</p>
+            </article>
+            <article class="summary-card">
+              <div class="summary-top">
+                <span class="summary-icon icon-violet"><svg viewBox="0 0 24 24"><path d="M5 15l4-4 3 3 7-8M15 6h4v4"/></svg></span>
+                <span class="pending-label">MELTWATER AI</span>
+              </div>
+              <strong class="metric" id="reachMetric">—</strong>
+              <span class="metric-label">Potential reach</span>
+              <p id="reachDescription">Loading Meltwater's source-reach estimate.</p>
+            </article>
+            <article class="summary-card geo-card">
+              <div class="summary-top">
+                <span class="summary-icon icon-dark"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3a15 15 0 0 1 0 18M12 3a15 15 0 0 0 0 18"/></svg></span>
+                <span class="live-label">SEPARATE WORKSPACE</span>
+              </div>
+              <strong class="geo-title">GEO visibility</strong>
+              <span class="metric-label">Open the dedicated dashboard</span>
+              <button class="text-button" data-action="geo">Go to GEO Dashboard <span>↗</span></button>
+            </article>
+          </section>
+
+          <section class="content-grid" id="monitor">
+            <article class="panel trend-panel">
+              <div class="panel-header">
+                <div>
+                  <span class="panel-kicker">KEY MENTION MONITOR</span>
+                  <h2>Conversation trend</h2>
+                  <p id="trendScope">RMIT China DSC Saved Search: design education, portfolio, creative disciplines and Beijing Open Day.</p>
+                </div>
+                <button class="icon-button subtle" aria-label="More options"><svg viewBox="0 0 24 24"><circle cx="5" cy="12" r="1"/><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/></svg></button>
+              </div>
+              <div class="chart-frame" id="trendChartFrame" role="group" aria-label="Daily Meltwater mention volume for the past three months. Peak points open the leading mentions for that day.">
+                <div class="chart-y-axis"><span id="chartHigh">—</span><span id="chartMid">—</span><span>0</span></div>
+                <svg class="trend-chart" viewBox="0 0 720 230" preserveAspectRatio="none" aria-hidden="true">
+                  <defs>
+                    <linearGradient id="chartFill" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="0%" stop-color="#e61e2a" stop-opacity=".18"/>
+                      <stop offset="100%" stop-color="#e61e2a" stop-opacity="0"/>
+                    </linearGradient>
+                  </defs>
+                  <path class="chart-grid" d="M0 35H720M0 110H720M0 185H720"/>
+                  <path class="chart-area" id="chartArea" d="M0 210 L720 210 L720 230 L0 230Z"/>
+                  <path class="chart-line" id="chartLine" d="M0 210 L720 210"/>
+                </svg>
+                <div class="chart-points" id="chartPoints"></div>
+                <aside class="trend-tooltip" id="trendTooltip" hidden></aside>
+                <div class="chart-overlay" id="chartLoading"><strong>Loading live trend…</strong><p>Fetching the RMIT China DSC Saved Search.</p></div>
+              </div>
+              <div class="chart-x-axis" id="chartXAxis"><span>—</span><span>—</span><span>—</span><span>—</span><span>—</span></div>
+            </article>
+
+            <article class="panel signal-panel">
+              <div class="panel-header">
+                <div>
+                  <span class="panel-kicker">CONVERSATION MIX</span>
+                  <h2>Topics & sentiment</h2>
+                  <p>The most useful signals from Meltwater AI.</p>
+                </div>
+              </div>
+              <div class="signal-empty" id="sentimentSummary">
+                <div class="signal-ring" id="sentimentRing"><span id="sentimentRingValue">—</span></div>
+                <strong id="sentimentHeadline">Loading sentiment</strong>
+                <p id="sentimentBreakdown">Positive — · Neutral — · Negative —</p>
+              </div>
+              <div class="topic-list" id="topicList" aria-live="polite">
+                <div class="topic-loading">Loading key topics…</div>
+              </div>
+            </article>
+          </section>
+
+          <section class="panel coverage-panel" id="coverage">
+            <div class="panel-header coverage-header">
+              <div>
+                <span class="panel-kicker">CONFIRMED COVERAGE</span>
+                <h2>Published media</h2>
+                <p>Confirmed placements, bilingual article titles and an editorial view of each outlet's role in China.</p>
+              </div>
+              <div class="table-actions">
+                <label class="search-control">
+                  <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m20 20-4-4"/></svg>
+                  <input type="search" id="mediaSearch" placeholder="Search media" aria-label="Search published media" />
+                </label>
+                <label class="select-control wave-filter-control">
+                  <span class="sr-only">Campaign wave</span>
+                  <svg viewBox="0 0 24 24"><path d="M4 6h16M7 12h10M10 18h4"/></svg>
+                  <select id="waveFilter" aria-label="Filter by campaign wave">
+                    <option value="all">All waves</option>
+                    <option value="wave-1">Wave 1 · DSC Beijing Open Day</option>
+                  </select>
+                </label>
+              </div>
+            </div>
+            <div class="wave-summary" id="waveSummary">
+              <div>
+                <span class="wave-label">WAVE 1 · CAMPAIGN TOPIC</span>
+                <strong>DSC Beijing Open Day | From “Building” to “Creating”</strong>
+                <small>RMIT Beijing Creative Disciplines Open Day</small>
+              </div>
+              <span class="wave-count" id="waveCount">10 placements</span>
+            </div>
+            <div class="table-scroll">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Media</th>
+                    <th>Landscape</th>
+                    <th>Article</th>
+                    <th>Published</th>
+                    <th>Status</th>
+                  </tr>
+                </thead>
+                <tbody id="mediaTableBody"></tbody>
+              </table>
+            </div>
+            <div class="table-footer">
+              <span id="mediaTableSummary">Showing 10 confirmed published records · source updated 29 Sep 2026</span>
+              <span>Media tiers are an editorial planning assessment, not an official ranking.</span>
+            </div>
+          </section>
+
+          <section class="panel pickup-panel" id="pickups">
+            <div class="pickup-heading">
+              <div>
+                <span class="panel-kicker">POTENTIAL & RELATED PICKUPS</span>
+                <h2>Additional organic coverage</h2>
+                <p>Recent Meltwater mentions for review, with bilingual titles and source-level potential reach. Confirm relevance before promotion to Published media.</p>
+              </div>
+            </div>
+            <div class="pickup-grid" id="mentionsGrid" aria-live="polite">
+              <article class="pickup-record pickup-record-empty"><span class="connection-orb">M</span><div><span class="record-label">MELTWATER LIVE DATA</span><strong>Loading recent mentions…</strong><small>Past three months</small></div></article>
+            </div>
+          </section>
+
+          <footer class="dashboard-footer">
+            <span>RMIT DSC China PR Tracking Dashboard</span>
+            <span id="dataSourceFooter">Connecting to Meltwater · Published media remains manually confirmed</span>
+          </footer>
+          <footer class="kmt-banner" aria-label="Kaleidoscope Management Technology copyright">
+            <div class="kmt-brand-line">
+              <a href="https://kmt.global/" target="_blank" rel="noopener noreferrer" aria-label="Visit Kaleidoscope Management Technology">
+                <img src="./assets/kmt-logo.png" alt="Kaleidoscope Management Technology" />
+              </a>
+              <span>See Infinitely.</span>
+            </div>
+            <small>© 2026 Kaleidoscope Management Technology. All rights reserved.</small>
+          </footer>
+        </main>
+      </div>
+    </div>
+
+    <dialog class="modal" id="appModal" aria-labelledby="modalTitle">
+      <form method="dialog" class="modal-card">
+        <button class="modal-close icon-button" value="cancel" aria-label="Close dialog">
+          <svg viewBox="0 0 24 24"><path d="m6 6 12 12M18 6 6 18"/></svg>
+        </button>
+        <div class="modal-icon" id="modalIcon"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 8v4l3 2"/></svg></div>
+        <span class="eyebrow" id="modalEyebrow">MOCKUP NOTE</span>
+        <h2 id="modalTitle">Integration placeholder</h2>
+        <p id="modalDescription">This action will be connected in the implementation phase.</p>
+        <div class="modal-actions">
+          <button class="button button-primary" value="cancel">Got it</button>
+        </div>
+      </form>
+    </dialog>
+
+    <div class="toast" id="toast" role="status" aria-live="polite"></div>
+    <script src="./dashboard.js?v=4" defer></script>
+  </body>
+</html>
