@@ -23,7 +23,7 @@ void test('shows the next three weekly meetings on a normal day', () => {
 
 void test('keeps the current meeting first for the full Melbourne calendar day', () => {
   const early = buildMeetingSchedule(new Date('2026-10-04T16:30:00Z'), ANCHOR);
-  const late = buildMeetingSchedule(new Date('2026-10-05T13:30:00Z'), ANCHOR);
+  const late = buildMeetingSchedule(new Date('2026-10-05T12:30:00Z'), ANCHOR);
   assert.equal(early[0].iso, '2026-10-05');
   assert.equal(late[0].iso, '2026-10-05');
   assert.equal(early[0].isToday, true);

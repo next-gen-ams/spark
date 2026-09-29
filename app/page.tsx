@@ -1820,7 +1820,7 @@ export default function Home() {
                   >
                     <div>
                       <p className="meeting-date">
-                        Biweekly · every second Monday
+                        Weekly · every Monday
                       </p>
                       <h1 id="meeting-title">Executive meeting schedule</h1>
                     </div>

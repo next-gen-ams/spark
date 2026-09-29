@@ -6,11 +6,11 @@
 
 ## Context
 
-EMT meetings run every second Monday, but the original tracker stored every upcoming item in one undated `agenda` bucket. That model cannot show three future meetings, schedule a topic beyond the next meeting, or calculate preparation reminders against the topic's actual meeting. It also leaves unfinished items ambiguous after a meeting passes.
+EMT meetings run every Monday, but the original tracker stored every upcoming item in one undated `agenda` bucket. That model cannot show three future meetings, schedule a topic beyond the next meeting, or calculate preparation reminders against the topic's actual meeting. It also leaves unfinished items ambiguous after a meeting passes.
 
 ## Decision
 
-Agenda topics use an explicit `meeting_date` aligned to the fortnightly EMT schedule. The homepage shows a rolling three-meeting window, retains the current meeting for the full Melbourne calendar day, and lets users move a topic to the following meeting. After a meeting date passes, undecided topics return to the discussion backlog and decided topics move to history.
+Agenda topics use an explicit `meeting_date` aligned to the weekly EMT schedule. The homepage shows a rolling three-meeting window, retains the current meeting for the full Melbourne calendar day, and lets users move a topic to the following meeting. After a meeting date passes, undecided topics return to the discussion backlog and decided topics move to history.
 
 ## Alternatives Considered
 
@@ -36,7 +36,7 @@ Agenda topics use an explicit `meeting_date` aligned to the fortnightly EMT sche
 
 ### Negative
 
-- Topic writes must validate a meeting date as part of the fortnightly schedule.
+- Topic writes must validate a meeting date as part of the weekly schedule.
 - The workspace and reminder services must run the same expired-agenda rollover rule.
 
 ### Risks

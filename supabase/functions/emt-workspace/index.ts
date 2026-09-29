@@ -1,5 +1,6 @@
 import 'jsr:@supabase/functions-js/edge-runtime.d.ts';
 import { createClient } from 'npm:@supabase/supabase-js@2.117.1';
+import { isWeeklyMeetingDate } from '../_shared/emt-meeting-schedule.ts';
 import {
   authenticateEmtMember,
   EMT_ALLOWED_ORIGINS,
@@ -100,10 +101,8 @@ function validateMeetingDate(
   if (bucket === 'agenda' && !meetingDate)
     throw new Error('Agenda topics require a meeting date.');
   if (!meetingDate) return null;
-  const date = new Date(`${meetingDate}T00:00:00Z`).getTime();
-  const anchor = new Date(`${meetingAnchorDate}T00:00:00Z`).getTime();
-  if ((date - anchor) % (14 * 86_400_000) !== 0)
-    throw new Error('Meeting date must follow the fortnightly EMT schedule.');
+  if (!isWeeklyMeetingDate(meetingDate, meetingAnchorDate))
+    throw new Error('Meeting date must follow the weekly EMT schedule.');
   if (bucket === 'agenda' && meetingDate < localIsoDate())
     throw new Error('Past meetings cannot receive agenda topics.');
   return meetingDate;

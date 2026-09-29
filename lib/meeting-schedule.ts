@@ -1,7 +1,7 @@
 export const MELBOURNE_TIME_ZONE = 'Australia/Melbourne';
 
 const DAY_MS = 86_400_000;
-const FORTNIGHT_MS = DAY_MS * 14;
+const WEEK_MS = DAY_MS * 7;
 
 export type MeetingSlot = {
   iso: string;
@@ -42,8 +42,8 @@ export function meetingDateLong(value: string) {
   }).format(new Date(`${value}T00:00:00Z`));
 }
 
-export function addMeetingFortnight(value: string) {
-  return new Date(dateSerialFromIso(value) + FORTNIGHT_MS)
+export function addMeetingWeek(value: string) {
+  return new Date(dateSerialFromIso(value) + WEEK_MS)
     .toISOString()
     .slice(0, 10);
 }
@@ -54,13 +54,13 @@ export function buildMeetingSchedule(
 ): MeetingSlot[] {
   const todaySerial = melbourneDateSerial(now);
   const anchorSerial = dateSerialFromIso(anchorIso);
-  const cyclesSinceAnchor = Math.max(
+  const weeksSinceAnchor = Math.max(
     0,
-    Math.ceil((todaySerial - anchorSerial) / FORTNIGHT_MS),
+    Math.ceil((todaySerial - anchorSerial) / WEEK_MS),
   );
-  const firstMeetingSerial = anchorSerial + cyclesSinceAnchor * FORTNIGHT_MS;
+  const firstMeetingSerial = anchorSerial + weeksSinceAnchor * WEEK_MS;
   return Array.from({ length: 3 }, (_, index) => {
-    const serial = firstMeetingSerial + index * FORTNIGHT_MS;
+    const serial = firstMeetingSerial + index * WEEK_MS;
     const iso = new Date(serial).toISOString().slice(0, 10);
     const countdownDays = Math.max(
       0,
