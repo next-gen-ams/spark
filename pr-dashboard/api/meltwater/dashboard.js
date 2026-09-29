@@ -1,6 +1,8 @@
 import { fetchMeltwaterDashboard } from '../_lib/meltwater.mjs';
+import fallbackSnapshot from '../../data/meltwater.json' with { type: 'json' };
 
 const WEEK_MS = 7 * 24 * 60 * 60 * 1000;
+export const config = { maxDuration: 60 };
 
 export default async function handler(request, response) {
   if (request.method !== 'GET') {
@@ -28,8 +30,18 @@ export default async function handler(request, response) {
       },
     });
   } catch (error) {
-    console.error(`[meltwater] dashboard refresh failed: ${error instanceof Error ? error.message : 'unknown error'}`);
-    response.setHeader('Cache-Control', 'no-store');
-    return response.status(502).json({ error: 'Live Meltwater data is temporarily unavailable.' });
+    const message = error instanceof Error ? error.message : 'unknown error';
+    const reason = message.match(/status \d{3}/)?.[0] || (message.includes('not configured') ? 'credential_not_configured' : 'request_failed');
+    console.error(`[meltwater] dashboard refresh failed: ${message}`);
+    response.setHeader('Cache-Control', 'public, s-maxage=604800, stale-while-revalidate=86400');
+    return response.status(200).json({
+      ...fallbackSnapshot,
+      meta: {
+        ...fallbackSnapshot.meta,
+        cached: true,
+        stale: true,
+        liveRefreshError: reason,
+      },
+    });
   }
 }

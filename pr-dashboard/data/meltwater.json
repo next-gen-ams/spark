@@ -1,0 +1,924 @@
+{
+  "meta": {
+    "searchId": 29175637,
+    "searchName": "RMIT China DSC",
+    "rangeLabel": "Past 3 months",
+    "start": "2026-06-29T00:53:13.382Z",
+    "end": "2026-09-29T00:53:13.382Z",
+    "generatedAt": "2026-09-29T00:53:13.382Z",
+    "cached": true,
+    "refreshMode": "weekly",
+    "nextRefreshAt": "2026-10-06T00:58:18.371Z"
+  },
+  "summary": {
+    "totalMentions": 234,
+    "averagePerDay": 2,
+    "positive": 8,
+    "positivePercent": 3.42,
+    "neutral": 226,
+    "neutralPercent": 96.58,
+    "negative": 0,
+    "negativePercent": 0,
+    "potentialReach": 2684998018,
+    "estimatedViews": 39044
+  },
+  "trend": [
+    {
+      "date": "2026-06-29",
+      "count": 1
+    },
+    {
+      "date": "2026-06-30",
+      "count": 2
+    },
+    {
+      "date": "2026-07-01",
+      "count": 1
+    },
+    {
+      "date": "2026-07-02",
+      "count": 0
+    },
+    {
+      "date": "2026-07-03",
+      "count": 4
+    },
+    {
+      "date": "2026-07-04",
+      "count": 0
+    },
+    {
+      "date": "2026-07-05",
+      "count": 0
+    },
+    {
+      "date": "2026-07-06",
+      "count": 2
+    },
+    {
+      "date": "2026-07-07",
+      "count": 5
+    },
+    {
+      "date": "2026-07-08",
+      "count": 10
+    },
+    {
+      "date": "2026-07-09",
+      "count": 6
+    },
+    {
+      "date": "2026-07-10",
+      "count": 2
+    },
+    {
+      "date": "2026-07-11",
+      "count": 0
+    },
+    {
+      "date": "2026-07-12",
+      "count": 0
+    },
+    {
+      "date": "2026-07-13",
+      "count": 1
+    },
+    {
+      "date": "2026-07-14",
+      "count": 9
+    },
+    {
+      "date": "2026-07-15",
+      "count": 10
+    },
+    {
+      "date": "2026-07-16",
+      "count": 3
+    },
+    {
+      "date": "2026-07-17",
+      "count": 1
+    },
+    {
+      "date": "2026-07-18",
+      "count": 1
+    },
+    {
+      "date": "2026-07-19",
+      "count": 0
+    },
+    {
+      "date": "2026-07-20",
+      "count": 0
+    },
+    {
+      "date": "2026-07-21",
+      "count": 2
+    },
+    {
+      "date": "2026-07-22",
+      "count": 2
+    },
+    {
+      "date": "2026-07-23",
+      "count": 0
+    },
+    {
+      "date": "2026-07-24",
+      "count": 5
+    },
+    {
+      "date": "2026-07-25",
+      "count": 0
+    },
+    {
+      "date": "2026-07-26",
+      "count": 0
+    },
+    {
+      "date": "2026-07-27",
+      "count": 0
+    },
+    {
+      "date": "2026-07-28",
+      "count": 1
+    },
+    {
+      "date": "2026-07-29",
+      "count": 0
+    },
+    {
+      "date": "2026-07-30",
+      "count": 6
+    },
+    {
+      "date": "2026-07-31",
+      "count": 1
+    },
+    {
+      "date": "2026-08-01",
+      "count": 15
+    },
+    {
+      "date": "2026-08-02",
+      "count": 0
+    },
+    {
+      "date": "2026-08-03",
+      "count": 1
+    },
+    {
+      "date": "2026-08-04",
+      "count": 0
+    },
+    {
+      "date": "2026-08-05",
+      "count": 1
+    },
+    {
+      "date": "2026-08-06",
+      "count": 0
+    },
+    {
+      "date": "2026-08-07",
+      "count": 6
+    },
+    {
+      "date": "2026-08-08",
+      "count": 0
+    },
+    {
+      "date": "2026-08-09",
+      "count": 0
+    },
+    {
+      "date": "2026-08-10",
+      "count": 1
+    },
+    {
+      "date": "2026-08-11",
+      "count": 2
+    },
+    {
+      "date": "2026-08-12",
+      "count": 0
+    },
+    {
+      "date": "2026-08-13",
+      "count": 0
+    },
+    {
+      "date": "2026-08-14",
+      "count": 1
+    },
+    {
+      "date": "2026-08-15",
+      "count": 2
+    },
+    {
+      "date": "2026-08-16",
+      "count": 0
+    },
+    {
+      "date": "2026-08-17",
+      "count": 0
+    },
+    {
+      "date": "2026-08-18",
+      "count": 0
+    },
+    {
+      "date": "2026-08-19",
+      "count": 24
+    },
+    {
+      "date": "2026-08-20",
+      "count": 2
+    },
+    {
+      "date": "2026-08-21",
+      "count": 0
+    },
+    {
+      "date": "2026-08-22",
+      "count": 0
+    },
+    {
+      "date": "2026-08-23",
+      "count": 0
+    },
+    {
+      "date": "2026-08-24",
+      "count": 4
+    },
+    {
+      "date": "2026-08-25",
+      "count": 4
+    },
+    {
+      "date": "2026-08-26",
+      "count": 4
+    },
+    {
+      "date": "2026-08-27",
+      "count": 3
+    },
+    {
+      "date": "2026-08-28",
+      "count": 0
+    },
+    {
+      "date": "2026-08-29",
+      "count": 2
+    },
+    {
+      "date": "2026-08-30",
+      "count": 3
+    },
+    {
+      "date": "2026-08-31",
+      "count": 2
+    },
+    {
+      "date": "2026-09-01",
+      "count": 3
+    },
+    {
+      "date": "2026-09-02",
+      "count": 1
+    },
+    {
+      "date": "2026-09-03",
+      "count": 3
+    },
+    {
+      "date": "2026-09-04",
+      "count": 7
+    },
+    {
+      "date": "2026-09-05",
+      "count": 4
+    },
+    {
+      "date": "2026-09-06",
+      "count": 0
+    },
+    {
+      "date": "2026-09-07",
+      "count": 3
+    },
+    {
+      "date": "2026-09-08",
+      "count": 4
+    },
+    {
+      "date": "2026-09-09",
+      "count": 1
+    },
+    {
+      "date": "2026-09-10",
+      "count": 2
+    },
+    {
+      "date": "2026-09-11",
+      "count": 0
+    },
+    {
+      "date": "2026-09-12",
+      "count": 2
+    },
+    {
+      "date": "2026-09-13",
+      "count": 1
+    },
+    {
+      "date": "2026-09-14",
+      "count": 2
+    },
+    {
+      "date": "2026-09-15",
+      "count": 4
+    },
+    {
+      "date": "2026-09-16",
+      "count": 1
+    },
+    {
+      "date": "2026-09-17",
+      "count": 5
+    },
+    {
+      "date": "2026-09-18",
+      "count": 1
+    },
+    {
+      "date": "2026-09-19",
+      "count": 0
+    },
+    {
+      "date": "2026-09-20",
+      "count": 1
+    },
+    {
+      "date": "2026-09-21",
+      "count": 18
+    },
+    {
+      "date": "2026-09-22",
+      "count": 5
+    },
+    {
+      "date": "2026-09-23",
+      "count": 4
+    },
+    {
+      "date": "2026-09-24",
+      "count": 0
+    },
+    {
+      "date": "2026-09-25",
+      "count": 1
+    },
+    {
+      "date": "2026-09-26",
+      "count": 1
+    },
+    {
+      "date": "2026-09-27",
+      "count": 2
+    },
+    {
+      "date": "2026-09-28",
+      "count": 6
+    },
+    {
+      "date": "2026-09-29",
+      "count": 0
+    }
+  ],
+  "topics": [
+    {
+      "name": "Colleges & universities",
+      "count": 132,
+      "percentage": 56.41
+    },
+    {
+      "name": "Study abroad",
+      "count": 70,
+      "percentage": 29.91
+    },
+    {
+      "name": "AI & machine learning",
+      "count": 59,
+      "percentage": 25.21
+    },
+    {
+      "name": "Arts & galleries",
+      "count": 17,
+      "percentage": 7.26
+    },
+    {
+      "name": "Fashion design",
+      "count": 15,
+      "percentage": 6.41
+    },
+    {
+      "name": "Admissions",
+      "count": 8,
+      "percentage": 3.42
+    }
+  ],
+  "mentions": [
+    {
+      "id": "KJ4SN2cDJf2-jh7VpQiUHTbEqc0",
+      "title": "下一代设计，正在北京发生",
+      "titleEn": "The Next Generation of Design Is Taking Shape in Beijing",
+      "source": "Hexun.com / 和讯网",
+      "sourceType": "news",
+      "url": "https://news.hexun.com/2026-09-28/225065248.html",
+      "publishedDate": "2026-09-28T08:05:42.000Z",
+      "sentiment": "neutral",
+      "language": "zh-Hans",
+      "matchedKeywords": [
+        "皇家墨尔本理工大学",
+        "艺术与设计"
+      ],
+      "hitSentence": "... 同的教育背景与创作现场。参与设计师中，可见来自北京服装学院、东华大学、中国美术学院、浙江理工大学、米兰新美术学院、英国皇家艺术学院、皇家墨尔本理工大学、中央圣马丁艺术与设计学院、伦敦艺术大学、南安普顿大学等海内外多个院校的青年创意者。 这些经历并未停留在履历层面，而是进入了设计 ...",
+      "reach": 167775,
+      "estimatedViews": 19
+    },
+    {
+      "id": "v5_0mXRU8d0rj0pQY83_K7wQ9p0",
+      "title": "下一代设计，正在北京发生",
+      "titleEn": "The Next Generation of Design Is Taking Shape in Beijing",
+      "source": "中国经济网",
+      "sourceType": "news",
+      "url": "http://www.ce.cn/culture/gd/202609/t20260928_3239411.shtml",
+      "publishedDate": "2026-09-28T05:57:45.000Z",
+      "sentiment": "neutral",
+      "language": "zh-Hans",
+      "matchedKeywords": [
+        "皇家墨尔本理工大学",
+        "艺术与设计"
+      ],
+      "hitSentence": "... 同的教育背景与创作现场。参与设计师中，可见来自北京服装学院、东华大学、中国美术学院、浙江理工大学、米兰新美术学院、英国皇家艺术学院、皇家墨尔本理工大学、中央圣马丁艺术与设计学院、伦敦艺术大学、南安普顿大学等海内外多个院校的青年创意者。 这些经历并未停留在履历层面，而是进入了设计 ...",
+      "reach": 435228,
+      "estimatedViews": 110
+    },
+    {
+      "id": "7zFAu3Uwy0VGpq99O8wD6Y7fYDQ",
+      "title": "澳大利亚皇家墨尔本理工大学代表团到访成都东软学院",
+      "titleEn": "RMIT University Delegation Visits Chengdu Neusoft University",
+      "source": "news.sina.com.cn / 新浪新闻",
+      "sourceType": "news",
+      "url": "https://k.sina.com.cn/article_5895814239_15f6afc5f00101rly2.html",
+      "publishedDate": "2026-09-28T05:32:49.000Z",
+      "sentiment": "positive",
+      "language": "zh-Hans",
+      "matchedKeywords": [
+        "皇家墨尔本理工大学",
+        "艺术与设计"
+      ],
+      "hitSentence": "... 9月23日，澳洲皇家墨尔本理工大学行政副校长海伦·博伊德、全球招生总监汤姆·吉福德，澳大利亚国际教育咨询协会会长、AIDE首席执行官盖瑞·李，AIDE全球事务总监卢卡斯·李一行到成都东软学院访问交流。成都东软学院校长张应辉、副校长陈旭辉、数字艺术与设计学院常务副院长陈志刚及相关 ...",
+      "reach": 12783096,
+      "estimatedViews": 0
+    },
+    {
+      "id": "tQsL-xuFa4txQoQ8UPS-9mY9mgQ",
+      "title": "SS2027北京时装周青年设计师扶持计划，为设计新秀打造时尚舞台",
+      "titleEn": "Beijing Fashion Week Emerging Designer Program Creates a Stage for New Talent",
+      "source": "纺织中国在线",
+      "sourceType": "news",
+      "url": "https://www.ctn1986.com/index.php?c=content&a=show&id=126850",
+      "publishedDate": "2026-09-28T01:57:40.000Z",
+      "sentiment": "neutral",
+      "language": "zh-Hans",
+      "matchedKeywords": [
+        "皇家墨尔本理工大学",
+        "艺术与设计"
+      ],
+      "hitSentence": "... 同的教育背景与创作现场。参与设计师中，可见来自北京服装学院、东华大学、中国美术学院、浙江理工大学、米兰新美术学院、英国皇家艺术学院、皇家墨尔本理工大学、中央圣马丁艺术与设计学院、伦敦艺术大学、南安普顿大学等海内外多个院校的青年创意者。 这些经历并未停留在履历层面，而是进入了设 ...",
+      "reach": 2657,
+      "estimatedViews": 0
+    },
+    {
+      "id": "3kLEm_vTWh2y06CM_CN_rZ1UupY",
+      "title": "下一代设计，正在北京发生",
+      "titleEn": "The Next Generation of Design Is Taking Shape in Beijing",
+      "source": "同花顺财经",
+      "sourceType": "news",
+      "url": "https://field.10jqka.com.cn/20260928/c680310444.shtml",
+      "publishedDate": "2026-09-27T15:10:24.000Z",
+      "sentiment": "neutral",
+      "language": "zh-Hans",
+      "matchedKeywords": [
+        "皇家墨尔本理工大学",
+        "艺术与设计"
+      ],
+      "hitSentence": "... 同的教育背景与创作现场。参与设计师中，可见来自北京服装学院、东华大学、中国美术学院、浙江理工大学、米兰新美术学院、英国皇家艺术学院、皇家墨尔本理工大学、中央圣马丁艺术与设计学院、伦敦艺术大学、南安普顿大学等海内外多个院校的青年创意者。 这些经历并未停留在履历层面，而是进入了设 ...",
+      "reach": 1293474,
+      "estimatedViews": 119
+    },
+    {
+      "id": "I1yEehtlTU9xHFvQVwhNyTf5NEQ",
+      "title": "SS2027 BFW NEXT｜下一种风格，正在成形",
+      "titleEn": "BFW NEXT | The Next Style Is Taking Shape",
+      "source": "中国服装人才网",
+      "sourceType": "news",
+      "url": "https://news.cfw.cn/v397063-1.htm",
+      "publishedDate": "2026-09-27T04:40:54.000Z",
+      "sentiment": "neutral",
+      "language": "zh-Hans",
+      "matchedKeywords": [
+        "皇家墨尔本理工大学",
+        "艺术与设计"
+      ],
+      "hitSentence": "... 来自不同教育体系的青年设计阵容 本季阵容连接了国内外不同的教育背景与创作现场。参与设计师中，可见米兰新美术学院、英国皇家艺术学院、皇家墨尔本理工大学、中央圣马丁艺术与设计学院、伦敦艺术大学、南安普顿大学等海外院校经历，也有北京服装学院、东华大学、中国美术学院、浙江理工大学等国 ...",
+      "reach": 473,
+      "estimatedViews": 7
+    },
+    {
+      "id": "jthfJZL46HVLvfZeDtJA4AsODPg",
+      "title": "SS2027 BFW NEXT｜下一种风格，正在成形",
+      "titleEn": "BFW NEXT | The Next Style Is Taking Shape",
+      "source": "搜狐新闻",
+      "sourceType": "news",
+      "url": "https://www.sohu.com/a/1081357936_116152",
+      "publishedDate": "2026-09-27T03:59:00.000Z",
+      "sentiment": "neutral",
+      "language": "zh-Hans",
+      "matchedKeywords": [
+        "皇家墨尔本理工大学",
+        "艺术与设计"
+      ],
+      "hitSentence": "... 来自不同教育体系的青年设计阵容 本季阵容连接了国内外不同的教育背景与创作现场。参与设计师中，可见米兰新美术学院、英国皇家艺术学院、皇家墨尔本理工大学、中央圣马丁艺术与设计学院、伦敦艺术大学、南安普顿大学等海外院校经历，也有北京服装学院、东华大学、中国美术学院、浙江理工大学等国 ...",
+      "reach": 17156201,
+      "estimatedViews": 22
+    },
+    {
+      "id": "pNUkNqMgiVRL2paj3wgaWAjbtCM",
+      "title": "SS2027 BFW NEXT｜下一种风格，正在成形",
+      "titleEn": "BFW NEXT | The Next Style Is Taking Shape",
+      "source": "时尚COSMOPOLITAN",
+      "sourceType": "news",
+      "url": "https://www.cosmopolitancn.com/cosmo/fashion/detail/51475",
+      "publishedDate": "2026-09-26T11:36:40.000Z",
+      "sentiment": "neutral",
+      "language": "zh-Hans",
+      "matchedKeywords": [
+        "皇家墨尔本理工大学",
+        "艺术与设计"
+      ],
+      "hitSentence": "... BFW NEXT发布日程 本季阵容连接了国内外不同的教育背景与创作现场。参与设计师中，可见米兰新美术学院、英国皇家艺术学院、皇家墨尔本理工大学、中央圣马丁艺术与设计学院、伦敦艺术大学、南安普顿大学等海外院校经历，也有北京服装学院、东华大学、中国美术学院、浙江理工大学等国 ...",
+      "reach": 2320,
+      "estimatedViews": 23
+    },
+    {
+      "id": "SLMnR6EW6xwi6NCuxEKtuYIQUeA",
+      "title": "SS2027 BFW NEXT｜下一种风格，正在成形",
+      "titleEn": "BFW NEXT | The Next Style Is Taking Shape",
+      "source": "Zaker",
+      "sourceType": "news",
+      "url": "https://www.myzaker.com/article/PP6ab531fa1bc8e0ef3800000a",
+      "publishedDate": "2026-09-24T16:55:14.000Z",
+      "sentiment": "neutral",
+      "language": "zh-Hans",
+      "matchedKeywords": [
+        "皇家墨尔本理工大学",
+        "艺术与设计"
+      ],
+      "hitSentence": "... 来自不同教育体系的青年设计阵容 本季阵容连接了国内外不同的教育背景与创作现场。参与设计师中，可见米兰新美术学院、英国皇家艺术学院、皇家墨尔本理工大学、中央圣马丁艺术与设计学院、伦敦艺术大学、南安普顿大学等海外院校经历，也有北京服装学院、东华大学、中国美术学院、浙江理工大学等国 ...",
+      "reach": 618026,
+      "estimatedViews": 32
+    },
+    {
+      "id": "jhq-2tkgOo2icnZ999ULU0fcXnA",
+      "title": "2026新政：澳洲游戏设计专业研究生留学申请方法",
+      "titleEn": "2026 Update: How to Apply for Postgraduate Game Design Study in Australia",
+      "source": "中国教育在线",
+      "sourceType": "news",
+      "url": "https://www.eol.cn/liuxue/yslx/20260923104324.html",
+      "publishedDate": "2026-09-23T02:43:24.000Z",
+      "sentiment": "neutral",
+      "language": "zh-Hans",
+      "matchedKeywords": [
+        "皇家墨尔本理工大学",
+        "RMIT",
+        "艺术与设计"
+      ],
+      "hitSentence": "... 保学生能顺利完成课程学习。你需要提前准备语言考试，在大三或大四就可以开始备考。 院校选择要点 澳洲有不少院校的游戏设计专业出色。皇家墨尔本理工大学（Royal Melbourne Institute of Technology，RMIT）在2025QS世界大学艺术与设计学科 ...",
+      "reach": 398340,
+      "estimatedViews": 883
+    },
+    {
+      "id": "W-nohqrJ5IZJwpox5aTDqjPEL_w",
+      "title": "2026年9月全国计算机专业3+1留学靠谱院校清单",
+      "titleEn": "",
+      "source": "搜狐新闻",
+      "sourceType": "news",
+      "url": "https://www.sohu.com/a/1078543228_121881099",
+      "publishedDate": "2026-09-22T16:03:00.000Z",
+      "sentiment": "neutral",
+      "language": "zh-Hans",
+      "matchedKeywords": [
+        "项目管理",
+        "皇家墨尔本理工大学"
+      ],
+      "hitSentence": "... 办学积淀。学校与全球52个国家和地区的273所大学及机构建立了稳定合作关系，对接50余所中国教育部认可的海外高校，本科阶段可平稳衔接皇家墨尔本理工大学、英国约克大学等QS前200院校，硕士深造通道覆盖英国G5、罗素集团、澳洲八大等众多世界名校。 北京交通大学的计算机科学学科实 ...",
+      "reach": 17156201,
+      "estimatedViews": 22
+    },
+    {
+      "id": "YtWy2B1yM6tzz_y6VDn26JqTG3Y",
+      "title": "从“建造”到“创造“：城市与产业变化带来的艺术设计教育新命题",
+      "titleEn": "From “Building” to “Creating”: New Questions for Art and Design Education Amid Urban and Industrial Change",
+      "source": "The Beijing News / 新京报网",
+      "sourceType": "news",
+      "url": "https://www.bjnews.com.cn/detail/1790051755129485.html",
+      "publishedDate": "2026-09-22T04:35:00.000Z",
+      "sentiment": "neutral",
+      "language": "zh-Hans",
+      "matchedKeywords": [
+        "皇家墨尔本理工大学",
+        "建筑设计",
+        "城市更新",
+        "建筑与城市设计",
+        "建筑学",
+        "创意学科"
+      ],
+      "hitSentence": "... 题、新的技术以及新的实践方式中。”作为此次创意学科开放日的主要演讲嘉宾、皇家墨尔本理工大学建筑与城市设计学院讲师、建筑学硕士项目主管兼项目负责人帕特里克·马卡赛特（Patrick Macasaet）博士首先提出自己对未来艺术设计人才的看法。 以建筑教育为例，随着中国城市发展逐 ...",
+      "reach": 660844,
+      "estimatedViews": 134
+    },
+    {
+      "id": "cPvGuodkI4hkg4JSpXGCKDYTGe0",
+      "title": "从“建造”到“创造“：城市与产业变化带来艺术设计教育新命题",
+      "titleEn": "From “Building” to “Creating”: New Questions for Art and Design Education Amid Urban and Industrial Change",
+      "source": "今日头条",
+      "sourceType": "news",
+      "url": "https://www.toutiao.com/article/7688029637980537383/",
+      "publishedDate": "2026-09-21T16:41:00.000Z",
+      "sentiment": "neutral",
+      "language": "zh-Hans",
+      "matchedKeywords": [
+        "城市更新",
+        "皇家墨尔本理工大学",
+        "工业设计",
+        "创意学科",
+        "艺术设计教育",
+        "建筑与城市设计"
+      ],
+      "hitSentence": "... 、新的技术以及新的实践方式中。”作为此次创意学科开放日的主要演讲嘉宾、皇家墨尔本理工大学建筑与城市设计学院讲师、建筑学硕士项目主管兼项目负责人帕特里克·马卡赛特（Patrick Macasaet）博士首先提出自己对未来艺术设计人才的看法。 以建筑教育为例，随着中国城市发展逐渐 ...",
+      "reach": 8562549,
+      "estimatedViews": 68
+    },
+    {
+      "id": "JIq6I0aghTVTWDQ9wXUqUiC4mDs",
+      "title": "从“建造”到“创造”：城市与产业变化带来的艺术设计教育新命题",
+      "titleEn": "From “Building” to “Creating”: New Questions for Art and Design Education Amid Urban and Industrial Change",
+      "source": "资讯中国",
+      "sourceType": "news",
+      "url": "http://cn.geceo.com/hangye/147928.html",
+      "publishedDate": "2026-09-21T10:12:00.000Z",
+      "sentiment": "neutral",
+      "language": "zh-Hans",
+      "matchedKeywords": [
+        "城市更新",
+        "皇家墨尔本理工大学",
+        "工业设计",
+        "创意学科",
+        "艺术设计教育",
+        "建筑与城市设计"
+      ],
+      "hitSentence": "... 题、新的技术以及新的实践方式中。”作为此次创意学科开放日的主要演讲嘉宾、皇家墨尔本理工大学建筑与城市设计学院讲师、建筑学硕士项目主管兼项目负责人帕特里克·马卡赛特（Patrick Macasaet）博士首先提出自己对未来艺术设计人才的看法。 以建筑教育为例，随着中国城市发展逐渐 ...",
+      "reach": 0,
+      "estimatedViews": 0
+    },
+    {
+      "id": "ijf1Oitt2awEZPSK_TtLTAWbI8w",
+      "title": "从“建造”到“创造“：城市与产业变化带来的艺术设计教育新命题",
+      "titleEn": "From “Building” to “Creating”: New Questions for Art and Design Education Amid Urban and Industrial Change",
+      "source": "北晚在线",
+      "sourceType": "news",
+      "url": "https://www.takefoto.cn/news/2026/09/21/11967638.shtml",
+      "publishedDate": "2026-09-21T07:11:00.000Z",
+      "sentiment": "neutral",
+      "language": "zh-Hans",
+      "matchedKeywords": [
+        "城市更新",
+        "皇家墨尔本理工大学",
+        "工业设计",
+        "创意学科",
+        "艺术设计教育",
+        "建筑与城市设计"
+      ],
+      "hitSentence": "... 、新的技术以及新的实践方式中。”作为此次创意学科开放日的主要演讲嘉宾、皇家墨尔本理工大学建筑与城市设计学院讲师、建筑学硕士项目主管兼项目负责人帕特里克·马卡赛特（Patrick Macasaet）博士首先提出自己对未来艺术设计人才的看法。 以建筑教育为例，随着中国城市发展逐渐 ...",
+      "reach": 14250,
+      "estimatedViews": 19
+    },
+    {
+      "id": "LM0wH8GdID93CuB7wcdm3jzt1VY",
+      "title": "从“建造”到“创造“：城市与产业变化带来的艺术设计教育新命题",
+      "titleEn": "From “Building” to “Creating”: New Questions for Art and Design Education Amid Urban and Industrial Change",
+      "source": "资讯中国",
+      "sourceType": "news",
+      "url": "http://cn.geceo.com/hangye/147884.html",
+      "publishedDate": "2026-09-21T07:03:00.000Z",
+      "sentiment": "neutral",
+      "language": "zh-Hans",
+      "matchedKeywords": [
+        "城市更新",
+        "皇家墨尔本理工大学",
+        "工业设计",
+        "创意学科",
+        "艺术设计教育",
+        "建筑与城市设计"
+      ],
+      "hitSentence": "... 题、新的技术以及新的实践方式中。”作为此次创意学科开放日的主要演讲嘉宾、皇家墨尔本理工大学建筑与城市设计学院讲师、建筑学硕士项目主管兼项目负责人帕特里克·马卡赛特（Patrick Macasaet）博士首先提出自己对未来艺术设计人才的看法。 以建筑教育为例，随着中国城市发展逐渐 ...",
+      "reach": 0,
+      "estimatedViews": 0
+    },
+    {
+      "id": "2i-C2iEFNw7wOeW_b4ltZI9SxXw",
+      "title": "从“建造”到“创造“：城市与产业变化带来的艺术设计教育新命题",
+      "titleEn": "From “Building” to “Creating”: New Questions for Art and Design Education Amid Urban and Industrial Change",
+      "source": "NetEase News / 网易新闻",
+      "sourceType": "news",
+      "url": "https://www.163.com/dy/article/L7C0EJBJ05506BEH.html",
+      "publishedDate": "2026-09-21T06:57:10.000Z",
+      "sentiment": "neutral",
+      "language": "zh-Hans",
+      "matchedKeywords": [
+        "艺术设计教育",
+        "建筑设计",
+        "皇家墨尔本理工大学",
+        "城市更新",
+        "城市设计",
+        "建筑与城市设计"
+      ],
+      "hitSentence": "... 皇家墨尔本理工大学 （Royal Melbourne Institute of Technology）的建筑、工业设计、时尚、传播与媒体等领域的学术专家齐聚北京，举办了一场创意学科开放日。他们从不同的专业角度出发，与现场的学生及家长深入探讨当设计越来越深入城市生活与产业创新之后 ...",
+      "reach": 28311861,
+      "estimatedViews": 127
+    },
+    {
+      "id": "oFxYAjM9VVjvTIuxg_cjG5-nDZo",
+      "title": "从“建造”到“创造“：城市与产业变化带来的艺术设计教育新命题",
+      "titleEn": "From “Building” to “Creating”: New Questions for Art and Design Education Amid Urban and Industrial Change",
+      "source": "搜狐新闻",
+      "sourceType": "news",
+      "url": "https://www.sohu.com/a/1078991782_120244154",
+      "publishedDate": "2026-09-21T06:47:00.000Z",
+      "sentiment": "neutral",
+      "language": "zh-Hans",
+      "matchedKeywords": [
+        "艺术设计教育",
+        "建筑设计",
+        "皇家墨尔本理工大学",
+        "城市更新",
+        "城市设计",
+        "建筑与城市设计"
+      ],
+      "hitSentence": "... 皇家墨尔本理工大学 （Royal Melbourne Institute of Technology）的建筑、工业设计、时尚、传播与媒体等领域的学术专家齐聚北京，举办了一场创意学科开放日。他们从不同的专业角度出发，与现场的学生及家长深入探讨当设计越来越深入城市生活与产业创新之后 ...",
+      "reach": 17156201,
+      "estimatedViews": 22
+    },
+    {
+      "id": "1cGP8EE0faLprVqT23wtaiUS724",
+      "title": "2026新政：艺术生稳妥艺术留学，澳洲音乐专业如何申请",
+      "titleEn": "",
+      "source": "中国教育在线",
+      "sourceType": "news",
+      "url": "https://www.eol.cn/liuxue/yslx/2026092184727.html",
+      "publishedDate": "2026-09-21T00:47:27.000Z",
+      "sentiment": "neutral",
+      "language": "zh-Hans",
+      "matchedKeywords": [
+        "作品集申请",
+        "交互设计",
+        "皇家墨尔本理工大学",
+        "RMIT",
+        "艺术与设计",
+        "艺术留学"
+      ],
+      "hitSentence": "... 。这是因为澳洲艺术院校希望学生具备专业能力和良好沟通能力。学生可提前1-2年开始准备语言，找专业老师指导作品集。 院校选择 皇家墨尔本理工大学（Royal Melbourne Institute of Technology，RMIT）、悉尼大学（The University ...",
+      "reach": 398340,
+      "estimatedViews": 883
+    },
+    {
+      "id": "t0VR_NYGmefBJzrJD6xL14NRTO4",
+      "title": "从“建造”到“创造“：城市与产业变化带来的艺术设计教育新命题",
+      "titleEn": "From “Building” to “Creating”: New Questions for Art and Design Education Amid Urban and Industrial Change",
+      "source": "解放日报 Jiefang Daily",
+      "sourceType": "news",
+      "url": "https://www.jfdaily.com/staticsg/res/html/web/newsDetail.html?id=1181031&sid=11",
+      "publishedDate": "2026-09-20T23:47:00.000Z",
+      "sentiment": "neutral",
+      "language": "zh-Hans",
+      "matchedKeywords": [
+        "艺术设计教育",
+        "建筑设计",
+        "皇家墨尔本理工大学",
+        "城市更新",
+        "城市设计",
+        "建筑与城市设计"
+      ],
+      "hitSentence": "... 皇家墨尔本理工大学 （Royal Melbourne Institute of Technology）的建筑、工业设计、时尚、传播与媒体等领域的学术专家齐聚北京，举办了一场创意学科开放日。他们从不同的专业角度出发，与现场的学生及家长深入探讨当设计越来越深入城市生活与产业创新之后 ...",
+      "reach": 429714,
+      "estimatedViews": 0
+    },
+    {
+      "id": "Oif8bJDa7wriHJC9iM_jV_LHDhg",
+      "title": "从“建造”到“创造“：城市与产业变化带来的艺术设计教育新命题",
+      "titleEn": "From “Building” to “Creating”: New Questions for Art and Design Education Amid Urban and Industrial Change",
+      "source": "上海观察",
+      "sourceType": "news",
+      "url": "https://www.shobserver.com/staticsg/res/html/web/newsDetail.html?id=1181031",
+      "publishedDate": "2026-09-20T15:47:00.000Z",
+      "sentiment": "neutral",
+      "language": "zh-Hans",
+      "matchedKeywords": [
+        "艺术设计教育",
+        "建筑设计",
+        "皇家墨尔本理工大学",
+        "城市更新",
+        "城市设计",
+        "建筑与城市设计"
+      ],
+      "hitSentence": "... 皇家墨尔本理工大学 （Royal Melbourne Institute of Technology）的建筑、工业设计、时尚、传播与媒体等领域的学术专家齐聚北京，举办了一场创意学科开放日。他们从不同的专业角度出发，与现场的学生及家长深入探讨当设计越来越深入城市生活与产业创新之后 ...",
+      "reach": 254896,
+      "estimatedViews": 105
+    },
+    {
+      "id": "opySkkLZdTm1ejM6kqW-XYJn8Go",
+      "title": "澳洲游戏设计硕士留学申请条件与作品集要求详解2026",
+      "titleEn": "",
+      "source": "中国教育在线",
+      "sourceType": "news",
+      "url": "https://www.eol.cn/liuxue/yslx/20260920103827.html",
+      "publishedDate": "2026-09-20T02:38:27.000Z",
+      "sentiment": "neutral",
+      "language": "zh-Hans",
+      "matchedKeywords": [
+        "艺术留学",
+        "皇家墨尔本理工大学",
+        "RMIT"
+      ],
+      "hitSentence": "... 资源整合优势 和 移民友好政策 成为艺术留学热门选择。以悉尼科技大学（University of Technology Sydney，UTS）和皇家墨尔本理工大学（RMIT University）为代表的院校，其游戏设计硕士申请核心考察三大维度。 学术背景与语言硬性门槛 1 ...",
+      "reach": 398340,
+      "estimatedViews": 883
+    },
+    {
+      "id": "jflzfwgwakbfInOqHbXIPLHQNV4",
+      "title": "2026第26届平遥国际摄影大展看展攻略来啦！",
+      "titleEn": "",
+      "source": "晋中新闻网",
+      "sourceType": "news",
+      "url": "http://jzxww.com.cn/conn/2026-09/18/content_471544.htm",
+      "publishedDate": "2026-09-18T02:48:12.000Z",
+      "sentiment": "neutral",
+      "language": "zh-Hans",
+      "matchedKeywords": [
+        "墨尔本皇家理工大学",
+        "城市更新"
+      ],
+      "hitSentence": "... 品近2万幅，涵盖社会生活、风光自然、艺术观念等多个类别。 本届大展增设“影像助力城市”单元，通过摄影呈现城市历史、人文景观、自然生态、城市更新和地方文化特色。同时，继续保留国际精品展、青年摄影推广计划、女性展、院校展、多媒体影像展、摄影画册和摄影手工书等特色单元。此外，本届大 ...",
+      "reach": 757,
+      "estimatedViews": 0
+    },
+    {
+      "id": "VnDG1MJgUjP0T2YQ3FUgnj-GfiY",
+      "title": "突破升学瓶颈！出国留学项目院校推荐与官方衔接路径深度解析",
+      "titleEn": "",
+      "source": "NetEase News / 网易新闻",
+      "sourceType": "news",
+      "url": "https://www.163.com/dy/article/L71MESSR0534R3N6.html",
+      "publishedDate": "2026-09-17T06:50:14.000Z",
+      "sentiment": "neutral",
+      "language": "zh-Hans",
+      "matchedKeywords": [
+        "皇家墨尔本理工大学",
+        "室内设计"
+      ],
+      "hitSentence": "... 项目践行“国内1.5年+新加坡2至2.5年”的学制安排。学生在国内修完为期18个月的专业课后，将赴新加坡对接英国伯明翰大学、澳大利亚皇家墨尔本理工大学、沃隆港大学等知名学府。提供的专业选项涵盖会计与金融、商业管理与传播、商业信息系统、计算机科学（含大数据、网络安全方向）等。 ...",
+      "reach": 28311861,
+      "estimatedViews": 127
+    }
+  ],
+  "peaks": [
+    {
+      "date": "2026-08-19",
+      "count": 24,
+      "mentions": []
+    },
+    {
+      "date": "2026-09-21",
+      "count": 18,
+      "mentions": []
+    },
+    {
+      "date": "2026-08-01",
+      "count": 15,
+      "mentions": []
+    }
+  ]
+}

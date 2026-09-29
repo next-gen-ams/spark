@@ -37,40 +37,39 @@ export async function fetchMeltwaterDashboard({ apiKey, searchId, now = new Date
     tz: 'Australia/Melbourne',
   });
 
-  const [searchResponse, analytics, topicsResponse, mentionsResponse, reachResponse] = await Promise.all([
-    apiRequest(fetchImpl, apiKey, `/v3/searches/${searchId}`),
-    apiRequest(fetchImpl, apiKey, `/v3/analytics/${searchId}?${commonParams}`),
-    apiRequest(fetchImpl, apiKey, `/v3/analytics/${searchId}/top_topics?${commonParams}&size=12`),
-    apiRequest(fetchImpl, apiKey, `/v3/search/${searchId}`, {
-      method: 'POST',
-      body: JSON.stringify({
-        start: range.start,
-        end: range.end,
-        page: 1,
-        page_size: 24,
-        sort_by: 'date',
-        sort_order: 'desc',
-        tz: 'Australia/Melbourne',
-        template: { name: 'api.json' },
-      }),
+  const searchResponse = await apiRequest(fetchImpl, apiKey, `/v3/searches/${searchId}`);
+  const analytics = await apiRequest(fetchImpl, apiKey, `/v3/analytics/${searchId}?${commonParams}`);
+  const topicsResponse = await apiRequest(fetchImpl, apiKey, `/v3/analytics/${searchId}/top_topics?${commonParams}&size=12`);
+  const mentionsResponse = await apiRequest(fetchImpl, apiKey, `/v3/search/${searchId}`, {
+    method: 'POST',
+    body: JSON.stringify({
+      start: range.start,
+      end: range.end,
+      page: 1,
+      page_size: 24,
+      sort_by: 'date',
+      sort_order: 'desc',
+      tz: 'Australia/Melbourne',
+      template: { name: 'api.json' },
     }),
-    apiRequest(fetchImpl, apiKey, `/v3/analytics/${searchId}/custom`, {
-      method: 'POST',
-      timeoutMs: 45_000,
-      body: JSON.stringify({
-        start: range.start,
-        end: range.end,
-        tz: 'Australia/Melbourne',
-        analysis: {
-          type: 'measure_statistics',
-          measures: ['reach', 'estimated_views'],
-        },
-      }),
-    }).catch(() => ({})),
-  ]);
+  });
+  const reachResponse = await apiRequest(fetchImpl, apiKey, `/v3/analytics/${searchId}/custom`, {
+    method: 'POST',
+    timeoutMs: 45_000,
+    body: JSON.stringify({
+      start: range.start,
+      end: range.end,
+      tz: 'Australia/Melbourne',
+      analysis: {
+        type: 'measure_statistics',
+        measures: ['reach', 'estimated_views'],
+      },
+    }),
+  }).catch(() => ({}));
 
   const peakDays = selectPeakDays(analytics.time_series || [], 3);
-  const peakResults = await Promise.all(peakDays.map(async (peak) => {
+  const peakResults = [];
+  for (const peak of peakDays) {
     const dayRange = getDayRange(peak.date);
     try {
       const response = await apiRequest(fetchImpl, apiKey, `/v3/search/${searchId}`, {
@@ -86,14 +85,14 @@ export async function fetchMeltwaterDashboard({ apiKey, searchId, now = new Date
           template: { name: 'api.json' },
         }),
       });
-      return {
+      peakResults.push({
         ...peak,
         documents: response.result?.documents || [],
-      };
+      });
     } catch {
-      return { ...peak, documents: [] };
+      peakResults.push({ ...peak, documents: [] });
     }
-  }));
+  }
 
   return normalizeDashboard({
     search: searchResponse.search,
@@ -109,24 +108,36 @@ export async function fetchMeltwaterDashboard({ apiKey, searchId, now = new Date
 
 async function apiRequest(fetchImpl, apiKey, endpoint, options = {}) {
   const { timeoutMs = 20_000, ...fetchOptions } = options;
-  const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), timeoutMs);
-  try {
-    const response = await fetchImpl(`${API_BASE}${endpoint}`, {
-      ...fetchOptions,
-      headers: {
-        Accept: 'application/json',
-        apikey: apiKey,
-        ...(fetchOptions.body ? { 'Content-Type': 'application/json' } : {}),
-        ...fetchOptions.headers,
-      },
-      signal: controller.signal,
-    });
-    if (!response.ok) throw new Error(`Meltwater request failed with status ${response.status}`);
-    return response.json();
-  } finally {
-    clearTimeout(timeout);
+  for (let attempt = 0; attempt < 3; attempt += 1) {
+    await delay(1_100);
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), timeoutMs);
+    try {
+      const response = await fetchImpl(`${API_BASE}${endpoint}`, {
+        ...fetchOptions,
+        headers: {
+          Accept: 'application/json',
+          apikey: apiKey,
+          ...(fetchOptions.body ? { 'Content-Type': 'application/json' } : {}),
+          ...fetchOptions.headers,
+        },
+        signal: controller.signal,
+      });
+      if (response.status === 429 && attempt < 2) {
+        await delay(750 * (attempt + 1));
+        continue;
+      }
+      if (!response.ok) throw new Error(`Meltwater request ${endpoint.split('?')[0]} failed with status ${response.status}`);
+      return response.json();
+    } finally {
+      clearTimeout(timeout);
+    }
   }
+  throw new Error(`Meltwater request ${endpoint.split('?')[0]} failed after retries`);
+}
+
+function delay(milliseconds) {
+  return new Promise((resolve) => setTimeout(resolve, milliseconds));
 }
 
 export function normalizeDashboard({ search = {}, analytics = {}, topics = [], documents = [], reachAnalytics = {}, peakResults = [], range, generatedAt }) {
