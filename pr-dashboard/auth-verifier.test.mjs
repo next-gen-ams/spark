@@ -1,5 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import { readFile } from 'node:fs/promises';
 import {
   REMEMBER_ACCESS_MS,
   createRememberedAccess,
@@ -27,4 +28,10 @@ test('remembered access expires after seven days', () => {
   assert.equal(hasValidRememberedAccess(remembered, now + REMEMBER_ACCESS_MS - 1), true);
   assert.equal(hasValidRememberedAccess(remembered, now + REMEMBER_ACCESS_MS), false);
   assert.equal(hasValidRememberedAccess('invalid-json', now), false);
+});
+
+test('native form fallback cannot serialize the password into the URL', async () => {
+  const html = await readFile(new URL('./index.html', import.meta.url), 'utf8');
+
+  assert.doesNotMatch(html, /name=["']password["']/i);
 });
