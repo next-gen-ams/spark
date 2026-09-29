@@ -4,6 +4,7 @@ import {
   addMeetingWeek,
   buildMeetingSchedule,
 } from '../lib/meeting-schedule.ts';
+import { isWeeklyMeetingDate } from '../supabase/functions/_shared/emt-meeting-schedule.ts';
 
 const ANCHOR = '2026-09-14';
 
@@ -40,4 +41,10 @@ void test('advances to the next meeting after the Melbourne meeting day', () => 
 
 void test('moves a topic exactly one week forward', () => {
   assert.equal(addMeetingWeek('2026-10-12'), '2026-10-19');
+});
+
+void test('backend accepts each weekly Monday and rejects off-cycle dates', () => {
+  assert.equal(isWeeklyMeetingDate('2026-10-05', ANCHOR), true);
+  assert.equal(isWeeklyMeetingDate('2026-10-12', ANCHOR), true);
+  assert.equal(isWeeklyMeetingDate('2026-10-06', ANCHOR), false);
 });
