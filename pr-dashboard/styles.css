@@ -57,6 +57,8 @@ svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width:
 .password-field input:focus, .modal-form input:focus, .modal-form select:focus { border-color: var(--rmit-red); box-shadow: 0 0 0 3px rgba(230,30,42,.11); }
 .password-field .icon-button { position: absolute; top: 6px; right: 6px; }
 .field-error { min-height: 16px; margin: 0; color: var(--rmit-red-dark); font-size: .76rem; }
+.login-form .remember-access { display: flex; align-items: center; gap: 8px; width: fit-content; color: #64676b; font-size: .74rem; font-weight: 600; cursor: pointer; }
+.remember-access input { width: 15px; height: 15px; margin: 0; accent-color: var(--rmit-red); }
 .prototype-note { display: flex; align-items: flex-start; gap: 10px; padding: 12px; color: #62666a; border: 1px solid #e3e1dc; border-radius: 11px; background: #f8f7f4; }
 .prototype-note svg { width: 17px; height: 17px; flex: 0 0 auto; margin-top: 2px; }
 .prototype-note p { margin: 0; font-size: .73rem; line-height: 1.48; }

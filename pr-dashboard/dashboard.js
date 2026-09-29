@@ -1,10 +1,16 @@
-import { AUTH_SESSION_KEY, verifyDashboardPassword } from './auth-verifier.js';
+import {
+  AUTH_SESSION_KEY,
+  createRememberedAccess,
+  hasValidRememberedAccess,
+  verifyDashboardPassword,
+} from './auth-verifier.js';
 
 const accessGate = document.querySelector('#accessGate');
 const appShell = document.querySelector('#appShell');
 const loginForm = document.querySelector('#loginForm');
 const passwordInput = document.querySelector('#password');
 const passwordError = document.querySelector('#passwordError');
+const rememberAccess = document.querySelector('#rememberAccess');
 const togglePassword = document.querySelector('#togglePassword');
 const toast = document.querySelector('#toast');
 const appModal = document.querySelector('#appModal');
@@ -126,7 +132,7 @@ loginForm.addEventListener('submit', async (event) => {
       passwordInput.select();
       return;
     }
-    sessionStorage.setItem(AUTH_SESSION_KEY, 'granted');
+    storeAccessPreference();
     showDashboard();
   } catch {
     passwordError.textContent = 'Password verification is unavailable in this browser.';
@@ -147,7 +153,38 @@ togglePassword.addEventListener('click', () => {
   togglePassword.setAttribute('aria-label', showing ? 'Show password' : 'Hide password');
 });
 
-if (sessionStorage.getItem(AUTH_SESSION_KEY) === 'granted') showDashboard();
+if (hasStoredAccess()) showDashboard();
+
+function storeAccessPreference() {
+  if (rememberAccess.checked) {
+    try {
+      localStorage.setItem(AUTH_SESSION_KEY, createRememberedAccess());
+      sessionStorage.removeItem(AUTH_SESSION_KEY);
+      return;
+    } catch {
+      // Fall through to per-tab access when persistent storage is unavailable.
+    }
+  } else {
+    try {
+      localStorage.removeItem(AUTH_SESSION_KEY);
+    } catch {
+      // Ignore storage restrictions; per-tab access still works.
+    }
+  }
+  sessionStorage.setItem(AUTH_SESSION_KEY, 'granted');
+}
+
+function hasStoredAccess() {
+  if (sessionStorage.getItem(AUTH_SESSION_KEY) === 'granted') return true;
+  try {
+    const remembered = localStorage.getItem(AUTH_SESSION_KEY);
+    if (hasValidRememberedAccess(remembered)) return true;
+    if (remembered) localStorage.removeItem(AUTH_SESSION_KEY);
+  } catch {
+    // Persistent storage may be disabled by browser privacy settings.
+  }
+  return false;
+}
 
 function showToast(message) {
   window.clearTimeout(toastTimer);

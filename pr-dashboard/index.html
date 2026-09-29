@@ -8,7 +8,7 @@
       content="RMIT DSC China PR tracking dashboard interface mockup"
     />
     <title>RMIT DSC China PR Tracker</title>
-    <link rel="stylesheet" href="./styles.css?v=6" />
+    <link rel="stylesheet" href="./styles.css?v=7" />
   </head>
   <body>
     <div class="access-gate" id="accessGate">
@@ -48,6 +48,10 @@
                 </button>
               </div>
               <p class="field-error" id="passwordError" role="alert"></p>
+              <label class="remember-access" for="rememberAccess">
+                <input id="rememberAccess" name="rememberAccess" type="checkbox" checked />
+                <span>Remember this device for 7 days</span>
+              </label>
               <button class="button button-primary access-submit" type="submit">
                 Enter dashboard
                 <svg viewBox="0 0 24 24"><path d="m9 18 6-6-6-6"/></svg>
@@ -344,6 +348,6 @@
     </dialog>
 
     <div class="toast" id="toast" role="status" aria-live="polite"></div>
-    <script type="module" src="./dashboard.js?v=6"></script>
+    <script type="module" src="./dashboard.js?v=7"></script>
   </body>
 </html>

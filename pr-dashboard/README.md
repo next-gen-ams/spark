@@ -4,7 +4,7 @@ Interactive dashboard prototype inspired by the clean operational structure of t
 
 ## Included
 
-- Password-entry screen with per-tab access state.
+- Password-entry screen with an optional seven-day remembered-device state; the plaintext password is never stored.
 - Rolling past-three-month Meltwater overview.
 - Published-media table with campaign-wave filtering, bilingual linked titles, outlet profiles and editorial media-landscape tiers.
 - Weekly Meltwater snapshots covering total mentions, potential reach, daily trend, peak-day article popovers, sentiment mix, core topics and a bilingual recent-mention review queue from Saved Search `RMIT China DSC` (`29175637`).

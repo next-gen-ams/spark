@@ -5,6 +5,21 @@ const AUTH_CONFIG = Object.freeze({
 });
 
 export const AUTH_SESSION_KEY = 'rmit-dsc-pr-dashboard-access';
+export const REMEMBER_ACCESS_MS = 7 * 24 * 60 * 60 * 1000;
+
+export function createRememberedAccess(now = Date.now()) {
+  return JSON.stringify({ version: 1, expiresAt: now + REMEMBER_ACCESS_MS });
+}
+
+export function hasValidRememberedAccess(value, now = Date.now()) {
+  if (typeof value !== 'string' || !value) return false;
+  try {
+    const parsed = JSON.parse(value);
+    return parsed.version === 1 && Number.isFinite(parsed.expiresAt) && parsed.expiresAt > now;
+  } catch {
+    return false;
+  }
+}
 
 export async function verifyDashboardPassword(candidate, config = AUTH_CONFIG) {
   if (typeof candidate !== 'string' || candidate.length < 1 || candidate.length > 128) return false;
