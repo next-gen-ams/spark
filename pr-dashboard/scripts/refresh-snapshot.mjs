@@ -1,7 +1,7 @@
 import { mkdir, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { fetchMeltwaterDashboard } from '../api/_lib/meltwater.mjs';
+import { fetchMeltwaterDashboard } from './meltwater.mjs';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const generatedAt = new Date();

@@ -1,16 +1,16 @@
+import { AUTH_SESSION_KEY, verifyDashboardPassword } from './auth-verifier.js';
+
 const accessGate = document.querySelector('#accessGate');
 const appShell = document.querySelector('#appShell');
 const loginForm = document.querySelector('#loginForm');
 const passwordInput = document.querySelector('#password');
 const passwordError = document.querySelector('#passwordError');
 const togglePassword = document.querySelector('#togglePassword');
-const profileButton = document.querySelector('#profileButton');
-const profileMenu = document.querySelector('#profileMenu');
-const logoutButton = document.querySelector('#logoutButton');
 const toast = document.querySelector('#toast');
 const appModal = document.querySelector('#appModal');
 const mediaSearch = document.querySelector('#mediaSearch');
 const waveFilter = document.querySelector('#waveFilter');
+const loginButton = loginForm.querySelector('button[type="submit"]');
 let toastTimer;
 let hasLoadedLiveData = false;
 
@@ -113,22 +113,28 @@ function showDashboard() {
   }
 }
 
-function showLogin() {
-  appShell.classList.add('is-hidden');
-  accessGate.classList.remove('is-hidden');
-  passwordInput.value = '';
-  passwordError.textContent = '';
-  passwordInput.focus();
-}
-
-loginForm.addEventListener('submit', (event) => {
+loginForm.addEventListener('submit', async (event) => {
   event.preventDefault();
-  if (!passwordInput.value.trim()) {
-    passwordError.textContent = 'Enter any text to preview this prototype.';
+  passwordError.textContent = '';
+  loginButton.disabled = true;
+  loginButton.setAttribute('aria-busy', 'true');
+
+  try {
+    const isValid = await verifyDashboardPassword(passwordInput.value);
+    if (!isValid) {
+      passwordError.textContent = 'Incorrect password. Please try again.';
+      passwordInput.select();
+      return;
+    }
+    sessionStorage.setItem(AUTH_SESSION_KEY, 'granted');
+    showDashboard();
+  } catch {
+    passwordError.textContent = 'Password verification is unavailable in this browser.';
     passwordInput.focus();
-    return;
+  } finally {
+    loginButton.disabled = false;
+    loginButton.removeAttribute('aria-busy');
   }
-  showDashboard();
 });
 
 passwordInput.addEventListener('input', () => {
@@ -141,20 +147,7 @@ togglePassword.addEventListener('click', () => {
   togglePassword.setAttribute('aria-label', showing ? 'Show password' : 'Hide password');
 });
 
-profileButton.addEventListener('click', () => {
-  const willOpen = profileMenu.hidden;
-  profileMenu.hidden = !willOpen;
-  profileButton.setAttribute('aria-expanded', String(willOpen));
-});
-
-document.addEventListener('click', (event) => {
-  if (!event.target.closest('#profileButton') && !event.target.closest('#profileMenu')) {
-    profileMenu.hidden = true;
-    profileButton.setAttribute('aria-expanded', 'false');
-  }
-});
-
-logoutButton.addEventListener('click', showLogin);
+if (sessionStorage.getItem(AUTH_SESSION_KEY) === 'granted') showDashboard();
 
 function showToast(message) {
   window.clearTimeout(toastTimer);
@@ -170,8 +163,8 @@ function openInfoModal(kind) {
 
   if (kind === 'geo') {
     eyebrow.textContent = 'SEPARATE DASHBOARD LINK';
-    title.textContent = 'GEO Dashboard URL needed';
-    description.textContent = 'This button is ready for the separate RMIT GEO dashboard URL. No placeholder website will be opened in the mockup.';
+    title.textContent = 'KMT GEO Dashboard URL needed';
+    description.textContent = 'This button is ready for the separate KMT GEO Dashboard URL. No placeholder website will be opened in the mockup.';
   } else {
     eyebrow.textContent = 'MELTWATER MCP PLACEHOLDER';
     title.textContent = 'Monitoring connection reserved';
@@ -285,13 +278,9 @@ async function loadMeltwaterData() {
 }
 
 async function fetchDashboardData() {
-  const liveResponse = await fetch('/api/meltwater/dashboard', {
-    headers: { Accept: 'application/json' },
-  });
-  if (liveResponse.ok) return liveResponse.json();
-
   const snapshotResponse = await fetch('./data/meltwater.json', {
     headers: { Accept: 'application/json' },
+    cache: 'no-store',
   });
   if (!snapshotResponse.ok) throw new Error('Weekly snapshot unavailable');
   return snapshotResponse.json();

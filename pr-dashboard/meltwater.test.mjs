@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { getThreeMonthRange, normalizeDashboard } from './api/_lib/meltwater.mjs';
+import { getThreeMonthRange, normalizeDashboard } from './scripts/meltwater.mjs';
 
 test('builds a rolling three-calendar-month range', () => {
   const range = getThreeMonthRange(new Date('2026-09-28T23:30:00.000Z'));

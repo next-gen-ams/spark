@@ -8,7 +8,7 @@
       content="RMIT DSC China PR tracking dashboard interface mockup"
     />
     <title>RMIT DSC China PR Tracker</title>
-    <link rel="stylesheet" href="./styles.css?v=4" />
+    <link rel="stylesheet" href="./styles.css?v=5" />
   </head>
   <body>
     <div class="access-gate" id="accessGate">
@@ -56,9 +56,12 @@
           </div>
         </section>
         <div class="access-footer" aria-label="KMT and GMS">
-          <img src="./assets/kmt-logo.png" alt="KMT" />
-          <span aria-hidden="true">×</span>
-          <img src="./assets/gms-logo.png" alt="GMS" />
+          <div class="access-footer-brands">
+            <img src="./assets/kmt-logo.png" alt="KMT" />
+            <span aria-hidden="true">×</span>
+            <img src="./assets/gms-logo.png" alt="GMS" />
+          </div>
+          <small>© 2026 Kaleidoscope Management Technology. All rights reserved.</small>
         </div>
       </div>
     </div>
@@ -92,17 +95,9 @@
             <span class="status-chip" id="connectionStatus"><span></span>Connecting to Meltwater</span>
             <button class="button button-geo" data-action="geo">
               <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3a15 15 0 0 1 0 18M12 3a15 15 0 0 0 0 18"/></svg>
-              Open GEO Dashboard
+              Open KMT GEO Dashboard
               <svg viewBox="0 0 24 24"><path d="M7 17 17 7M8 7h9v9"/></svg>
             </button>
-            <button class="profile-button" id="profileButton" aria-expanded="false" aria-controls="profileMenu">
-              <span class="avatar">CH</span>
-              <span class="profile-copy"><strong>Coco Hu</strong><small>Project admin</small></span>
-              <svg viewBox="0 0 24 24"><path d="m7 10 5 5 5-5"/></svg>
-            </button>
-            <div class="profile-menu" id="profileMenu" hidden>
-              <button id="logoutButton"><svg viewBox="0 0 24 24"><path d="M10 17l5-5-5-5M15 12H3M15 4h5v16h-5"/></svg>Sign out</button>
-            </div>
           </div>
         </div>
       </header>
@@ -198,9 +193,9 @@
                 <span class="summary-icon icon-dark"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3a15 15 0 0 1 0 18M12 3a15 15 0 0 0 0 18"/></svg></span>
                 <span class="live-label">SEPARATE WORKSPACE</span>
               </div>
-              <strong class="geo-title">GEO visibility</strong>
-              <span class="metric-label">Open the dedicated dashboard</span>
-              <button class="text-button" data-action="geo">Go to GEO Dashboard <span>↗</span></button>
+              <strong class="geo-title">KMT GEO Dashboard</strong>
+              <span class="metric-label">Open the dedicated visibility workspace</span>
+              <button class="text-button" data-action="geo">Go to KMT GEO Dashboard <span>↗</span></button>
             </article>
           </section>
 
@@ -349,6 +344,6 @@
     </dialog>
 
     <div class="toast" id="toast" role="status" aria-live="polite"></div>
-    <script src="./dashboard.js?v=5" defer></script>
+    <script type="module" src="./dashboard.js?v=6"></script>
   </body>
 </html>

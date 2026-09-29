@@ -3,7 +3,5 @@
 .env.*
 node_modules/
 coverage/
-.vercel/
 *.log
-.vercel
 .env*

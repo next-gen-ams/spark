@@ -60,10 +60,12 @@ svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width:
 .prototype-note { display: flex; align-items: flex-start; gap: 10px; padding: 12px; color: #62666a; border: 1px solid #e3e1dc; border-radius: 11px; background: #f8f7f4; }
 .prototype-note svg { width: 17px; height: 17px; flex: 0 0 auto; margin-top: 2px; }
 .prototype-note p { margin: 0; font-size: .73rem; line-height: 1.48; }
-.access-footer { min-height: 30px; display: flex; align-items: center; justify-content: center; gap: 12px; margin: 18px 0 0; color: #9a9ca0; }
+.access-footer { min-height: 30px; display: grid; justify-items: center; gap: 9px; margin: 18px 0 0; color: #888b90; text-align: center; }
+.access-footer-brands { display: flex; align-items: center; justify-content: center; gap: 12px; }
 .access-footer img { width: auto; max-width: 118px; height: 24px; display: block; object-fit: contain; }
-.access-footer img:last-child { max-width: 112px; height: 23px; }
+.access-footer img:last-child { max-width: 140px; height: 29px; }
 .access-footer span { font-size: .78rem; font-weight: 650; }
+.access-footer small { font-size: .65rem; line-height: 1.35; letter-spacing: .01em; }
 
 .button { min-height: 42px; display: inline-flex; align-items: center; justify-content: center; gap: 8px; padding: 0 15px; border: 0; border-radius: 10px; font-size: .83rem; font-weight: 750; transition: transform .18s, box-shadow .18s, background .18s; }
 .button:hover { transform: translateY(-1px); }
@@ -97,16 +99,6 @@ svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width:
 .status-chip > span { width: 7px; height: 7px; border-radius: 50%; background: #f4bf45; box-shadow: 0 0 0 4px rgba(244,191,69,.12); }
 .status-chip.is-live > span { background: #55c89b; box-shadow: 0 0 0 4px rgba(85,200,155,.13); }
 .button-geo { min-height: 40px; color: white; background: var(--rmit-red); }
-.profile-button { min-height: 44px; display: flex; align-items: center; gap: 10px; padding: 4px 8px 4px 5px; color: white; border: 1px solid rgba(255,255,255,.11); border-radius: 11px; background: rgba(255,255,255,.06); }
-.profile-button > svg { width: 15px; height: 15px; color: rgba(255,255,255,.55); }
-.avatar { width: 34px; height: 34px; display: grid; place-items: center; border-radius: 9px; color: #202124; background: #f3cbc8; font-size: .73rem; font-weight: 850; }
-.profile-copy { display: grid; gap: 1px; text-align: left; }
-.profile-copy strong { font-size: .75rem; }
-.profile-copy small { color: rgba(255,255,255,.55); font-size: .61rem; }
-.profile-menu { position: absolute; top: 53px; right: 0; width: 160px; padding: 6px; border: 1px solid #dfddd9; border-radius: 11px; background: white; box-shadow: var(--shadow); }
-.profile-menu button { width: 100%; height: 38px; display: flex; align-items: center; gap: 8px; padding: 0 10px; color: var(--ink); border: 0; border-radius: 7px; background: transparent; text-align: left; font-size: .77rem; }
-.profile-menu button:hover { background: #f5f4f1; }
-.profile-menu svg { width: 17px; height: 17px; }
 
 .workspace { width: min(1480px, calc(100% - 36px)); display: grid; grid-template-columns: 218px minmax(0,1fr); gap: 28px; margin: 0 auto; }
 .sidebar { position: sticky; top: 76px; height: calc(100vh - 76px); display: flex; flex-direction: column; padding: 30px 0 22px; }
@@ -359,7 +351,7 @@ a.article-link:hover strong { color: var(--rmit-red); text-decoration: underline
 }
 
 @media (max-width: 620px) {
-  .brand-name, .profile-button, .status-chip { display: none; }
+  .brand-name, .status-chip { display: none; }
   .brand-logo-compact { width: 98px; height: 37px; }
   .topbar-product-group { gap: 7px; }
   .country-control { height: 37px; }
