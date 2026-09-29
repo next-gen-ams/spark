@@ -61,10 +61,10 @@ svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width:
 .prototype-note svg { width: 17px; height: 17px; flex: 0 0 auto; margin-top: 2px; }
 .prototype-note p { margin: 0; font-size: .73rem; line-height: 1.48; }
 .access-footer { min-height: 30px; display: grid; justify-items: center; gap: 9px; margin: 18px 0 0; color: #888b90; text-align: center; }
-.access-footer-brands { display: flex; align-items: center; justify-content: center; gap: 12px; }
-.access-footer img { width: auto; max-width: 118px; height: 24px; display: block; object-fit: contain; }
-.access-footer img:last-child { max-width: 140px; height: 29px; }
-.access-footer span { font-size: .78rem; font-weight: 650; }
+.access-footer-brands { display: flex; align-items: center; justify-content: center; gap: 7px; }
+.access-footer img { width: auto; max-width: 59px; height: 12px; display: block; object-fit: contain; }
+.access-footer img:last-child { max-width: 70px; height: 14.5px; }
+.access-footer span { font-size: .58rem; font-weight: 650; }
 .access-footer small { font-size: .65rem; line-height: 1.35; letter-spacing: .01em; }
 
 .button { min-height: 42px; display: inline-flex; align-items: center; justify-content: center; gap: 8px; padding: 0 15px; border: 0; border-radius: 10px; font-size: .83rem; font-weight: 750; transition: transform .18s, box-shadow .18s, background .18s; }
