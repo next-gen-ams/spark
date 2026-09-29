@@ -12,7 +12,7 @@ Vinext/React application published through ChatGPT Sites and as a static build i
 
 ## Users
 
-The GMS Executive Team, preparing for and running a fortnightly discussion of internal administrative work.
+The GMS Executive Team, preparing for and running a weekly discussion of internal administrative work.
 
 ## Product Purpose
 
@@ -20,11 +20,11 @@ Keep proposed discussion topics, meeting decisions and follow-up work in one sha
 
 ## Positioning
 
-The tracker connects the fortnightly meeting agenda directly to ownership and follow-up, instead of separating meeting notes from action tracking.
+The tracker connects the weekly meeting agenda directly to ownership and follow-up, instead of separating meeting notes from action tracking.
 
 ## Operating Context
 
-Used before, during and after a fortnightly executive meeting. Microsoft work accounts provide sign-in; Outlook email and calendar are intended to deliver reminders and meeting context.
+Used before, during and after a weekly executive meeting. Microsoft work accounts provide sign-in; Outlook email and calendar are intended to deliver reminders and meeting context.
 
 ## Capabilities and Constraints
 
