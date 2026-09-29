@@ -276,16 +276,25 @@ navItems.forEach((item) => {
 
 async function loadMeltwaterData() {
   try {
-    const response = await fetch('/api/meltwater/dashboard', {
-      headers: { Accept: 'application/json' },
-    });
-    if (!response.ok) throw new Error('Live data unavailable');
-    const data = await response.json();
+    const data = await fetchDashboardData();
     renderMeltwaterData(data);
   } catch {
     renderMeltwaterError();
     showToast('Could not load the latest weekly Meltwater snapshot.');
   }
+}
+
+async function fetchDashboardData() {
+  const liveResponse = await fetch('/api/meltwater/dashboard', {
+    headers: { Accept: 'application/json' },
+  });
+  if (liveResponse.ok) return liveResponse.json();
+
+  const snapshotResponse = await fetch('./data/meltwater.json', {
+    headers: { Accept: 'application/json' },
+  });
+  if (!snapshotResponse.ok) throw new Error('Weekly snapshot unavailable');
+  return snapshotResponse.json();
 }
 
 function renderMeltwaterData(data) {
