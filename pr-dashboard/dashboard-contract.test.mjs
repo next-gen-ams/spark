@@ -71,6 +71,15 @@ test('summary cards use production data-source labels', async () => {
   assert.doesNotMatch(javascript, /WEEKLY CACHE|WEEKLY SNAPSHOT/);
 });
 
+test('coverage sections use concise client-facing headings without helper copy', async () => {
+  const html = await readFile(new URL('./index.html', import.meta.url), 'utf8');
+
+  assert.match(html, /<span class="panel-kicker">PUBLISHED MEDIA<\/span>\s*<h2>Confirmed coverage<\/h2>/);
+  assert.match(html, /<span class="panel-kicker">POTENTIAL & RELATED PICKUPS<\/span>\s*<h2>Organic coverage<\/h2>/);
+  assert.doesNotMatch(html, /Additional organic coverage|<h2>Published media<\/h2>/);
+  assert.doesNotMatch(html, /Confirmed placements, bilingual article titles|Recent Meltwater mentions for review/);
+});
+
 test('PR performance does not render a separate AI insights surface', async () => {
   const [html, javascript, server] = await Promise.all([
     readFile(new URL('./index.html', import.meta.url), 'utf8'),
