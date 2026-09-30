@@ -11,7 +11,7 @@
     <meta name="referrer" content="strict-origin-when-cross-origin" />
     <meta name="robots" content="noindex, nofollow, noarchive" />
     <title>RMIT DSC China PR Tracker</title>
-    <link rel="stylesheet" href="./styles.css?v=17" />
+    <link rel="stylesheet" href="./styles.css?v=18" />
   </head>
   <body>
     <div class="access-gate" id="accessGate">
@@ -322,12 +322,10 @@
           <div class="dashboard-view" data-view-panel="geo-visibility" hidden>
             <section class="panel geo-visibility-panel" id="geo-visibility" aria-labelledby="geoVisibilityTitle">
               <div class="panel-header geo-visibility-header">
-                <div>
+                <div class="geo-heading-copy">
                   <span class="panel-kicker">GEO VISIBILITY · KMT GEO</span>
                   <h2 id="geoVisibilityTitle">GEO Report Snapshots</h2>
                   <p>One bilingual sample prompt for each journey stage, with English translations of the latest answers from Doubao, ERNIE and Qwen.</p>
-                </div>
-                <div class="geo-header-actions">
                   <div class="geo-name-metric" id="geoNameMetric" aria-live="polite">
                     <div class="geo-name-dial" id="geoNameMetricDial" role="img" aria-label="Loading the latest pre-brand result">
                       <span id="geoNameMetricRate">—</span>
@@ -338,11 +336,11 @@
                       <small id="geoNameMetricContext">Loading the latest pre-brand result…</small>
                     </div>
                   </div>
-                  <a class="button button-secondary geo-report-link" href="https://geo.kmt.global/share/XYK19lgzKLyGdYjkoELc5o8aA1pO0RIUPQD45KRMn0g" target="_blank" rel="noopener noreferrer">
-                    Open full GEO report
-                    <svg viewBox="0 0 24 24"><path d="M7 17 17 7M8 7h9v9"/></svg>
-                  </a>
                 </div>
+                <a class="button button-secondary geo-report-link" href="https://geo.kmt.global/share/XYK19lgzKLyGdYjkoELc5o8aA1pO0RIUPQD45KRMn0g" target="_blank" rel="noopener noreferrer">
+                  Open full GEO report
+                  <svg viewBox="0 0 24 24"><path d="M7 17 17 7M8 7h9v9"/></svg>
+                </a>
               </div>
               <div class="geo-summary-strip" id="geoSummaryStrip" aria-live="polite">
                 <span>Loading the latest read-only GEO snapshot…</span>
@@ -404,6 +402,6 @@
     </dialog>
 
     <div class="toast" id="toast" role="status" aria-live="polite"></div>
-    <script type="module" src="./dashboard.js?v=17"></script>
+    <script type="module" src="./dashboard.js?v=18"></script>
   </body>
 </html>

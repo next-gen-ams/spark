@@ -230,10 +230,9 @@ svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width:
 .topic-track span { height: 100%; display: block; border-radius: inherit; background: linear-gradient(90deg, var(--blue), #79a8b8); }
 
 .geo-visibility-panel { scroll-margin-top: 104px; margin-bottom: 14px; overflow: hidden; }
-.geo-visibility-header { align-items: center; padding-bottom: 17px; }
-.geo-visibility-header > div { max-width: 760px; }
-.geo-header-actions { max-width: none !important; display: flex; align-items: center; justify-content: flex-end; gap: 18px; }
-.geo-name-metric { min-width: 250px; display: flex; align-items: center; gap: 11px; padding-left: 18px; border-left: 1px solid #dedbd5; }
+.geo-visibility-header { align-items: flex-start; padding-bottom: 17px; }
+.geo-heading-copy { max-width: 780px; }
+.geo-name-metric { width: fit-content; min-width: 250px; display: flex; align-items: center; gap: 11px; margin-top: 14px; }
 .geo-name-dial { --geo-rate: 0%; position: relative; width: 58px; height: 58px; display: grid; place-items: center; flex: 0 0 auto; border-radius: 50%; background: conic-gradient(#7448e8 0 var(--geo-rate), #e5e2eb var(--geo-rate) 100%); }
 .geo-name-dial::before { content: ""; position: absolute; inset: 7px; border-radius: 50%; background: #fff; box-shadow: inset 0 0 0 1px rgba(116,72,232,.08); }
 .geo-name-dial span { position: relative; z-index: 1; color: #3d315c; font-size: .72rem; font-weight: 900; letter-spacing: -.035em; }
@@ -241,7 +240,7 @@ svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width:
 .geo-name-copy > span { color: var(--rmit-red); font-size: .5rem; font-weight: 900; letter-spacing: .13em; }
 .geo-name-copy strong { color: #26282b; font-size: 1.25rem; line-height: 1; letter-spacing: -.055em; }
 .geo-name-copy small { max-width: 160px; color: #777a7f; font-size: .52rem; line-height: 1.35; }
-.geo-report-link { flex: 0 0 auto; text-decoration: none; }
+.geo-report-link { flex: 0 0 auto; margin-top: 3px; text-decoration: none; }
 .geo-report-link svg { width: 15px; height: 15px; }
 .geo-summary-strip { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 0; padding: 0 22px 19px; }
 .geo-summary-chip { min-height: 18px; display: inline-flex; align-items: center; gap: 7px; padding: 0 14px; color: #707378; border-left: 1px solid #dcdad5; font-size: .59rem; font-weight: 720; }
@@ -459,8 +458,7 @@ a.article-link:hover strong { color: var(--rmit-red); text-decoration: underline
   .radar-three { width: 82px; height: 82px; }.radar-two { width: 60px; height: 60px; }
   .pickup-heading { align-items: flex-start; flex-direction: column; }
   .geo-visibility-header { align-items: flex-start; flex-direction: column; }
-  .geo-header-actions { width: 100%; align-items: stretch; justify-content: space-between; }
-  .geo-report-link { align-self: stretch; justify-content: center; }
+  .geo-report-link { align-self: stretch; justify-content: center; margin-top: 0; }
   .country-control summary { min-width: 116px; padding: 0 8px; }
 }
 
@@ -480,8 +478,7 @@ a.article-link:hover strong { color: var(--rmit-red); text-decoration: underline
   .pickup-heading .auto-refresh-badge { width: 100%; justify-content: center; }
   .pickup-illustration { display: none; }
   .geo-persona-header { align-items: flex-start; flex-direction: column; }
-  .geo-header-actions { flex-direction: column; }
-  .geo-name-metric { width: 100%; padding: 0 0 0 12px; }
+  .geo-name-metric { width: 100%; }
   .geo-persona-score { justify-items: start; text-align: left; }
   .geo-summary-strip { display: grid; gap: 7px; }
   .geo-summary-chip { padding: 0; border-left: 0; }
