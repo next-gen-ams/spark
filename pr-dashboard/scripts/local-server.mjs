@@ -14,7 +14,6 @@ const allowedFiles = new Map([
   ['/dashboard.js', ['dashboard.js', 'text/javascript; charset=utf-8']],
   ['/auth-verifier.js', ['auth-verifier.js', 'text/javascript; charset=utf-8']],
   ['/data/meltwater.json', ['data/meltwater.json', 'application/json; charset=utf-8']],
-  ['/data/geo.json', ['data/geo.json', 'application/json; charset=utf-8']],
   ['/assets/rmit-university-logo.png', ['assets/rmit-university-logo.png', 'image/png']],
   ['/assets/kmt-logo.png', ['assets/kmt-logo.png', 'image/png']],
   ['/assets/gms-logo.png', ['assets/gms-logo.png', 'image/png']],
@@ -50,7 +49,7 @@ const server = createServer(async (request, response) => {
 
 server.listen(port, host, () => {
   console.log(`RMIT DSC PR Tracker running at http://${host}:${port}`);
-  console.log('Data sources: committed Meltwater and KMT GEO snapshots');
+  console.log('Data source: committed Meltwater snapshot');
 });
 
 function setSecurityHeaders(response) {

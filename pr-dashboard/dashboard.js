@@ -533,7 +533,7 @@ function showPeakTooltip(peak, point, pinned = false) {
     link.target = '_blank';
     link.rel = 'noopener noreferrer';
     const title = document.createElement('strong');
-    title.textContent = mention.titleEn || 'English title pending review';
+    title.textContent = mention.titleEn || mention.title;
     const titleCn = document.createElement('span');
     titleCn.className = 'trend-title-cn';
     titleCn.textContent = mention.title;
@@ -623,7 +623,7 @@ function renderMentions(mentions) {
     label.className = `record-label sentiment-${mention.sentiment}`;
     label.textContent = `${mention.sentiment.toUpperCase()} · ${formatShortDate(mention.publishedDate)}`;
     const title = document.createElement('strong');
-    title.textContent = mention.titleEn || 'English title pending review';
+    title.textContent = mention.titleEn || mention.title;
     title.title = title.textContent;
     const titleCn = document.createElement('span');
     titleCn.className = 'mention-title-cn';

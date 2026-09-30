@@ -262,6 +262,18 @@ function normalizeMention(document) {
 
 function translateTitle(title) {
   const normalized = title.replace(/[“”]/g, '"').replace(/\s+/g, ' ').trim();
+  if (normalized.includes('上海性价比高的国际中本贯通学校：东鼎新加坡方向深度解析')) {
+    return 'A Detailed Look at Shanghai Dongding\'s Singapore Pathway';
+  }
+  if (normalized.includes('第七届城市热岛效应对策国际会议')) {
+    return 'The 7th International Conference on Countermeasures to Urban Heat Islands Concludes in Nanjing';
+  }
+  if (normalized.includes('澳洲服装设计硕士就业前景解析')) {
+    return 'Fashion Design Master\'s Degrees in Australia: Career Prospects and Portfolio Preparation';
+  }
+  if (normalized.includes('上海大学再次亮相世界设计之都大会')) {
+    return 'Shanghai University Returns to the World Design Cities Conference';
+  }
   if (normalized.includes('下一代设计，正在北京发生')) {
     return 'The Next Generation of Design Is Taking Shape in Beijing';
   }
