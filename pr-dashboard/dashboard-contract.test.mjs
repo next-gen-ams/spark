@@ -38,3 +38,22 @@ test('peak tooltip is constrained to its trend panel', async () => {
   assert.match(css, /\.trend-tooltip\.tip-align-left\s*\{/);
   assert.match(javascript, /classList\.toggle\('tip-align-left'/);
 });
+
+test('China-IP coverage records include local page captures', async () => {
+  const [html, javascript, server, beijingNews, beijingYouth] = await Promise.all([
+    readFile(new URL('./index.html', import.meta.url), 'utf8'),
+    readFile(new URL('./dashboard.js', import.meta.url), 'utf8'),
+    readFile(new URL('./scripts/local-server.mjs', import.meta.url), 'utf8'),
+    readFile(new URL('./assets/coverage-beijing-news.jpg', import.meta.url)),
+    readFile(new URL('./assets/coverage-beijing-youth-online.png', import.meta.url)),
+  ]);
+
+  assert.match(html, /id="coverageEvidenceModal"/);
+  assert.equal((javascript.match(/accessNote: 'May require a China-based IP address'/g) || []).length, 2);
+  assert.match(javascript, /coverage-beijing-news\.jpg/);
+  assert.match(javascript, /coverage-beijing-youth-online\.png/);
+  assert.match(server, /coverage-beijing-news\.jpg/);
+  assert.match(server, /coverage-beijing-youth-online\.png/);
+  assert.ok(beijingNews.length > 100_000);
+  assert.ok(beijingYouth.length > 100_000);
+});

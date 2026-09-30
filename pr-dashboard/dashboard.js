@@ -18,6 +18,11 @@ const mediaSearch = document.querySelector('#mediaSearch');
 const waveFilter = document.querySelector('#waveFilter');
 const loginButton = loginForm.querySelector('button[type="submit"]');
 const lockDashboard = document.querySelector('#lockDashboard');
+const coverageEvidenceModal = document.querySelector('#coverageEvidenceModal');
+const coverageEvidenceImage = document.querySelector('#coverageEvidenceImage');
+const coverageEvidenceTitle = document.querySelector('#coverageEvidenceTitle');
+const coverageEvidenceDescription = document.querySelector('#coverageEvidenceDescription');
+const closeCoverageEvidence = document.querySelector('#closeCoverageEvidence');
 let toastTimer;
 let hasLoadedLiveData = false;
 
@@ -47,6 +52,9 @@ const publishedMedia = [
     introEn: 'A leading Beijing-based mainstream outlet known for investigations and urban coverage.',
     titleCn: COMMON_TITLE_CN, titleEn: COMMON_TITLE_EN, date: '2026-09-22',
     url: 'https://bjnews.com.cn/detail/1790051755129485.html',
+    accessNote: 'May require a China-based IP address',
+    capture: './assets/coverage-beijing-news.jpg',
+    captureAlt: 'Captured mobile page for The Beijing News article, supplied by the China team.',
   },
   {
     wave: 'wave-1', outletCn: '光明网', outletEn: 'Guangming Online', mark: '光', colour: 'red',
@@ -80,6 +88,9 @@ const publishedMedia = [
     introEn: 'The official site of Beijing Youth Daily and a key regional distribution platform.',
     titleCn: COMMON_TITLE_CN, titleEn: COMMON_TITLE_EN, date: '2026-09-21',
     url: 'http://culture.ynet.com/2026/09/21/4046030t467.html',
+    accessNote: 'May require a China-based IP address',
+    capture: './assets/coverage-beijing-youth-online.png',
+    captureAlt: 'Captured desktop page for Beijing Youth Online article, supplied by the China team.',
   },
   {
     wave: 'wave-1', outletCn: '北京晚报', outletEn: 'Beijing Evening News', mark: '晚', colour: 'blue',
@@ -293,6 +304,7 @@ function renderPublishedMedia() {
     titleCn.textContent = item.titleCn;
     articleLink.append(titleEn, titleCn);
     articleCell.append(articleLink);
+    if (item.capture) articleCell.append(createCoverageEvidenceControl(item));
 
     const dateCell = document.createElement('td');
     const date = document.createElement('strong');
@@ -311,6 +323,35 @@ function renderPublishedMedia() {
   document.querySelector('#waveCount').textContent = `${filtered.length} placement${filtered.length === 1 ? '' : 's'}`;
   document.querySelector('#mediaTableSummary').textContent = `Showing ${filtered.length} confirmed published record${filtered.length === 1 ? '' : 's'} · source updated 29 Sep 2026`;
 }
+
+function createCoverageEvidenceControl(item) {
+  const row = document.createElement('div');
+  row.className = 'coverage-access-row';
+  const badge = document.createElement('span');
+  badge.className = 'coverage-access-badge';
+  badge.textContent = 'China-IP access';
+  badge.title = item.accessNote;
+  const button = document.createElement('button');
+  button.className = 'coverage-capture-button';
+  button.type = 'button';
+  button.textContent = 'View captured page';
+  button.addEventListener('click', () => openCoverageEvidence(item));
+  row.append(badge, button);
+  return row;
+}
+
+function openCoverageEvidence(item) {
+  coverageEvidenceTitle.textContent = `${item.outletEn} · Captured page`;
+  coverageEvidenceDescription.textContent = `${item.accessNote}. This screenshot was supplied by the China team as a reporting reference.`;
+  coverageEvidenceImage.src = item.capture;
+  coverageEvidenceImage.alt = item.captureAlt;
+  coverageEvidenceModal.showModal();
+}
+
+closeCoverageEvidence.addEventListener('click', () => coverageEvidenceModal.close());
+coverageEvidenceModal.addEventListener('click', (event) => {
+  if (event.target === coverageEvidenceModal) coverageEvidenceModal.close();
+});
 
 const navItems = [...document.querySelectorAll('.nav-item')];
 navItems.forEach((item) => {

@@ -18,6 +18,8 @@ const allowedFiles = new Map([
   ['/assets/rmit-university-logo.png', ['assets/rmit-university-logo.png', 'image/png']],
   ['/assets/kmt-logo.png', ['assets/kmt-logo.png', 'image/png']],
   ['/assets/gms-logo.png', ['assets/gms-logo.png', 'image/png']],
+  ['/assets/coverage-beijing-news.jpg', ['assets/coverage-beijing-news.jpg', 'image/jpeg']],
+  ['/assets/coverage-beijing-youth-online.png', ['assets/coverage-beijing-youth-online.png', 'image/png']],
 ]);
 
 const server = createServer(async (request, response) => {

@@ -381,6 +381,24 @@
       </form>
     </dialog>
 
+    <dialog class="coverage-evidence-modal" id="coverageEvidenceModal" aria-labelledby="coverageEvidenceTitle">
+      <section class="coverage-evidence-card">
+        <header>
+          <div>
+            <span class="panel-kicker">CAPTURED COVERAGE · CHINA TEAM</span>
+            <h2 id="coverageEvidenceTitle">Captured article page</h2>
+            <p id="coverageEvidenceDescription">This article may require a China-based IP address.</p>
+          </div>
+          <button class="modal-close icon-button" id="closeCoverageEvidence" type="button" aria-label="Close captured page">
+            <svg viewBox="0 0 24 24"><path d="m6 6 12 12M18 6 6 18"/></svg>
+          </button>
+        </header>
+        <div class="coverage-evidence-frame">
+          <img id="coverageEvidenceImage" alt="" />
+        </div>
+      </section>
+    </dialog>
+
     <div class="toast" id="toast" role="status" aria-live="polite"></div>
     <script type="module" src="./dashboard.js?v=10"></script>
   </body>

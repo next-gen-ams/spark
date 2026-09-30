@@ -7,6 +7,7 @@ Interactive dashboard prototype inspired by the clean operational structure of t
 - Password-entry screen with an optional seven-day remembered-device state; the plaintext password is never stored.
 - Rolling past-three-month Meltwater overview.
 - Published-media table with campaign-wave filtering, bilingual linked titles, outlet profiles and editorial media-landscape tiers.
+- China-IP access notes and China-team page captures for The Beijing News and Beijing Youth Online when the original article cannot be opened from Australia.
 - Weekly Meltwater snapshots covering total mentions, potential reach, daily trend, peak-day article popovers, sentiment mix, core topics and a bilingual recent-mention review queue from Saved Search `RMIT China DSC` (`29175637`).
 - China market selector with locked future-market options, official RMIT branding and the standard KMT copyright banner.
 - Compact KMT GEO audience-journey section with three personas, one representative prompt per journey stage, and expandable Doubao, ERNIE and Qwen answers with cited-source links.
