@@ -57,3 +57,15 @@ test('China-IP coverage records include local page captures', async () => {
   assert.ok(beijingNews.length > 100_000);
   assert.ok(beijingYouth.length > 100_000);
 });
+
+test('summary cards use production data-source labels', async () => {
+  const [html, javascript] = await Promise.all([
+    readFile(new URL('./index.html', import.meta.url), 'utf8'),
+    readFile(new URL('./dashboard.js', import.meta.url), 'utf8'),
+  ]);
+
+  assert.match(html, /UPDATED · 29 SEP/);
+  assert.doesNotMatch(html, /TEMP DATA|Temporary tracker records/i);
+  assert.match(javascript, /meltwaterMetricStatus'\)\.textContent = 'MELTWATER API'/);
+  assert.doesNotMatch(javascript, /WEEKLY CACHE|WEEKLY SNAPSHOT/);
+});

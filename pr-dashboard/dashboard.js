@@ -601,7 +601,7 @@ function renderMeltwaterData(data) {
   document.querySelector('#totalMentionsMetric').textContent = formatNumber(summary.totalMentions);
   document.querySelector('#totalMentionsMetric').classList.remove('metric-pending');
   document.querySelector('#totalMentionsDescription').textContent = `${formatNumber(summary.averagePerDay)} mentions per day on average.`;
-  document.querySelector('#meltwaterMetricStatus').textContent = meta.cached ? 'WEEKLY CACHE' : 'WEEKLY SNAPSHOT';
+  document.querySelector('#meltwaterMetricStatus').textContent = 'MELTWATER API';
   document.querySelector('#reachMetric').textContent = formatCompact(summary.potentialReach);
   document.querySelector('#reachDescription').textContent = `${formatCompact(summary.estimatedViews)} estimated views · source audiences may overlap.`;
 
