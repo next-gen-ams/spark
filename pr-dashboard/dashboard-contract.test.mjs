@@ -94,6 +94,35 @@ test('GEO report uses spacious bilingual persona and journey cards', async () =>
   assert.match(css, /\.geo-journey\[open\]\s*\{[^}]*grid-column:\s*1 \/ -1/s);
 });
 
+test('workspace separates PR performance and GEO visibility into routed views', async () => {
+  const [html, javascript, css] = await Promise.all([
+    readFile(new URL('./index.html', import.meta.url), 'utf8'),
+    readFile(new URL('./dashboard.js', import.meta.url), 'utf8'),
+    readFile(new URL('./styles.css', import.meta.url), 'utf8'),
+  ]);
+
+  assert.equal((html.match(/class="nav-item(?: is-active)?"/g) || []).length, 2);
+  assert.match(html, /data-view="pr-performance"[^>]*>[\s\S]*?PR Performance/);
+  assert.match(html, /data-view="geo-visibility"[^>]*>[\s\S]*?GEO Visibility/);
+  assert.equal((html.match(/data-view-panel=/g) || []).length, 2);
+  assert.match(javascript, /searchParams\.set\('view', view\)/);
+  assert.match(javascript, /window\.history\.pushState/);
+  assert.match(javascript, /window\.addEventListener\('popstate'/);
+  assert.match(css, /\.dashboard-view\[hidden\]\s*\{\s*display:\s*none;/);
+});
+
+test('GEO snapshot metadata reads as passive text instead of buttons', async () => {
+  const [javascript, css] = await Promise.all([
+    readFile(new URL('./dashboard.js', import.meta.url), 'utf8'),
+    readFile(new URL('./styles.css', import.meta.url), 'utf8'),
+  ]);
+
+  assert.match(javascript, /`Updated on \$\{data\.meta\.checkedLabel\}`/);
+  const metadataRule = css.match(/\.geo-summary-chip\s*\{([^}]*)\}/)?.[1] || '';
+  assert.doesNotMatch(metadataRule, /border-radius|background|cursor/);
+  assert.match(metadataRule, /border-left:\s*1px solid/);
+});
+
 test('locked markets use right-aligned dashboard lock icons', async () => {
   const [html, css] = await Promise.all([
     readFile(new URL('./index.html', import.meta.url), 'utf8'),

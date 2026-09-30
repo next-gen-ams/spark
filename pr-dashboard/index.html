@@ -11,7 +11,7 @@
     <meta name="referrer" content="strict-origin-when-cross-origin" />
     <meta name="robots" content="noindex, nofollow, noarchive" />
     <title>RMIT DSC China PR Tracker</title>
-    <link rel="stylesheet" href="./styles.css?v=13" />
+    <link rel="stylesheet" href="./styles.css?v=14" />
   </head>
   <body>
     <div class="access-gate" id="accessGate">
@@ -76,7 +76,7 @@
       <header class="topbar">
         <div class="topbar-inner">
           <div class="topbar-product-group">
-            <a href="#overview" class="brand-lockup" aria-label="RMIT PR dashboard home">
+            <a href="?view=pr-performance" class="brand-lockup" aria-label="RMIT PR dashboard home">
               <span class="brand-logo-surface brand-logo-compact">
                 <img class="rmit-logo" src="./assets/rmit-university-logo.png" alt="RMIT University" />
               </span>
@@ -125,28 +125,13 @@
         <aside class="sidebar" aria-label="Dashboard sections">
           <nav>
             <span class="nav-label">WORKSPACE</span>
-            <a class="nav-item is-active" href="#overview" data-section="overview">
+            <a class="nav-item is-active" href="?view=pr-performance" data-view="pr-performance" aria-current="page">
               <svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
-              Overview
+              PR Performance
             </a>
-            <a class="nav-item" href="#coverage" data-section="coverage">
-              <svg viewBox="0 0 24 24"><path d="M4 4h16v16H4zM8 8h8M8 12h8M8 16h5"/></svg>
-              Published media
-              <span class="nav-count">10</span>
-            </a>
-            <a class="nav-item" href="#monitor" data-section="monitor">
-              <svg viewBox="0 0 24 24"><path d="M4 19V9M10 19V5M16 19v-7M22 19V3"/></svg>
-              Mention monitor
-              <span class="soon-dot is-live" title="Meltwater connected"></span>
-            </a>
-            <a class="nav-item" href="#geo-visibility" data-section="geo-visibility">
+            <a class="nav-item" href="?view=geo-visibility" data-view="geo-visibility">
               <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3a15 15 0 0 1 0 18M12 3a15 15 0 0 0 0 18"/></svg>
-              GEO visibility
-              <span class="soon-dot is-live geo-live-dot" title="KMT GEO snapshot available"></span>
-            </a>
-            <a class="nav-item" href="#pickups" data-section="pickups">
-              <svg viewBox="0 0 24 24"><path d="m4 13 4 4L20 5M4 5h7M4 9h4"/></svg>
-              Potential pickups
+              GEO Visibility
             </a>
           </nav>
           <div class="sidebar-card">
@@ -166,6 +151,7 @@
         </aside>
 
         <main class="main-content">
+          <div class="dashboard-view is-active" data-view-panel="pr-performance">
           <section class="page-header" id="overview">
             <div>
               <span class="eyebrow">ROLLING 3-MONTH VIEW · MELTWATER</span>
@@ -266,26 +252,6 @@
             </article>
           </section>
 
-          <section class="panel geo-visibility-panel" id="geo-visibility" aria-labelledby="geoVisibilityTitle">
-            <div class="panel-header geo-visibility-header">
-              <div>
-                <span class="panel-kicker">GEO VISIBILITY · KMT GEO</span>
-                <h2 id="geoVisibilityTitle">GEO Report Snapshots</h2>
-                <p>One bilingual sample prompt for each journey stage, with English translations of the latest answers from Doubao, ERNIE and Qwen.</p>
-              </div>
-              <a class="button button-secondary geo-report-link" href="https://geo.kmt.global/share/XYK19lgzKLyGdYjkoELc5o8aA1pO0RIUPQD45KRMn0g" target="_blank" rel="noopener noreferrer">
-                Open full GEO report
-                <svg viewBox="0 0 24 24"><path d="M7 17 17 7M8 7h9v9"/></svg>
-              </a>
-            </div>
-            <div class="geo-summary-strip" id="geoSummaryStrip" aria-live="polite">
-              <span>Loading the latest read-only GEO snapshot…</span>
-            </div>
-            <div class="geo-persona-grid" id="geoPersonaGrid" aria-live="polite">
-              <article class="geo-persona-loading">Loading persona journeys and representative prompts…</article>
-            </div>
-          </section>
-
           <section class="panel coverage-panel" id="coverage">
             <div class="panel-header coverage-header">
               <div>
@@ -348,6 +314,29 @@
               <article class="pickup-record pickup-record-empty"><span class="connection-orb">M</span><div><span class="record-label">MELTWATER LIVE DATA</span><strong>Loading recent mentions…</strong><small>Past three months</small></div></article>
             </div>
           </section>
+          </div>
+
+          <div class="dashboard-view" data-view-panel="geo-visibility" hidden>
+            <section class="panel geo-visibility-panel" id="geo-visibility" aria-labelledby="geoVisibilityTitle">
+              <div class="panel-header geo-visibility-header">
+                <div>
+                  <span class="panel-kicker">GEO VISIBILITY · KMT GEO</span>
+                  <h2 id="geoVisibilityTitle">GEO Report Snapshots</h2>
+                  <p>One bilingual sample prompt for each journey stage, with English translations of the latest answers from Doubao, ERNIE and Qwen.</p>
+                </div>
+                <a class="button button-secondary geo-report-link" href="https://geo.kmt.global/share/XYK19lgzKLyGdYjkoELc5o8aA1pO0RIUPQD45KRMn0g" target="_blank" rel="noopener noreferrer">
+                  Open full GEO report
+                  <svg viewBox="0 0 24 24"><path d="M7 17 17 7M8 7h9v9"/></svg>
+                </a>
+              </div>
+              <div class="geo-summary-strip" id="geoSummaryStrip" aria-live="polite">
+                <span>Loading the latest read-only GEO snapshot…</span>
+              </div>
+              <div class="geo-persona-grid" id="geoPersonaGrid" aria-live="polite">
+                <article class="geo-persona-loading">Loading persona journeys and representative prompts…</article>
+              </div>
+            </section>
+          </div>
 
           <footer class="dashboard-footer">
             <span>RMIT DSC China PR Tracking Dashboard</span>
@@ -400,6 +389,6 @@
     </dialog>
 
     <div class="toast" id="toast" role="status" aria-live="polite"></div>
-    <script type="module" src="./dashboard.js?v=13"></script>
+    <script type="module" src="./dashboard.js?v=14"></script>
   </body>
 </html>

@@ -25,6 +25,9 @@ const coverageEvidenceImage = document.querySelector('#coverageEvidenceImage');
 const coverageEvidenceTitle = document.querySelector('#coverageEvidenceTitle');
 const coverageEvidenceDescription = document.querySelector('#coverageEvidenceDescription');
 const closeCoverageEvidence = document.querySelector('#closeCoverageEvidence');
+const navItems = [...document.querySelectorAll('.nav-item')];
+const dashboardViews = [...document.querySelectorAll('[data-view-panel]')];
+const validDashboardViews = new Set(['pr-performance', 'geo-visibility']);
 let toastTimer;
 let hasLoadedLiveData = false;
 
@@ -125,8 +128,7 @@ renderPublishedMedia();
 function showDashboard() {
   accessGate.classList.add('is-hidden');
   appShell.classList.remove('is-hidden');
-  document.title = 'RMIT DSC China PR Tracker';
-  window.scrollTo({ top: 0, behavior: 'instant' });
+  setDashboardView(dashboardViewFromUrl());
   if (!hasLoadedLiveData) {
     hasLoadedLiveData = true;
     Promise.allSettled([loadMeltwaterData(), loadGeoData()]);
@@ -370,13 +372,43 @@ coverageEvidenceModal.addEventListener('click', (event) => {
   if (event.target === coverageEvidenceModal) coverageEvidenceModal.close();
 });
 
-const navItems = [...document.querySelectorAll('.nav-item')];
 navItems.forEach((item) => {
-  item.addEventListener('click', () => {
-    navItems.forEach((link) => link.classList.remove('is-active'));
-    item.classList.add('is-active');
+  item.addEventListener('click', (event) => {
+    event.preventDefault();
+    setDashboardView(item.dataset.view, { push: true });
   });
 });
+window.addEventListener('popstate', () => setDashboardView(dashboardViewFromUrl()));
+
+function dashboardViewFromUrl() {
+  const requestedView = new URLSearchParams(window.location.search).get('view');
+  return validDashboardViews.has(requestedView) ? requestedView : 'pr-performance';
+}
+
+function setDashboardView(requestedView, { push = false } = {}) {
+  const view = validDashboardViews.has(requestedView) ? requestedView : 'pr-performance';
+  dashboardViews.forEach((panel) => {
+    const isActive = panel.dataset.viewPanel === view;
+    panel.hidden = !isActive;
+    panel.classList.toggle('is-active', isActive);
+  });
+  navItems.forEach((item) => {
+    const isActive = item.dataset.view === view;
+    item.classList.toggle('is-active', isActive);
+    if (isActive) item.setAttribute('aria-current', 'page');
+    else item.removeAttribute('aria-current');
+  });
+  document.title = view === 'geo-visibility'
+    ? 'RMIT DSC GEO Visibility'
+    : 'RMIT DSC PR Performance';
+  if (push) {
+    const url = new URL(window.location.href);
+    url.searchParams.set('view', view);
+    url.hash = '';
+    window.history.pushState({ view }, '', url);
+  }
+  window.scrollTo({ top: 0, behavior: 'instant' });
+}
 
 async function loadMeltwaterData() {
   try {
@@ -410,7 +442,7 @@ function renderGeoData(data) {
   grid.replaceChildren();
 
   const summaryItems = [
-    `${data.meta.checkedLabel} · ${data.meta.ordinal}`,
+    `Updated on ${data.meta.checkedLabel}`,
     `${data.summary.audiences} China audiences`,
     `${data.summary.models.length} Chinese leading AI models`,
   ];
