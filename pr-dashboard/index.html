@@ -11,7 +11,7 @@
     <meta name="referrer" content="strict-origin-when-cross-origin" />
     <meta name="robots" content="noindex, nofollow, noarchive" />
     <title>RMIT DSC China PR Tracker</title>
-    <link rel="stylesheet" href="./styles.css?v=15" />
+    <link rel="stylesheet" href="./styles.css?v=16" />
   </head>
   <body>
     <div class="access-gate" id="accessGate">
@@ -134,19 +134,22 @@
               GEO Visibility
             </a>
           </nav>
-          <div class="sidebar-card">
-            <div class="sidebar-card-icon"><svg viewBox="0 0 24 24"><path d="M12 2v6M12 16v6M4.9 4.9l4.2 4.2M14.9 14.9l4.2 4.2M2 12h6M16 12h6M4.9 19.1l4.2-4.2M14.9 9.1l4.2-4.2"/></svg></div>
-            <span>MELTWATER API</span>
-            <strong>Weekly automatic refresh</strong>
-            <p>Mentions, trends and pickup candidates refresh server-side every seven days. Manual refresh is disabled.</p>
+          <div class="sidebar-card" id="sidebarContextCard">
+            <div class="sidebar-card-icon" id="sidebarContextVisual">
+              <svg id="sidebarMeltwaterIcon" viewBox="0 0 24 24"><path d="M12 2v6M12 16v6M4.9 4.9l4.2 4.2M14.9 14.9l4.2 4.2M2 12h6M16 12h6M4.9 19.1l4.2-4.2M14.9 9.1l4.2-4.2"/></svg>
+              <img id="sidebarGeoLogo" src="./assets/kmt-logo.png" alt="KMT" hidden />
+            </div>
+            <span id="sidebarContextSource">MELTWATER API</span>
+            <strong id="sidebarContextTitle">Weekly automatic refresh</strong>
+            <p id="sidebarContextDescription">Mentions, trends and pickup candidates refresh server-side every seven days. Manual refresh is disabled.</p>
             <div class="auto-refresh-note">
               <svg viewBox="0 0 24 24"><path d="M20 6v5h-5M4 18v-5h5"/><path d="M18.5 9a7 7 0 0 0-12-2M5.5 15a7 7 0 0 0 12 2"/></svg>
-              <span><small>Next automatic update</small><strong id="nextRefresh">Calculating…</strong></span>
+              <span><small id="sidebarRefreshLabel">Next automatic update</small><strong id="sidebarRefreshValue">Calculating…</strong></span>
             </div>
           </div>
           <div class="sidebar-footer">
-            <span>Last refreshed</span>
-            <strong id="lastRefreshed">Connecting…</strong>
+            <span id="sidebarLastRefreshLabel">Last refreshed</span>
+            <strong id="sidebarLastRefreshValue">Connecting…</strong>
           </div>
         </aside>
 
@@ -396,6 +399,6 @@
     </dialog>
 
     <div class="toast" id="toast" role="status" aria-live="polite"></div>
-    <script type="module" src="./dashboard.js?v=15"></script>
+    <script type="module" src="./dashboard.js?v=16"></script>
   </body>
 </html>

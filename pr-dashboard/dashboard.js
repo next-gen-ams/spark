@@ -27,6 +27,17 @@ const coverageEvidenceDescription = document.querySelector('#coverageEvidenceDes
 const closeCoverageEvidence = document.querySelector('#closeCoverageEvidence');
 const navItems = [...document.querySelectorAll('.nav-item')];
 const dashboardViews = [...document.querySelectorAll('[data-view-panel]')];
+const sidebarContextCard = document.querySelector('#sidebarContextCard');
+const sidebarContextVisual = document.querySelector('#sidebarContextVisual');
+const sidebarMeltwaterIcon = document.querySelector('#sidebarMeltwaterIcon');
+const sidebarGeoLogo = document.querySelector('#sidebarGeoLogo');
+const sidebarContextSource = document.querySelector('#sidebarContextSource');
+const sidebarContextTitle = document.querySelector('#sidebarContextTitle');
+const sidebarContextDescription = document.querySelector('#sidebarContextDescription');
+const sidebarRefreshLabel = document.querySelector('#sidebarRefreshLabel');
+const sidebarRefreshValue = document.querySelector('#sidebarRefreshValue');
+const sidebarLastRefreshLabel = document.querySelector('#sidebarLastRefreshLabel');
+const sidebarLastRefreshValue = document.querySelector('#sidebarLastRefreshValue');
 const validDashboardViews = new Set(['pr-performance', 'geo-visibility']);
 let toastTimer;
 let hasLoadedLiveData = false;
@@ -401,6 +412,7 @@ function setDashboardView(requestedView, { push = false } = {}) {
   document.title = view === 'geo-visibility'
     ? 'RMIT DSC GEO Visibility'
     : 'RMIT DSC PR Performance';
+  renderSidebarContext(view);
   if (push) {
     const url = new URL(window.location.href);
     url.searchParams.set('view', view);
@@ -408,6 +420,27 @@ function setDashboardView(requestedView, { push = false } = {}) {
     window.history.pushState({ view }, '', url);
   }
   window.scrollTo({ top: 0, behavior: 'instant' });
+}
+
+function renderSidebarContext(view) {
+  const isGeo = view === 'geo-visibility';
+  sidebarContextCard.classList.toggle('sidebar-card-geo', isGeo);
+  sidebarContextVisual.classList.toggle('sidebar-card-logo', isGeo);
+  sidebarMeltwaterIcon.hidden = isGeo;
+  sidebarGeoLogo.hidden = !isGeo;
+  sidebarContextSource.textContent = isGeo ? 'KMT GEO' : 'MELTWATER API';
+  sidebarContextTitle.textContent = isGeo ? 'Monthly GEO snapshot' : 'Weekly automatic refresh';
+  sidebarContextDescription.textContent = isGeo
+    ? 'Persona, journey and AI answer visibility refreshes monthly from the verified KMT GEO report.'
+    : 'Mentions, trends and pickup candidates refresh server-side every seven days. Manual refresh is disabled.';
+  sidebarRefreshLabel.textContent = isGeo ? 'Refresh schedule' : 'Next automatic update';
+  sidebarRefreshValue.textContent = isGeo
+    ? 'First Monday · 10:30 am'
+    : (sidebarRefreshValue.dataset.meltwater || 'Calculating…');
+  sidebarLastRefreshLabel.textContent = isGeo ? 'Last GEO check' : 'Last refreshed';
+  sidebarLastRefreshValue.textContent = isGeo
+    ? (sidebarLastRefreshValue.dataset.geo || 'Connecting…')
+    : (sidebarLastRefreshValue.dataset.meltwater || 'Connecting…');
 }
 
 async function loadMeltwaterData() {
@@ -442,6 +475,8 @@ function renderGeoData(data) {
   const grid = document.querySelector('#geoPersonaGrid');
   document.querySelector('#geoNameMetricValue').textContent = `${preBrand.namesYou} / ${preBrand.validAnswers}`;
   document.querySelector('#geoNameMetricContext').textContent = `${preBrand.namesYouRate}% across ${preBrand.questions} pre-brand prompts where RMIT was not named.`;
+  sidebarLastRefreshValue.dataset.geo = data.meta.checkedLabel;
+  if (dashboardViewFromUrl() === 'geo-visibility') renderSidebarContext('geo-visibility');
   summary.replaceChildren();
   grid.replaceChildren();
 
@@ -663,8 +698,9 @@ function renderMeltwaterData(data) {
   document.querySelector('#reachDescription').textContent = `${formatCompact(summary.estimatedViews)} estimated views · source audiences may overlap.`;
 
   const generatedAt = new Date(meta.generatedAt);
-  document.querySelector('#lastRefreshed').textContent = formatDateTime(generatedAt);
-  document.querySelector('#nextRefresh').textContent = formatDateTime(new Date(meta.nextRefreshAt));
+  sidebarLastRefreshValue.dataset.meltwater = formatDateTime(generatedAt);
+  sidebarRefreshValue.dataset.meltwater = formatDateTime(new Date(meta.nextRefreshAt));
+  if (dashboardViewFromUrl() === 'pr-performance') renderSidebarContext('pr-performance');
   document.querySelector('#headerLastUpdated').textContent = `Updated ${formatDateTime(generatedAt)}`;
   document.querySelector('#dataSourceFooter').textContent = `${meta.searchName} · Meltwater weekly snapshot · Updated ${formatDateTime(generatedAt)}`;
 

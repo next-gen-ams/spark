@@ -129,9 +129,14 @@ svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width:
 .sidebar-card { display: grid; gap: 8px; margin-top: auto; padding: 16px; border: 1px solid rgba(255,255,255,.85); border-radius: 16px; background: rgba(255,255,255,.63); box-shadow: var(--shadow-soft); backdrop-filter: blur(16px); }
 .sidebar-card-icon { width: 34px; height: 34px; display: grid; place-items: center; color: var(--blue); border-radius: 10px; background: var(--blue-soft); }
 .sidebar-card-icon svg { width: 17px; height: 17px; }
+.sidebar-card-icon img[hidden], .sidebar-card-icon svg[hidden] { display: none; }
+.sidebar-card-icon.sidebar-card-logo { width: 92px; height: 30px; display: flex; justify-content: flex-start; border-radius: 0; background: transparent; }
+.sidebar-card-logo img { width: 92px; height: auto; display: block; }
 .sidebar-card > span { color: var(--blue); font-size: .59rem; font-weight: 850; letter-spacing: .11em; }
+.sidebar-card-geo > span { color: #6744d6; }
 .sidebar-card strong { font-size: .79rem; }
 .sidebar-card p { margin: 0; color: var(--ink-soft); font-size: .67rem; line-height: 1.5; }
+.sidebar-card-geo .auto-refresh-note > svg { color: #7448e8; }
 .auto-refresh-note { display: flex; align-items: center; gap: 8px; margin-top: 3px; padding-top: 10px; border-top: 1px solid #e6e4df; }
 .auto-refresh-note > svg { width: 16px; height: 16px; flex: 0 0 auto; color: var(--blue); }
 .auto-refresh-note > span { display: grid; gap: 2px; }

@@ -137,6 +137,21 @@ test('GEO heading shows a concise data-driven total names-you metric', async () 
   assert.match(css, /\.geo-name-metric\s*\{/);
 });
 
+test('sidebar context switches from Meltwater to KMT GEO with the active workspace', async () => {
+  const [html, javascript, css] = await Promise.all([
+    readFile(new URL('./index.html', import.meta.url), 'utf8'),
+    readFile(new URL('./dashboard.js', import.meta.url), 'utf8'),
+    readFile(new URL('./styles.css', import.meta.url), 'utf8'),
+  ]);
+
+  assert.match(html, /id="sidebarGeoLogo"[^>]*kmt-logo\.png/);
+  assert.match(javascript, /sidebarContextSource\.textContent = isGeo \? 'KMT GEO' : 'MELTWATER API'/);
+  assert.match(javascript, /Monthly GEO snapshot/);
+  assert.match(javascript, /First Monday · 10:30 am/);
+  assert.match(javascript, /Last GEO check/);
+  assert.match(css, /\.sidebar-card-icon\.sidebar-card-logo/);
+});
+
 test('locked markets use right-aligned dashboard lock icons', async () => {
   const [html, css] = await Promise.all([
     readFile(new URL('./index.html', import.meta.url), 'utf8'),
