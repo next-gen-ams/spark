@@ -227,6 +227,11 @@ svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width:
 .geo-visibility-panel { scroll-margin-top: 104px; margin-bottom: 14px; overflow: hidden; }
 .geo-visibility-header { align-items: center; padding-bottom: 17px; }
 .geo-visibility-header > div { max-width: 760px; }
+.geo-header-actions { max-width: none !important; display: flex; align-items: center; justify-content: flex-end; gap: 18px; }
+.geo-name-metric { min-width: 190px; display: grid; grid-template-columns: auto 1fr; align-items: baseline; gap: 3px 9px; padding-left: 18px; border-left: 1px solid #dedbd5; }
+.geo-name-metric > span { grid-column: 1 / -1; color: var(--rmit-red); font-size: .5rem; font-weight: 900; letter-spacing: .13em; }
+.geo-name-metric strong { color: #26282b; font-size: 1.25rem; line-height: 1; letter-spacing: -.055em; }
+.geo-name-metric small { max-width: 180px; color: #777a7f; font-size: .52rem; line-height: 1.35; }
 .geo-report-link { flex: 0 0 auto; text-decoration: none; }
 .geo-report-link svg { width: 15px; height: 15px; }
 .geo-summary-strip { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 0; padding: 0 22px 19px; }
@@ -445,6 +450,7 @@ a.article-link:hover strong { color: var(--rmit-red); text-decoration: underline
   .radar-three { width: 82px; height: 82px; }.radar-two { width: 60px; height: 60px; }
   .pickup-heading { align-items: flex-start; flex-direction: column; }
   .geo-visibility-header { align-items: flex-start; flex-direction: column; }
+  .geo-header-actions { width: 100%; align-items: stretch; justify-content: space-between; }
   .geo-report-link { align-self: stretch; justify-content: center; }
   .country-control summary { min-width: 116px; padding: 0 8px; }
 }
@@ -465,6 +471,8 @@ a.article-link:hover strong { color: var(--rmit-red); text-decoration: underline
   .pickup-heading .auto-refresh-badge { width: 100%; justify-content: center; }
   .pickup-illustration { display: none; }
   .geo-persona-header { align-items: flex-start; flex-direction: column; }
+  .geo-header-actions { flex-direction: column; }
+  .geo-name-metric { width: 100%; padding: 0 0 0 12px; }
   .geo-persona-score { justify-items: start; text-align: left; }
   .geo-summary-strip { display: grid; gap: 7px; }
   .geo-summary-chip { padding: 0; border-left: 0; }

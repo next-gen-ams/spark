@@ -11,6 +11,21 @@ test('GEO snapshot contains three personas and one sample prompt per journey', a
   assert.equal(data.summary.audiences, 3);
   assert.equal(data.summary.samplePrompts, 9);
   assert.deepEqual(data.summary.models, ['Doubao', 'ERNIE', 'Qwen']);
+  assert.deepEqual(data.summary.preBrand, {
+    questions: 30,
+    engines: 3,
+    validAnswers: 87,
+    namesYou: 59,
+    namesCompetitor: 3,
+    noVendor: 25,
+    namedByAnyEngine: 22,
+    namedByAnyEngineTotal: 30,
+    namesYouRate: 68,
+  });
+  assert.equal(
+    data.summary.preBrand.namesYou + data.summary.preBrand.namesCompetitor + data.summary.preBrand.noVendor,
+    data.summary.preBrand.validAnswers,
+  );
   assert.equal(data.personas.length, 3);
 
   for (const persona of data.personas) {

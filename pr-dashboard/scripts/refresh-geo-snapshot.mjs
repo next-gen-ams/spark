@@ -150,7 +150,34 @@ function extractOrdinal(html) {
 function extractOverallSummary(html) {
   const answers = Number(html.match(/By audience<\/h2>[\s\S]*?>(\d+) answers, all three stages/)?.[1] || 0);
   const noVendor = Number(html.match(/title="(\d+) answers name no vendor"/)?.[1] || 0);
-  return { answers, noVendor };
+  const preBrandMatch = html.match(
+    /aria-label="Of the (\d+) answers (\d+) engines gave to (\d+) questions where you were not named first, (\d+) name you, (\d+) name a competitor instead, and (\d+) name no vendor at all\."/,
+  );
+  if (!preBrandMatch) throw new Error('Pre-brand GEO summary not found');
+  const validAnswers = Number(preBrandMatch[1]);
+  const engines = Number(preBrandMatch[2]);
+  const questions = Number(preBrandMatch[3]);
+  const namesYou = Number(preBrandMatch[4]);
+  const namesCompetitor = Number(preBrandMatch[5]);
+  const preBrandNoVendor = Number(preBrandMatch[6]);
+  const beforeTheyNameYou = html.slice(html.indexOf('Before they name you'), html.indexOf('By audience</h2>'));
+  const namedByAnyMatch = beforeTheyNameYou.match(/Named by at least one engine[\s\S]*?font-semibold text-foreground">(\d+)[\s\S]*?\/(?:<[^>]+>)*\s*(\d+)/);
+  if (!namedByAnyMatch) throw new Error('Pre-brand named-by-engine summary not found');
+  return {
+    answers,
+    noVendor,
+    preBrand: {
+      questions,
+      engines,
+      validAnswers,
+      namesYou,
+      namesCompetitor,
+      noVendor: preBrandNoVendor,
+      namedByAnyEngine: Number(namedByAnyMatch[1]),
+      namedByAnyEngineTotal: Number(namedByAnyMatch[2]),
+      namesYouRate: Math.round((namesYou / validAnswers) * 100),
+    },
+  };
 }
 
 function extractPersonaMetrics(html, name) {

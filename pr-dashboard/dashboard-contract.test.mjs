@@ -123,6 +123,20 @@ test('GEO snapshot metadata reads as passive text instead of buttons', async () 
   assert.match(metadataRule, /border-left:\s*1px solid/);
 });
 
+test('GEO heading shows a concise data-driven total names-you metric', async () => {
+  const [html, javascript, css] = await Promise.all([
+    readFile(new URL('./index.html', import.meta.url), 'utf8'),
+    readFile(new URL('./dashboard.js', import.meta.url), 'utf8'),
+    readFile(new URL('./styles.css', import.meta.url), 'utf8'),
+  ]);
+
+  assert.match(html, /id="geoNameMetric"/);
+  assert.match(html, /TOTAL ANSWERS NAMING RMIT/);
+  assert.match(javascript, /preBrand\.namesYou} \/ \$\{preBrand\.validAnswers/);
+  assert.match(javascript, /pre-brand prompts where RMIT was not named/);
+  assert.match(css, /\.geo-name-metric\s*\{/);
+});
+
 test('locked markets use right-aligned dashboard lock icons', async () => {
   const [html, css] = await Promise.all([
     readFile(new URL('./index.html', import.meta.url), 'utf8'),

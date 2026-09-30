@@ -11,7 +11,7 @@
     <meta name="referrer" content="strict-origin-when-cross-origin" />
     <meta name="robots" content="noindex, nofollow, noarchive" />
     <title>RMIT DSC China PR Tracker</title>
-    <link rel="stylesheet" href="./styles.css?v=14" />
+    <link rel="stylesheet" href="./styles.css?v=15" />
   </head>
   <body>
     <div class="access-gate" id="accessGate">
@@ -324,10 +324,17 @@
                   <h2 id="geoVisibilityTitle">GEO Report Snapshots</h2>
                   <p>One bilingual sample prompt for each journey stage, with English translations of the latest answers from Doubao, ERNIE and Qwen.</p>
                 </div>
-                <a class="button button-secondary geo-report-link" href="https://geo.kmt.global/share/XYK19lgzKLyGdYjkoELc5o8aA1pO0RIUPQD45KRMn0g" target="_blank" rel="noopener noreferrer">
-                  Open full GEO report
-                  <svg viewBox="0 0 24 24"><path d="M7 17 17 7M8 7h9v9"/></svg>
-                </a>
+                <div class="geo-header-actions">
+                  <div class="geo-name-metric" id="geoNameMetric" aria-live="polite">
+                    <span>TOTAL ANSWERS NAMING RMIT</span>
+                    <strong id="geoNameMetricValue">—</strong>
+                    <small id="geoNameMetricContext">Loading the latest pre-brand result…</small>
+                  </div>
+                  <a class="button button-secondary geo-report-link" href="https://geo.kmt.global/share/XYK19lgzKLyGdYjkoELc5o8aA1pO0RIUPQD45KRMn0g" target="_blank" rel="noopener noreferrer">
+                    Open full GEO report
+                    <svg viewBox="0 0 24 24"><path d="M7 17 17 7M8 7h9v9"/></svg>
+                  </a>
+                </div>
               </div>
               <div class="geo-summary-strip" id="geoSummaryStrip" aria-live="polite">
                 <span>Loading the latest read-only GEO snapshot…</span>
@@ -389,6 +396,6 @@
     </dialog>
 
     <div class="toast" id="toast" role="status" aria-live="polite"></div>
-    <script type="module" src="./dashboard.js?v=14"></script>
+    <script type="module" src="./dashboard.js?v=15"></script>
   </body>
 </html>

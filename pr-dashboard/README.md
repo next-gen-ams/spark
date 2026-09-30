@@ -11,7 +11,7 @@ Interactive dashboard prototype inspired by the clean operational structure of t
 - Weekly Meltwater snapshots covering total mentions, potential reach, daily trend, peak-day article popovers, sentiment mix, core topics and a bilingual recent-mention review queue from Saved Search `RMIT China DSC` (`29175637`).
 - China market selector with locked future-market options, official RMIT branding and the standard KMT copyright banner.
 - Two routed workspace views: a focused PR Performance page and a separate GEO Visibility page, with browser back/forward support.
-- Expanded KMT GEO report section with three stacked personas, bilingual sample prompts for each journey stage, and expandable English translations of Doubao, ERNIE and Qwen answers with cited-source links.
+- Expanded monthly KMT GEO report section with a pre-brand names-you headline, three stacked personas, bilingual sample prompts for each journey stage, and expandable English translations of Doubao, ERNIE and Qwen answers with cited-source links.
 - One intentional GEO report link inside the GEO section, linked to the verified shared RMIT GEO report.
 - Search, information dialogs and responsive layouts.
 
@@ -30,7 +30,7 @@ Run the static preview:
 npm run preview
 ```
 
-Then open `http://127.0.0.1:4173`. The server binds to localhost by default and exposes no browser-triggered manual refresh action. A local Codex automation refreshes and publishes the Spark snapshot every Monday.
+Then open `http://127.0.0.1:4173`. The server binds to localhost by default and exposes no browser-triggered manual refresh action. Local Codex automations refresh Meltwater every Monday and refresh the KMT GEO snapshot on the first Monday of each month.
 
 Run the local tests with:
 

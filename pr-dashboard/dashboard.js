@@ -436,8 +436,12 @@ async function loadGeoData() {
 
 function renderGeoData(data) {
   if (!Array.isArray(data?.personas) || !data.personas.length) throw new Error('Invalid GEO snapshot');
+  const preBrand = data.summary?.preBrand;
+  if (!preBrand?.validAnswers || !Number.isFinite(preBrand.namesYou)) throw new Error('Invalid GEO pre-brand summary');
   const summary = document.querySelector('#geoSummaryStrip');
   const grid = document.querySelector('#geoPersonaGrid');
+  document.querySelector('#geoNameMetricValue').textContent = `${preBrand.namesYou} / ${preBrand.validAnswers}`;
+  document.querySelector('#geoNameMetricContext').textContent = `${preBrand.namesYouRate}% across ${preBrand.questions} pre-brand prompts where RMIT was not named.`;
   summary.replaceChildren();
   grid.replaceChildren();
 
@@ -605,6 +609,8 @@ function createModelAnswer(answer) {
 function renderGeoError() {
   const summary = document.querySelector('#geoSummaryStrip');
   const grid = document.querySelector('#geoPersonaGrid');
+  document.querySelector('#geoNameMetricValue').textContent = '—';
+  document.querySelector('#geoNameMetricContext').textContent = 'Monthly GEO snapshot unavailable.';
   summary.replaceChildren();
   grid.replaceChildren();
   const status = document.createElement('span');
