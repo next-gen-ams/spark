@@ -3,30 +3,26 @@
     "searchId": 29175637,
     "searchName": "RMIT China DSC",
     "rangeLabel": "Past 3 months",
-    "start": "2026-06-29T00:53:13.382Z",
-    "end": "2026-09-29T00:53:13.382Z",
-    "generatedAt": "2026-09-29T00:53:13.382Z",
+    "start": "2026-06-30T00:04:48.023Z",
+    "end": "2026-09-30T00:04:48.023Z",
+    "generatedAt": "2026-09-30T00:04:48.023Z",
     "cached": true,
     "refreshMode": "weekly",
-    "nextRefreshAt": "2026-10-06T00:58:18.371Z"
+    "nextRefreshAt": "2026-10-07T00:04:48.023Z"
   },
   "summary": {
-    "totalMentions": 234,
+    "totalMentions": 246,
     "averagePerDay": 2,
     "positive": 8,
-    "positivePercent": 3.42,
-    "neutral": 226,
-    "neutralPercent": 96.58,
+    "positivePercent": 3.25,
+    "neutral": 238,
+    "neutralPercent": 96.75,
     "negative": 0,
     "negativePercent": 0,
-    "potentialReach": 2684998018,
-    "estimatedViews": 39044
+    "potentialReach": 2862379336,
+    "estimatedViews": 40804
   },
   "trend": [
-    {
-      "date": "2026-06-29",
-      "count": 1
-    },
     {
       "date": "2026-06-30",
       "count": 2
@@ -393,42 +389,148 @@
     },
     {
       "date": "2026-09-29",
+      "count": 13
+    },
+    {
+      "date": "2026-09-30",
       "count": 0
     }
   ],
   "topics": [
     {
       "name": "Colleges & universities",
-      "count": 132,
-      "percentage": 56.41
+      "count": 144,
+      "percentage": 58.54
     },
     {
       "name": "Study abroad",
-      "count": 70,
-      "percentage": 29.91
+      "count": 71,
+      "percentage": 28.86
     },
     {
       "name": "AI & machine learning",
       "count": 59,
-      "percentage": 25.21
+      "percentage": 23.98
     },
     {
       "name": "Arts & galleries",
       "count": 17,
-      "percentage": 7.26
+      "percentage": 6.91
     },
     {
       "name": "Fashion design",
-      "count": 15,
-      "percentage": 6.41
+      "count": 16,
+      "percentage": 6.5
     },
     {
-      "name": "Admissions",
-      "count": 8,
-      "percentage": 3.42
+      "name": "Design",
+      "count": 15,
+      "percentage": 6.1
     }
   ],
   "mentions": [
+    {
+      "id": "a6qW9-tU4C7VAMG71F-oor4wsLg",
+      "title": "上海性价比高的国际中本贯通学校：东鼎新加坡方向深度解析",
+      "titleEn": "",
+      "source": "深圳之窗",
+      "sourceType": "news",
+      "url": "https://www.shenchuang.com/gdrd/20260929/1692390.shtml",
+      "publishedDate": "2026-09-29T04:53:18.000Z",
+      "sentiment": "neutral",
+      "language": "zh-Hans",
+      "matchedKeywords": [
+        "作品集辅导",
+        "皇家墨尔本理工大学"
+      ],
+      "hitSentence": "... 校合作申请通道，包含SIM、PSB、Kaplan、拉萨尔等院校，学生需要达到对应学术、语言要求方可录取，并非保底直升。合作院校中包含皇家墨尔本理工大学、科廷大学、纽卡斯尔大学等，这些大学在新加坡设有校区，学生在新加坡完成课程后获得本校授予的文凭，满足条件可做中国留学服务中心认证 ...",
+      "reach": 12565,
+      "estimatedViews": 68
+    },
+    {
+      "id": "-7kQx6auyxuLA57u6uMyaf745B0",
+      "title": "第七届城市热岛效应对策国际会议（IC2UHI 2026）在南京圆满闭幕",
+      "titleEn": "",
+      "source": "中华网",
+      "sourceType": "news",
+      "url": "https://tech.china.com/articles/20260929/202609291962855.html",
+      "publishedDate": "2026-09-29T03:44:42.000Z",
+      "sentiment": "neutral",
+      "language": "zh-Hans",
+      "matchedKeywords": [
+        "可持续发展",
+        "建筑学",
+        "城市设计",
+        "皇家墨尔本理工大学",
+        "建筑设计"
+      ],
+      "hitSentence": "... 绍了城市高温量化与预警及热健康行动计划相关成果，意大利佩鲁贾大学Anna Laura Pisello教授结合实测结果总结了面向更热未来的城市设计方法，南京大学张宁教授围绕城市热岛风险的数值研究展开交流。 ▲ 图6：第四场主旨报告（9月23日上午） 第五场报告由澳大利亚皇家墨 ...",
+      "reach": 3151245,
+      "estimatedViews": 62
+    },
+    {
+      "id": "Hw2pX6gH0w5ZQ5oG4KSgG-jZYv4",
+      "title": "澳洲服装设计硕士就业前景解析：悉尼墨尔本热门城市与作品集准备要点",
+      "titleEn": "",
+      "source": "中国教育在线",
+      "sourceType": "news",
+      "url": "https://www.eol.cn/liuxue/yslx/20260929104829.html",
+      "publishedDate": "2026-09-29T02:48:29.000Z",
+      "sentiment": "neutral",
+      "language": "zh-Hans",
+      "matchedKeywords": [
+        "服装设计",
+        "可持续设计",
+        "RMIT",
+        "艺术留学",
+        "RMIT大学"
+      ],
+      "hitSentence": "... 合作校方官方通知为准。 澳洲服装设计硕士就业前景 是许多艺术留学生关注的核心问题。作为南半球最具活力的时尚产业聚集地，澳大利亚的悉尼、墨尔本等城市拥有成熟的服装设计产业链与国际化的就业环境。 澳洲服装设计行业地域分布特点 悉尼作为澳洲时尚产业中心，聚集了 ...",
+      "reach": 398340,
+      "estimatedViews": 883
+    },
+    {
+      "id": "UBiCPEeVGyBAezeETJQep1CBprs",
+      "title": "上海大学再次亮相世界设计之都大会",
+      "titleEn": "",
+      "source": "上海观察",
+      "sourceType": "news",
+      "url": "https://www.shobserver.com/staticsg/res/html/web/newsDetail.html?id=1186546",
+      "publishedDate": "2026-09-28T20:36:00.000Z",
+      "sentiment": "neutral",
+      "language": "zh-Hans",
+      "matchedKeywords": [
+        "设计教育",
+        "产品设计",
+        "皇家墨尔本理工大学",
+        "创意产业",
+        "可持续发展"
+      ],
+      "hitSentence": "... 源，让人工智能成为文化传承、艺术创新和设计教育的新工具。 “文心造物”则让传统重新进入当代生活，从青年陶艺家的创作，到汝瓷咖啡杯、地方文化包装设计，传统工艺与地域文化通过材料、器物和产品获得新的表达，让文化在当代生活中持续焕发新的生命力。 “无界对话”汇聚上海大学与悉尼科技 ...",
+      "reach": 254896,
+      "estimatedViews": 105
+    },
+    {
+      "id": "RQ9k1zNo_xcumSzM6fP-BxVncmM",
+      "title": "上海大学再次亮相世界设计之都大会",
+      "titleEn": "",
+      "source": "解放日报 Jiefang Daily",
+      "sourceType": "news",
+      "url": "https://www.jfdaily.com/staticsg/res/html/web/newsDetail.html?id=1186546&sid=200",
+      "publishedDate": "2026-09-28T20:36:00.000Z",
+      "sentiment": "neutral",
+      "language": "zh-Hant",
+      "matchedKeywords": [
+        "设计教育",
+        "产品设计",
+        "皇家墨尔本理工大学",
+        "创意产业",
+        "可持续发展"
+      ],
+      "hitSentence": "... 源，让人工智能成为文化传承、艺术创新和设计教育的新工具。 “文心造物”则让传统重新进入当代生活，从青年陶艺家的创作，到汝瓷咖啡杯、地方文化包装设计，传统工艺与地域文化通过材料、器物和产品获得新的表达，让文化在当代生活中持续焕发新的生命力。 “无界对话”汇聚上海大学与悉尼科技 ...",
+      "reach": 429714,
+      "estimatedViews": 0
+    },
     {
       "id": "KJ4SN2cDJf2-jh7VpQiUHTbEqc0",
       "title": "下一代设计，正在北京发生",
@@ -902,23 +1004,1629 @@
       "hitSentence": "... 项目践行“国内1.5年+新加坡2至2.5年”的学制安排。学生在国内修完为期18个月的专业课后，将赴新加坡对接英国伯明翰大学、澳大利亚皇家墨尔本理工大学、沃隆港大学等知名学府。提供的专业选项涵盖会计与金融、商业管理与传播、商业信息系统、计算机科学（含大数据、网络安全方向）等。 ...",
       "reach": 28311861,
       "estimatedViews": 127
+    },
+    {
+      "id": "Si15G4Vs2eXBTM_zFx0tBF0Q1y4",
+      "title": "2026出国留学院校推荐：不同条件，有哪些升学路径？",
+      "titleEn": "",
+      "source": "NetEase News / 网易新闻",
+      "sourceType": "news",
+      "url": "https://www.163.com/dy/article/L71ALMNP0536U52A.html",
+      "publishedDate": "2026-09-17T03:24:31.000Z",
+      "sentiment": "neutral",
+      "language": "zh-Hans",
+      "matchedKeywords": [
+        "视觉传达",
+        "室内设计",
+        "可持续设计",
+        "皇家墨尔本理工大学"
+      ],
+      "hitSentence": "... 热门专业集群。商科类涵盖会计金融、国际商务、市场营销、经济学、酒店管理、商务管理、活动管理等；艺术类深度覆盖动画、纯艺、插画、平面设计、视觉传达、游戏艺术、室内设计、电影制作、可持续设计等前沿领域；同时在马来西亚方向增设计算机科学等工科类及大众传媒等人文社科类专业。 （五）费 ...",
+      "reach": 28311861,
+      "estimatedViews": 127
+    },
+    {
+      "id": "PFEUdU1XsHCjzZa4tf14e-uYDdw",
+      "title": "南京艺术学院国际本科二加三含金量解析：艺术生留学英澳名校的跳板优势",
+      "titleEn": "",
+      "source": "中国教育在线",
+      "sourceType": "news",
+      "url": "https://www.eol.cn/liuxue/gjbk/1279898.html",
+      "publishedDate": "2026-09-17T02:30:31.000Z",
+      "sentiment": "neutral",
+      "language": "zh-Hans",
+      "matchedKeywords": [
+        "皇家墨尔本理工大学",
+        "RMIT",
+        "创意产业"
+      ],
+      "hitSentence": "London，UAL）、澳大利亚皇家墨尔本理工大学（RMIT University）等QS艺术设计学科TOP50院校，最终获得中外院校双学位证书。 学历认证与升学优势解析 1） 教育部留学服务中心可认证 ：学生完成海外3年学习后所获学位，可通过教育部留学服务中心进行学历认证 ...",
+      "reach": 398340,
+      "estimatedViews": 883
+    },
+    {
+      "id": "ZKAX82JVd2-nj0xqhytgeRUDYsY",
+      "title": "澳洲建筑专业研究生留学申请条件解析：2026年作品集与择校指南",
+      "titleEn": "",
+      "source": "中国教育在线",
+      "sourceType": "news",
+      "url": "https://www.eol.cn/liuxue/yslx/2026091792828.html",
+      "publishedDate": "2026-09-17T01:28:28.000Z",
+      "sentiment": "neutral",
+      "language": "zh-Hans",
+      "matchedKeywords": [
+        "设计思维",
+        "皇家墨尔本理工大学",
+        "RMIT",
+        "建筑设计",
+        "建筑学",
+        "交互设计"
+      ],
+      "hitSentence": "... 估申请者建筑专业能力的关键材料，需包含3-5个完整设计项目：1） 展示设计思维过程 2） 技术图纸与模型照片 3） 实际建成项目优先 。皇家墨尔本理工大学（RMIT University）明确要求作品集不超过15页。 推荐院校与专业特色 1） 悉尼大学（University ...",
+      "reach": 398340,
+      "estimatedViews": 883
+    },
+    {
+      "id": "-QJ6kZiGaQzBweS6oSjGIvbCkSI",
+      "title": "低成本留学+稳妥拿PR！2026澳新高适配专业、院校清单整理",
+      "titleEn": "",
+      "source": "新东方网",
+      "sourceType": "news",
+      "url": "https://goabroad.xdf.cn/202609/15390435.html",
+      "publishedDate": "2026-09-15T12:38:59.000Z",
+      "sentiment": "neutral",
+      "language": "zh-Hans",
+      "matchedKeywords": [
+        "皇家墨尔本理工",
+        "校企合作",
+        "景观建筑"
+      ],
+      "hitSentence": "... 大学、昆士兰科技大学、悉尼科技大学 择校小建议：如果优先考虑澳洲本地就业，可以多关注UTS、QUT这类公立应用型院校，课程实操占比高，校企合作资源丰富，比传统重理论的名校更贴合本地职场需求。 3.教育与社工类：文科生友好，避开商科内卷 对于文科、社科、语言类同学来说， ...",
+      "reach": 484810,
+      "estimatedViews": 0
+    },
+    {
+      "id": "CZKTirqBPbIpQ0dBA82CLHslQ6Q",
+      "title": "2026出国留学项目推荐：热门国家通道解析",
+      "titleEn": "",
+      "source": "NetEase News / 网易新闻",
+      "sourceType": "news",
+      "url": "https://www.163.com/dy/article/L6RVKJ220536U52A.html",
+      "publishedDate": "2026-09-15T01:37:50.000Z",
+      "sentiment": "neutral",
+      "language": "zh-Hans",
+      "matchedKeywords": [
+        "皇家墨尔本理工大学",
+        "视觉传达",
+        "室内设计"
+      ],
+      "hitSentence": "... 行信息备案，全程受官方监管。 （三）学科方向与费用区间 特色专业涵盖商科与艺术类两大核心学科方向。具体开设会计金融、国际商务、动画、视觉传达、室内设计等前沿专业。国内阶段学费按类别区分，普通类专业每年6.8万元，艺术类专业每年7万元；国外阶段涵盖生活费与学费的年度预估综合费 ...",
+      "reach": 28311861,
+      "estimatedViews": 144
+    },
+    {
+      "id": "u3BR0U4qxmef01uUbcYieHJ-3Jw",
+      "title": "2026出国留学项目院校推荐：热门国家通道解析",
+      "titleEn": "",
+      "source": "NetEase News / 网易新闻",
+      "sourceType": "news",
+      "url": "https://www.163.com/dy/article/L6PGP5BK0534R3N6.html",
+      "publishedDate": "2026-09-14T02:36:59.000Z",
+      "sentiment": "neutral",
+      "language": "zh-Hans",
+      "matchedKeywords": [
+        "室内设计",
+        "皇家墨尔本理工大学"
+      ],
+      "hitSentence": "... 南理工大学继续教育学院、广东外语外贸大学国际学院、西安外国语大学国际学院等院校共同构建培养网络；海外精准对接英国伯明翰大学、澳大利亚皇家墨尔本理工大学、澳大利亚沃隆港大学及新加坡管理学院等海外知名学府。 （二）特色专业与费用条件 招生专业聚焦高就业率领域，主推会计与金融、商 ...",
+      "reach": 28311861,
+      "estimatedViews": 144
+    },
+    {
+      "id": "FjUzj3YGLl2qIUl3rodqntxENrY",
+      "title": "2026新政：澳洲数字媒体艺术研究生留学入学条件大揭秘",
+      "titleEn": "",
+      "source": "中国教育在线",
+      "sourceType": "news",
+      "url": "https://www.eol.cn/liuxue/yslx/202609149828.html",
+      "publishedDate": "2026-09-14T01:08:28.000Z",
+      "sentiment": "neutral",
+      "language": "zh-Hans",
+      "matchedKeywords": [
+        "皇家墨尔本理工大学",
+        "RMIT",
+        "交互设计",
+        "城市设计",
+        "体验设计"
+      ],
+      "hitSentence": "... 面，接下来为大家详细介绍。 学术要求 通常要求申请者拥有本科学士学位，部分院校可能接受相关专业的大专生，但需有丰富工作经验。比如皇家墨尔本理工大学（RMIT University），该校数字媒体艺术专业在澳洲颇具声誉。本科成绩方面，一般要达到70% - 80%以上，不同院校 ...",
+      "reach": 398340,
+      "estimatedViews": 1575
+    },
+    {
+      "id": "GF4oanaNWMr-iLV8jlVqvaKpJks",
+      "title": "博泰教育靠不靠谱，价格透明零套路，避坑指南一看就懂",
+      "titleEn": "",
+      "source": "中华网",
+      "sourceType": "news",
+      "url": "https://m.tech.china.com/redian/2026/0913/092026_1959352.html",
+      "publishedDate": "2026-09-13T05:20:01.000Z",
+      "sentiment": "neutral",
+      "language": "zh-Hans",
+      "matchedKeywords": [
+        "教育专业",
+        "皇家墨尔本理工大学"
+      ],
+      "hitSentence": "... 背景普通的学员拿到目标院校offer，其中民办本科会计学GPA2.41无语言背景学员，成功拿到香港理工大学金融学offer;双非本科小学教育专业学员，自主申请未录取后找到深圳市博泰教育管理有限公司，成功拿到香港教育大学中文研究文学硕士offer;大专毕业数字媒体技术专业学员，通 ...",
+      "reach": 3151245,
+      "estimatedViews": 71
+    },
+    {
+      "id": "0lZOpAQXSbF9_DJe1oLBggy9kZ8",
+      "title": "南京国际学校A-Level同步班12位老师一图看懂：选科+选老师的对应清单",
+      "titleEn": "",
+      "source": "新东方网",
+      "sourceType": "news",
+      "url": "https://iedu.xdf.cn/202609/15384937.html",
+      "publishedDate": "2026-09-11T14:11:49.000Z",
+      "sentiment": "neutral",
+      "language": "zh-Hans",
+      "matchedKeywords": [
+        "墨尔本皇家理工大学",
+        "教育专业"
+      ],
+      "hitSentence": "... 中文按学科分组如下： ■ 01｜化学组 · 尤聪 IG AL IB化学 南京工业大学 · 金月月 AL AP化学 墨尔本皇家理工大学 · 马慧媛 AP AL IG化学（化学教育专业） 化学教育方向 ■ 02｜生物组 · 张超 IG AL AP ...",
+      "reach": 484810,
+      "estimatedViews": 0
+    },
+    {
+      "id": "dD0nOZwN93cfxaP5dFeAJwizpQU",
+      "title": "高考成绩平平如何破局？国内公办国际本科升学路径与重点院校项目全解析",
+      "titleEn": "",
+      "source": "NetEase News / 网易新闻",
+      "sourceType": "news",
+      "url": "https://www.163.com/dy/article/L6G0T7710534R3N6.html",
+      "publishedDate": "2026-09-10T10:06:37.000Z",
+      "sentiment": "neutral",
+      "language": "zh-Hant",
+      "matchedKeywords": [
+        "皇家墨尔本理工大学",
+        "室内设计"
+      ],
+      "hitSentence": "... 加坡海外的单年各项综合开支总计约 30 万元。 衔接高校及热门学科：直通学府包含英国伯明翰大学（2026QS 排名 76 位）、澳洲皇家墨尔本理工大学（QS 排名 125 位）以及沃隆港大学（QS 排名 184 位）。重点开设了会计与金融学、商业管理、专业传播学，以及涵盖大数据 ...",
+      "reach": 28311861,
+      "estimatedViews": 144
+    },
+    {
+      "id": "Zo8wDcD0m2j2IFkaw0hkSR9akLw",
+      "title": "【北京国际本科】2026年9月想报北京国际本科怎么选更靠谱？",
+      "titleEn": "",
+      "source": "搜狐新闻",
+      "sourceType": "news",
+      "url": "https://www.sohu.com/a/1073783670_121178718",
+      "publishedDate": "2026-09-09T16:07:00.000Z",
+      "sentiment": "neutral",
+      "language": "zh-Hans",
+      "matchedKeywords": [
+        "皇家墨尔本理工大学",
+        "项目管理"
+      ],
+      "hitSentence": "... 在升学成果层面，北京交通大学国际本科项目对接全球50余所教育部认可的海外高校，本科阶段录取率稳定，可顺畅衔接QS前200院校包括皇家墨尔本理工大学、英国约克大学等，办学至今本科毕业率达99%，85%以上的学生本科毕业后成功申请至QS前100院校攻读硕士，多名往届学生先后拿到 ...",
+      "reach": 17156201,
+      "estimatedViews": 22
+    },
+    {
+      "id": "bGkjcBoVDTXgHADHqkMmPlQ-pzA",
+      "title": "上海国际大学生广告节“扬州站”启幕：一场活动撬动创意生产、国际传播、产业落地、人才孵化四大动能",
+      "titleEn": "",
+      "source": "今日头条",
+      "sourceType": "news",
+      "url": "https://www.toutiao.com/article/7683436733920379411/",
+      "publishedDate": "2026-09-09T07:41:00.000Z",
+      "sentiment": "neutral",
+      "language": "zh-Hans",
+      "matchedKeywords": [
+        "城市设计",
+        "皇家墨尔本理工大学"
+      ],
+      "hitSentence": "... 上海国际大学生广告节组委会、上海大学、同济大学、上海纽约大学、上海市城市设计与城市科学重点实验室，扬州市各委办局，以及来自上海、南京、扬州等长三角地区的政府代表、相关行业机构负责人、国际合作嘉宾和媒体代表等共同参加活动。 创意生产：以城市命题激活全球创意产能 扬州市文化广电 ...",
+      "reach": 8562549,
+      "estimatedViews": 46
+    },
+    {
+      "id": "zpI8FUEHF0iVvYh4YqpTLNmzrlY",
+      "title": "出国留学项目院校推荐：2026五大高性价比国际教育路径深度盘点",
+      "titleEn": "",
+      "source": "NetEase News / 网易新闻",
+      "sourceType": "news",
+      "url": "https://www.163.com/dy/article/L6A31CSH0536U52A.html",
+      "publishedDate": "2026-09-08T02:48:36.000Z",
+      "sentiment": "neutral",
+      "language": "zh-Hans",
+      "matchedKeywords": [
+        "室内设计",
+        "皇家墨尔本理工大学"
+      ],
+      "hitSentence": "... 合作院校：项目对接多所世界知名高校，文凭由海外名校直发，包括2026年QS排名第76位的英国伯明翰大学、排名第125位的澳大利亚皇家墨尔本理工大学以及排名第184位的澳大利亚沃隆港大学。 特色专业：涵盖会计与金融、商业信息系统、计算机科学（下设大数据与网络安全细分领域）等 ...",
+      "reach": 28311861,
+      "estimatedViews": 144
+    },
+    {
+      "id": "rHyMXnfzj-Vn-AgUd8_j6C1ESrE",
+      "title": "“旋转的木马——黄祎勤”9月12日将在上海开幕",
+      "titleEn": "",
+      "source": "中华网",
+      "sourceType": "news",
+      "url": "https://sd.china.com/qlsh/20000951/20260907/26013498.html",
+      "publishedDate": "2026-09-07T02:52:41.000Z",
+      "sentiment": "neutral",
+      "language": "zh-Hans",
+      "matchedKeywords": [
+        "墨尔本皇家理工大学",
+        "艺术与设计"
+      ],
+      "hitSentence": "... 简介 黄祎勤 ，1977年生，职业艺术家，现居上海，墨尔本皇家理工大学艺术管理硕士。 个展 2026.09旋转的木马叁柒贰叁美术馆 2025.09元花上海艺博画廊 2024.03生命是一万次春和景明北京构得画廊 2022.12yi-静觀上海白厢画廊 群展 ...",
+      "reach": 3151245,
+      "estimatedViews": 71
+    },
+    {
+      "id": "LSyy7Tu1nDyjXx7QTtVgNN4dGSg",
+      "title": "外滩大会首次设立AI艺术节：AI音乐会、AI概念艺术展、AI影像展映启动报名",
+      "titleEn": "The Inclusion Conference on the Bund Launches Its First AI Arts Festival",
+      "source": "news.sina.com.cn / 新浪新闻",
+      "sourceType": "news",
+      "url": "https://finance.sina.com.cn/jjxw/2026-09-05/doc-iniquimu0353079.shtml",
+      "publishedDate": "2026-09-05T08:22:17.000Z",
+      "sentiment": "neutral",
+      "language": "zh-Hans",
+      "matchedKeywords": [
+        "可持续发展",
+        "皇家墨尔本理工大学",
+        "RMIT"
+      ],
+      "hitSentence": "... 号C.初始化计划策展的AI概念艺术展——「纠缠，而后日以作夜」也将同步举行，聚焦于人与AI日益“纠缠”的共生关系。 展览由澳大利亚皇家墨尔本理工大学（RMIT）可再生未来研究所所长、苏格兰皇家学会院士克里斯·斯彼得（Chris Speed）教授，复旦大学脑神经科学家王云教授及 ...",
+      "reach": 13636089,
+      "estimatedViews": 0
+    },
+    {
+      "id": "FRGSfhK7q7MqzvGH3e-3hBSG-Y4",
+      "title": "外滩大会首次设立AI艺术节：AI音乐会、AI概念艺术展、AI影像展映启动报名",
+      "titleEn": "The Inclusion Conference on the Bund Launches Its First AI Arts Festival",
+      "source": "今日头条",
+      "sourceType": "news",
+      "url": "https://www.toutiao.com/article/7681962329159844378/",
+      "publishedDate": "2026-09-05T08:17:00.000Z",
+      "sentiment": "neutral",
+      "language": "zh-Hans",
+      "matchedKeywords": [
+        "可持续发展",
+        "皇家墨尔本理工大学",
+        "RMIT"
+      ],
+      "hitSentence": "... 号C.初始化计划策展的AI概念艺术展——「纠缠，而后日以作夜」也将同步举行，聚焦于人与AI日益“纠缠”的共生关系。 展览由澳大利亚皇家墨尔本理工大学（RMIT）可再生未来研究所所长、苏格兰皇家学会院士克里斯·斯彼得（Chris Speed）教授，复旦大学脑神经科学家王云教授及 ...",
+      "reach": 8510201,
+      "estimatedViews": 46
+    },
+    {
+      "id": "j_SeReicGkPi3KVkYq9dzNZ6e_M",
+      "title": "外滩大会首次设立AI艺术节：AI音乐会、AI概念艺术展、AI影像展映启动报名",
+      "titleEn": "The Inclusion Conference on the Bund Launches Its First AI Arts Festival",
+      "source": "海外网",
+      "sourceType": "news",
+      "url": "https://news.haiwainet.cn/n/2026/0905/c3541089-32980701.html",
+      "publishedDate": "2026-09-05T08:11:46.000Z",
+      "sentiment": "neutral",
+      "language": "zh-Hans",
+      "matchedKeywords": [
+        "皇家墨尔本理工大学",
+        "RMIT",
+        "可持续发展"
+      ],
+      "hitSentence": "... 号C.初始化计划策展的AI概念艺术展——「纠缠，而后日以作夜」也将同步举行，聚焦于人与AI日益“纠缠”的共生关系。 展览由澳大利亚皇家墨尔本理工大学（RMIT）可再生未来研究所所长、苏格兰皇家学会院士克里斯·斯彼得（Chris Speed）教授，复旦大学脑神经科学家王云教授及 ...",
+      "reach": 136541,
+      "estimatedViews": 68
+    },
+    {
+      "id": "8adfDPft2uaxN7rRIK-8I9x5fNI",
+      "title": "出国留学项目院校推荐：直申海外 VS 国内国际本科择校指南",
+      "titleEn": "",
+      "source": "NetEase News / 网易新闻",
+      "sourceType": "news",
+      "url": "https://www.163.com/dy/article/L60GL5D90536U52A.html",
+      "publishedDate": "2026-09-04T09:36:35.000Z",
+      "sentiment": "neutral",
+      "language": "zh-Hans",
+      "matchedKeywords": [
+        "皇家墨尔本理工大学",
+        "室内设计"
+      ],
+      "hitSentence": "... 大纲与英澳本校保持同步，学生出境后注册海外合作院校全日制学籍。 对接英国伯明翰大学（2026QS 世界排名第 76 位）、澳大利亚皇家墨尔本理工大学、沃隆港大学等 QS 前 200 院校，文凭由海外名校直接颁发。开设会计与金融、商业管理学、商业传播、计算机科学等专业，细分大数 ...",
+      "reach": 31300959,
+      "estimatedViews": 144
+    },
+    {
+      "id": "El9_Dk6Re8Cof9am56aMcjCBJ2M",
+      "title": "高考低分国际本科院校项目推荐：2+2、本硕连读多模式留学解析",
+      "titleEn": "",
+      "source": "NetEase News / 网易新闻",
+      "sourceType": "news",
+      "url": "https://www.163.com/dy/article/L60D4UM40534R3N6.html",
+      "publishedDate": "2026-09-04T08:32:31.000Z",
+      "sentiment": "neutral",
+      "language": "zh-Hans",
+      "matchedKeywords": [
+        "皇家墨尔本理工大学",
+        "室内设计"
+      ],
+      "hitSentence": "... 项目特点：集美大学是新加坡管理学院在福建省设立的唯一海外教学中心，对接英国伯明翰大学（2026QS 世界排名第 76 位）、澳大利亚皇家墨尔本理工大学、沃隆港大学等 QS 前 200 院校，文凭由海外名校直接颁发。新加坡管理学院获当地教育信托之星认证，毕业生就业表现较好；集美大 ...",
+      "reach": 31300959,
+      "estimatedViews": 144
+    },
+    {
+      "id": "UhO4dtodKC-Q1fuhmPPybTeVrWU",
+      "title": "8000公里外来的策展人，在花鸟岛打理一家装满“故事”的照相馆",
+      "titleEn": "",
+      "source": "今日头条",
+      "sourceType": "news",
+      "url": "https://www.toutiao.com/article/7681510347777245747/",
+      "publishedDate": "2026-09-04T03:03:00.000Z",
+      "sentiment": "neutral",
+      "language": "zh-Hans",
+      "matchedKeywords": [
+        "皇家墨尔本理工大学",
+        "建筑设计"
+      ],
+      "hitSentence": "... 一张全“家”福。 游客参观初见花鸟照相馆 图源花鸟岛旅游 2022年后，皇家墨尔本理工大学策展委员会加入项目运营，让这场社区实践有了国际视野。今年，照相馆完成新一轮升级改造，一层展厅免费开放，以呈现与花鸟岛生活、记忆和社区共创相关内容为主，负一楼则承担社区活动与创意体验功能 ...",
+      "reach": 8510201,
+      "estimatedViews": 46
+    },
+    {
+      "id": "BSNjEGOw3SANEqsvbDVCRp5Xg4g",
+      "title": "高考低分不想复读？2+2、本硕连读，一文读懂分段式海外本科升学",
+      "titleEn": "",
+      "source": "NetEase News / 网易新闻",
+      "sourceType": "news",
+      "url": "https://www.163.com/dy/article/L5VOOTA50536U52A.html",
+      "publishedDate": "2026-09-04T02:37:13.000Z",
+      "sentiment": "neutral",
+      "language": "zh-Hans",
+      "matchedKeywords": [
+        "室内设计",
+        "可持续设计",
+        "皇家墨尔本理工大学"
+      ],
+      "hitSentence": "... 哈德斯菲尔德大学、伯恩茅斯艺术大学、诺森比亚大学；澳大利亚对接迪肯大学。专业选择覆盖会计金融、国际商务、市场营销等商科；动画、游戏艺术、室内设计、可持续设计等艺术类；还有经济学、人力资源管理、计算机科学等应用学科。 费用层面，国内阶段普通类专业每年 6.8 万元，艺术类专业每 ...",
+      "reach": 31300959,
+      "estimatedViews": 144
+    },
+    {
+      "id": "BMicftR8Gdk1GF3gVPIBb0ocE_8",
+      "title": "当艺术与管理跨界，会擦出怎样的火花？",
+      "titleEn": "",
+      "source": "52hrtt",
+      "sourceType": "news",
+      "url": "https://www.52hrtt.com/in/n/w/info/F1786948333990",
+      "publishedDate": "2026-09-04T02:16:00.000Z",
+      "sentiment": "neutral",
+      "language": "zh-Hant",
+      "matchedKeywords": [
+        "创意产业",
+        "服装设计",
+        "室内设计",
+        "产品设计",
+        "体验设计",
+        "时尚设计"
+      ],
+      "hitSentence": "... “创意”具有可见的经济价值，并形成完整的产业链。 像我们平时看的 话剧、歌剧、期刊杂志、电子出版物、文创产品、周边手工艺品 等，都属于创意产业管理的范畴。 在今年早些时候，全球最大招聘搜索引擎indeed.com公布了 “2022年十大高薪艺术类专业”名单 ， 其中， 「 ...",
+      "reach": 61743,
+      "estimatedViews": 35
+    },
+    {
+      "id": "u1YAbYDXUlguJ7XPcIg6TvaQWX8",
+      "title": "碳质子电池有可能取代锂电池吗？",
+      "titleEn": "",
+      "source": "中国传动网",
+      "sourceType": "news",
+      "url": "https://www.chuandong.com/tech/tech51720.html",
+      "publishedDate": "2026-09-03T10:08:36.000Z",
+      "sentiment": "neutral",
+      "language": "zh-Hans",
+      "matchedKeywords": [
+        "皇家墨尔本理工",
+        "可持续发展"
+      ],
+      "hitSentence": "... \"哪一种电池的能源密度能和锂电池相媲美?\"这是一个人们经常提及的问题。在未来几年可能不会出现这种情况。但是澳大利亚皇家墨尔本理工学院的研究表明，终有一天，碳质子电池有可能取代锂电池。 墨尔本理工学院的一个研究小组设计并制造了一种使用环保碳电极，水和可渗透膜来存储电能的质子电池 ...",
+      "reach": 14617,
+      "estimatedViews": 94
+    },
+    {
+      "id": "kEtcS-vXGytqqwiZ5ThLW_WZtNc",
+      "title": "出国留学院校推荐：集美大学五大方向项目全解析",
+      "titleEn": "",
+      "source": "红商网",
+      "sourceType": "news",
+      "url": "http://www.redsh.com/a/20260902/172137.shtml",
+      "publishedDate": "2026-09-02T08:21:00.000Z",
+      "sentiment": "neutral",
+      "language": "zh-Hans",
+      "matchedKeywords": [
+        "室内设计",
+        "皇家墨尔本理工大学"
+      ],
+      "hitSentence": "... 学科位居全球前列；当地留学生签证与毕业生工签政策相对稳定，适合以就业、长期发展为导向的申请者。 集美大学澳大利亚方向对接迪肯大学、皇家墨尔本理工大学、沃隆港大学、纽卡斯尔大学等多所院校，分布在不同 QS 排名梯队，适配不同升学诉求。 学科设置上，覆盖多个优势方向：迪肯大学的 ...",
+      "reach": 6195,
+      "estimatedViews": 0
+    },
+    {
+      "id": "ywt_iRqf9RzesFoUmHcu1u0Q2eg",
+      "title": "2026高考失利国际本科选择指南：看清录取、学制、费用与避坑要点",
+      "titleEn": "",
+      "source": "NetEase News / 网易新闻",
+      "sourceType": "news",
+      "url": "https://www.163.com/dy/article/L5NUFSIG0536U52A.html",
+      "publishedDate": "2026-09-01T01:42:44.000Z",
+      "sentiment": "neutral",
+      "language": "zh-Hans",
+      "matchedKeywords": [
+        "皇家墨尔本理工大学",
+        "室内设计"
+      ],
+      "hitSentence": "... 年上学期 9 万元；新加坡海外年度综合花费约 30 万元。 合作院校与核心专业： 对接英国伯明翰大学（2026QS76）、澳大利亚皇家墨尔本理工大学（QS125）、沃隆港大学（QS184）。开设会计与金融、商业管理学、专业传播学、计算机科学（大数据、网络安全、游戏开发方向）。 ...",
+      "reach": 31300959,
+      "estimatedViews": 144
+    },
+    {
+      "id": "i_lF8X3HZEdL7jcnka8nDxUQdfc",
+      "title": "国际本科3+1学校如何选：分段式留学路径全维度解析",
+      "titleEn": "",
+      "source": "搜狐新闻",
+      "sourceType": "news",
+      "url": "https://www.sohu.com/a/1069948876_121881099",
+      "publishedDate": "2026-08-31T16:21:00.000Z",
+      "sentiment": "neutral",
+      "language": "zh-Hant",
+      "matchedKeywords": [
+        "项目管理",
+        "皇家墨尔本理工大学"
+      ],
+      "hitSentence": "... 都直接影响后续的就读体验和升学结果：第一是官方授权资质，必须是教育部留学服务中心首批公示的SQA项目主办院校，学生学籍要在教育部留服中心项目管理系统和苏格兰学历管理委员会项目管理系统两个官方系统同时完成注册，确保后续学位认证的合规性；第二是国内院校的办学背景，优先选择211/双 ...",
+      "reach": 17579631,
+      "estimatedViews": 22
+    },
+    {
+      "id": "JKnF4gvf9etxqdm3DPSPHIYNXW8",
+      "title": "衣迪阿诺 x 梁燕：星火史诗·彝伦攸叙｜2026中国国际时装周（秋季）",
+      "titleEn": "",
+      "source": "搜狐新闻",
+      "sourceType": "news",
+      "url": "https://www.sohu.com/a/1069610977_467704",
+      "publishedDate": "2026-08-30T06:45:00.000Z",
+      "sentiment": "neutral",
+      "language": "zh-Hans",
+      "matchedKeywords": [
+        "产品设计",
+        "墨尔本皇家理工大学"
+      ],
+      "hitSentence": "... 、自立、自强的坚韧生命力量。 立足市场需求、当代审美与技艺传承，品牌以“产品设计+设计师孵化”模式，助力本土设计成长，赋能乡村振兴。同时联动非遗银饰匠人，将手工锻造的金属银扣作为点睛元素，以行走的凉山彝族美学让非遗走出博物馆，实现传统文化在当代语境下的活态传承与时尚表达。 ...",
+      "reach": 17579631,
+      "estimatedViews": 22
+    },
+    {
+      "id": "vojwuW461arvoacYukEcHaBekq8",
+      "title": "2026出国留学项目院校选择指南：政策、专业、费用与申请条件汇总",
+      "titleEn": "",
+      "source": "NetEase News / 网易新闻",
+      "sourceType": "news",
+      "url": "https://www.163.com/dy/article/L5IIAHBQ0536N0RG.html",
+      "publishedDate": "2026-08-29T23:34:30.000Z",
+      "sentiment": "neutral",
+      "language": "zh-Hans",
+      "matchedKeywords": [
+        "皇家墨尔本理工大学",
+        "室内设计",
+        "可持续设计"
+      ],
+      "hitSentence": "... 英国方向覆盖商科与艺术类两大核心赛道：商科涵盖会计金融、国际商务、市场营销、酒店管理等；艺术类涵盖动画、纯艺、插画、平面设计、游戏艺术、室内设计、电影制作、可持续设计等，其中创意艺术大学、伯恩茅斯艺术大学为英国顶尖艺术院校，专业常年位居全英前列。 费用方面，国内阶段普通类专业每 ...",
+      "reach": 31300959,
+      "estimatedViews": 144
+    },
+    {
+      "id": "yfXKVxK3AKOq-hLsGBa2ahEzD8E",
+      "title": "DANSE·C：第二骨架｜2026中国国际时装周（秋季）",
+      "titleEn": "",
+      "source": "搜狐新闻",
+      "sourceType": "news",
+      "url": "https://www.sohu.com/a/1069295889_467704",
+      "publishedDate": "2026-08-29T07:20:00.000Z",
+      "sentiment": "neutral",
+      "language": "zh-Hans",
+      "matchedKeywords": [
+        "服装设计",
+        "RMIT",
+        "墨尔本皇家理工大学"
+      ],
+      "hitSentence": "... 廓形与解构剪裁作为语言 打破固有的成人着装逻辑 重构高级定制的美学边界 一人一相 各有其锋 Naomi FAN尤米 毕业于 RMIT墨尔本皇家理工大学服装设计专业 荣获 Australian Fashion Laureate 年度新锐设计师 （ ...",
+      "reach": 17579631,
+      "estimatedViews": 22
+    },
+    {
+      "id": "u9GiTZKhFku9Mo96ETFxnur4Jt0",
+      "title": "2026年青岛理工大学国际本科3+1对接院校详解",
+      "titleEn": "",
+      "source": "搜狐新闻",
+      "sourceType": "news",
+      "url": "https://www.sohu.com/a/1067702626_122066624",
+      "publishedDate": "2026-08-26T16:05:00.000Z",
+      "sentiment": "neutral",
+      "language": "zh-Hans",
+      "matchedKeywords": [
+        "艺术与设计",
+        "皇家墨尔本理工大学"
+      ],
+      "hitSentence": "... 对应的适配海外院校清单，比如计算机软件开发方向可以对接英国埃克塞特大学、英国纽卡斯尔大学、澳大利亚伍伦贡大学等院校的计算机相关专业，创意艺术与设计方向可以对接英国爱丁堡艺术学院、英国伦敦艺术大学下属学院、澳大利亚皇家墨尔本理工大学等院校的设计类专业，商务类专业可以对接英国伯明翰 ...",
+      "reach": 17579631,
+      "estimatedViews": 22
+    },
+    {
+      "id": "AeUb86ydTsE-MqMWfOqpE2aBbWE",
+      "title": "2026出国留学院校推荐：公办国际本科项目怎么选？一文看懂预算、院校与就业",
+      "titleEn": "",
+      "source": "红商网",
+      "sourceType": "news",
+      "url": "http://www.redsh.com/a/20260826/114831.shtml",
+      "publishedDate": "2026-08-26T02:48:00.000Z",
+      "sentiment": "neutral",
+      "language": "zh-Hans",
+      "matchedKeywords": [
+        "皇家墨尔本理工大学",
+        "可持续设计",
+        "校企合作"
+      ],
+      "hitSentence": "... 海外本科学位的稳妥路径。 QS 名校冲刺型 推荐集美大学新加坡 SIM 联合培养项目：对接英国伯明翰大学（QS 第 76 位）、皇家墨尔本理工大学（QS 第 125 位）等百强院校，免雅思入学，通过校内综合测评即可录取；文凭由海外本校直接颁发，与直申学生学历一致，是高考发挥 ...",
+      "reach": 6195,
+      "estimatedViews": 0
+    },
+    {
+      "id": "fkSdkwDi364-oZr-DWahJjsKcXM",
+      "title": "2026一文看懂分段式国际本科：2+2/1+3 / 本硕连读，专业、预算、院校参考",
+      "titleEn": "",
+      "source": "NetEase News / 网易新闻",
+      "sourceType": "news",
+      "url": "https://www.163.com/dy/article/L5725T9H0534R3N6.html",
+      "publishedDate": "2026-08-25T12:19:53.000Z",
+      "sentiment": "neutral",
+      "language": "zh-Hans",
+      "matchedKeywords": [
+        "可持续设计",
+        "皇家墨尔本理工大学",
+        "设计专业就业"
+      ],
+      "hitSentence": "... 方授权属性明确。 院校学术优势： 合作院校中的伯明翰大学作为英国罗素集团成员，在商科、工程、传媒领域学术积淀深厚，毕业生认可度高；皇家墨尔本理工大学的实践教学体系与产业绑定紧密，传媒、设计专业就业率常年位居澳洲前列。 项目核心价值： 免雅思成绩入学，学生通过校内测评即可注册 ...",
+      "reach": 31300959,
+      "estimatedViews": 144
+    },
+    {
+      "id": "wyimneko9HuHPBt4rI2Foexwix8",
+      "title": "北京澳洲艺术留学机构优选指南：四家机构深度测评",
+      "titleEn": "",
+      "source": "衡水日报 - hsrb.com.cn",
+      "sourceType": "news",
+      "url": "https://www.hsrb.com.cn/detail/178764301021545.html",
+      "publishedDate": "2026-08-25T08:41:58.000Z",
+      "sentiment": "neutral",
+      "language": "zh-Hans",
+      "matchedKeywords": [
+        "皇家墨尔本理工大学",
+        "RMIT",
+        "艺术留学",
+        "建筑设计",
+        "艺术与设计",
+        "作品集辅导"
+      ],
+      "hitSentence": "... 学生；预算有限但对硬件设备和实践项目有较高要求的申请者。 四、时序艺术留学 科系覆盖全面，课程体系相对完整 时序艺术留学汇集海内外艺术设计教授、专家及国际艺术高校海归导师。课程体系包括艺术升学、艺术基础、艺术强化、作品集辅导、艺术留学准备、艺术背景提升等模块，针对初、高中 ...",
+      "reach": 2532,
+      "estimatedViews": 0
+    },
+    {
+      "id": "YPVyHIDK9sOX7j9W_Bgv8X4I44c",
+      "title": "北京澳洲艺术留学机构优选指南：四家机构深度测评",
+      "titleEn": "",
+      "source": "xinwenzixunwang",
+      "sourceType": "news",
+      "url": "http://www.xinwenzixunwang.cn/p/082520892.html",
+      "publishedDate": "2026-08-25T07:26:16.000Z",
+      "sentiment": "neutral",
+      "language": "zh-Hans",
+      "matchedKeywords": [
+        "皇家墨尔本理工大学",
+        "RMIT",
+        "艺术留学",
+        "作品集辅导",
+        "创意产业",
+        "交互设计"
+      ],
+      "hitSentence": "... 学生；预算有限但对硬件设备和实践项目有较高要求的申请者。 四、时序艺术留学 科系覆盖全面，课程体系相对完整 时序艺术留学汇集海内外艺术设计教授、专家及国际艺术高校海归导师。课程体系包括艺术升学、艺术基础、艺术强化、作品集辅导、艺术留学准备、艺术背景提升等模块，针对初、高中 ...",
+      "reach": 0,
+      "estimatedViews": 0
+    },
+    {
+      "id": "EX1tZBmLX39Z40tfFWw2bj6ckc0",
+      "title": "排名能打、录取友好：集美大学官方对接的这些海外升学宝藏项目藏不住了",
+      "titleEn": "",
+      "source": "NetEase News / 网易新闻",
+      "sourceType": "news",
+      "url": "https://www.163.com/dy/article/L53IMGSN0534R3N6.html",
+      "publishedDate": "2026-08-24T03:51:31.000Z",
+      "sentiment": "neutral",
+      "language": "zh-Hans",
+      "matchedKeywords": [
+        "皇家墨尔本理工大学",
+        "RMIT",
+        "创意产业",
+        "可持续设计"
+      ],
+      "hitSentence": "... 致 项目亮点：免雅思成绩入学，通过校内测评即可注册海外学籍；以更低的升学门槛冲刺百强名校，适配高考发挥失常的学生 澳大利亚皇家墨尔本理工大学 2026 年 QS 世界大学排名第 125 位，澳洲顶尖科技类院校，计算机、传媒、设计等专业实力强劲，课程设置高度贴合职场需求。 ...",
+      "reach": 31300959,
+      "estimatedViews": 144
+    },
+    {
+      "id": "zCUVNvgijExactEcL5ayRoW3004",
+      "title": "ATC艺术中心与多家院校达成艺术教育项目合作，培养创新型艺术人才",
+      "titleEn": "",
+      "source": "shangjixun.com",
+      "sourceType": "news",
+      "url": "https://www.shangjixun.com/news/21772.html",
+      "publishedDate": "2026-08-20T12:42:13.000Z",
+      "sentiment": "neutral",
+      "language": "zh-Hans",
+      "matchedKeywords": [
+        "艺术留学",
+        "设计思维",
+        "皇家墨尔本理工",
+        "设计人才培养"
+      ],
+      "hitSentence": "... 力于艺术留学作品集指导，艺术留学规划，国际艺术课程研发和设计行业资源整合，汇集了100+国际知名院校海归导师、行业优秀艺术家及设计师为师资力量，致力培养学生设计思维及跨学科应用能力，接轨海外院校的教育理念与课程体系，鼓励并尊重学生的个性及创造力。每年成功辅导百余名学生成功录取包 ...",
+      "reach": 0,
+      "estimatedViews": 0
+    },
+    {
+      "id": "u9b3XWItfxv8micb9gFyVLccbyk",
+      "title": "不唯高考分数：集美大学24年办学，2+2 / 本硕连读项目全解析",
+      "titleEn": "",
+      "source": "NetEase News / 网易新闻",
+      "sourceType": "news",
+      "url": "https://www.163.com/dy/article/L4PS7I7S0534R3N6.html",
+      "publishedDate": "2026-08-20T09:26:04.000Z",
+      "sentiment": "neutral",
+      "language": "zh-Hant",
+      "matchedKeywords": [
+        "创意产业",
+        "皇家墨尔本理工大学",
+        "校企合作"
+      ],
+      "hitSentence": "... 的专业与就业优势： 新加坡 SIM 名校联合培养（百强冲刺赛道）： 对接英国伯明翰大学（2026QS 第 76 位）、皇家墨尔本理工大学（第 125 位）、沃隆港大学（第 184 位）三所 QS 前 200 名校。新加坡作为亚洲金融与数字经济高地，政府出台多项外籍人才就业扶持 ...",
+      "reach": 31300959,
+      "estimatedViews": 144
+    },
+    {
+      "id": "uhVnn9Ab5odqxz1vIoG9E7YQ87g",
+      "title": "2026外滩大会前瞻：首次设立AI艺术节，20余位艺术家参展",
+      "titleEn": "",
+      "source": "国际金融报网 - International Financial News",
+      "sourceType": "news",
+      "url": "https://ifnews.com/news.html?aid=861119&cid=45",
+      "publishedDate": "2026-08-19T12:50:00.000Z",
+      "sentiment": "neutral",
+      "language": "zh-Hans",
+      "matchedKeywords": [
+        "可持续发展",
+        "皇家墨尔本理工大学",
+        "RMIT"
+      ],
+      "hitSentence": "... 号C.初始化计划策展的AI概念艺术展——“纠缠，而后日以作夜”也将同步举行，聚焦于人与AI日益“纠缠”的共生关系。 展览由澳大利亚皇家墨尔本理工大学（RMIT）可再生未来研究所所长、苏格兰皇家学会院士克里斯·斯彼得（Chris Speed）教授，复旦大学脑神经科学家王云教授及 ...",
+      "reach": 102490,
+      "estimatedViews": 40
+    },
+    {
+      "id": "vPfDg1SkcxVcVc7RE3TxQIVhyqo",
+      "title": "外滩大会首次设立AI艺术节：AI音乐会、AI概念艺术展等活动启动报名",
+      "titleEn": "The Inclusion Conference on the Bund Launches Its First AI Arts Festival",
+      "source": "今日头条",
+      "sourceType": "news",
+      "url": "https://www.toutiao.com/article/7675692600795333154/",
+      "publishedDate": "2026-08-19T10:47:00.000Z",
+      "sentiment": "neutral",
+      "language": "zh-Hans",
+      "matchedKeywords": [
+        "皇家墨尔本理工大学",
+        "RMIT",
+        "可持续发展"
+      ],
+      "hitSentence": "... 号C.初始化计划策展的AI概念艺术展——“纠缠，而后日以作夜”也将同步举行，聚焦于人与AI日益“纠缠”的共生关系。 展览由澳大利亚皇家墨尔本理工大学（RMIT）可再生未来研究所所长、苏格兰皇家学会院士克里斯·斯彼得（Chris Speed）教授，复旦大学脑神经科学家王云教授及 ...",
+      "reach": 8510201,
+      "estimatedViews": 46
+    },
+    {
+      "id": "RwhF-EnsVUJ3wD7r-OT0RsoHWi0",
+      "title": "AI艺人开唱、顶尖数字艺术家集结、100余部AI影像展映：外滩大会打造AI艺术新现场",
+      "titleEn": "AI Performers, Leading Digital Artists and 100+ Screenings Create a New AI Arts Showcase",
+      "source": "IT之家",
+      "sourceType": "news",
+      "url": "https://www.ithome.com/0/991/722.htm",
+      "publishedDate": "2026-08-19T08:54:56.000Z",
+      "sentiment": "neutral",
+      "language": "zh-Hans",
+      "matchedKeywords": [
+        "皇家墨尔本理工大学",
+        "RMIT",
+        "可持续发展"
+      ],
+      "hitSentence": "... 化计划策展的 AI 概念艺术展 ——「纠缠，而后日以作夜」也将同步举行，聚焦于人与 AI 日益“纠缠”的共生关系。 展览由澳大利亚皇家墨尔本理工大学（RMIT）可再生未来研究所所长、苏格兰皇家学会院士克里斯 · 斯彼得（Chris Speed）教授，复旦大学脑神经科学家王云教 ...",
+      "reach": 1524248,
+      "estimatedViews": 1968
+    },
+    {
+      "id": "XpvmABLP3Z9fQJtIQ3oA0p37tIg",
+      "title": "外滩大会AI艺术节报名启动：AI艺人线下首演、100余部AI影像、20余位艺术家参展",
+      "titleEn": "",
+      "source": "品玩",
+      "sourceType": "news",
+      "url": "https://www.pingwest.com/a/316584",
+      "publishedDate": "2026-08-19T08:48:15.000Z",
+      "sentiment": "neutral",
+      "language": "zh-Hans",
+      "matchedKeywords": [
+        "皇家墨尔本理工大学",
+        "RMIT",
+        "可持续发展"
+      ],
+      "hitSentence": "... 分号C.初始化计划策展的AI概念艺术展——「纠缠，而后日以作夜」也将同步举行，聚焦于人与AI日益“纠缠”的共生关系。 展览由澳大利亚皇家墨尔本理工大学（RMIT）可再生未来研究所所长、苏格兰皇家学会院士克里斯·斯彼得（Chris Speed）教授，复旦大学脑神经科学家王云教授及 ...",
+      "reach": 65817,
+      "estimatedViews": 197
+    },
+    {
+      "id": "XAwiaqW7zrY3nMpTLq0TJK8C0AM",
+      "title": "外滩大会首次设立AI艺术节：AI音乐会、AI概念艺术展、AI影像展映启动报名",
+      "titleEn": "The Inclusion Conference on the Bund Launches Its First AI Arts Festival",
+      "source": "雷科技",
+      "sourceType": "news",
+      "url": "https://www.leikeji.com/article/78772",
+      "publishedDate": "2026-08-19T08:35:08.000Z",
+      "sentiment": "neutral",
+      "language": "zh-Hans",
+      "matchedKeywords": [
+        "皇家墨尔本理工大学",
+        "RMIT",
+        "可持续发展"
+      ],
+      "hitSentence": "... 号C.初始化计划策展的AI概念艺术展——「纠缠，而后日以作夜」也将同步举行，聚焦于人与AI日益“纠缠”的共生关系。 展览由澳大利亚皇家墨尔本理工大学（RMIT）可再生未来研究所所长、苏格兰皇家学会院士克里斯·斯彼得（Chris Speed）教授，复旦大学脑神经科学家王云教授及 ...",
+      "reach": 45679,
+      "estimatedViews": 18
+    },
+    {
+      "id": "QlwBnseumgFtzTHNzLQqYa9BrRI",
+      "title": "外滩大会首次设立AI艺术节：AI音乐会、AI概念艺术展、AI影像展映启动报名",
+      "titleEn": "The Inclusion Conference on the Bund Launches Its First AI Arts Festival",
+      "source": "China Daily - Epaper",
+      "sourceType": "news",
+      "url": "https://cn.chinadaily.com.cn/a/202608/19/WS6a856195a3105d3d7a27bca1.html",
+      "publishedDate": "2026-08-19T08:26:44.000Z",
+      "sentiment": "neutral",
+      "language": "zh-Hans",
+      "matchedKeywords": [
+        "皇家墨尔本理工大学",
+        "RMIT",
+        "可持续发展"
+      ],
+      "hitSentence": "... 号C.初始化计划策展的AI概念艺术展——「纠缠，而后日以作夜」也将同步举行，聚焦于人与AI日益“纠缠”的共生关系。 展览由澳大利亚皇家墨尔本理工大学（RMIT）可再生未来研究所所长、苏格兰皇家学会院士克里斯·斯彼得（Chris Speed）教授，复旦大学脑神经科学家王云教授及 ...",
+      "reach": 4597,
+      "estimatedViews": 9
+    },
+    {
+      "id": "nxq6IGYOc8lZYuIWTaIGxZ-uAHA",
+      "title": "外滩大会AI艺术节报名启动：AI艺人线下首演、100余部AI影像、20余位艺术家参展",
+      "titleEn": "",
+      "source": "资讯中国",
+      "sourceType": "news",
+      "url": "http://cn.geceo.com/hangye/144224.html",
+      "publishedDate": "2026-08-19T08:25:00.000Z",
+      "sentiment": "neutral",
+      "language": "zh-Hans",
+      "matchedKeywords": [
+        "皇家墨尔本理工大学",
+        "RMIT",
+        "可持续发展"
+      ],
+      "hitSentence": "... 分号C.初始化计划策展的AI概念艺术展——「纠缠，而后日以作夜」也将同步举行，聚焦于人与AI日益“纠缠”的共生关系。 展览由澳大利亚皇家墨尔本理工大学（RMIT）可再生未来研究所所长、苏格兰皇家学会院士克里斯·斯彼得（Chris Speed）教授，复旦大学脑神经科学家王云教授及 ...",
+      "reach": 0,
+      "estimatedViews": 0
+    },
+    {
+      "id": "blPwceZXTzLUMWV4XeTYZJtJ-e0",
+      "title": "外滩大会首次设立AI艺术节：AI音乐会、AI概念艺术展、AI影像展映启动报名",
+      "titleEn": "The Inclusion Conference on the Bund Launches Its First AI Arts Festival",
+      "source": "界面新闻",
+      "sourceType": "news",
+      "url": "https://www.jiemian.com/article/14947391.html",
+      "publishedDate": "2026-08-19T08:10:01.000Z",
+      "sentiment": "neutral",
+      "language": "zh-Hans",
+      "matchedKeywords": [
+        "皇家墨尔本理工大学",
+        "RMIT",
+        "可持续发展"
+      ],
+      "hitSentence": "... 分号C.初始化计划策展的AI概念艺术展——「纠缠，而后日以作夜」也将同步举行，聚焦于人与AI日益“纠缠”的共生关系。 展览由澳大利亚皇家墨尔本理工大学（RMIT）可再生未来研究所所长、苏格兰皇家学会院士克里斯·斯彼得（Chris Speed）教授，复旦大学脑神经科学家王云教授及 ...",
+      "reach": 703350,
+      "estimatedViews": 93
+    },
+    {
+      "id": "B6OqpO-Dl9pwYWDTjrQNfscKs_w",
+      "title": "外滩大会首次设立AI艺术节：AI音乐会、AI概念艺术展、AI影像展映启动报名",
+      "titleEn": "The Inclusion Conference on the Bund Launches Its First AI Arts Festival",
+      "source": "中国网",
+      "sourceType": "news",
+      "url": "http://dicn.china.com.cn/2026-08/19/content_43479141.shtml",
+      "publishedDate": "2026-08-19T08:09:55.000Z",
+      "sentiment": "neutral",
+      "language": "zh-Hans",
+      "matchedKeywords": [
+        "皇家墨尔本理工大学",
+        "RMIT",
+        "可持续发展"
+      ],
+      "hitSentence": "... 号C.初始化计划策展的AI概念艺术展——「纠缠,而后日以作夜」也将同步举行,聚焦于人与AI日益“纠缠”的共生关系。 展览由澳大利亚皇家墨尔本理工大学(RMIT)可再生未来研究所所长、苏格兰皇家学会院士克里斯·斯彼得(Chris Speed)教授,复旦大学脑神经科学家王云教授及 ...",
+      "reach": 546831,
+      "estimatedViews": 42
+    },
+    {
+      "id": "Zz9MJF67_qUtK_hYmYOP9TWb8iQ",
+      "title": "外滩大会AI艺术节报名启动：AI艺人线下首演、100余部AI影像、20余位艺术家参展",
+      "titleEn": "",
+      "source": "DoNews",
+      "sourceType": "news",
+      "url": "https://www.donews.com/news/detail/4/6676944.html",
+      "publishedDate": "2026-08-19T08:04:30.000Z",
+      "sentiment": "neutral",
+      "language": "zh-Hans",
+      "matchedKeywords": [
+        "皇家墨尔本理工大学",
+        "RMIT",
+        "可持续发展"
+      ],
+      "hitSentence": "... 分号C.初始化计划策展的AI概念艺术展——「纠缠，而后日以作夜」也将同步举行，聚焦于人与AI日益“纠缠”的共生关系。 展览由澳大利亚皇家墨尔本理工大学（RMIT）可再生未来研究所所长、苏格兰皇家学会院士克里斯·斯彼得（Chris Speed）教授，复旦大学脑神经科学家王云教授及 ...",
+      "reach": 3389,
+      "estimatedViews": 0
+    },
+    {
+      "id": "C0SktG2j3w_dK-9R7dCqpK_-u3o",
+      "title": "外滩大会首次设立AI艺术节：AI音乐会、AI概念艺术展等活动启动报名",
+      "titleEn": "The Inclusion Conference on the Bund Launches Its First AI Arts Festival",
+      "source": "解放日报 Jiefang Daily",
+      "sourceType": "news",
+      "url": "https://www.jfdaily.com/staticsg/res/html/web/newsDetail.html?id=1162670&sid=300",
+      "publishedDate": "2026-08-19T03:22:00.000Z",
+      "sentiment": "neutral",
+      "language": "zh-Hans",
+      "matchedKeywords": [
+        "皇家墨尔本理工大学",
+        "RMIT",
+        "可持续发展"
+      ],
+      "hitSentence": "... 号C.初始化计划策展的AI概念艺术展——“纠缠，而后日以作夜”也将同步举行，聚焦于人与AI日益“纠缠”的共生关系。 展览由澳大利亚皇家墨尔本理工大学（RMIT）可再生未来研究所所长、苏格兰皇家学会院士克里斯·斯彼得（Chris Speed）教授，复旦大学脑神经科学家王云教授及 ...",
+      "reach": 244434,
+      "estimatedViews": 0
+    },
+    {
+      "id": "VazIi3EBdX6F0s4MCQy5TKdhrhY",
+      "title": "2026胡志明市 HSC 会议全景：从代币化到稳定币再到人工智能",
+      "titleEn": "",
+      "source": "0XZX",
+      "sourceType": "news",
+      "url": "https://0xzx.com/2026081419276403875.html",
+      "publishedDate": "2026-08-14T11:47:14.000Z",
+      "sentiment": "neutral",
+      "language": "zh-Hans",
+      "matchedKeywords": [
+        "产品设计",
+        "皇家墨尔本理工大学"
+      ],
+      "hitSentence": "... 差距仍然如此之大，以及如何才能缩小这一差距。 该会议由 Varmeta 合作伙伴关系主管 Julie Pham 主持，与会者包括越南皇家墨尔本理工大学数字经济讲师 Minh Nhat Nguyen 博士； Ivan Postavskyy，Centrifuge 代币化和投资运营经 ...",
+      "reach": 61848,
+      "estimatedViews": 0
+    },
+    {
+      "id": "CDdl-6ZfgcGEzJu6njhyTN084I0",
+      "title": "上海交大+新加坡，拿英澳本科学历，应往届高中生！",
+      "titleEn": "",
+      "source": "搜狐新闻",
+      "sourceType": "news",
+      "url": "https://www.sohu.com/a/1061529682_108293",
+      "publishedDate": "2026-08-11T09:28:00.000Z",
+      "sentiment": "neutral",
+      "language": "zh-Hans",
+      "matchedKeywords": [
+        "皇家墨尔本理工大学",
+        "项目管理"
+      ],
+      "hitSentence": "... 敦大学颁发学位，部分课程由LSE提供学术指导。 其他路径包括伯明翰大学、皇家墨尔本理工大学等，最终专业和颁证大学以实际录取为准。 合作大学 伦敦大学 （LSE提供学术指导） 伯明翰大学 皇家墨尔本理工大学 最终专业和颁证大学以实际录取为准 取得相应学位后，可按届时 ...",
+      "reach": 17579631,
+      "estimatedViews": 19
+    },
+    {
+      "id": "-jbe6qr1Oo4geerEESROVrlCbPQ",
+      "title": "1977-2026中国101家本土女装品牌创立时序与产业进化全景图鉴(下)",
+      "titleEn": "",
+      "source": "今日头条",
+      "sourceType": "news",
+      "url": "https://www.toutiao.com/article/7672590285246939689/",
+      "publishedDate": "2026-08-11T02:24:00.000Z",
+      "sentiment": "neutral",
+      "language": "zh-Hans",
+      "matchedKeywords": [
+        "服装设计",
+        "皇家墨尔本理工大学",
+        "艺术与设计",
+        "建筑学",
+        "教育专业"
+      ],
+      "hitSentence": "... 莱佛士设计学院服装设计方向；2009年回国落户东莞虎门正式开拓中国市场。 品牌风格 ：新东方女性着装——分东方系列（新中式元素提炼）、浪漫系列（蕾丝/荷叶边/柔光缎）、时尚系列（利落都市剪裁）三大主线，“个性而不失优雅，简洁而不失有型”，为追求内外兼修、既温婉又有态度的都市女 ...",
+      "reach": 8510201,
+      "estimatedViews": 43
+    },
+    {
+      "id": "lORvL6MQVpZGAcO1T9pPy5DQWCQ",
+      "title": "中传取消艺考后，艺术生的出路在哪？艺术留学全景替代路径",
+      "titleEn": "",
+      "source": "搜狐新闻",
+      "sourceType": "news",
+      "url": "https://www.sohu.com/a/1060972952_179487",
+      "publishedDate": "2026-08-10T04:00:00.000Z",
+      "sentiment": "neutral",
+      "language": "zh-Hans",
+      "matchedKeywords": [
+        "服装设计",
+        "时尚设计",
+        "艺术与设计",
+        "工业设计",
+        "RMIT",
+        "艺术留学"
+      ],
+      "hitSentence": "... 全球视野 vs 单一市场 英国创意产业就业市场持续增长，AI技能相关岗位需求两年内激增超200%；韩国设计类毕业生就业率90%+，平均起薪约2万人民币/月；加拿大和美国为艺术/设计/STEM交叉专业毕业生提供明确的工签和移民通道。艺术留学毕业后的舞台，不只限于回国进大厂或电视 ...",
+      "reach": 17579631,
+      "estimatedViews": 19
+    },
+    {
+      "id": "fg6NxNY6GyEJr1ms_awyC0KlxC8",
+      "title": "高考英语110+可申！就读上海交大+新加坡，真香！拿英澳本科学历，应往届高中生",
+      "titleEn": "",
+      "source": "搜狐新闻",
+      "sourceType": "news",
+      "url": "https://www.sohu.com/a/1060088412_113707",
+      "publishedDate": "2026-08-07T10:10:00.000Z",
+      "sentiment": "neutral",
+      "language": "zh-Hans",
+      "matchedKeywords": [
+        "皇家墨尔本理工大学",
+        "项目管理"
+      ],
+      "hitSentence": "... 敦大学颁发学位，部分课程由LSE提供学术指导。 其他路径包括伯明翰大学、皇家墨尔本理工大学等，最终专业和颁证大学以实际录取为准。 合作大学 伦敦大学 （LSE提供学术指导） 伯明翰大学 皇家墨尔本理工大学 最终专业和颁证大学以实际录取为准 取得相应学位后，可按届时 ...",
+      "reach": 17579631,
+      "estimatedViews": 19
+    },
+    {
+      "id": "2nTDUvI-cISuT_52lTVh0zoi63w",
+      "title": "Geo-STEP赋能中外学科交流 黄河文明与可持续发展国际暑期学校开营",
+      "titleEn": "",
+      "source": "NetEase News / 网易新闻",
+      "sourceType": "news",
+      "url": "https://www.163.com/dy/article/L3O5JP4K0514R9KE.html",
+      "publishedDate": "2026-08-07T07:15:28.000Z",
+      "sentiment": "neutral",
+      "language": "zh-Hans",
+      "matchedKeywords": [
+        "可持续发展",
+        "墨尔本皇家理工大学"
+      ],
+      "hitSentence": "... 为传承创新大河文明、深化流域人地系统与可持续发展研究、搭建中外地理学科交流互鉴平台，8月5日至18日，河南大学地理科学与工程学部、空间基准全国重点实验室等单位，组织举办2026年黄河文明与可持续发展国际暑期学校暨河南省国际中文教育实践活动大河文明与可持续发展国际夏令营。 来自 ...",
+      "reach": 31152038,
+      "estimatedViews": 169
+    },
+    {
+      "id": "7rcggX5oDcY9rhfkFL3RVK-iTCM",
+      "title": "Geo-STEP赋能中外学科交流 黄河文明与可持续发展国际暑期学校开营",
+      "titleEn": "",
+      "source": "China Daily - Epaper",
+      "sourceType": "news",
+      "url": "https://hen.chinadaily.com.cn/a/202608/07/WS6a7573e0a310d709c2fc20d0.html",
+      "publishedDate": "2026-08-07T06:07:12.000Z",
+      "sentiment": "neutral",
+      "language": "zh-Hans",
+      "matchedKeywords": [
+        "可持续发展",
+        "墨尔本皇家理工大学"
+      ],
+      "hitSentence": "... 为传承创新大河文明、深化流域人地系统与可持续发展研究、搭建中外地理学科交流互鉴平台，8月5日至18日，河南大学地理科学与工程学部、空间基准全国重点实验室等单位，组织举办2026年黄河文明与可持续发展国际暑期学校暨河南省国际中文教育实践活动大河文明与可持续发展国际夏令营。 来自 ...",
+      "reach": 5187,
+      "estimatedViews": 1174
+    },
+    {
+      "id": "VCy5hnEAbG1kp3z6lOBTWafFOTk",
+      "title": "2026年出国留学项目院校推荐：从稳妥升学到名校冲刺，集美大学国际本科项目深度解析",
+      "titleEn": "",
+      "source": "NetEase News / 网易新闻",
+      "sourceType": "news",
+      "url": "https://www.163.com/dy/article/L3J6HRQR0536U52A.html",
+      "publishedDate": "2026-08-05T08:56:33.000Z",
+      "sentiment": "neutral",
+      "language": "zh-Hans",
+      "matchedKeywords": [
+        "皇家墨尔本理工大学",
+        "视觉传达",
+        "室内设计",
+        "可持续设计",
+        "艺术与设计",
+        "创意产业"
+      ],
+      "hitSentence": "... 西亚三国）： 英国方向共 4 所院校： 创意艺术大学：英国专业艺术院校，开设动画、纯艺、插画、平面设计、视觉传达、游戏艺术、室内设计、电影制作、可持续设计等艺术与设计类专业，专业设置覆盖创意产业主要方向。 哈德斯菲尔德大学：商科类专业设置齐全，包括会计金融、国际商务、市场营 ...",
+      "reach": 31152038,
+      "estimatedViews": 169
+    },
+    {
+      "id": "xSk5ZXr7j7900AXKozzLDx2ZaKE",
+      "title": "风起海上，青春作答！上大联合主办的中国美协首届现代插画艺术大展在沪开幕",
+      "titleEn": "A New Wave Meets Youthful Creativity at Shanghai’s Modern Illustration Exhibition",
+      "source": "搜狐新闻",
+      "sourceType": "news",
+      "url": "https://www.sohu.com/a/1057613881_121106832",
+      "publishedDate": "2026-08-01T11:15:00.000Z",
+      "sentiment": "neutral",
+      "language": "zh-Hans",
+      "matchedKeywords": [
+        "未来城市",
+        "皇家墨尔本理工",
+        "设计创新",
+        "真实项目"
+      ],
+      "hitSentence": "... ，把立德树人成效作为检验学校一切工作的根本标准， 主动服务国家文化建设和上海城市发展。上海大学上海美术学院扎根海派文化沃土，在艺术创作、设计创新、公共艺术、文化传承和社会美育等领域形成了深厚积累。学校将继续推动艺术与科技、教育与产业、校园与城市深度融合，引导青年创作者在真实项目 ...",
+      "reach": 15985216,
+      "estimatedViews": 19
+    },
+    {
+      "id": "_VhvqEyllFGrjGEZPaVJlSrvIfQ",
+      "title": "中国视觉艺术百年发展史铺陈在苏州河畔！首届现代插画大展开幕",
+      "titleEn": "A Century of Chinese Visual Arts Unfolds Along Suzhou Creek",
+      "source": "今日头条",
+      "sourceType": "news",
+      "url": "https://www.toutiao.com/article/7669015399324729896/",
+      "publishedDate": "2026-08-01T10:56:00.000Z",
+      "sentiment": "neutral",
+      "language": "zh-Hant",
+      "matchedKeywords": [
+        "皇家墨尔本理工",
+        "未来城市",
+        "设计创新",
+        "真实项目"
+      ],
+      "hitSentence": "... 、未来城市、科技创新与数字生态，以视觉想象回应中国式现代化进程。 上海大学副校长张建华在致辞中表示，作为本次大展的主办单位之一，上海大学坚持全员全过程全方位全领域育人，把立德树人成效作为检验学校一切工作的根本标准，主动服务国家文化建设和上海城市发展。 上海大学副校长张建华致 ...",
+      "reach": 8944999,
+      "estimatedViews": 43
+    },
+    {
+      "id": "UB8RPEYdeH00KAn8LTO6pU9wPGg",
+      "title": "中国视觉艺术百年发展史铺陈在苏州河畔！首届现代插画大展开幕",
+      "titleEn": "A Century of Chinese Visual Arts Unfolds Along Suzhou Creek",
+      "source": "NetEase News / 网易新闻",
+      "sourceType": "news",
+      "url": "https://www.163.com/dy/article/L393OS5B055040N3.html",
+      "publishedDate": "2026-08-01T10:54:42.000Z",
+      "sentiment": "neutral",
+      "language": "zh-Hans",
+      "matchedKeywords": [
+        "皇家墨尔本理工",
+        "未来城市",
+        "设计创新",
+        "真实项目"
+      ],
+      "hitSentence": "... 、未来城市、科技创新与数字生态，以视觉想象回应中国式现代化进程。 上海大学副校长张建华在致辞中表示，作为本次大展的主办单位之一，上海大学坚持全员全过程全方位全领域育人，把立德树人成效作为检验学校一切工作的根本标准，主动服务国家文化建设和上海城市发展。 上海大学副校长张建华致 ...",
+      "reach": 31152038,
+      "estimatedViews": 169
+    },
+    {
+      "id": "Et4PIbu4fRMfEXhP9q4UzI95oBc",
+      "title": "中国视觉艺术百年发展史铺陈在苏州河畔！首届现代插画大展开幕",
+      "titleEn": "A Century of Chinese Visual Arts Unfolds Along Suzhou Creek",
+      "source": "搜狐新闻",
+      "sourceType": "news",
+      "url": "https://www.sohu.com/a/1057610476_121286085",
+      "publishedDate": "2026-08-01T10:52:00.000Z",
+      "sentiment": "neutral",
+      "language": "zh-Hans",
+      "matchedKeywords": [
+        "皇家墨尔本理工",
+        "未来城市",
+        "设计创新",
+        "真实项目"
+      ],
+      "hitSentence": "... 、未来城市、科技创新与数字生态，以视觉想象回应中国式现代化进程。 上海大学副校长张建华在致辞中表示，作为本次大展的主办单位之一，上海大学坚持全员全过程全方位全领域育人，把立德树人成效作为检验学校一切工作的根本标准，主动服务国家文化建设和上海城市发展。 上海大学副校长张建华致 ...",
+      "reach": 15985216,
+      "estimatedViews": 19
+    },
+    {
+      "id": "Vfkm-CB4rt7XP-JEQLFzo5eO-jM",
+      "title": "中国视觉艺术百年发展史铺陈在苏州河畔！首届现代插画大展开幕",
+      "titleEn": "A Century of Chinese Visual Arts Unfolds Along Suzhou Creek",
+      "source": "解放日报 Jiefang Daily",
+      "sourceType": "news",
+      "url": "https://www.jfdaily.com/staticsg/res/html/web/newsDetail.html?id=1153980&sid=200",
+      "publishedDate": "2026-08-01T03:52:00.000Z",
+      "sentiment": "neutral",
+      "language": "zh-Hans",
+      "matchedKeywords": [
+        "皇家墨尔本理工",
+        "未来城市",
+        "设计创新",
+        "真实项目"
+      ],
+      "hitSentence": "... 、未来城市、科技创新与数字生态，以视觉想象回应中国式现代化进程。 上海大学副校长张建华在致辞中表示，作为本次大展的主办单位之一，上海大学坚持全员全过程全方位全领域育人，把立德树人成效作为检验学校一切工作的根本标准，主动服务国家文化建设和上海城市发展。 上海大学副校长张建华致 ...",
+      "reach": 170211,
+      "estimatedViews": 0
+    },
+    {
+      "id": "9HRbRa83Xq-96FwBapCUWDHgQus",
+      "title": "中国视觉艺术百年发展史铺陈在苏州河畔！首届现代插画大展开幕",
+      "titleEn": "A Century of Chinese Visual Arts Unfolds Along Suzhou Creek",
+      "source": "上海观察",
+      "sourceType": "news",
+      "url": "https://www.shobserver.com/staticsg/res/html/web/newsDetail.html?id=1153980",
+      "publishedDate": "2026-07-31T19:52:00.000Z",
+      "sentiment": "neutral",
+      "language": "zh-Hans",
+      "matchedKeywords": [
+        "皇家墨尔本理工",
+        "未来城市",
+        "设计创新",
+        "真实项目"
+      ],
+      "hitSentence": "... 、未来城市、科技创新与数字生态，以视觉想象回应中国式现代化进程。 上海大学副校长张建华在致辞中表示，作为本次大展的主办单位之一，上海大学坚持全员全过程全方位全领域育人，把立德树人成效作为检验学校一切工作的根本标准，主动服务国家文化建设和上海城市发展。 上海大学副校长张建华致 ...",
+      "reach": 568102,
+      "estimatedViews": 173
+    },
+    {
+      "id": "3vhALBF17u2hzpRTS7VMDheaPQU",
+      "title": "不想走太远，又想让孩子接受国际化教育？新加坡成了很多家庭的新选择",
+      "titleEn": "",
+      "source": "今日头条",
+      "sourceType": "news",
+      "url": "https://www.toutiao.com/article/7668298496985793064/",
+      "publishedDate": "2026-07-30T12:34:00.000Z",
+      "sentiment": "neutral",
+      "language": "zh-Hans",
+      "matchedKeywords": [
+        "皇家墨尔本理工大学",
+        "RMIT",
+        "校企合作"
+      ],
+      "hitSentence": "... 大学：课程学术指导由联邦成员学院——伦敦政治经济学院（LSE）提供。LSE在2027年QS世界大学排名第62位。 澳大利亚方向 皇家墨尔本理工大学（RMIT）：2027年QS排名全球第119位，澳大利亚第10，排名持续攀升。 蒙纳士学院（隶属蒙纳士大学）：蒙纳士大学2027 ...",
+      "reach": 8944999,
+      "estimatedViews": 43
+    },
+    {
+      "id": "qRR3U1AYVTVmxjXeGuW5C5XCCDw",
+      "title": "深度设计•智启未来 ｜ 2026清华深圳设计营创论坛成功举办！",
+      "titleEn": "",
+      "source": "央视融媒网·国际网络传播中心",
+      "sourceType": "news",
+      "url": "http://www.cctvzyzg.com/index/detail/id/10757.html",
+      "publishedDate": "2026-07-30T07:41:43.000Z",
+      "sentiment": "neutral",
+      "language": "zh-Hans",
+      "matchedKeywords": [
+        "RMIT大学",
+        "建筑学",
+        "设计教育"
+      ],
+      "hitSentence": "... 高岩主持。美国南加州大学建筑学院院长Brett Steele，上海工程技术大学校长娄永琪发表主题演讲；中国工程院院士、清华大学教授庄惟敏、香港中文大学建筑学院副教授朱竞翔参与讨论。嘉宾们分别从设计教育本质、AI对学科边界的重塑、跨学科教研模式及AI驱动的深度设计实践等维度，探讨 ...",
+      "reach": 0,
+      "estimatedViews": 0
+    },
+    {
+      "id": "uSpTSWMyKCGBk1-T2M_yidCu2qE",
+      "title": "深度设计•智启未来 ｜ 2026清华深圳设计营创论坛成功举办！",
+      "titleEn": "",
+      "source": "界面新闻",
+      "sourceType": "news",
+      "url": "https://www.jiemian.com/article/14849821.html",
+      "publishedDate": "2026-07-30T07:33:19.000Z",
+      "sentiment": "neutral",
+      "language": "zh-Hant",
+      "matchedKeywords": [
+        "RMIT大学",
+        "建筑学",
+        "设计教育"
+      ],
+      "hitSentence": "... 任高岩主持。美国南加州大学建筑学院院长Brett Steele，上海工程技术大学校长娄永琪发表主题演讲；中国工程院院士、清华大学教授庄惟敏、香港中文大学建筑学院副教授朱竞翔参与讨论。嘉宾们分别从设计教育本质、AI对学科边界的重塑、跨学科教研模式及AI驱动的深度设计实践等维度，探 ...",
+      "reach": 613991,
+      "estimatedViews": 74
+    },
+    {
+      "id": "ZTyf9ygXkPzsGKQRpsOWbISBhIo",
+      "title": "深度设计•智启未来 ｜ 2026清华深圳设计营创论坛成功举办！",
+      "titleEn": "",
+      "source": "西盟软件站",
+      "sourceType": "news",
+      "url": "http://zqzx.zmke.com/smart/138136.html",
+      "publishedDate": "2026-07-30T07:30:19.000Z",
+      "sentiment": "neutral",
+      "language": "zh-Hans",
+      "matchedKeywords": [
+        "RMIT大学",
+        "建筑学",
+        "设计教育"
+      ],
+      "hitSentence": "... 岩主持。美国南加州大学建筑学院院长Brett Steele，上海工程技术大学校长娄永琪发表主题演讲；中国工程院院士、清华大学教授庄惟敏、中国香港中文大学建筑学院副教授朱竞翔参与讨论。嘉宾们分别从设计教育本质、AI对学科边界的重塑、跨学科教研模式及AI驱动的深度设计实践等维度，探 ...",
+      "reach": 811,
+      "estimatedViews": 0
+    },
+    {
+      "id": "A02nuyfI9X2yB9b_dC5cNybAjRM",
+      "title": "深度设计•智启未来 ｜ 2026清华深圳设计营创论坛成功举办！",
+      "titleEn": "",
+      "source": "天极网",
+      "sourceType": "news",
+      "url": "https://news.yesky.com/hotnews/435/364435.shtml",
+      "publishedDate": "2026-07-30T07:19:50.000Z",
+      "sentiment": "neutral",
+      "language": "zh-Hans",
+      "matchedKeywords": [
+        "建筑学",
+        "RMIT大学",
+        "设计教育"
+      ],
+      "hitSentence": "... 高岩主持。美国南加州大学建筑学院院长Brett Steele，上海工程技术大学校长娄永琪发表主题演讲;中国工程院院士、清华大学教授庄惟敏、香港中文大学建筑学院副教授朱竞翔参与讨论。嘉宾们分别从设计教育本质、AI对学科边界的重塑、跨学科教研模式及AI驱动的深度设计实践等维度，探讨 ...",
+      "reach": 476318,
+      "estimatedViews": 258
+    },
+    {
+      "id": "UnLRsE23p69zeaocznFL_d13FgU",
+      "title": "深度设计•智启未来 ｜ 2026清华深圳设计营创论坛成功举办！",
+      "titleEn": "",
+      "source": "乐商网",
+      "sourceType": "news",
+      "url": "http://www.6sw.com.cn/yh/145326292.html",
+      "publishedDate": "2026-07-28T12:57:26.000Z",
+      "sentiment": "neutral",
+      "language": "zh-Hans",
+      "matchedKeywords": [
+        "RMIT大学",
+        "建筑学",
+        "设计教育"
+      ],
+      "hitSentence": "... 高岩主持。美国南加州大学建筑学院院长Brett Steele，上海工程技术大学校长娄永琪发表主题演讲；中国工程院院士、清华大学教授庄惟敏、香港中文大学建筑学院副教授朱竞翔参与讨论。嘉宾们分别从设计教育本质、AI对学科边界的重塑、跨学科教研模式及AI驱动的深度设计实践等维度，探讨 ...",
+      "reach": 0,
+      "estimatedViews": 0
+    },
+    {
+      "id": "4LczK7KKZ1v8tzJTy5byM0VOE_k",
+      "title": "澳大利亚摄影专业留学院校推荐哪个，有哪些申请要求",
+      "titleEn": "",
+      "source": "中国教育在线",
+      "sourceType": "news",
+      "url": "https://www.eol.cn/liuxue/aozhou/ys202607221201469.html",
+      "publishedDate": "2026-07-22T06:55:42.000Z",
+      "sentiment": "neutral",
+      "language": "zh-Hans",
+      "matchedKeywords": [
+        "皇家墨尔本理工大学",
+        "RMIT",
+        "创意产业"
+      ],
+      "hitSentence": "... 留学院校推荐哪个，有哪些申请要求？ 澳大利亚摄影专业留学院校推荐哪个，有哪些申请要求？ 1、皇家墨尔本理工大学 皇家墨尔本理工大学的摄影学文科学士专业在1887年成立，作为一门一直运行的古老专业来讲，已经获得世界领域的一致好评，甚至有可能是世界上比较好的。该专业为学生提供 ...",
+      "reach": 398340,
+      "estimatedViews": 2954
+    },
+    {
+      "id": "QWMog3fr7NMp3oIF_B0bI1i5bBo",
+      "title": "澳洲工业设计研究生留学申请步骤有哪些？大概需要多少学费？",
+      "titleEn": "",
+      "source": "中国教育在线",
+      "sourceType": "news",
+      "url": "https://www.eol.cn/liuxue/aozhou/ys202607221201465.html",
+      "publishedDate": "2026-07-22T06:42:01.000Z",
+      "sentiment": "neutral",
+      "language": "zh-Hans",
+      "matchedKeywords": [
+        "工业设计",
+        "皇家墨尔本理工大学"
+      ],
+      "hitSentence": "... 证明需显示有足够资金支付学费和生活费，健康保险需覆盖留学期间。 澳洲工业设计研究生留学大概需要多少学费？ 澳洲工业设计研究生留学的学费每年在2万到4万澳元之间，具体取决于大学和课程类型。公立大学如皇家墨尔本理工大学或新南威尔士大学，学费可能较高，约3万到4万澳元每年；私立或 ...",
+      "reach": 576951,
+      "estimatedViews": 2954
+    },
+    {
+      "id": "-W6ba4NDkFduKoQ29NooMaWIVX0",
+      "title": "西安交大附中国际部2026-2027年招生简章",
+      "titleEn": "",
+      "source": "上海远播教育科技集团股份有限公司 版权所有",
+      "sourceType": "news",
+      "url": "https://guoji.114study.com/news/27197/",
+      "publishedDate": "2026-07-21T08:10:29.000Z",
+      "sentiment": "neutral",
+      "language": "zh-Hans",
+      "matchedKeywords": [
+        "建筑设计",
+        "工业设计",
+        "作品集申请",
+        "建筑学",
+        "皇家墨尔本理工大学"
+      ],
+      "hitSentence": "... 05 发展理想：95%入读世界50强学科。 【优飞艺术&设计大师班】 西北地区较早开设的世界20强高校设计类(建筑设计、工业设计、媒体设计、平面设计)和艺术类本科优录课程基地，旨在培养世界高水平的设计人才和艺术管理人才。学生完成设计类相关课程，成绩达到要求，即可被澳洲G-8 ...",
+      "reach": 12513,
+      "estimatedViews": 0
     }
   ],
   "peaks": [
     {
       "date": "2026-08-19",
       "count": 24,
-      "mentions": []
+      "mentions": [
+        {
+          "id": "vPfDg1SkcxVcVc7RE3TxQIVhyqo",
+          "title": "外滩大会首次设立AI艺术节：AI音乐会、AI概念艺术展等活动启动报名",
+          "titleEn": "The Inclusion Conference on the Bund Launches Its First AI Arts Festival",
+          "source": "今日头条",
+          "sourceType": "news",
+          "url": "https://www.toutiao.com/article/7675692600795333154/",
+          "publishedDate": "2026-08-19T10:47:00.000Z",
+          "sentiment": "neutral",
+          "language": "zh-Hans",
+          "matchedKeywords": [
+            "皇家墨尔本理工大学",
+            "RMIT",
+            "可持续发展"
+          ],
+          "hitSentence": "... 号C.初始化计划策展的AI概念艺术展——“纠缠，而后日以作夜”也将同步举行，聚焦于人与AI日益“纠缠”的共生关系。 展览由澳大利亚皇家墨尔本理工大学（RMIT）可再生未来研究所所长、苏格兰皇家学会院士克里斯·斯彼得（Chris Speed）教授，复旦大学脑神经科学家王云教授及 ...",
+          "reach": 8510201,
+          "estimatedViews": 46
+        },
+        {
+          "id": "RwhF-EnsVUJ3wD7r-OT0RsoHWi0",
+          "title": "AI艺人开唱、顶尖数字艺术家集结、100余部AI影像展映：外滩大会打造AI艺术新现场",
+          "titleEn": "AI Performers, Leading Digital Artists and 100+ Screenings Create a New AI Arts Showcase",
+          "source": "IT之家",
+          "sourceType": "news",
+          "url": "https://www.ithome.com/0/991/722.htm",
+          "publishedDate": "2026-08-19T08:54:56.000Z",
+          "sentiment": "neutral",
+          "language": "zh-Hans",
+          "matchedKeywords": [
+            "皇家墨尔本理工大学",
+            "RMIT",
+            "可持续发展"
+          ],
+          "hitSentence": "... 化计划策展的 AI 概念艺术展 ——「纠缠，而后日以作夜」也将同步举行，聚焦于人与 AI 日益“纠缠”的共生关系。 展览由澳大利亚皇家墨尔本理工大学（RMIT）可再生未来研究所所长、苏格兰皇家学会院士克里斯 · 斯彼得（Chris Speed）教授，复旦大学脑神经科学家王云教 ...",
+          "reach": 1524248,
+          "estimatedViews": 1968
+        },
+        {
+          "id": "blPwceZXTzLUMWV4XeTYZJtJ-e0",
+          "title": "外滩大会首次设立AI艺术节：AI音乐会、AI概念艺术展、AI影像展映启动报名",
+          "titleEn": "The Inclusion Conference on the Bund Launches Its First AI Arts Festival",
+          "source": "界面新闻",
+          "sourceType": "news",
+          "url": "https://www.jiemian.com/article/14947391.html",
+          "publishedDate": "2026-08-19T08:10:01.000Z",
+          "sentiment": "neutral",
+          "language": "zh-Hans",
+          "matchedKeywords": [
+            "皇家墨尔本理工大学",
+            "RMIT",
+            "可持续发展"
+          ],
+          "hitSentence": "... 分号C.初始化计划策展的AI概念艺术展——「纠缠，而后日以作夜」也将同步举行，聚焦于人与AI日益“纠缠”的共生关系。 展览由澳大利亚皇家墨尔本理工大学（RMIT）可再生未来研究所所长、苏格兰皇家学会院士克里斯·斯彼得（Chris Speed）教授，复旦大学脑神经科学家王云教授及 ...",
+          "reach": 703350,
+          "estimatedViews": 93
+        },
+        {
+          "id": "B6OqpO-Dl9pwYWDTjrQNfscKs_w",
+          "title": "外滩大会首次设立AI艺术节：AI音乐会、AI概念艺术展、AI影像展映启动报名",
+          "titleEn": "The Inclusion Conference on the Bund Launches Its First AI Arts Festival",
+          "source": "中国网",
+          "sourceType": "news",
+          "url": "http://dicn.china.com.cn/2026-08/19/content_43479141.shtml",
+          "publishedDate": "2026-08-19T08:09:55.000Z",
+          "sentiment": "neutral",
+          "language": "zh-Hans",
+          "matchedKeywords": [
+            "皇家墨尔本理工大学",
+            "RMIT",
+            "可持续发展"
+          ],
+          "hitSentence": "... 号C.初始化计划策展的AI概念艺术展——「纠缠,而后日以作夜」也将同步举行,聚焦于人与AI日益“纠缠”的共生关系。 展览由澳大利亚皇家墨尔本理工大学(RMIT)可再生未来研究所所长、苏格兰皇家学会院士克里斯·斯彼得(Chris Speed)教授,复旦大学脑神经科学家王云教授及 ...",
+          "reach": 546831,
+          "estimatedViews": 42
+        }
+      ]
     },
     {
       "date": "2026-09-21",
       "count": 18,
-      "mentions": []
+      "mentions": [
+        {
+          "id": "2i-C2iEFNw7wOeW_b4ltZI9SxXw",
+          "title": "从“建造”到“创造“：城市与产业变化带来的艺术设计教育新命题",
+          "titleEn": "From “Building” to “Creating”: New Questions for Art and Design Education Amid Urban and Industrial Change",
+          "source": "NetEase News / 网易新闻",
+          "sourceType": "news",
+          "url": "https://www.163.com/dy/article/L7C0EJBJ05506BEH.html",
+          "publishedDate": "2026-09-21T06:57:10.000Z",
+          "sentiment": "neutral",
+          "language": "zh-Hans",
+          "matchedKeywords": [
+            "艺术设计教育",
+            "建筑设计",
+            "皇家墨尔本理工大学",
+            "城市更新",
+            "城市设计",
+            "建筑与城市设计"
+          ],
+          "hitSentence": "... 皇家墨尔本理工大学 （Royal Melbourne Institute of Technology）的建筑、工业设计、时尚、传播与媒体等领域的学术专家齐聚北京，举办了一场创意学科开放日。他们从不同的专业角度出发，与现场的学生及家长深入探讨当设计越来越深入城市生活与产业创新之后 ...",
+          "reach": 28311861,
+          "estimatedViews": 127
+        },
+        {
+          "id": "oFxYAjM9VVjvTIuxg_cjG5-nDZo",
+          "title": "从“建造”到“创造“：城市与产业变化带来的艺术设计教育新命题",
+          "titleEn": "From “Building” to “Creating”: New Questions for Art and Design Education Amid Urban and Industrial Change",
+          "source": "搜狐新闻",
+          "sourceType": "news",
+          "url": "https://www.sohu.com/a/1078991782_120244154",
+          "publishedDate": "2026-09-21T06:47:00.000Z",
+          "sentiment": "neutral",
+          "language": "zh-Hans",
+          "matchedKeywords": [
+            "艺术设计教育",
+            "建筑设计",
+            "皇家墨尔本理工大学",
+            "城市更新",
+            "城市设计",
+            "建筑与城市设计"
+          ],
+          "hitSentence": "... 皇家墨尔本理工大学 （Royal Melbourne Institute of Technology）的建筑、工业设计、时尚、传播与媒体等领域的学术专家齐聚北京，举办了一场创意学科开放日。他们从不同的专业角度出发，与现场的学生及家长深入探讨当设计越来越深入城市生活与产业创新之后 ...",
+          "reach": 17156201,
+          "estimatedViews": 22
+        },
+        {
+          "id": "cPvGuodkI4hkg4JSpXGCKDYTGe0",
+          "title": "从“建造”到“创造“：城市与产业变化带来艺术设计教育新命题",
+          "titleEn": "From “Building” to “Creating”: New Questions for Art and Design Education Amid Urban and Industrial Change",
+          "source": "今日头条",
+          "sourceType": "news",
+          "url": "https://www.toutiao.com/article/7688029637980537383/",
+          "publishedDate": "2026-09-21T16:41:00.000Z",
+          "sentiment": "neutral",
+          "language": "zh-Hans",
+          "matchedKeywords": [
+            "城市更新",
+            "皇家墨尔本理工大学",
+            "工业设计",
+            "创意学科",
+            "艺术设计教育",
+            "建筑与城市设计"
+          ],
+          "hitSentence": "... 、新的技术以及新的实践方式中。”作为此次创意学科开放日的主要演讲嘉宾、皇家墨尔本理工大学建筑与城市设计学院讲师、建筑学硕士项目主管兼项目负责人帕特里克·马卡赛特（Patrick Macasaet）博士首先提出自己对未来艺术设计人才的看法。 以建筑教育为例，随着中国城市发展逐渐 ...",
+          "reach": 8562549,
+          "estimatedViews": 68
+        },
+        {
+          "id": "1cGP8EE0faLprVqT23wtaiUS724",
+          "title": "2026新政：艺术生稳妥艺术留学，澳洲音乐专业如何申请",
+          "titleEn": "",
+          "source": "中国教育在线",
+          "sourceType": "news",
+          "url": "https://www.eol.cn/liuxue/yslx/2026092184727.html",
+          "publishedDate": "2026-09-21T00:47:27.000Z",
+          "sentiment": "neutral",
+          "language": "zh-Hans",
+          "matchedKeywords": [
+            "作品集申请",
+            "交互设计",
+            "皇家墨尔本理工大学",
+            "RMIT",
+            "艺术与设计",
+            "艺术留学"
+          ],
+          "hitSentence": "... 。这是因为澳洲艺术院校希望学生具备专业能力和良好沟通能力。学生可提前1-2年开始准备语言，找专业老师指导作品集。 院校选择 皇家墨尔本理工大学（Royal Melbourne Institute of Technology，RMIT）、悉尼大学（The University ...",
+          "reach": 398340,
+          "estimatedViews": 883
+        }
+      ]
     },
     {
       "date": "2026-08-01",
       "count": 15,
-      "mentions": []
+      "mentions": [
+        {
+          "id": "UB8RPEYdeH00KAn8LTO6pU9wPGg",
+          "title": "中国视觉艺术百年发展史铺陈在苏州河畔！首届现代插画大展开幕",
+          "titleEn": "A Century of Chinese Visual Arts Unfolds Along Suzhou Creek",
+          "source": "NetEase News / 网易新闻",
+          "sourceType": "news",
+          "url": "https://www.163.com/dy/article/L393OS5B055040N3.html",
+          "publishedDate": "2026-08-01T10:54:42.000Z",
+          "sentiment": "neutral",
+          "language": "zh-Hans",
+          "matchedKeywords": [
+            "皇家墨尔本理工",
+            "未来城市",
+            "设计创新",
+            "真实项目"
+          ],
+          "hitSentence": "... 、未来城市、科技创新与数字生态，以视觉想象回应中国式现代化进程。 上海大学副校长张建华在致辞中表示，作为本次大展的主办单位之一，上海大学坚持全员全过程全方位全领域育人，把立德树人成效作为检验学校一切工作的根本标准，主动服务国家文化建设和上海城市发展。 上海大学副校长张建华致 ...",
+          "reach": 31152038,
+          "estimatedViews": 169
+        },
+        {
+          "id": "xSk5ZXr7j7900AXKozzLDx2ZaKE",
+          "title": "风起海上，青春作答！上大联合主办的中国美协首届现代插画艺术大展在沪开幕",
+          "titleEn": "A New Wave Meets Youthful Creativity at Shanghai’s Modern Illustration Exhibition",
+          "source": "搜狐新闻",
+          "sourceType": "news",
+          "url": "https://www.sohu.com/a/1057613881_121106832",
+          "publishedDate": "2026-08-01T11:15:00.000Z",
+          "sentiment": "neutral",
+          "language": "zh-Hans",
+          "matchedKeywords": [
+            "未来城市",
+            "皇家墨尔本理工",
+            "设计创新",
+            "真实项目"
+          ],
+          "hitSentence": "... ，把立德树人成效作为检验学校一切工作的根本标准， 主动服务国家文化建设和上海城市发展。上海大学上海美术学院扎根海派文化沃土，在艺术创作、设计创新、公共艺术、文化传承和社会美育等领域形成了深厚积累。学校将继续推动艺术与科技、教育与产业、校园与城市深度融合，引导青年创作者在真实项目 ...",
+          "reach": 15985216,
+          "estimatedViews": 19
+        },
+        {
+          "id": "Et4PIbu4fRMfEXhP9q4UzI95oBc",
+          "title": "中国视觉艺术百年发展史铺陈在苏州河畔！首届现代插画大展开幕",
+          "titleEn": "A Century of Chinese Visual Arts Unfolds Along Suzhou Creek",
+          "source": "搜狐新闻",
+          "sourceType": "news",
+          "url": "https://www.sohu.com/a/1057610476_121286085",
+          "publishedDate": "2026-08-01T10:52:00.000Z",
+          "sentiment": "neutral",
+          "language": "zh-Hans",
+          "matchedKeywords": [
+            "皇家墨尔本理工",
+            "未来城市",
+            "设计创新",
+            "真实项目"
+          ],
+          "hitSentence": "... 、未来城市、科技创新与数字生态，以视觉想象回应中国式现代化进程。 上海大学副校长张建华在致辞中表示，作为本次大展的主办单位之一，上海大学坚持全员全过程全方位全领域育人，把立德树人成效作为检验学校一切工作的根本标准，主动服务国家文化建设和上海城市发展。 上海大学副校长张建华致 ...",
+          "reach": 15985216,
+          "estimatedViews": 19
+        },
+        {
+          "id": "_VhvqEyllFGrjGEZPaVJlSrvIfQ",
+          "title": "中国视觉艺术百年发展史铺陈在苏州河畔！首届现代插画大展开幕",
+          "titleEn": "A Century of Chinese Visual Arts Unfolds Along Suzhou Creek",
+          "source": "今日头条",
+          "sourceType": "news",
+          "url": "https://www.toutiao.com/article/7669015399324729896/",
+          "publishedDate": "2026-08-01T10:56:00.000Z",
+          "sentiment": "neutral",
+          "language": "zh-Hant",
+          "matchedKeywords": [
+            "皇家墨尔本理工",
+            "未来城市",
+            "设计创新",
+            "真实项目"
+          ],
+          "hitSentence": "... 、未来城市、科技创新与数字生态，以视觉想象回应中国式现代化进程。 上海大学副校长张建华在致辞中表示，作为本次大展的主办单位之一，上海大学坚持全员全过程全方位全领域育人，把立德树人成效作为检验学校一切工作的根本标准，主动服务国家文化建设和上海城市发展。 上海大学副校长张建华致 ...",
+          "reach": 8944999,
+          "estimatedViews": 43
+        }
+      ]
     }
   ]
 }
