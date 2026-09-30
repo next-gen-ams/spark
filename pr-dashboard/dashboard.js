@@ -465,9 +465,9 @@ function showPeakTooltip(peak, point, pinned = false) {
   }
 
   const pointLeft = Number.parseFloat(point.style.left);
-  tooltip.classList.toggle('tip-align-right', pointLeft > 64);
-  tooltip.style.left = `${Math.min(92, Math.max(8, pointLeft))}%`;
-  tooltip.style.top = `${Math.max(5, Number.parseFloat(point.style.top) - 6)}%`;
+  tooltip.classList.toggle('tip-align-left', pointLeft > 50);
+  tooltip.style.removeProperty('left');
+  tooltip.style.removeProperty('top');
   tooltip.hidden = false;
 }
 
