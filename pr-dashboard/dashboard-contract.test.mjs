@@ -13,20 +13,16 @@ test('the GEO report keeps one intentional entry point to the verified shared re
   assert.doesNotMatch(html, /data-action=["']geo["']/);
 });
 
-test('GEO audience journeys render from a local read-only snapshot', async () => {
-  const [html, javascript, server] = await Promise.all([
+test('GEO visibility opens the verified full report without a duplicate local page', async () => {
+  const [html, javascript] = await Promise.all([
     readFile(new URL('./index.html', import.meta.url), 'utf8'),
     readFile(new URL('./dashboard.js', import.meta.url), 'utf8'),
-    readFile(new URL('./scripts/local-server.mjs', import.meta.url), 'utf8'),
   ]);
 
-  assert.match(html, /id="geo-visibility"/);
-  assert.match(html, /id="geoPersonaGrid"/);
-  assert.match(javascript, /fetch\('\.\/data\/geo\.json'/);
-  assert.match(javascript, /answerText\.textContent = formatGeoAnswer\(answer\.answerTextEn \|\| answer\.answerText\)/);
-  assert.match(javascript, /English translation · Translated from the original Chinese response/);
-  assert.doesNotMatch(javascript, /innerHTML\s*=.*answer/i);
-  assert.match(server, /\/data\/geo\.json/);
+  assert.match(html, new RegExp(`<a class="nav-item nav-item-external" href="${GEO_REPORT_URL.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}"`));
+  assert.match(html, /target="_blank" rel="noopener noreferrer"[\s\S]*?GEO Visibility/);
+  assert.doesNotMatch(html, /data-view="geo-visibility"|data-view-panel="geo-visibility"|id="geoPersonaGrid"/);
+  assert.doesNotMatch(javascript, /loadGeoData|renderGeoData|fetch\('\.\/data\/geo\.json'/);
 });
 
 test('peak tooltip is constrained to its trend panel', async () => {
@@ -75,40 +71,34 @@ test('summary cards use production data-source labels', async () => {
   assert.doesNotMatch(javascript, /WEEKLY CACHE|WEEKLY SNAPSHOT/);
 });
 
-test('GEO report uses spacious bilingual persona and journey cards', async () => {
-  const [html, javascript, css] = await Promise.all([
+test('PR performance renders exactly three data-grounded insight cards', async () => {
+  const [html, javascript, server] = await Promise.all([
     readFile(new URL('./index.html', import.meta.url), 'utf8'),
     readFile(new URL('./dashboard.js', import.meta.url), 'utf8'),
-    readFile(new URL('./styles.css', import.meta.url), 'utf8'),
+    readFile(new URL('./scripts/local-server.mjs', import.meta.url), 'utf8'),
   ]);
 
-  assert.match(html, /GEO Report Snapshots/);
-  assert.doesNotMatch(html, /Audience journey snapshots|geoMethodNote/);
-  assert.match(javascript, /marker\.textContent = `Persona \$\{personaIndex \+ 1\}`/);
-  assert.match(javascript, /sampleLabel\.textContent = 'Sample prompt'/);
-  assert.match(javascript, /promptEn\.textContent = journey\.promptEn/);
-  assert.doesNotMatch(javascript, /Problem framed|Comparing named options|Asking about RMIT by name/);
-  assert.doesNotMatch(javascript, /RMIT named|RMIT not named|answers name no vendor/);
-  assert.match(javascript, /Chinese leading AI models/);
-  assert.match(css, /\.geo-persona-grid\s*\{[^}]*grid-template-columns:\s*1fr/s);
-  assert.match(css, /\.geo-journey\[open\]\s*\{[^}]*grid-column:\s*1 \/ -1/s);
+  assert.match(html, /id="prInsights"/);
+  assert.match(html, /id="prInsightsGrid"/);
+  assert.match(javascript, /fetch\('\.\/data\/insights\.json'/);
+  assert.match(javascript, /items\.slice\(0, 3\)/);
+  assert.match(server, /\/data\/insights\.json/);
 });
 
-test('workspace separates PR performance and GEO visibility into routed views', async () => {
-  const [html, javascript, css] = await Promise.all([
+test('workspace keeps PR local and GEO as an external report destination', async () => {
+  const [html, javascript] = await Promise.all([
     readFile(new URL('./index.html', import.meta.url), 'utf8'),
     readFile(new URL('./dashboard.js', import.meta.url), 'utf8'),
-    readFile(new URL('./styles.css', import.meta.url), 'utf8'),
   ]);
 
   assert.equal((html.match(/class="nav-item(?: is-active)?"/g) || []).length, 2);
   assert.match(html, /data-view="pr-performance"[^>]*>[\s\S]*?PR Performance/);
-  assert.match(html, /data-view="geo-visibility"[^>]*>[\s\S]*?GEO Visibility/);
-  assert.equal((html.match(/data-view-panel=/g) || []).length, 2);
+  assert.match(html, /nav-item-external[\s\S]*?GEO Visibility/);
+  assert.equal((html.match(/data-view-panel=/g) || []).length, 1);
+  assert.doesNotMatch(javascript, /geo-visibility/);
   assert.match(javascript, /searchParams\.set\('view', view\)/);
   assert.match(javascript, /window\.history\.pushState/);
   assert.match(javascript, /window\.addEventListener\('popstate'/);
-  assert.match(css, /\.dashboard-view\[hidden\]\s*\{\s*display:\s*none;/);
 });
 
 test('topbar uses an explicit logout control without a Meltwater status chip', async () => {
@@ -126,51 +116,16 @@ test('topbar uses an explicit logout control without a Meltwater status chip', a
   assert.match(css, /\.logout-button\s*\{/);
 });
 
-test('GEO snapshot metadata reads as passive text instead of buttons', async () => {
-  const [javascript, css] = await Promise.all([
-    readFile(new URL('./dashboard.js', import.meta.url), 'utf8'),
-    readFile(new URL('./styles.css', import.meta.url), 'utf8'),
-  ]);
-
-  assert.match(javascript, /`Updated on \$\{data\.meta\.checkedLabel\}`/);
-  const metadataRule = css.match(/\.geo-summary-chip\s*\{([^}]*)\}/)?.[1] || '';
-  assert.doesNotMatch(metadataRule, /border-radius|background|cursor/);
-  assert.match(metadataRule, /border-left:\s*1px solid/);
-});
-
-test('GEO heading shows a concise data-driven total names-you metric', async () => {
-  const [html, javascript, css] = await Promise.all([
+test('sidebar uses the actual weekly schedule and no GEO context switch', async () => {
+  const [html, javascript] = await Promise.all([
     readFile(new URL('./index.html', import.meta.url), 'utf8'),
     readFile(new URL('./dashboard.js', import.meta.url), 'utf8'),
-    readFile(new URL('./styles.css', import.meta.url), 'utf8'),
   ]);
 
-  assert.match(html, /id="geoNameMetric"/);
-  assert.match(html, /id="geoNameMetricDial"/);
-  assert.match(html, /id="geoNameMetricRate"/);
-  assert.match(html, /class="geo-heading-copy"[\s\S]*?id="geoVisibilityTitle"[\s\S]*?id="geoNameMetric"/);
-  assert.match(html, /TOTAL ANSWERS NAMING RMIT/);
-  assert.match(javascript, /preBrand\.namesYou} \/ \$\{preBrand\.validAnswers/);
-  assert.match(javascript, /pre-brand prompts where RMIT was not named/);
-  assert.match(javascript, /style\.setProperty\('--geo-rate'/);
-  assert.match(css, /\.geo-name-metric\s*\{/);
-  assert.match(css, /\.geo-name-metric\s*\{[^}]*margin-top:\s*14px/s);
-  assert.match(css, /conic-gradient\(#7448e8/);
-});
-
-test('sidebar context switches from Meltwater to KMT GEO with the active workspace', async () => {
-  const [html, javascript, css] = await Promise.all([
-    readFile(new URL('./index.html', import.meta.url), 'utf8'),
-    readFile(new URL('./dashboard.js', import.meta.url), 'utf8'),
-    readFile(new URL('./styles.css', import.meta.url), 'utf8'),
-  ]);
-
-  assert.match(html, /id="sidebarGeoLogo"[^>]*kmt-logo\.png/);
-  assert.match(javascript, /sidebarContextSource\.textContent = isGeo \? 'KMT GEO' : 'MELTWATER API'/);
-  assert.match(javascript, /Monthly GEO snapshot/);
-  assert.match(javascript, /First Monday · 10:30 am/);
-  assert.match(javascript, /Last GEO check/);
-  assert.match(css, /\.sidebar-card-icon\.sidebar-card-logo/);
+  assert.doesNotMatch(html, /id="sidebarGeoLogo"/);
+  assert.doesNotMatch(javascript, /renderSidebarContext|Monthly GEO snapshot|Last GEO check/);
+  assert.match(html, /Next automatic update/);
+  assert.match(javascript, /meta\.nextRefreshAt/);
 });
 
 test('locked markets use right-aligned dashboard lock icons', async () => {
