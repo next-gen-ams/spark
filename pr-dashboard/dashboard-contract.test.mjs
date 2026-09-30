@@ -71,18 +71,16 @@ test('summary cards use production data-source labels', async () => {
   assert.doesNotMatch(javascript, /WEEKLY CACHE|WEEKLY SNAPSHOT/);
 });
 
-test('PR performance renders exactly three data-grounded insight cards', async () => {
+test('PR performance does not render a separate AI insights surface', async () => {
   const [html, javascript, server] = await Promise.all([
     readFile(new URL('./index.html', import.meta.url), 'utf8'),
     readFile(new URL('./dashboard.js', import.meta.url), 'utf8'),
     readFile(new URL('./scripts/local-server.mjs', import.meta.url), 'utf8'),
   ]);
 
-  assert.match(html, /id="prInsights"/);
-  assert.match(html, /id="prInsightsGrid"/);
-  assert.match(javascript, /fetch\('\.\/data\/insights\.json'/);
-  assert.match(javascript, /items\.slice\(0, 3\)/);
-  assert.match(server, /\/data\/insights\.json/);
+  assert.doesNotMatch(html, /id="prInsights"|AI INSIGHTS|What changed and what matters/);
+  assert.doesNotMatch(javascript, /loadInsightsData|renderPrInsights|data\/insights\.json/);
+  assert.doesNotMatch(server, /\/data\/insights\.json/);
 });
 
 test('workspace keeps PR local and GEO as an external report destination', async () => {
