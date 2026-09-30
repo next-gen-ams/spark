@@ -133,7 +133,7 @@ function showDashboard() {
   setDashboardView(dashboardViewFromUrl());
   if (!hasLoadedLiveData) {
     hasLoadedLiveData = true;
-    Promise.allSettled([loadMeltwaterData(), loadInsightsData()]);
+    loadMeltwaterData();
   }
 }
 
@@ -418,49 +418,6 @@ async function loadMeltwaterData() {
     renderMeltwaterError();
     showToast('Could not load the latest weekly Meltwater snapshot.');
   }
-}
-
-async function loadInsightsData() {
-  try {
-    const response = await fetch('./data/insights.json', {
-      headers: { Accept: 'application/json' },
-      cache: 'no-store',
-    });
-    if (!response.ok) throw new Error('Insights snapshot unavailable');
-    renderPrInsights((await response.json()).pr);
-  } catch {
-    renderPrInsightsError();
-  }
-}
-
-function renderPrInsights(section) {
-  if (!Array.isArray(section?.items) || section.items.length < 3) throw new Error('Invalid PR insights');
-  const grid = document.querySelector('#prInsightsGrid');
-  grid.replaceChildren();
-  section.items.slice(0, 3).forEach((item, index) => {
-    const card = document.createElement('article');
-    card.className = `insight-card insight-card-${index + 1}`;
-    const label = document.createElement('span');
-    label.textContent = item.label;
-    const title = document.createElement('strong');
-    title.textContent = item.title;
-    const body = document.createElement('p');
-    body.textContent = item.body;
-    card.append(label, title, body);
-    grid.append(card);
-  });
-  const status = section.comparison === 'baseline' ? 'Baseline' : 'Compared with previous week';
-  document.querySelector('#prInsightsUpdated').textContent = `${status} · Updated ${formatDateTime(new Date(section.generatedAt))}`;
-}
-
-function renderPrInsightsError() {
-  const grid = document.querySelector('#prInsightsGrid');
-  grid.replaceChildren();
-  const empty = document.createElement('article');
-  empty.className = 'insight-card insight-card-loading';
-  empty.textContent = 'Insights will return with the next successful weekly refresh.';
-  grid.append(empty);
-  document.querySelector('#prInsightsUpdated').textContent = 'Analysis unavailable';
 }
 
 async function fetchDashboardData() {
