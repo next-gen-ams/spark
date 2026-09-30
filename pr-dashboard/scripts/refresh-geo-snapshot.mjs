@@ -1,6 +1,7 @@
 import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { archivePreviousSnapshot } from './snapshot-utils.mjs';
 
 const GEO_ORIGIN = 'https://geo.kmt.global';
 const SHARE_TOKEN = 'XYK19lgzKLyGdYjkoELc5o8aA1pO0RIUPQD45KRMn0g';
@@ -8,6 +9,7 @@ const SHARE_URL = `${GEO_ORIGIN}/share/${SHARE_TOKEN}`;
 const ANSWER_FUNCTION_ID = 'fddc5f269fa1c14ee74b152f6a09801ec884cdf7c6021c83f16ea7a94650e3a8';
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const outputPath = path.join(root, 'data', 'geo.json');
+const previousPath = path.join(root, 'data', 'history', 'geo-previous.json');
 
 const PERSONAS = [
   {
@@ -124,6 +126,7 @@ const output = {
 };
 
 await mkdir(path.dirname(outputPath), { recursive: true });
+await archivePreviousSnapshot({ currentPath: outputPath, previousPath, nextSnapshot: output });
 await writeFile(outputPath, `${JSON.stringify(output, null, 2)}\n`, { mode: 0o600 });
 console.log(`Wrote ${outputPath}`);
 console.log(`${personas.length} personas · ${output.summary.samplePrompts} prompts · ${checkedLabel}`);

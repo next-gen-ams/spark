@@ -91,7 +91,7 @@ test('workspace keeps PR local and GEO as an external report destination', async
     readFile(new URL('./dashboard.js', import.meta.url), 'utf8'),
   ]);
 
-  assert.equal((html.match(/class="nav-item(?: is-active)?"/g) || []).length, 2);
+  assert.equal((html.match(/class="nav-item[^"]*"/g) || []).length, 2);
   assert.match(html, /data-view="pr-performance"[^>]*>[\s\S]*?PR Performance/);
   assert.match(html, /nav-item-external[\s\S]*?GEO Visibility/);
   assert.equal((html.match(/data-view-panel=/g) || []).length, 1);

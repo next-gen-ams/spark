@@ -14,6 +14,7 @@ const allowedFiles = new Map([
   ['/dashboard.js', ['dashboard.js', 'text/javascript; charset=utf-8']],
   ['/auth-verifier.js', ['auth-verifier.js', 'text/javascript; charset=utf-8']],
   ['/data/meltwater.json', ['data/meltwater.json', 'application/json; charset=utf-8']],
+  ['/data/insights.json', ['data/insights.json', 'application/json; charset=utf-8']],
   ['/data/geo.json', ['data/geo.json', 'application/json; charset=utf-8']],
   ['/assets/rmit-university-logo.png', ['assets/rmit-university-logo.png', 'image/png']],
   ['/assets/kmt-logo.png', ['assets/kmt-logo.png', 'image/png']],

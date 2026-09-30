@@ -121,6 +121,7 @@ svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width:
 .nav-item:hover { color: var(--ink); background: rgba(255,255,255,.6); }
 .nav-item.is-active { color: #202124; background: white; box-shadow: var(--shadow-soft); }
 .nav-item.is-active::before { content: ""; width: 3px; height: 20px; margin-left: -12px; border-radius: 0 4px 4px 0; background: var(--rmit-red); }
+.nav-item .nav-external-icon { width: 13px; height: 13px; margin-left: auto; color: #8a8d92; }
 .nav-count { min-width: 21px; height: 21px; display: grid; place-items: center; margin-left: auto; color: var(--rmit-red); border-radius: 999px; background: var(--rmit-red-soft); font-size: .63rem; }
 .soon-dot { width: 8px; height: 8px; margin-left: auto; border-radius: 50%; background: #f1b949; }
 .soon-dot.is-live { background: #38a581; box-shadow: 0 0 0 4px rgba(56,165,129,.1); }
@@ -156,6 +157,19 @@ svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width:
 .reporting-tag { min-height: 31px; display: inline-flex; align-items: center; gap: 7px; padding: 0 10px; color: #666a6f; border: 1px solid rgba(108,111,115,.13); border-radius: 999px; background: rgba(235,234,230,.72); font-size: .66rem; font-weight: 740; white-space: nowrap; }
 .reporting-tag svg { width: 14px; height: 14px; color: #6f858e; }
 .reporting-tag-timestamp { color: #85888c; background: rgba(255,255,255,.45); font-weight: 650; }
+.insights-panel { margin-bottom: 14px; overflow: hidden; border: 1px solid rgba(255,255,255,.92); border-radius: 18px; background: rgba(255,255,255,.82); box-shadow: var(--shadow-soft); }
+.insights-header { display: flex; align-items: flex-end; justify-content: space-between; gap: 18px; padding: 17px 20px 13px; border-bottom: 1px solid #eceae6; }
+.insights-header h2 { margin: 5px 0 0; font-size: 1.02rem; letter-spacing: -.025em; }
+.insights-updated { color: #8a8d91; font-size: .58rem; font-weight: 700; }
+.insights-grid { display: grid; grid-template-columns: repeat(3, minmax(0,1fr)); }
+.insight-card { min-height: 132px; display: grid; align-content: start; gap: 7px; padding: 17px 20px 19px; border-left: 1px solid #eceae6; }
+.insight-card:first-child { border-left: 0; }
+.insight-card > span { color: var(--rmit-red); font-size: .54rem; font-weight: 900; letter-spacing: .1em; text-transform: uppercase; }
+.insight-card > strong { color: #303236; font-size: .77rem; line-height: 1.36; }
+.insight-card > p { margin: 0; color: #73767b; font-size: .64rem; line-height: 1.55; }
+.insight-card-2 > span { color: var(--blue); }
+.insight-card-3 > span { color: var(--violet); }
+.insight-card-loading { grid-column: 1 / -1; min-height: 90px; place-items: center; color: #878a8e; border-left: 0; font-size: .67rem; text-align: center; }
 .auto-refresh-badge { min-height: 42px; display: inline-flex; align-items: center; gap: 8px; padding: 0 13px; color: #5f6368; border: 1px solid #dededa; border-radius: 10px; background: rgba(255,255,255,.72); font-size: .72rem; font-weight: 750; white-space: nowrap; }
 .auto-refresh-badge svg { width: 16px; height: 16px; color: var(--blue); }
 .auto-refresh-badge-dark { min-height: 40px; color: #e9eaeb; border-color: #303235; background: #303235; }
@@ -424,6 +438,9 @@ a.article-link:hover strong { color: var(--rmit-red); text-decoration: underline
 @media (max-width: 1100px) {
   .summary-grid { grid-template-columns: repeat(3, minmax(0,1fr)); }
   .content-grid { grid-template-columns: 1fr; }
+  .insights-grid { grid-template-columns: 1fr; }
+  .insight-card { min-height: auto; border-top: 1px solid #eceae6; border-left: 0; }
+  .insight-card:first-child { border-top: 0; }
   .signal-panel { min-height: 300px; }
   .profile-copy { display: none; }
   .topbar-product-group { gap: 10px; }
@@ -455,6 +472,7 @@ a.article-link:hover strong { color: var(--rmit-red); text-decoration: underline
   .pickup-illustration { width: 86px; height: 86px; }
   .radar-three { width: 82px; height: 82px; }.radar-two { width: 60px; height: 60px; }
   .pickup-heading { align-items: flex-start; flex-direction: column; }
+  .insights-header { align-items: flex-start; flex-direction: column; }
   .geo-visibility-header { align-items: flex-start; flex-direction: column; }
   .geo-report-link { align-self: stretch; justify-content: center; margin-top: 0; }
   .country-control summary { min-width: 116px; padding: 0 8px; }

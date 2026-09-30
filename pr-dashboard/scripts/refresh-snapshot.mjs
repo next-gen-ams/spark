@@ -2,8 +2,11 @@ import { mkdir, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { fetchMeltwaterDashboard } from './meltwater.mjs';
+import { archivePreviousSnapshot, getNextMelbourneWeeklyRefresh } from './snapshot-utils.mjs';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
+const outputPath = path.join(root, 'data', 'meltwater.json');
+const previousPath = path.join(root, 'data', 'history', 'meltwater-previous.json');
 const generatedAt = new Date();
 const data = process.env.SNAPSHOT_SOURCE_URL
   ? await fetch(process.env.SNAPSHOT_SOURCE_URL).then((response) => {
@@ -21,10 +24,11 @@ const snapshot = {
     ...data.meta,
     cached: true,
     refreshMode: 'weekly',
-    nextRefreshAt: new Date(generatedAt.getTime() + 7 * 24 * 60 * 60 * 1000).toISOString(),
+    nextRefreshAt: getNextMelbourneWeeklyRefresh(generatedAt).toISOString(),
   },
 };
 
 await mkdir(path.join(root, 'data'), { recursive: true });
-await writeFile(path.join(root, 'data', 'meltwater.json'), `${JSON.stringify(snapshot, null, 2)}\n`, 'utf8');
+await archivePreviousSnapshot({ currentPath: outputPath, previousPath, nextSnapshot: snapshot });
+await writeFile(outputPath, `${JSON.stringify(snapshot, null, 2)}\n`, 'utf8');
 console.log(`Saved Meltwater snapshot generated at ${snapshot.meta.generatedAt}`);

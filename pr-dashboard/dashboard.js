@@ -25,20 +25,11 @@ const coverageEvidenceImage = document.querySelector('#coverageEvidenceImage');
 const coverageEvidenceTitle = document.querySelector('#coverageEvidenceTitle');
 const coverageEvidenceDescription = document.querySelector('#coverageEvidenceDescription');
 const closeCoverageEvidence = document.querySelector('#closeCoverageEvidence');
-const navItems = [...document.querySelectorAll('.nav-item')];
+const navItems = [...document.querySelectorAll('.nav-item[data-view]')];
 const dashboardViews = [...document.querySelectorAll('[data-view-panel]')];
-const sidebarContextCard = document.querySelector('#sidebarContextCard');
-const sidebarContextVisual = document.querySelector('#sidebarContextVisual');
-const sidebarMeltwaterIcon = document.querySelector('#sidebarMeltwaterIcon');
-const sidebarGeoLogo = document.querySelector('#sidebarGeoLogo');
-const sidebarContextSource = document.querySelector('#sidebarContextSource');
-const sidebarContextTitle = document.querySelector('#sidebarContextTitle');
-const sidebarContextDescription = document.querySelector('#sidebarContextDescription');
-const sidebarRefreshLabel = document.querySelector('#sidebarRefreshLabel');
 const sidebarRefreshValue = document.querySelector('#sidebarRefreshValue');
-const sidebarLastRefreshLabel = document.querySelector('#sidebarLastRefreshLabel');
 const sidebarLastRefreshValue = document.querySelector('#sidebarLastRefreshValue');
-const validDashboardViews = new Set(['pr-performance', 'geo-visibility']);
+const validDashboardViews = new Set(['pr-performance']);
 let toastTimer;
 let hasLoadedLiveData = false;
 
@@ -142,7 +133,7 @@ function showDashboard() {
   setDashboardView(dashboardViewFromUrl());
   if (!hasLoadedLiveData) {
     hasLoadedLiveData = true;
-    Promise.allSettled([loadMeltwaterData(), loadGeoData()]);
+    Promise.allSettled([loadMeltwaterData(), loadInsightsData()]);
   }
 }
 
@@ -409,10 +400,7 @@ function setDashboardView(requestedView, { push = false } = {}) {
     if (isActive) item.setAttribute('aria-current', 'page');
     else item.removeAttribute('aria-current');
   });
-  document.title = view === 'geo-visibility'
-    ? 'RMIT DSC GEO Visibility'
-    : 'RMIT DSC PR Performance';
-  renderSidebarContext(view);
+  document.title = 'RMIT DSC PR Performance';
   if (push) {
     const url = new URL(window.location.href);
     url.searchParams.set('view', view);
@@ -420,27 +408,6 @@ function setDashboardView(requestedView, { push = false } = {}) {
     window.history.pushState({ view }, '', url);
   }
   window.scrollTo({ top: 0, behavior: 'instant' });
-}
-
-function renderSidebarContext(view) {
-  const isGeo = view === 'geo-visibility';
-  sidebarContextCard.classList.toggle('sidebar-card-geo', isGeo);
-  sidebarContextVisual.classList.toggle('sidebar-card-logo', isGeo);
-  sidebarMeltwaterIcon.hidden = isGeo;
-  sidebarGeoLogo.hidden = !isGeo;
-  sidebarContextSource.textContent = isGeo ? 'KMT GEO' : 'MELTWATER API';
-  sidebarContextTitle.textContent = isGeo ? 'Monthly GEO snapshot' : 'Weekly automatic refresh';
-  sidebarContextDescription.textContent = isGeo
-    ? 'Persona, journey and AI answer visibility refreshes monthly from the verified KMT GEO report.'
-    : 'Mentions, trends and pickup candidates refresh server-side every seven days. Manual refresh is disabled.';
-  sidebarRefreshLabel.textContent = isGeo ? 'Refresh schedule' : 'Next automatic update';
-  sidebarRefreshValue.textContent = isGeo
-    ? 'First Monday · 10:30 am'
-    : (sidebarRefreshValue.dataset.meltwater || 'Calculating…');
-  sidebarLastRefreshLabel.textContent = isGeo ? 'Last GEO check' : 'Last refreshed';
-  sidebarLastRefreshValue.textContent = isGeo
-    ? (sidebarLastRefreshValue.dataset.geo || 'Connecting…')
-    : (sidebarLastRefreshValue.dataset.meltwater || 'Connecting…');
 }
 
 async function loadMeltwaterData() {
@@ -453,233 +420,47 @@ async function loadMeltwaterData() {
   }
 }
 
-async function loadGeoData() {
+async function loadInsightsData() {
   try {
-    const response = await fetch('./data/geo.json', {
+    const response = await fetch('./data/insights.json', {
       headers: { Accept: 'application/json' },
       cache: 'no-store',
     });
-    if (!response.ok) throw new Error('GEO snapshot unavailable');
-    const data = await response.json();
-    renderGeoData(data);
+    if (!response.ok) throw new Error('Insights snapshot unavailable');
+    renderPrInsights((await response.json()).pr);
   } catch {
-    renderGeoError();
+    renderPrInsightsError();
   }
 }
 
-function renderGeoData(data) {
-  if (!Array.isArray(data?.personas) || !data.personas.length) throw new Error('Invalid GEO snapshot');
-  const preBrand = data.summary?.preBrand;
-  if (!preBrand?.validAnswers || !Number.isFinite(preBrand.namesYou)) throw new Error('Invalid GEO pre-brand summary');
-  const summary = document.querySelector('#geoSummaryStrip');
-  const grid = document.querySelector('#geoPersonaGrid');
-  const dial = document.querySelector('#geoNameMetricDial');
-  const rate = Math.max(0, Math.min(100, preBrand.namesYouRate));
-  dial.style.setProperty('--geo-rate', `${rate}%`);
-  dial.setAttribute('aria-label', `${rate}% of valid pre-brand answers named RMIT`);
-  document.querySelector('#geoNameMetricRate').textContent = `${rate}%`;
-  document.querySelector('#geoNameMetricValue').textContent = `${preBrand.namesYou} / ${preBrand.validAnswers}`;
-  document.querySelector('#geoNameMetricContext').textContent = `Across ${preBrand.questions} pre-brand prompts where RMIT was not named.`;
-  sidebarLastRefreshValue.dataset.geo = data.meta.checkedLabel;
-  if (dashboardViewFromUrl() === 'geo-visibility') renderSidebarContext('geo-visibility');
-  summary.replaceChildren();
+function renderPrInsights(section) {
+  if (!Array.isArray(section?.items) || section.items.length < 3) throw new Error('Invalid PR insights');
+  const grid = document.querySelector('#prInsightsGrid');
   grid.replaceChildren();
-
-  const summaryItems = [
-    `Updated on ${data.meta.checkedLabel}`,
-    `${data.summary.audiences} China audiences`,
-    `${data.summary.models.length} Chinese leading AI models`,
-  ];
-  summaryItems.forEach((item, index) => {
-    const chip = document.createElement('span');
-    chip.className = index === 0 ? 'geo-summary-chip geo-summary-chip-primary' : 'geo-summary-chip';
-    chip.textContent = item;
-    summary.append(chip);
-  });
-
-  data.personas.forEach((persona, personaIndex) => {
+  section.items.slice(0, 3).forEach((item, index) => {
     const card = document.createElement('article');
-    card.className = 'geo-persona-card';
-
-    const header = document.createElement('header');
-    header.className = 'geo-persona-header';
-    const identity = document.createElement('div');
-    identity.className = 'geo-persona-identity';
-    const marker = document.createElement('span');
-    marker.className = `geo-persona-marker geo-persona-marker-${personaIndex + 1}`;
-    marker.textContent = `Persona ${personaIndex + 1}`;
-    const heading = document.createElement('div');
-    const title = document.createElement('h3');
-    title.textContent = persona.name;
-    const meta = document.createElement('p');
-    meta.textContent = `${persona.country} · ${persona.questions} questions · ${persona.answers} answers`;
-    heading.append(title, meta);
-    identity.append(marker, heading);
-
-    const score = document.createElement('div');
-    score.className = 'geo-persona-score';
-    const scoreValue = document.createElement('strong');
-    scoreValue.textContent = `${persona.namedRate}%`;
-    const scoreLabel = document.createElement('span');
-    scoreLabel.textContent = `${persona.named}/${persona.answers} answers name RMIT`;
-    score.append(scoreValue, scoreLabel);
-    header.append(identity, score);
-
-    const progress = document.createElement('div');
-    progress.className = 'geo-persona-progress';
-    const progressBar = document.createElement('span');
-    progressBar.style.width = `${Math.max(0, Math.min(100, persona.namedRate))}%`;
-    progress.append(progressBar);
-
-    const journeys = document.createElement('div');
-    journeys.className = 'geo-journey-list';
-    persona.journeys.forEach((journey) => journeys.append(createGeoJourney(journey)));
-    card.append(header, progress, journeys);
+    card.className = `insight-card insight-card-${index + 1}`;
+    const label = document.createElement('span');
+    label.textContent = item.label;
+    const title = document.createElement('strong');
+    title.textContent = item.title;
+    const body = document.createElement('p');
+    body.textContent = item.body;
+    card.append(label, title, body);
     grid.append(card);
   });
+  const status = section.comparison === 'baseline' ? 'Baseline' : 'Compared with previous week';
+  document.querySelector('#prInsightsUpdated').textContent = `${status} · Updated ${formatDateTime(new Date(section.generatedAt))}`;
 }
 
-function createGeoJourney(journey) {
-  const labels = {
-    awareness: 'Awareness',
-    consideration: 'Consideration',
-    conversion: 'Conversion',
-  };
-  const stageLabel = labels[journey.stage] || journey.stage;
-  const details = document.createElement('details');
-  details.className = `geo-journey geo-journey-${journey.stage}`;
-  const summary = document.createElement('summary');
-
-  const stage = document.createElement('span');
-  stage.className = 'geo-stage-label';
-  const stageName = document.createElement('strong');
-  stageName.textContent = stageLabel;
-  const sampleLabel = document.createElement('small');
-  sampleLabel.textContent = 'Sample prompt';
-  stage.append(stageName, sampleLabel);
-
-  const prompt = document.createElement('span');
-  prompt.className = 'geo-prompt';
-  const promptEn = document.createElement('strong');
-  promptEn.lang = 'en';
-  promptEn.textContent = journey.promptEn;
-  const promptCn = document.createElement('small');
-  promptCn.lang = 'zh-CN';
-  promptCn.textContent = journey.prompt;
-  prompt.append(promptEn, promptCn);
-
-  const result = document.createElement('span');
-  result.className = 'geo-stage-result';
-  const ratio = document.createElement('strong');
-  ratio.textContent = `${journey.named}/${journey.answerCount}`;
-  const resultLabel = document.createElement('small');
-  resultLabel.textContent = 'answers name RMIT';
-  result.append(ratio, resultLabel);
-
-  const chevron = document.createElement('span');
-  chevron.className = 'geo-chevron';
-  chevron.setAttribute('aria-hidden', 'true');
-  chevron.textContent = '⌄';
-  summary.append(stage, prompt, result, chevron);
-
-  const body = document.createElement('div');
-  body.className = 'geo-journey-body';
-  const answerIntro = document.createElement('p');
-  answerIntro.className = 'geo-answer-intro';
-  answerIntro.textContent = 'Expand a model to review its answer and cited sources.';
-  const answerGrid = document.createElement('div');
-  answerGrid.className = 'geo-answer-grid';
-  journey.answers.forEach((answer) => answerGrid.append(createModelAnswer(answer)));
-  body.append(answerIntro, answerGrid);
-  details.append(summary, body);
-  return details;
-}
-
-function createModelAnswer(answer) {
-  const details = document.createElement('details');
-  details.className = `geo-model-answer geo-model-${answer.modelId}`;
-  const summary = document.createElement('summary');
-  const identity = document.createElement('span');
-  identity.className = 'geo-model-identity';
-  const mark = document.createElement('span');
-  mark.textContent = answer.model.slice(0, 1);
-  const name = document.createElement('strong');
-  name.textContent = answer.model;
-  identity.append(mark, name);
-  const toggle = document.createElement('span');
-  toggle.className = 'geo-model-toggle';
-  toggle.textContent = 'View answer';
-  summary.append(identity, toggle);
-
-  const content = document.createElement('div');
-  content.className = 'geo-model-content';
-  const translationLabel = document.createElement('span');
-  translationLabel.className = 'geo-translation-label';
-  translationLabel.textContent = answer.answerTextEn
-    ? 'English translation · Translated from the original Chinese response'
-    : 'Original Chinese response · English translation pending';
-  const answerText = document.createElement('p');
-  answerText.className = 'geo-answer-copy';
-  answerText.lang = answer.answerTextEn ? 'en' : 'zh-CN';
-  answerText.textContent = formatGeoAnswer(answer.answerTextEn || answer.answerText);
-  content.append(translationLabel, answerText);
-
-  if (answer.sources.length) {
-    const sources = document.createElement('div');
-    sources.className = 'geo-answer-sources';
-    const sourceLabel = document.createElement('strong');
-    sourceLabel.textContent = 'Sources returned by model';
-    const sourceList = document.createElement('div');
-    answer.sources.forEach((source, index) => {
-      const link = document.createElement('a');
-      link.href = source;
-      link.target = '_blank';
-      link.rel = 'noopener noreferrer';
-      link.textContent = `${index + 1}. ${displayHostname(source)}`;
-      sourceList.append(link);
-    });
-    sources.append(sourceLabel, sourceList);
-    content.append(sources);
-  }
-
-  details.append(summary, content);
-  return details;
-}
-
-function renderGeoError() {
-  const summary = document.querySelector('#geoSummaryStrip');
-  const grid = document.querySelector('#geoPersonaGrid');
-  document.querySelector('#geoNameMetricDial').style.setProperty('--geo-rate', '0%');
-  document.querySelector('#geoNameMetricRate').textContent = '—';
-  document.querySelector('#geoNameMetricValue').textContent = '—';
-  document.querySelector('#geoNameMetricContext').textContent = 'Monthly GEO snapshot unavailable.';
-  summary.replaceChildren();
+function renderPrInsightsError() {
+  const grid = document.querySelector('#prInsightsGrid');
   grid.replaceChildren();
-  const status = document.createElement('span');
-  status.className = 'geo-summary-chip';
-  status.textContent = 'GEO snapshot unavailable';
   const empty = document.createElement('article');
-  empty.className = 'geo-persona-loading';
-  empty.textContent = 'The next scheduled GEO snapshot will retry automatically.';
-  summary.append(status);
+  empty.className = 'insight-card insight-card-loading';
+  empty.textContent = 'Insights will return with the next successful weekly refresh.';
   grid.append(empty);
-}
-
-function displayHostname(value) {
-  try {
-    return new URL(value).hostname.replace(/^www\./, '');
-  } catch {
-    return 'Source';
-  }
-}
-
-function formatGeoAnswer(value) {
-  return String(value || '')
-    .replace(/\\n/g, '\n')
-    .replace(/^#{1,6}\s*/gm, '')
-    .replace(/\*\*/g, '')
-    .replace(/^\s*[-*]\s+/gm, '• ')
-    .trim();
+  document.querySelector('#prInsightsUpdated').textContent = 'Analysis unavailable';
 }
 
 async function fetchDashboardData() {
@@ -701,9 +482,8 @@ function renderMeltwaterData(data) {
   document.querySelector('#reachDescription').textContent = `${formatCompact(summary.estimatedViews)} estimated views · source audiences may overlap.`;
 
   const generatedAt = new Date(meta.generatedAt);
-  sidebarLastRefreshValue.dataset.meltwater = formatDateTime(generatedAt);
-  sidebarRefreshValue.dataset.meltwater = formatDateTime(new Date(meta.nextRefreshAt));
-  if (dashboardViewFromUrl() === 'pr-performance') renderSidebarContext('pr-performance');
+  sidebarLastRefreshValue.textContent = formatDateTime(generatedAt);
+  sidebarRefreshValue.textContent = formatDateTime(new Date(meta.nextRefreshAt));
   document.querySelector('#headerLastUpdated').textContent = `Updated ${formatDateTime(generatedAt)}`;
   document.querySelector('#dataSourceFooter').textContent = `${meta.searchName} · Meltwater weekly snapshot · Updated ${formatDateTime(generatedAt)}`;
 
@@ -949,6 +729,7 @@ function formatDateTime(value) {
   const date = value instanceof Date ? value : new Date(value);
   if (Number.isNaN(date.getTime())) return 'Pending';
   return new Intl.DateTimeFormat('en-AU', {
+    timeZone: 'Australia/Melbourne',
     day: 'numeric',
     month: 'short',
     hour: 'numeric',
