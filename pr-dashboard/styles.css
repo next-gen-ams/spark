@@ -91,11 +91,21 @@ svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width:
 .brand-lockup { display: flex; align-items: center; gap: 13px; color: white; text-decoration: none; }
 .brand-name strong { font-size: .85rem; }
 .brand-name span { color: rgba(255,255,255,.57); font-size: .68rem; }
-.country-control { height: 40px; display: flex; align-items: center; gap: 7px; padding: 0 11px; color: rgba(255,255,255,.72); border: 1px solid rgba(255,255,255,.14); border-radius: 9px; background: rgba(255,255,255,.06); }
-.country-control svg { width: 16px; height: 16px; }
-.country-control select { min-width: 92px; border: 0; outline: 0; color: white; background: transparent; font-size: .72rem; font-weight: 750; }
-.country-control option { color: #27292c; background: white; }
-.country-control option:disabled { color: #a5a7aa; }
+.country-control { position: relative; color: rgba(255,255,255,.72); }
+.country-control summary { height: 40px; min-width: 132px; display: flex; align-items: center; gap: 8px; padding: 0 10px; border: 1px solid rgba(255,255,255,.14); border-radius: 9px; background: rgba(255,255,255,.06); cursor: pointer; list-style: none; font-size: .72rem; font-weight: 750; }
+.country-control summary::-webkit-details-marker { display: none; }
+.country-control summary:focus-visible { outline: 2px solid #8cc8dd; outline-offset: 2px; }
+.country-control[open] summary { color: white; background: rgba(255,255,255,.11); }
+.country-control svg { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+.country-control .country-chevron { width: 14px; margin-left: auto; transition: transform .18s ease; }
+.country-control[open] .country-chevron { transform: rotate(180deg); }
+.country-menu { position: absolute; z-index: 30; top: calc(100% + 8px); left: 0; width: 172px; padding: 6px; color: #313338; border: 1px solid #e1dfda; border-radius: 12px; background: rgba(255,255,255,.98); box-shadow: 0 16px 38px rgba(14,18,25,.2); }
+.country-option { width: 100%; min-height: 37px; display: flex; align-items: center; justify-content: space-between; gap: 18px; padding: 0 9px; color: #3d4045; border: 0; border-radius: 8px; background: transparent; font: inherit; font-size: .73rem; font-weight: 720; text-align: left; }
+.country-option.is-selected { color: #202226; background: #f1efeb; }
+.country-option:not(:disabled):hover { background: #eceae6; }
+.country-option:disabled { color: #a0a2a6; cursor: not-allowed; opacity: 1; }
+.country-option .country-check { width: 15px; height: 15px; color: var(--rmit-red); stroke-width: 2.3; }
+.country-option .country-option-lock { width: 15px; height: 15px; flex: 0 0 auto; color: #a6a8ac; stroke-width: 1.7; }
 .topbar-actions { position: relative; display: flex; align-items: center; gap: 10px; }
 .status-chip { display: inline-flex; align-items: center; gap: 7px; padding: 7px 11px; color: rgba(255,255,255,.72); border: 1px solid rgba(255,255,255,.13); border-radius: 999px; font-size: .68rem; font-weight: 700; }
 .status-chip > span { width: 7px; height: 7px; border-radius: 50%; background: #f4bf45; box-shadow: 0 0 0 4px rgba(244,191,69,.12); }
@@ -438,16 +448,16 @@ a.article-link:hover strong { color: var(--rmit-red); text-decoration: underline
   .pickup-heading { align-items: flex-start; flex-direction: column; }
   .geo-visibility-header { align-items: flex-start; flex-direction: column; }
   .geo-report-link { align-self: stretch; justify-content: center; }
-  .country-control { padding: 0 8px; }
-  .country-control select { min-width: 74px; }
+  .country-control summary { min-width: 116px; padding: 0 8px; }
 }
 
 @media (max-width: 620px) {
   .brand-name, .status-chip { display: none; }
   .brand-logo-compact { width: 98px; height: 37px; }
   .topbar-product-group { gap: 7px; }
-  .country-control { height: 37px; }
-  .country-control svg { display: none; }
+  .country-control summary { height: 37px; min-width: 91px; }
+  .country-control .country-globe { display: none; }
+  .country-menu { left: auto; right: 0; width: 164px; }
   .button-geo { padding: 0 10px; font-size: .7rem; }
   .summary-grid { grid-template-columns: 1fr; }
   .summary-card { min-height: 158px; }

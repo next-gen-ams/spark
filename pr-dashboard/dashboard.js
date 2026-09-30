@@ -18,6 +18,8 @@ const mediaSearch = document.querySelector('#mediaSearch');
 const waveFilter = document.querySelector('#waveFilter');
 const loginButton = loginForm.querySelector('button[type="submit"]');
 const lockDashboard = document.querySelector('#lockDashboard');
+const countryControl = document.querySelector('#countryControl');
+const selectedCountryOption = countryControl.querySelector('[data-market="china"]');
 const coverageEvidenceModal = document.querySelector('#coverageEvidenceModal');
 const coverageEvidenceImage = document.querySelector('#coverageEvidenceImage');
 const coverageEvidenceTitle = document.querySelector('#coverageEvidenceTitle');
@@ -180,6 +182,21 @@ lockDashboard.addEventListener('click', () => {
   passwordError.textContent = '';
   document.title = 'RMIT DSC China PR Tracker';
   passwordInput.focus();
+});
+
+selectedCountryOption.addEventListener('click', () => {
+  countryControl.open = false;
+});
+
+document.addEventListener('click', (event) => {
+  if (!countryControl.contains(event.target)) countryControl.open = false;
+});
+
+countryControl.addEventListener('keydown', (event) => {
+  if (event.key === 'Escape') {
+    countryControl.open = false;
+    countryControl.querySelector('summary').focus();
+  }
 });
 
 function storeAccessPreference() {

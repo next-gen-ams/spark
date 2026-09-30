@@ -69,3 +69,16 @@ test('summary cards use production data-source labels', async () => {
   assert.match(javascript, /meltwaterMetricStatus'\)\.textContent = 'MELTWATER API'/);
   assert.doesNotMatch(javascript, /WEEKLY CACHE|WEEKLY SNAPSHOT/);
 });
+
+test('locked markets use right-aligned dashboard lock icons', async () => {
+  const [html, css] = await Promise.all([
+    readFile(new URL('./index.html', import.meta.url), 'utf8'),
+    readFile(new URL('./styles.css', import.meta.url), 'utf8'),
+  ]);
+
+  assert.equal((html.match(/class="country-option-lock"/g) || []).length, 3);
+  assert.equal((html.match(/aria-disabled="true" disabled/g) || []).length, 3);
+  assert.doesNotMatch(html, /🔒/);
+  assert.match(css, /\.country-option\s*\{[^}]*justify-content:\s*space-between/s);
+  assert.match(css, /\.country-option \.country-option-lock\s*\{/);
+});

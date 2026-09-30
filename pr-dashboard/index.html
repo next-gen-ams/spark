@@ -86,16 +86,31 @@
                 <span>DSC Tracking</span>
               </div>
             </a>
-            <label class="country-control">
-              <span class="sr-only">Market</span>
-              <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3a15 15 0 0 1 0 18M12 3a15 15 0 0 0 0 18"/></svg>
-              <select id="countrySelect" aria-label="Market selector">
-                <option value="china" selected>China</option>
-                <option value="indonesia" disabled>🔒 Indonesia</option>
-                <option value="india" disabled>🔒 India</option>
-                <option value="malaysia" disabled>🔒 Malaysia</option>
-              </select>
-            </label>
+            <details class="country-control" id="countryControl">
+              <summary aria-label="Market selector, China selected">
+                <svg class="country-globe" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3a15 15 0 0 1 0 18M12 3a15 15 0 0 0 0 18"/></svg>
+                <span>China</span>
+                <svg class="country-chevron" viewBox="0 0 24 24" aria-hidden="true"><path d="m8 10 4 4 4-4"/></svg>
+              </summary>
+              <div class="country-menu" role="listbox" aria-label="Available markets">
+                <button class="country-option is-selected" type="button" role="option" aria-selected="true" data-market="china">
+                  <span>China</span>
+                  <svg class="country-check" viewBox="0 0 24 24" aria-hidden="true"><path d="m6 12 4 4 8-9"/></svg>
+                </button>
+                <button class="country-option" type="button" role="option" aria-disabled="true" disabled>
+                  <span>Indonesia</span>
+                  <svg class="country-option-lock" viewBox="0 0 24 24" aria-hidden="true"><rect x="6" y="10" width="12" height="10" rx="2"/><path d="M8.5 10V7.5a3.5 3.5 0 0 1 7 0V10"/></svg>
+                </button>
+                <button class="country-option" type="button" role="option" aria-disabled="true" disabled>
+                  <span>India</span>
+                  <svg class="country-option-lock" viewBox="0 0 24 24" aria-hidden="true"><rect x="6" y="10" width="12" height="10" rx="2"/><path d="M8.5 10V7.5a3.5 3.5 0 0 1 7 0V10"/></svg>
+                </button>
+                <button class="country-option" type="button" role="option" aria-disabled="true" disabled>
+                  <span>Malaysia</span>
+                  <svg class="country-option-lock" viewBox="0 0 24 24" aria-hidden="true"><rect x="6" y="10" width="12" height="10" rx="2"/><path d="M8.5 10V7.5a3.5 3.5 0 0 1 7 0V10"/></svg>
+                </button>
+              </div>
+            </details>
           </div>
           <div class="topbar-actions">
             <span class="status-chip" id="connectionStatus"><span></span>Connecting to Meltwater</span>
@@ -400,6 +415,6 @@
     </dialog>
 
     <div class="toast" id="toast" role="status" aria-live="polite"></div>
-    <script type="module" src="./dashboard.js?v=11"></script>
+    <script type="module" src="./dashboard.js?v=12"></script>
   </body>
 </html>
