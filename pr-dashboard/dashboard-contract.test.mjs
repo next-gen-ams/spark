@@ -4,11 +4,12 @@ import { readFile } from 'node:fs/promises';
 
 const GEO_REPORT_URL = 'https://geo.kmt.global/share/XYK19lgzKLyGdYjkoELc5o8aA1pO0RIUPQD45KRMn0g';
 
-test('all KMT GEO entry points use the verified shared report URL', async () => {
+test('the GEO report keeps one intentional entry point to the verified shared report', async () => {
   const html = await readFile(new URL('./index.html', import.meta.url), 'utf8');
   const matches = html.match(new RegExp(GEO_REPORT_URL.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'g')) || [];
 
-  assert.equal(matches.length, 3);
+  assert.equal(matches.length, 1);
+  assert.doesNotMatch(html, /Open KMT GEO Dashboard|SEPARATE WORKSPACE/);
   assert.doesNotMatch(html, /data-action=["']geo["']/);
 });
 
@@ -22,7 +23,8 @@ test('GEO audience journeys render from a local read-only snapshot', async () =>
   assert.match(html, /id="geo-visibility"/);
   assert.match(html, /id="geoPersonaGrid"/);
   assert.match(javascript, /fetch\('\.\/data\/geo\.json'/);
-  assert.match(javascript, /answerText\.textContent = formatGeoAnswer\(answer\.answerText\)/);
+  assert.match(javascript, /answerText\.textContent = formatGeoAnswer\(answer\.answerTextEn \|\| answer\.answerText\)/);
+  assert.match(javascript, /English translation · Translated from the original Chinese response/);
   assert.doesNotMatch(javascript, /innerHTML\s*=.*answer/i);
   assert.match(server, /\/data\/geo\.json/);
 });
@@ -67,7 +69,29 @@ test('summary cards use production data-source labels', async () => {
   assert.match(html, /UPDATED · 29 SEP/);
   assert.doesNotMatch(html, /TEMP DATA|Temporary tracker records/i);
   assert.match(javascript, /meltwaterMetricStatus'\)\.textContent = 'MELTWATER API'/);
+  assert.equal((html.match(/MELTWATER API/g) || []).length, 2);
+  assert.match(html, /<span class="pending-label">MELTWATER API<\/span>[\s\S]*?id="reachMetric"/);
+  assert.doesNotMatch(html, /MELTWATER AI/);
   assert.doesNotMatch(javascript, /WEEKLY CACHE|WEEKLY SNAPSHOT/);
+});
+
+test('GEO report uses spacious bilingual persona and journey cards', async () => {
+  const [html, javascript, css] = await Promise.all([
+    readFile(new URL('./index.html', import.meta.url), 'utf8'),
+    readFile(new URL('./dashboard.js', import.meta.url), 'utf8'),
+    readFile(new URL('./styles.css', import.meta.url), 'utf8'),
+  ]);
+
+  assert.match(html, /GEO Report Snapshots/);
+  assert.doesNotMatch(html, /Audience journey snapshots|geoMethodNote/);
+  assert.match(javascript, /marker\.textContent = `Persona \$\{personaIndex \+ 1\}`/);
+  assert.match(javascript, /sampleLabel\.textContent = 'Sample prompt'/);
+  assert.match(javascript, /promptEn\.textContent = journey\.promptEn/);
+  assert.doesNotMatch(javascript, /Problem framed|Comparing named options|Asking about RMIT by name/);
+  assert.doesNotMatch(javascript, /RMIT named|RMIT not named|answers name no vendor/);
+  assert.match(javascript, /Chinese leading AI models/);
+  assert.match(css, /\.geo-persona-grid\s*\{[^}]*grid-template-columns:\s*1fr/s);
+  assert.match(css, /\.geo-journey\[open\]\s*\{[^}]*grid-column:\s*1 \/ -1/s);
 });
 
 test('locked markets use right-aligned dashboard lock icons', async () => {

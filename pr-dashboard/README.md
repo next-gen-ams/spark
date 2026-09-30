@@ -10,8 +10,8 @@ Interactive dashboard prototype inspired by the clean operational structure of t
 - China-IP access notes and China-team page captures for The Beijing News and Beijing Youth Online when the original article cannot be opened from Australia.
 - Weekly Meltwater snapshots covering total mentions, potential reach, daily trend, peak-day article popovers, sentiment mix, core topics and a bilingual recent-mention review queue from Saved Search `RMIT China DSC` (`29175637`).
 - China market selector with locked future-market options, official RMIT branding and the standard KMT copyright banner.
-- Compact KMT GEO audience-journey section with three personas, one representative prompt per journey stage, and expandable Doubao, ERNIE and Qwen answers with cited-source links.
-- Separate KMT GEO Dashboard call-to-action linked to the verified shared RMIT GEO report.
+- Expanded KMT GEO report section with three stacked personas, bilingual sample prompts for each journey stage, and expandable English translations of Doubao, ERNIE and Qwen answers with cited-source links.
+- One intentional GEO report link inside the GEO section, linked to the verified shared RMIT GEO report.
 - Search, information dialogs and responsive layouts.
 
 ## Important boundaries
@@ -41,6 +41,12 @@ Refresh the committed GEO snapshot from the verified read-only share before publ
 
 ```sh
 npm run refresh:geo
+```
+
+Generate any missing English translations after a GEO refresh:
+
+```sh
+npm run translate:geo
 ```
 
 ## Production handoff notes

@@ -412,9 +412,7 @@ function renderGeoData(data) {
   const summaryItems = [
     `${data.meta.checkedLabel} · ${data.meta.ordinal}`,
     `${data.summary.audiences} China audiences`,
-    `${data.summary.models.length} AI models`,
-    `${data.summary.samplePrompts} sample prompts`,
-    `${data.summary.noVendor} answers name no vendor`,
+    `${data.summary.models.length} Chinese leading AI models`,
   ];
   summaryItems.forEach((item, index) => {
     const chip = document.createElement('span');
@@ -433,7 +431,7 @@ function renderGeoData(data) {
     identity.className = 'geo-persona-identity';
     const marker = document.createElement('span');
     marker.className = `geo-persona-marker geo-persona-marker-${personaIndex + 1}`;
-    marker.textContent = `P${personaIndex + 1}`;
+    marker.textContent = `Persona ${personaIndex + 1}`;
     const heading = document.createElement('div');
     const title = document.createElement('h3');
     title.textContent = persona.name;
@@ -463,17 +461,15 @@ function renderGeoData(data) {
     card.append(header, progress, journeys);
     grid.append(card);
   });
-
-  document.querySelector('#geoMethodNote').textContent = `Read-only KMT GEO snapshot · ${data.meta.checkedLabel}, ${data.meta.ordinal}. Answers are reproduced for reporting review; verify time-sensitive claims against cited sources before external use.`;
 }
 
 function createGeoJourney(journey) {
   const labels = {
-    awareness: ['Awareness', 'Problem framed, no brand named'],
-    consideration: ['Consideration', 'Comparing named options'],
-    conversion: ['Conversion', 'Asking about RMIT by name'],
+    awareness: 'Awareness',
+    consideration: 'Consideration',
+    conversion: 'Conversion',
   };
-  const [stageLabel, stageDescription] = labels[journey.stage] || [journey.stage, 'Journey stage'];
+  const stageLabel = labels[journey.stage] || journey.stage;
   const details = document.createElement('details');
   details.className = `geo-journey geo-journey-${journey.stage}`;
   const summary = document.createElement('summary');
@@ -482,14 +478,19 @@ function createGeoJourney(journey) {
   stage.className = 'geo-stage-label';
   const stageName = document.createElement('strong');
   stageName.textContent = stageLabel;
-  const stageHint = document.createElement('small');
-  stageHint.textContent = stageDescription;
-  stage.append(stageName, stageHint);
+  const sampleLabel = document.createElement('small');
+  sampleLabel.textContent = 'Sample prompt';
+  stage.append(stageName, sampleLabel);
 
   const prompt = document.createElement('span');
   prompt.className = 'geo-prompt';
-  prompt.lang = 'zh-CN';
-  prompt.textContent = journey.prompt;
+  const promptEn = document.createElement('strong');
+  promptEn.lang = 'en';
+  promptEn.textContent = journey.promptEn;
+  const promptCn = document.createElement('small');
+  promptCn.lang = 'zh-CN';
+  promptCn.textContent = journey.prompt;
+  prompt.append(promptEn, promptCn);
 
   const result = document.createElement('span');
   result.className = 'geo-stage-result';
@@ -529,23 +530,23 @@ function createModelAnswer(answer) {
   const name = document.createElement('strong');
   name.textContent = answer.model;
   identity.append(mark, name);
-  const status = document.createElement('span');
-  status.className = answer.mentioned ? 'geo-answer-status is-named' : 'geo-answer-status';
-  status.textContent = answer.mentioned
-    ? `RMIT named${answer.position ? ` · #${answer.position}` : ''}`
-    : 'RMIT not named';
   const toggle = document.createElement('span');
   toggle.className = 'geo-model-toggle';
   toggle.textContent = 'View answer';
-  summary.append(identity, status, toggle);
+  summary.append(identity, toggle);
 
   const content = document.createElement('div');
   content.className = 'geo-model-content';
+  const translationLabel = document.createElement('span');
+  translationLabel.className = 'geo-translation-label';
+  translationLabel.textContent = answer.answerTextEn
+    ? 'English translation · Translated from the original Chinese response'
+    : 'Original Chinese response · English translation pending';
   const answerText = document.createElement('p');
   answerText.className = 'geo-answer-copy';
-  answerText.lang = 'zh-CN';
-  answerText.textContent = formatGeoAnswer(answer.answerText);
-  content.append(answerText);
+  answerText.lang = answer.answerTextEn ? 'en' : 'zh-CN';
+  answerText.textContent = formatGeoAnswer(answer.answerTextEn || answer.answerText);
+  content.append(translationLabel, answerText);
 
   if (answer.sources.length) {
     const sources = document.createElement('div');
@@ -594,6 +595,7 @@ function displayHostname(value) {
 
 function formatGeoAnswer(value) {
   return String(value || '')
+    .replace(/\\n/g, '\n')
     .replace(/^#{1,6}\s*/gm, '')
     .replace(/\*\*/g, '')
     .replace(/^\s*[-*]\s+/gm, '• ')

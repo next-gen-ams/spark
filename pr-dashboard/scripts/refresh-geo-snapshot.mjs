@@ -1,4 +1,4 @@
-import { mkdir, writeFile } from 'node:fs/promises';
+import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -19,6 +19,11 @@ const PERSONAS = [
       consideration: 'RMIT、UTS、UNSW、墨尔本大学和悉尼大学的艺术设计本科有什么区别？请从教学方式、作品集、行业连接和毕业发展比较。',
       conversion: '对中国学生来说，RMIT设计与社会学院的本科是否值得申请？最适合哪些学习和职业目标？',
     },
+    samplesEn: {
+      awareness: 'Which Australian universities place the strongest emphasis on practical learning and industry connections for Chinese high school students seeking an undergraduate degree in art, design or a creative discipline?',
+      consideration: 'How do the undergraduate art and design programs at RMIT, UTS, UNSW, the University of Melbourne and the University of Sydney differ in teaching approach, portfolio expectations, industry connections and graduate outcomes?',
+      conversion: "Is an undergraduate degree in RMIT's College of Design and Social Context worth applying for as a Chinese student, and which study and career goals is it best suited to?",
+    },
   },
   {
     id: 'scope_088a1d174ce2771e',
@@ -28,6 +33,11 @@ const PERSONAS = [
       awareness: '中国家庭如何判断去澳大利亚读艺术设计本科的投入是否值得？应该看哪些就业和学习证据？',
       consideration: 'RMIT不是澳大利亚八大，这会不会影响中国学生回国求职？和八大相比应该如何判断它的专业价值？',
       conversion: '家长在决定让孩子申请RMIT前，最应该向学校确认哪些课程、作品集、就业和学生支持信息？',
+    },
+    samplesEn: {
+      awareness: 'How can Chinese families assess whether the investment in an Australian undergraduate art and design degree is worthwhile? What evidence about learning and employment outcomes should they examine?',
+      consideration: "RMIT is not a Group of Eight university. Will this affect a Chinese graduate's employment prospects after returning to China, and how should families assess its professional value against Group of Eight universities?",
+      conversion: 'Before their child applies to RMIT, what should parents ask the university about courses, portfolios, employment outcomes and student support?',
     },
   },
   {
@@ -39,10 +49,16 @@ const PERSONAS = [
       consideration: 'RMIT、UTS、UNSW、墨尔本大学和悉尼大学的实践型设计或建成环境硕士有什么区别？',
       conversion: '根据我的本科和工作背景，RMIT设计与社会学院的哪些研究生课程最适合我的职业目标？',
     },
+    samplesEn: {
+      awareness: "For someone seeking to transition into the creative or built-environment sector, what kind of master's program best provides a strong portfolio, real projects and industry experience?",
+      consideration: "How do practice-led master's programs in design or the built environment at RMIT, UTS, UNSW, the University of Melbourne and the University of Sydney differ?",
+      conversion: "Based on my undergraduate degree and work experience, which postgraduate programs within RMIT's College of Design and Social Context best fit my career goals?",
+    },
   },
 ];
 
 const STAGES = ['awareness', 'consideration', 'conversion'];
+const translationCache = await loadTranslationCache();
 
 const overviewHtml = await getText(`${SHARE_URL}/geo-report`);
 const checkedLabel = extractCheckedLabel(overviewHtml);
@@ -69,8 +85,9 @@ for (const persona of PERSONAS) {
       named: stageMetrics.named,
       answerCount: stageMetrics.answers,
       prompt,
+      promptEn: persona.samplesEn[stage],
       questionId,
-      answers: detail.answers.map(normaliseAnswer),
+      answers: detail.answers.map((answer) => normaliseAnswer(answer, questionId)),
     });
   }
 
@@ -236,9 +253,10 @@ function decodeSeroval(node, refs = new Map()) {
   throw new Error(`Unsupported GEO response node type: ${node.t}`);
 }
 
-function normaliseAnswer(answer) {
+function normaliseAnswer(answer, questionId) {
   const answerText = String(answer.answerText || '').trim();
   if (!answerText) throw new Error(`Empty answer returned for ${answer.modelId}`);
+  const answerTextEn = translationCache.get(translationKey(questionId, answer.modelId, answerText));
   return {
     model: modelName(answer.modelId),
     modelId: answer.modelId,
@@ -246,8 +264,35 @@ function normaliseAnswer(answer) {
     position: Number.isFinite(answer.position) ? answer.position : null,
     grounded: Boolean(answer.grounded),
     answerText,
+    ...(answerTextEn ? { answerTextEn } : {}),
     sources: (answer.sources || []).map(safeUrl).filter(Boolean).slice(0, 8),
   };
+}
+
+async function loadTranslationCache() {
+  try {
+    const existing = JSON.parse(await readFile(outputPath, 'utf8'));
+    const cache = new Map();
+    for (const persona of existing.personas || []) {
+      for (const journey of persona.journeys || []) {
+        for (const answer of journey.answers || []) {
+          if (answer.answerTextEn) {
+            cache.set(
+              translationKey(journey.questionId, answer.modelId, answer.answerText),
+              answer.answerTextEn,
+            );
+          }
+        }
+      }
+    }
+    return cache;
+  } catch {
+    return new Map();
+  }
+}
+
+function translationKey(questionId, modelId, answerText) {
+  return `${questionId}\u0000${modelId}\u0000${answerText}`;
 }
 
 function modelName(value) {

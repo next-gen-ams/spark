@@ -22,11 +22,14 @@ test('GEO snapshot contains three personas and one sample prompt per journey', a
     ]);
     for (const journey of persona.journeys) {
       assert.ok(journey.prompt.length > 10);
+      assert.ok(journey.promptEn.length > 20);
       assert.equal(journey.answers.length, 3);
       assert.ok(journey.named >= 0 && journey.named <= journey.answerCount);
       for (const answer of journey.answers) {
         assert.ok(['Doubao', 'ERNIE', 'Qwen'].includes(answer.model));
         assert.ok(answer.answerText.length > 100);
+        assert.ok(answer.answerTextEn.length > 100);
+        assert.doesNotMatch(answer.answerTextEn, /[\u3400-\u9fff]/);
         for (const source of answer.sources) {
           assert.ok(/^https?:\/\//.test(source));
         }
