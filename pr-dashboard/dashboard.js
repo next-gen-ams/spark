@@ -693,10 +693,6 @@ async function fetchDashboardData() {
 
 function renderMeltwaterData(data) {
   const { meta, summary, trend, topics, mentions, peaks = [] } = data;
-  const connectionStatus = document.querySelector('#connectionStatus');
-  connectionStatus.lastChild.textContent = 'Meltwater · Weekly snapshot';
-  connectionStatus.classList.add('is-live');
-
   document.querySelector('#totalMentionsMetric').textContent = formatNumber(summary.totalMentions);
   document.querySelector('#totalMentionsMetric').classList.remove('metric-pending');
   document.querySelector('#totalMentionsDescription').textContent = `${formatNumber(summary.averagePerDay)} mentions per day on average.`;
@@ -911,9 +907,6 @@ function renderMentions(mentions) {
 }
 
 function renderMeltwaterError() {
-  const connectionStatus = document.querySelector('#connectionStatus');
-  connectionStatus.lastChild.textContent = 'Meltwater unavailable';
-  connectionStatus.classList.remove('is-live');
   document.querySelector('#meltwaterMetricStatus').textContent = 'RETRY NEEDED';
   const loading = document.querySelector('#chartLoading');
   loading.hidden = false;

@@ -111,6 +111,21 @@ test('workspace separates PR performance and GEO visibility into routed views', 
   assert.match(css, /\.dashboard-view\[hidden\]\s*\{\s*display:\s*none;/);
 });
 
+test('topbar uses an explicit logout control without a Meltwater status chip', async () => {
+  const [html, javascript, css] = await Promise.all([
+    readFile(new URL('./index.html', import.meta.url), 'utf8'),
+    readFile(new URL('./dashboard.js', import.meta.url), 'utf8'),
+    readFile(new URL('./styles.css', import.meta.url), 'utf8'),
+  ]);
+
+  assert.doesNotMatch(html, /id="connectionStatus"|class="status-chip"/);
+  assert.match(html, /class="logout-button"[^>]*id="lockDashboard"/);
+  assert.match(html, /<span>Log out<\/span>/);
+  assert.doesNotMatch(javascript, /connectionStatus/);
+  assert.match(javascript, /localStorage\.removeItem\(AUTH_SESSION_KEY\)/);
+  assert.match(css, /\.logout-button\s*\{/);
+});
+
 test('GEO snapshot metadata reads as passive text instead of buttons', async () => {
   const [javascript, css] = await Promise.all([
     readFile(new URL('./dashboard.js', import.meta.url), 'utf8'),

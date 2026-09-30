@@ -11,7 +11,7 @@
     <meta name="referrer" content="strict-origin-when-cross-origin" />
     <meta name="robots" content="noindex, nofollow, noarchive" />
     <title>RMIT DSC China PR Tracker</title>
-    <link rel="stylesheet" href="./styles.css?v=18" />
+    <link rel="stylesheet" href="./styles.css?v=19" />
   </head>
   <body>
     <div class="access-gate" id="accessGate">
@@ -113,9 +113,9 @@
             </details>
           </div>
           <div class="topbar-actions">
-            <span class="status-chip" id="connectionStatus"><span></span>Connecting to Meltwater</span>
-            <button class="lock-button" id="lockDashboard" type="button" aria-label="Lock dashboard" title="Lock dashboard">
-              <svg viewBox="0 0 24 24"><path d="M7 10V8a5 5 0 0 1 10 0v2M6 10h12v10H6z"/></svg>
+            <button class="logout-button" id="lockDashboard" type="button" aria-label="Log out of dashboard">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M10 17l5-5-5-5M15 12H3M14 4h5a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-5"/></svg>
+              <span>Log out</span>
             </button>
           </div>
         </div>
@@ -402,6 +402,6 @@
     </dialog>
 
     <div class="toast" id="toast" role="status" aria-live="polite"></div>
-    <script type="module" src="./dashboard.js?v=18"></script>
+    <script type="module" src="./dashboard.js?v=19"></script>
   </body>
 </html>
