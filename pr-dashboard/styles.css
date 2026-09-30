@@ -233,10 +233,14 @@ svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width:
 .geo-visibility-header { align-items: center; padding-bottom: 17px; }
 .geo-visibility-header > div { max-width: 760px; }
 .geo-header-actions { max-width: none !important; display: flex; align-items: center; justify-content: flex-end; gap: 18px; }
-.geo-name-metric { min-width: 190px; display: grid; grid-template-columns: auto 1fr; align-items: baseline; gap: 3px 9px; padding-left: 18px; border-left: 1px solid #dedbd5; }
-.geo-name-metric > span { grid-column: 1 / -1; color: var(--rmit-red); font-size: .5rem; font-weight: 900; letter-spacing: .13em; }
-.geo-name-metric strong { color: #26282b; font-size: 1.25rem; line-height: 1; letter-spacing: -.055em; }
-.geo-name-metric small { max-width: 180px; color: #777a7f; font-size: .52rem; line-height: 1.35; }
+.geo-name-metric { min-width: 250px; display: flex; align-items: center; gap: 11px; padding-left: 18px; border-left: 1px solid #dedbd5; }
+.geo-name-dial { --geo-rate: 0%; position: relative; width: 58px; height: 58px; display: grid; place-items: center; flex: 0 0 auto; border-radius: 50%; background: conic-gradient(#7448e8 0 var(--geo-rate), #e5e2eb var(--geo-rate) 100%); }
+.geo-name-dial::before { content: ""; position: absolute; inset: 7px; border-radius: 50%; background: #fff; box-shadow: inset 0 0 0 1px rgba(116,72,232,.08); }
+.geo-name-dial span { position: relative; z-index: 1; color: #3d315c; font-size: .72rem; font-weight: 900; letter-spacing: -.035em; }
+.geo-name-copy { min-width: 0; display: grid; gap: 2px; }
+.geo-name-copy > span { color: var(--rmit-red); font-size: .5rem; font-weight: 900; letter-spacing: .13em; }
+.geo-name-copy strong { color: #26282b; font-size: 1.25rem; line-height: 1; letter-spacing: -.055em; }
+.geo-name-copy small { max-width: 160px; color: #777a7f; font-size: .52rem; line-height: 1.35; }
 .geo-report-link { flex: 0 0 auto; text-decoration: none; }
 .geo-report-link svg { width: 15px; height: 15px; }
 .geo-summary-strip { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 0; padding: 0 22px 19px; }

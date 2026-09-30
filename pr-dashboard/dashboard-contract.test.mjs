@@ -131,10 +131,14 @@ test('GEO heading shows a concise data-driven total names-you metric', async () 
   ]);
 
   assert.match(html, /id="geoNameMetric"/);
+  assert.match(html, /id="geoNameMetricDial"/);
+  assert.match(html, /id="geoNameMetricRate"/);
   assert.match(html, /TOTAL ANSWERS NAMING RMIT/);
   assert.match(javascript, /preBrand\.namesYou} \/ \$\{preBrand\.validAnswers/);
   assert.match(javascript, /pre-brand prompts where RMIT was not named/);
+  assert.match(javascript, /style\.setProperty\('--geo-rate'/);
   assert.match(css, /\.geo-name-metric\s*\{/);
+  assert.match(css, /conic-gradient\(#7448e8/);
 });
 
 test('sidebar context switches from Meltwater to KMT GEO with the active workspace', async () => {

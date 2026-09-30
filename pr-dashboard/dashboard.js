@@ -473,8 +473,13 @@ function renderGeoData(data) {
   if (!preBrand?.validAnswers || !Number.isFinite(preBrand.namesYou)) throw new Error('Invalid GEO pre-brand summary');
   const summary = document.querySelector('#geoSummaryStrip');
   const grid = document.querySelector('#geoPersonaGrid');
+  const dial = document.querySelector('#geoNameMetricDial');
+  const rate = Math.max(0, Math.min(100, preBrand.namesYouRate));
+  dial.style.setProperty('--geo-rate', `${rate}%`);
+  dial.setAttribute('aria-label', `${rate}% of valid pre-brand answers named RMIT`);
+  document.querySelector('#geoNameMetricRate').textContent = `${rate}%`;
   document.querySelector('#geoNameMetricValue').textContent = `${preBrand.namesYou} / ${preBrand.validAnswers}`;
-  document.querySelector('#geoNameMetricContext').textContent = `${preBrand.namesYouRate}% across ${preBrand.questions} pre-brand prompts where RMIT was not named.`;
+  document.querySelector('#geoNameMetricContext').textContent = `Across ${preBrand.questions} pre-brand prompts where RMIT was not named.`;
   sidebarLastRefreshValue.dataset.geo = data.meta.checkedLabel;
   if (dashboardViewFromUrl() === 'geo-visibility') renderSidebarContext('geo-visibility');
   summary.replaceChildren();
@@ -644,6 +649,8 @@ function createModelAnswer(answer) {
 function renderGeoError() {
   const summary = document.querySelector('#geoSummaryStrip');
   const grid = document.querySelector('#geoPersonaGrid');
+  document.querySelector('#geoNameMetricDial').style.setProperty('--geo-rate', '0%');
+  document.querySelector('#geoNameMetricRate').textContent = '—';
   document.querySelector('#geoNameMetricValue').textContent = '—';
   document.querySelector('#geoNameMetricContext').textContent = 'Monthly GEO snapshot unavailable.';
   summary.replaceChildren();
