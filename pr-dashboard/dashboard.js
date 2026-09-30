@@ -116,7 +116,7 @@ function showDashboard() {
   window.scrollTo({ top: 0, behavior: 'instant' });
   if (!hasLoadedLiveData) {
     hasLoadedLiveData = true;
-    loadMeltwaterData();
+    Promise.allSettled([loadMeltwaterData(), loadGeoData()]);
   }
 }
 
@@ -328,6 +328,218 @@ async function loadMeltwaterData() {
     renderMeltwaterError();
     showToast('Could not load the latest weekly Meltwater snapshot.');
   }
+}
+
+async function loadGeoData() {
+  try {
+    const response = await fetch('./data/geo.json', {
+      headers: { Accept: 'application/json' },
+      cache: 'no-store',
+    });
+    if (!response.ok) throw new Error('GEO snapshot unavailable');
+    const data = await response.json();
+    renderGeoData(data);
+  } catch {
+    renderGeoError();
+  }
+}
+
+function renderGeoData(data) {
+  if (!Array.isArray(data?.personas) || !data.personas.length) throw new Error('Invalid GEO snapshot');
+  const summary = document.querySelector('#geoSummaryStrip');
+  const grid = document.querySelector('#geoPersonaGrid');
+  summary.replaceChildren();
+  grid.replaceChildren();
+
+  const summaryItems = [
+    `${data.meta.checkedLabel} · ${data.meta.ordinal}`,
+    `${data.summary.audiences} China audiences`,
+    `${data.summary.models.length} AI models`,
+    `${data.summary.samplePrompts} sample prompts`,
+    `${data.summary.noVendor} answers name no vendor`,
+  ];
+  summaryItems.forEach((item, index) => {
+    const chip = document.createElement('span');
+    chip.className = index === 0 ? 'geo-summary-chip geo-summary-chip-primary' : 'geo-summary-chip';
+    chip.textContent = item;
+    summary.append(chip);
+  });
+
+  data.personas.forEach((persona, personaIndex) => {
+    const card = document.createElement('article');
+    card.className = 'geo-persona-card';
+
+    const header = document.createElement('header');
+    header.className = 'geo-persona-header';
+    const identity = document.createElement('div');
+    identity.className = 'geo-persona-identity';
+    const marker = document.createElement('span');
+    marker.className = `geo-persona-marker geo-persona-marker-${personaIndex + 1}`;
+    marker.textContent = `P${personaIndex + 1}`;
+    const heading = document.createElement('div');
+    const title = document.createElement('h3');
+    title.textContent = persona.name;
+    const meta = document.createElement('p');
+    meta.textContent = `${persona.country} · ${persona.questions} questions · ${persona.answers} answers`;
+    heading.append(title, meta);
+    identity.append(marker, heading);
+
+    const score = document.createElement('div');
+    score.className = 'geo-persona-score';
+    const scoreValue = document.createElement('strong');
+    scoreValue.textContent = `${persona.namedRate}%`;
+    const scoreLabel = document.createElement('span');
+    scoreLabel.textContent = `${persona.named}/${persona.answers} answers name RMIT`;
+    score.append(scoreValue, scoreLabel);
+    header.append(identity, score);
+
+    const progress = document.createElement('div');
+    progress.className = 'geo-persona-progress';
+    const progressBar = document.createElement('span');
+    progressBar.style.width = `${Math.max(0, Math.min(100, persona.namedRate))}%`;
+    progress.append(progressBar);
+
+    const journeys = document.createElement('div');
+    journeys.className = 'geo-journey-list';
+    persona.journeys.forEach((journey) => journeys.append(createGeoJourney(journey)));
+    card.append(header, progress, journeys);
+    grid.append(card);
+  });
+
+  document.querySelector('#geoMethodNote').textContent = `Read-only KMT GEO snapshot · ${data.meta.checkedLabel}, ${data.meta.ordinal}. Answers are reproduced for reporting review; verify time-sensitive claims against cited sources before external use.`;
+}
+
+function createGeoJourney(journey) {
+  const labels = {
+    awareness: ['Awareness', 'Problem framed, no brand named'],
+    consideration: ['Consideration', 'Comparing named options'],
+    conversion: ['Conversion', 'Asking about RMIT by name'],
+  };
+  const [stageLabel, stageDescription] = labels[journey.stage] || [journey.stage, 'Journey stage'];
+  const details = document.createElement('details');
+  details.className = `geo-journey geo-journey-${journey.stage}`;
+  const summary = document.createElement('summary');
+
+  const stage = document.createElement('span');
+  stage.className = 'geo-stage-label';
+  const stageName = document.createElement('strong');
+  stageName.textContent = stageLabel;
+  const stageHint = document.createElement('small');
+  stageHint.textContent = stageDescription;
+  stage.append(stageName, stageHint);
+
+  const prompt = document.createElement('span');
+  prompt.className = 'geo-prompt';
+  prompt.lang = 'zh-CN';
+  prompt.textContent = journey.prompt;
+
+  const result = document.createElement('span');
+  result.className = 'geo-stage-result';
+  const ratio = document.createElement('strong');
+  ratio.textContent = `${journey.named}/${journey.answerCount}`;
+  const resultLabel = document.createElement('small');
+  resultLabel.textContent = 'answers name RMIT';
+  result.append(ratio, resultLabel);
+
+  const chevron = document.createElement('span');
+  chevron.className = 'geo-chevron';
+  chevron.setAttribute('aria-hidden', 'true');
+  chevron.textContent = '⌄';
+  summary.append(stage, prompt, result, chevron);
+
+  const body = document.createElement('div');
+  body.className = 'geo-journey-body';
+  const answerIntro = document.createElement('p');
+  answerIntro.className = 'geo-answer-intro';
+  answerIntro.textContent = 'Expand a model to review its answer and cited sources.';
+  const answerGrid = document.createElement('div');
+  answerGrid.className = 'geo-answer-grid';
+  journey.answers.forEach((answer) => answerGrid.append(createModelAnswer(answer)));
+  body.append(answerIntro, answerGrid);
+  details.append(summary, body);
+  return details;
+}
+
+function createModelAnswer(answer) {
+  const details = document.createElement('details');
+  details.className = `geo-model-answer geo-model-${answer.modelId}`;
+  const summary = document.createElement('summary');
+  const identity = document.createElement('span');
+  identity.className = 'geo-model-identity';
+  const mark = document.createElement('span');
+  mark.textContent = answer.model.slice(0, 1);
+  const name = document.createElement('strong');
+  name.textContent = answer.model;
+  identity.append(mark, name);
+  const status = document.createElement('span');
+  status.className = answer.mentioned ? 'geo-answer-status is-named' : 'geo-answer-status';
+  status.textContent = answer.mentioned
+    ? `RMIT named${answer.position ? ` · #${answer.position}` : ''}`
+    : 'RMIT not named';
+  const toggle = document.createElement('span');
+  toggle.className = 'geo-model-toggle';
+  toggle.textContent = 'View answer';
+  summary.append(identity, status, toggle);
+
+  const content = document.createElement('div');
+  content.className = 'geo-model-content';
+  const answerText = document.createElement('p');
+  answerText.className = 'geo-answer-copy';
+  answerText.lang = 'zh-CN';
+  answerText.textContent = formatGeoAnswer(answer.answerText);
+  content.append(answerText);
+
+  if (answer.sources.length) {
+    const sources = document.createElement('div');
+    sources.className = 'geo-answer-sources';
+    const sourceLabel = document.createElement('strong');
+    sourceLabel.textContent = 'Sources returned by model';
+    const sourceList = document.createElement('div');
+    answer.sources.forEach((source, index) => {
+      const link = document.createElement('a');
+      link.href = source;
+      link.target = '_blank';
+      link.rel = 'noopener noreferrer';
+      link.textContent = `${index + 1}. ${displayHostname(source)}`;
+      sourceList.append(link);
+    });
+    sources.append(sourceLabel, sourceList);
+    content.append(sources);
+  }
+
+  details.append(summary, content);
+  return details;
+}
+
+function renderGeoError() {
+  const summary = document.querySelector('#geoSummaryStrip');
+  const grid = document.querySelector('#geoPersonaGrid');
+  summary.replaceChildren();
+  grid.replaceChildren();
+  const status = document.createElement('span');
+  status.className = 'geo-summary-chip';
+  status.textContent = 'GEO snapshot unavailable';
+  const empty = document.createElement('article');
+  empty.className = 'geo-persona-loading';
+  empty.textContent = 'The next scheduled GEO snapshot will retry automatically.';
+  summary.append(status);
+  grid.append(empty);
+}
+
+function displayHostname(value) {
+  try {
+    return new URL(value).hostname.replace(/^www\./, '');
+  } catch {
+    return 'Source';
+  }
+}
+
+function formatGeoAnswer(value) {
+  return String(value || '')
+    .replace(/^#{1,6}\s*/gm, '')
+    .replace(/\*\*/g, '')
+    .replace(/^\s*[-*]\s+/gm, '• ')
+    .trim();
 }
 
 async function fetchDashboardData() {

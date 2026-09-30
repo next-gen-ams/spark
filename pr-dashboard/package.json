@@ -5,6 +5,7 @@
   "type": "module",
   "scripts": {
     "preview": "node scripts/local-server.mjs",
+    "refresh:geo": "node scripts/refresh-geo-snapshot.mjs",
     "refresh:snapshot": "node scripts/refresh-snapshot.mjs",
     "test": "node --test"
   },

@@ -4,12 +4,27 @@ import { readFile } from 'node:fs/promises';
 
 const GEO_REPORT_URL = 'https://geo.kmt.global/share/XYK19lgzKLyGdYjkoELc5o8aA1pO0RIUPQD45KRMn0g';
 
-test('both KMT GEO entry points use the verified shared report URL', async () => {
+test('all KMT GEO entry points use the verified shared report URL', async () => {
   const html = await readFile(new URL('./index.html', import.meta.url), 'utf8');
   const matches = html.match(new RegExp(GEO_REPORT_URL.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'g')) || [];
 
-  assert.equal(matches.length, 2);
+  assert.equal(matches.length, 3);
   assert.doesNotMatch(html, /data-action=["']geo["']/);
+});
+
+test('GEO audience journeys render from a local read-only snapshot', async () => {
+  const [html, javascript, server] = await Promise.all([
+    readFile(new URL('./index.html', import.meta.url), 'utf8'),
+    readFile(new URL('./dashboard.js', import.meta.url), 'utf8'),
+    readFile(new URL('./scripts/local-server.mjs', import.meta.url), 'utf8'),
+  ]);
+
+  assert.match(html, /id="geo-visibility"/);
+  assert.match(html, /id="geoPersonaGrid"/);
+  assert.match(javascript, /fetch\('\.\/data\/geo\.json'/);
+  assert.match(javascript, /answerText\.textContent = formatGeoAnswer\(answer\.answerText\)/);
+  assert.doesNotMatch(javascript, /innerHTML\s*=.*answer/i);
+  assert.match(server, /\/data\/geo\.json/);
 });
 
 test('peak tooltip is constrained to its trend panel', async () => {
