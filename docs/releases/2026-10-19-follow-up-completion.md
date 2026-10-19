@@ -10,7 +10,7 @@ The browser check in `design-previews/completion/check-preview.mjs` verified Mar
 
 ## Behavior
 
-- Saved decisions with a follow-up owner show `Mark complete` in the Decision tab.
+- Saved decisions with a follow-up owner show `Mark complete` in the Decision tab's bottom action bar, immediately left of Save decision. Reopen uses the same position. The summary card retains status/date information only. Phone layouts use two equal-width action columns.
 - The completed state, completion date and verified actor appear in the drawer. The decision log shows a Completed badge; the original decision and task stay visible.
 - `Reopen follow-up` returns the task to Open. Edits to decision, owner, next action or due date also reopen it; title/context edits retain completion.
 - The existing mutation lock and spinner prevent duplicate submissions. Unsaved decision changes must be saved before completion is changed.

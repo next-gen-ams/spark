@@ -3392,55 +3392,6 @@ export default function Home() {
                                 : ''}
                             </small>
                           ) : null}
-                          <div className="completion-actions">
-                            <Button
-                              variant="outline"
-                              className="completion-action mutation-button"
-                              disabled={
-                                pendingMutation !== null ||
-                                !selectedTopic.followUpOwner ||
-                                decisionDraft.decision !==
-                                  selectedTopic.decision ||
-                                decisionDraft.followUpOwner !==
-                                  selectedTopic.followUpOwner ||
-                                decisionDraft.followUpAction !==
-                                  selectedTopic.followUpAction ||
-                                decisionDraft.dueDate !== selectedTopic.dueDate
-                              }
-                              aria-busy={pendingMutation === 'set-completion'}
-                              onClick={() => void toggleCompletion()}
-                            >
-                              {pendingMutation === 'set-completion' ? (
-                                <LoaderCircle
-                                  className="spin"
-                                  aria-hidden="true"
-                                />
-                              ) : (
-                                <CheckCircle2 aria-hidden="true" />
-                              )}
-                              {pendingMutation === 'set-completion'
-                                ? 'Saving…'
-                                : selectedTopic.completedAt
-                                  ? 'Reopen follow-up'
-                                  : 'Mark complete'}
-                            </Button>
-                            <small>
-                              {!selectedTopic.followUpOwner
-                                ? 'Assign an owner and save the decision to mark complete.'
-                                : decisionDraft.decision !==
-                                      selectedTopic.decision ||
-                                    decisionDraft.followUpOwner !==
-                                      selectedTopic.followUpOwner ||
-                                    decisionDraft.followUpAction !==
-                                      selectedTopic.followUpAction ||
-                                    decisionDraft.dueDate !==
-                                      selectedTopic.dueDate
-                                  ? 'Save your changes before updating completion.'
-                                  : selectedTopic.completedAt
-                                    ? 'Reopen this follow-up if more work is needed.'
-                                    : 'Mark complete when the assigned follow-up is finished.'}
-                            </small>
-                          </div>
                         </div>
                       ) : null}
                       <label
@@ -3522,7 +3473,7 @@ export default function Home() {
                         </label>
                       </div>
                     </div>
-                    <SheetFooter className="topic-action-bar">
+                    <SheetFooter className="topic-action-bar decision-action-bar">
                       <div className="topic-delete-actions">
                         {selectedTopic.decision ? (
                           <Button
@@ -3545,24 +3496,67 @@ export default function Home() {
                           Delete discussion
                         </Button>
                       </div>
-                      <Button
-                        className="primary-action topic-save-action mutation-button"
-                        disabled={pendingMutation !== null}
-                        aria-busy={pendingMutation === 'save-decision'}
-                        onClick={() => void saveDecision()}
-                      >
-                        {pendingMutation === 'save-decision' ? (
-                          <>
-                            <LoaderCircle className="spin" aria-hidden="true" />
-                            Saving…
-                          </>
-                        ) : (
-                          <>
-                            <Check aria-hidden="true" />
-                            Save decision
-                          </>
-                        )}
-                      </Button>
+                      <div className="topic-primary-actions">
+                        {selectedTopic.decision ? (
+                          <Button
+                            variant="outline"
+                            className="completion-action mutation-button"
+                            disabled={
+                              pendingMutation !== null ||
+                              !selectedTopic.followUpOwner ||
+                              decisionDraft.decision !==
+                                selectedTopic.decision ||
+                              decisionDraft.followUpOwner !==
+                                selectedTopic.followUpOwner ||
+                              decisionDraft.followUpAction !==
+                                selectedTopic.followUpAction ||
+                              decisionDraft.dueDate !== selectedTopic.dueDate
+                            }
+                            title={
+                              !selectedTopic.followUpOwner
+                                ? 'Assign an owner and save the decision to mark complete.'
+                                : 'Save any decision changes before updating completion.'
+                            }
+                            aria-busy={pendingMutation === 'set-completion'}
+                            onClick={() => void toggleCompletion()}
+                          >
+                            {pendingMutation === 'set-completion' ? (
+                              <LoaderCircle
+                                className="spin"
+                                aria-hidden="true"
+                              />
+                            ) : (
+                              <CheckCircle2 aria-hidden="true" />
+                            )}
+                            {pendingMutation === 'set-completion'
+                              ? 'Saving…'
+                              : selectedTopic.completedAt
+                                ? 'Reopen follow-up'
+                                : 'Mark complete'}
+                          </Button>
+                        ) : null}
+                        <Button
+                          className="primary-action topic-save-action mutation-button"
+                          disabled={pendingMutation !== null}
+                          aria-busy={pendingMutation === 'save-decision'}
+                          onClick={() => void saveDecision()}
+                        >
+                          {pendingMutation === 'save-decision' ? (
+                            <>
+                              <LoaderCircle
+                                className="spin"
+                                aria-hidden="true"
+                              />
+                              Saving…
+                            </>
+                          ) : (
+                            <>
+                              <Check aria-hidden="true" />
+                              Save decision
+                            </>
+                          )}
+                        </Button>
+                      </div>
                     </SheetFooter>
                   </TabsContent>
                 </Tabs>

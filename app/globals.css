@@ -2247,21 +2247,11 @@ body.is-topic-pointer-dragging * {
   color: #265974;
   background: #eaf7fd;
 }
-.completion-actions {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 10px;
-  margin-top: 8px;
-}
 .completion-action {
   min-height: 40px;
   color: #23664f;
   border-color: #a9cdbd;
   background: white;
-}
-.completion-actions small {
-  flex: 1 1 180px;
 }
 .saved-decision {
   display: grid;
@@ -2312,6 +2302,22 @@ body.is-topic-pointer-dragging * {
 }
 .topic-save-action {
   margin-left: auto;
+}
+.topic-primary-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-left: auto;
+}
+.topic-action-bar.decision-action-bar button {
+  min-width: 0;
+  padding-inline: 10px;
+  font-size: 0.75rem;
+}
+.decision-action-bar button svg {
+  width: 14px;
+  height: 14px;
 }
 .topic-action-bar button {
   min-width: 132px;
@@ -2688,6 +2694,14 @@ body.is-topic-pointer-dragging * {
   }
   .topic-save-action {
     margin-left: 0;
+  }
+  .topic-primary-actions {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    margin-left: 0;
+  }
+  .topic-primary-actions:has(> :only-child) {
+    grid-template-columns: 1fr;
   }
   .form-dialog [data-slot='dialog-footer'],
   .signin-dialog [data-slot='dialog-footer'],
