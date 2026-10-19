@@ -2,6 +2,12 @@
 
 Status: implemented and verified locally; not pushed or deployed.
 
+## Interactive preview
+
+Run `npx --no-install vite --config design-previews/completion/vite.config.ts`, then open `http://127.0.0.1:4193/?view=decisions`. This separate preview entry renders the actual application components with local mock authentication/data adapters; it does not alter the production entry or access live accounts. All visible records are synthetic. Completion and reopening persist only under a preview-specific localStorage key. Use Reset preview to restore the examples.
+
+The browser check in `design-previews/completion/check-preview.mjs` verified Mark complete, immediate loading, persistence across refresh, Reopen, desktop and phone layouts, and zero page errors, with external requests blocked. Screenshots are kept alongside the harness. The preview follows the existing GMS Frosted Workspace styling and authentic logo assets; it is not a production deployment.
+
 ## Behavior
 
 - Saved decisions with a follow-up owner show `Mark complete` in the Decision tab.
