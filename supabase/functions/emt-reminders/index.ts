@@ -1,5 +1,6 @@
 import 'jsr:@supabase/functions-js/edge-runtime.d.ts';
 import { createClient } from 'npm:@supabase/supabase-js@2.117.1';
+import { isFollowUpOpen } from '../_shared/emt-completion.ts';
 import {
   renderReminderEmail,
   type ReminderEmailInput,
@@ -40,6 +41,7 @@ type TopicRow = {
   follow_up_action: string;
   due_date: string | null;
   meeting_date: string | null;
+  completed_at: string | null;
 };
 
 type Candidate = {
@@ -255,6 +257,7 @@ function buildCandidates(
   const candidates: Candidate[] = [];
 
   for (const topic of topics) {
+    if (!isFollowUpOpen(topic)) continue;
     if (topic.bucket === 'agenda' && topic.meeting_date) {
       const meetingDate = topic.meeting_date;
       const member = memberByName.get(topic.lead);
@@ -397,7 +400,7 @@ Deno.serve(async (request) => {
         database
           .from('emt_topics')
           .select(
-            'id,bucket,title,category,lead,prep_action,decision,follow_up_owner,follow_up_action,due_date,meeting_date',
+            'id,bucket,title,category,lead,prep_action,decision,follow_up_owner,follow_up_action,due_date,meeting_date,completed_at',
           ),
       ]);
     if (memberSettingsResult.error) throw memberSettingsResult.error;

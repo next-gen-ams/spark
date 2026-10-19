@@ -18,6 +18,8 @@ export type WorkspaceTopic = {
   followUpOwner: string;
   dueDate: string;
   followUpAction: string;
+  completedAt?: string;
+  completedBy?: string;
   prepAction: string;
   decisionDate?: string;
   decisionDateIso?: string;
@@ -114,6 +116,15 @@ export async function deleteEmtTopic(id: number) {
       id,
     },
   );
+}
+
+export async function setEmtCompletion(id: number, complete: boolean) {
+  const result = await request<{ topic: WorkspaceTopic }>('POST', {
+    action: 'set_completion',
+    id,
+    complete,
+  });
+  return result.topic;
 }
 
 export async function deleteEmtDecision(id: number) {

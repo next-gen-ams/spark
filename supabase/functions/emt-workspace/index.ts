@@ -1,6 +1,7 @@
 import 'jsr:@supabase/functions-js/edge-runtime.d.ts';
 import { createClient } from 'npm:@supabase/supabase-js@2.117.1';
 import { isWeeklyMeetingDate } from '../_shared/emt-meeting-schedule.ts';
+import { completionRequest } from '../_shared/emt-completion.ts';
 import {
   authenticateEmtMember,
   EMT_ALLOWED_ORIGINS,
@@ -193,6 +194,8 @@ function mapTopic(row: Record<string, unknown>) {
     decision: row.decision,
     followUpOwner: row.follow_up_owner,
     followUpAction: row.follow_up_action,
+    completedAt: row.completed_at || undefined,
+    completedBy: row.completed_by || undefined,
     dueDate: row.due_date || '',
     decisionDateIso: row.decision_date || undefined,
     decisionDate: row.decision_date || undefined,
@@ -365,7 +368,26 @@ Deno.serve(async (request) => {
       settings?: Record<string, unknown>;
       id?: number;
       name?: string;
+      complete?: boolean;
     };
+
+    if (body.action === 'set_completion') {
+      const input = completionRequest(body.id, body.complete);
+      const { data, error } = await database.rpc(
+        'emt_set_follow_up_completion',
+        {
+          topic_id: input.id,
+          is_complete: input.complete,
+          actor_email: profile.email,
+        },
+      );
+      if (error) throw error;
+      if (!data?.[0])
+        throw new Error('Save a decision and assign a follow-up owner first.');
+      return json(origin, {
+        topic: mapTopic(data[0] as Record<string, unknown>),
+      });
+    }
 
     if (body.action === 'create_topic') {
       const [allowedCategories, allowedLeads, meetingAnchorDate] =

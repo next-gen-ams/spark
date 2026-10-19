@@ -100,6 +100,7 @@ import {
   renameEmtCategory,
   saveEmtSettings,
   saveEmtTopic,
+  setEmtCompletion,
   type WorkspaceCategory,
   type WorkspaceMember,
   type WorkspaceSettings,
@@ -133,6 +134,7 @@ type PendingMutation =
   | 'move-topic'
   | 'save-decision'
   | 'save-topic'
+  | 'set-completion'
   | null;
 
 const DEFAULT_TOPIC_CATEGORIES = [
@@ -882,7 +884,10 @@ export default function Home() {
     remindersOn && currentMember
       ? [
           ...topics
-            .filter((topic) => topic.lead === currentMember.displayName)
+            .filter(
+              (topic) =>
+                !topic.completedAt && topic.lead === currentMember.displayName,
+            )
             .map((topic) => ({
               id: `agenda-${topic.id}`,
               timing: agendaReminderTiming,
@@ -893,6 +898,7 @@ export default function Home() {
             .filter(
               (topic) =>
                 topic.followUpOwner === currentMember.displayName &&
+                !topic.completedAt &&
                 topic.followUpAction &&
                 topic.dueDate,
             )
@@ -1225,6 +1231,30 @@ export default function Home() {
         title: 'Decision saved',
         description: 'The shared decision is now visible in the decision log.',
       });
+  }
+
+  async function toggleCompletion() {
+    if (!selectedTopic || !beginMutation('set-completion')) return;
+    const complete = !selectedTopic.completedAt;
+    try {
+      const saved = await setEmtCompletion(selectedTopic.id, complete);
+      applyTopic(saved);
+      toast.add({
+        type: 'success',
+        title: complete ? 'Follow-up completed' : 'Follow-up reopened',
+        description: complete
+          ? 'Completion is saved. Reminders for this item have stopped.'
+          : 'This follow-up is open again and follows your reminder settings.',
+      });
+    } catch (error) {
+      toast.add({
+        type: 'error',
+        title: 'Status not saved',
+        description: error instanceof Error ? error.message : 'Try again.',
+      });
+    } finally {
+      finishMutation();
+    }
   }
 
   async function confirmDeleteDiscussion() {
@@ -2197,7 +2227,22 @@ export default function Home() {
                                   </span>
                                 </span>
                                 <span className="decision-followup">
-                                  <small>Next action</small>
+                                  <small
+                                    className={
+                                      topic.completedAt
+                                        ? 'completion-badge'
+                                        : undefined
+                                    }
+                                  >
+                                    {topic.completedAt ? (
+                                      <>
+                                        <CheckCircle2 aria-hidden="true" />{' '}
+                                        Completed
+                                      </>
+                                    ) : (
+                                      'Open follow-up'
+                                    )}
+                                  </small>
                                   <strong>
                                     {topic.followUpAction || 'Not added'}
                                   </strong>
@@ -3312,7 +3357,17 @@ export default function Home() {
                       </p>
                       {selectedTopic.decision ? (
                         <div className="saved-decision">
-                          <strong>Current decision</strong>
+                          <div className="decision-status-heading">
+                            <strong>Current decision</strong>
+                            <span
+                              className={`completion-badge${selectedTopic.completedAt ? '' : ' is-open'}`}
+                            >
+                              {selectedTopic.completedAt ? (
+                                <CheckCircle2 aria-hidden="true" />
+                              ) : null}
+                              {selectedTopic.completedAt ? 'Completed' : 'Open'}
+                            </span>
+                          </div>
                           <span>{selectedTopic.decision}</span>
                           <small>
                             Next action:{' '}
@@ -3323,6 +3378,69 @@ export default function Home() {
                             {selectedTopic.followUpOwner || 'Not assigned'} ·
                             Due: {formatDueDate(selectedTopic.dueDate)}
                           </small>
+                          {selectedTopic.completedAt ? (
+                            <small>
+                              Completed{' '}
+                              {new Intl.DateTimeFormat('en-AU', {
+                                day: 'numeric',
+                                month: 'short',
+                                year: 'numeric',
+                                timeZone: MELBOURNE_TIME_ZONE,
+                              }).format(new Date(selectedTopic.completedAt))}
+                              {selectedTopic.completedBy
+                                ? ` · ${members.find((member) => member.email === selectedTopic.completedBy)?.displayName || selectedTopic.completedBy}`
+                                : ''}
+                            </small>
+                          ) : null}
+                          <div className="completion-actions">
+                            <Button
+                              variant="outline"
+                              className="completion-action mutation-button"
+                              disabled={
+                                pendingMutation !== null ||
+                                !selectedTopic.followUpOwner ||
+                                decisionDraft.decision !==
+                                  selectedTopic.decision ||
+                                decisionDraft.followUpOwner !==
+                                  selectedTopic.followUpOwner ||
+                                decisionDraft.followUpAction !==
+                                  selectedTopic.followUpAction ||
+                                decisionDraft.dueDate !== selectedTopic.dueDate
+                              }
+                              aria-busy={pendingMutation === 'set-completion'}
+                              onClick={() => void toggleCompletion()}
+                            >
+                              {pendingMutation === 'set-completion' ? (
+                                <LoaderCircle
+                                  className="spin"
+                                  aria-hidden="true"
+                                />
+                              ) : (
+                                <CheckCircle2 aria-hidden="true" />
+                              )}
+                              {pendingMutation === 'set-completion'
+                                ? 'Saving…'
+                                : selectedTopic.completedAt
+                                  ? 'Reopen follow-up'
+                                  : 'Mark complete'}
+                            </Button>
+                            <small>
+                              {!selectedTopic.followUpOwner
+                                ? 'Assign an owner and save the decision to mark complete.'
+                                : decisionDraft.decision !==
+                                      selectedTopic.decision ||
+                                    decisionDraft.followUpOwner !==
+                                      selectedTopic.followUpOwner ||
+                                    decisionDraft.followUpAction !==
+                                      selectedTopic.followUpAction ||
+                                    decisionDraft.dueDate !==
+                                      selectedTopic.dueDate
+                                  ? 'Save your changes before updating completion.'
+                                  : selectedTopic.completedAt
+                                    ? 'Reopen this follow-up if more work is needed.'
+                                    : 'Mark complete when the assigned follow-up is finished.'}
+                            </small>
+                          </div>
                         </div>
                       ) : null}
                       <label
