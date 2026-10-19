@@ -1,5 +1,8 @@
 import 'jsr:@supabase/functions-js/edge-runtime.d.ts';
-import { createClient } from 'npm:@supabase/supabase-js@2.117.1';
+import {
+  createClient,
+  type SupabaseClient,
+} from 'npm:@supabase/supabase-js@2.117.1';
 import { isWeeklyMeetingDate } from '../_shared/emt-meeting-schedule.ts';
 import { completionRequest } from '../_shared/emt-completion.ts';
 import {
@@ -225,7 +228,7 @@ function mapCategory(row: Record<string, unknown>, usageCount = 0) {
   };
 }
 
-async function getAllowedCategories(database: ReturnType<typeof createClient>) {
+async function getAllowedCategories(database: SupabaseClient) {
   const { data, error } = await database
     .from('emt_topic_categories')
     .select('name,active,system');
@@ -237,7 +240,7 @@ async function getAllowedCategories(database: ReturnType<typeof createClient>) {
   );
 }
 
-async function getAllowedLeads(database: ReturnType<typeof createClient>) {
+async function getAllowedLeads(database: SupabaseClient) {
   const { data, error } = await database
     .from('emt_members')
     .select('display_name')
@@ -246,7 +249,7 @@ async function getAllowedLeads(database: ReturnType<typeof createClient>) {
   return new Set((data || []).map((member) => String(member.display_name)));
 }
 
-async function getMeetingAnchorDate(database: ReturnType<typeof createClient>) {
+async function getMeetingAnchorDate(database: SupabaseClient) {
   const { data, error } = await database
     .from('emt_settings')
     .select('meeting_anchor_date')

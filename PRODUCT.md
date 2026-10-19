@@ -8,7 +8,7 @@ web
 
 ## Stack
 
-Vinext/React application published through ChatGPT Sites and as a static build in the GMS Spark repository.
+React application built with Vite and published as a static site in the GMS Spark repository. Microsoft sign-in is browser-managed; authenticated data and scheduled email run in Supabase Edge Functions. No server-rendering/image-processing/Cloudflare build runtime or UI generator is required.
 
 ## Users
 
@@ -30,7 +30,7 @@ Used before, during and after a weekly executive meeting. Microsoft work account
 
 - Microsoft work-account sign-in uses a tenant-scoped Entra single-page application and verifies the signed-in profile through Microsoft Graph.
 - The primary workflow is: capture a topic, place it on an upcoming agenda, assign a lead, record a decision and track follow-up.
-- Follow-up completion (implemented locally; release pending): an assigned recorded decision can be marked complete or reopened. Completion records the verified EMT member and server timestamp, remains visible in the decision log, and stops the item's reminder emails. Changing the decision, owner, action or due date reopens the work; changing its title/context preserves completion. All active EMT members can maintain this shared state, matching the existing shared editing model.
+- Follow-up completion: an assigned recorded decision can be marked complete or reopened. The action sits in the bottom bar immediately left of Save decision. Completion records the verified EMT member and server timestamp, remains visible in the decision log, and stops the item's reminder emails. Changing the decision, owner, action or due date reopens the work; changing its title/context preserves completion. All active EMT members can maintain this shared state, matching the existing shared editing model.
 - Topic groups are managed from a dedicated settings view. The four initial groups can be renamed, new groups can be added, and deletion requires confirmation; linked agenda and decision records are preserved under `Uncategorised`.
 - The shared workspace persists topics and topic groups in Supabase, while reminder preferences are saved separately for each approved Microsoft account behind the authenticated workspace API.
 - Outlook email delivery uses an app-only Microsoft Graph sender fixed to `insights@gms.global`; the evaluator runs hourly and sends only in the 09:00 Australia/Melbourne window when a member's global settings produce a due reminder.

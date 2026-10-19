@@ -1,6 +1,9 @@
 allowBuilds:
   esbuild: true
-  sharp: true
-  workerd: true
+overrides:
+  esbuild: 0.28.2
+  postcss: 8.5.31
+  source-map-js: 1.2.2
 minimumReleaseAgeExclude:
   - '@azure/msal-browser@5.23.0'
+  - postcss@8.5.31

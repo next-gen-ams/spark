@@ -1,6 +1,6 @@
 # Follow-up completion
 
-Status: implemented and verified locally; not pushed or deployed.
+Status: approved layout; backend deployed (workspace v13, reminders v12), frontend publication in progress.
 
 ## Interactive preview
 
@@ -28,13 +28,18 @@ The additive migration introduces `completed_at` and `completed_by` with a consi
 - `npx --no-install tsc --noEmit --incremental false`: pass.
 - Targeted `oxlint`, formatting and `git diff --check`: pass.
 - `npm run build:github` with the existing public Microsoft identifiers: pass.
-- Supabase production schema inspected read-only; no completion columns currently exist. Production workspace/reminder functions are still v12/v11. No production migration or email send was performed.
+- The additive migration is applied and production workspace/reminder functions are v13/v12. A synthetic live-schema transaction verified completion, idempotency, reopening, changed-task/deletion reset and RPC grants, then rolled back. Existing decisions were not marked complete; no test email was sent. Unauthenticated workspace/reminder requests returned 401; disallowed workspace origin returned 403.
 
-## Publication blocker
+## Dependency remediation and release verification
 
-The required pre-push `pnpm audit --json` reports **3 critical, 19 high, 16 moderate and 6 low advisories** in the unchanged existing dependency tree. Examples include `tinypool`, `proxy-addr`, `react-server-dom-webpack`, `undici`, `sharp`, `braces` and `@modelcontextprotocol/sdk`. `pnpm view braces version` reports 3.0.3; the high-severity advisory has no official patched version. The feature introduces no new package or dependency version.
+The initial pre-push `pnpm audit --json` reported **3 critical, 19 high, 16 moderate and 6 low advisories**. On 19 October Coco approved remediation and Spark publication. The final installed dependency tree reports **zero known vulnerabilities across all severities**, with 238 dependency entries instead of 698. No advisories were ignored or suppressed.
 
-These are pre-existing findings, but the workspace security gate prohibits a push with unresolved critical/high findings. Publication is paused until dependency remediation is completed and rescanned. No third-party source scanner was used. Review the dependency/build-tool remediation scope before changing framework versions or replacing a transitive package.
+- Removed unused Vinext/RSC/image-server, Cloudflare/Wrangler and shadcn generator chains. This eliminates `braces` without needing an unpatched upstream release. The deployed product was already a static page backed by Supabase; Vite now produces its static assets directly.
+- Updated React/React DOM to 19.2.9, Vite to 8.3.4, Tailwind to 4.3.3 and lint/format tools. Explicit overrides pin esbuild 0.28.2, PostCSS 8.5.31 and source-map-js 1.2.2. The retained UI state CSS was copied with its MIT license so removing the generator preserves styling.
+- Only the three existing public Microsoft identifier/base-path constants are inlined; no environment object, application secret or service-role credential is bundled. Existing MSAL storage, callback path and backend membership checks remain in place.
+- `gitleaks git --redact`: 51 prior commits passed. A directory scan additionally flagged generated random framework keys in ignored, obsolete `dist/server/**` artifacts; these are not tracked or copied to Spark. The current frontend build did not produce those files.
+- Production build, TypeScript and targeted changed-file lint passed. Both Edge Functions passed `deno check`. The full lint command continues to report inherited generated-UI accessibility/type issues and Node-versus-Deno resolution errors; it is not reported as a full pass.
+- Browser checks passed for the actual components with mock data (complete/loading/reload/reopen, desktop/phone) and the production static bundle (configured Microsoft sign-in, protected workspace, logo, refresh, phone overflow, script-free auth callback, no page/asset errors).
 
 ## Deployment after the gate clears
 
@@ -43,7 +48,7 @@ These are pre-existing findings, but the workspace security gate prohibits a pus
 3. Build and publish the static frontend to Spark, retaining shared assets and old hashed chunks for existing sessions.
 4. Verify a synthetic completion/reopen journey, persistence after reload, authorization denial and dry-run reminder exclusion without sending test mail.
 
-Until deployment, the live site does not expose completion controls. Source of the pending feature is the task-local source checkout referenced by the GMS project index.
+Source is maintained on Spark's `emt-tracker-source` branch; static publication remains on `main` under `emt-tracker/`. The task-local checkout and GMS project index point to those authoritative remote locations.
 
 ## Intermediate output review
 

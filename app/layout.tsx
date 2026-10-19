@@ -1,7 +1,6 @@
-import type { Metadata } from 'next';
 import './globals.css';
 
-export const metadata: Metadata = {
+export const metadata = {
   title: 'EMT Tracker',
   description:
     'Weekly GMS executive discussions, decisions, ownership and Microsoft-connected reminders.',

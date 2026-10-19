@@ -12,5 +12,5 @@ export default function Image({
   void priority;
   void fill;
   void unoptimized;
-  return <img {...props} />;
+  return <img {...props} alt={props.alt || ''} />;
 }
