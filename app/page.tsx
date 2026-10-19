@@ -35,6 +35,7 @@ import {
 } from 'lucide-react';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
+import { FollowUpStatus } from '@/components/follow-up-status';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -1978,6 +1979,9 @@ export default function Home() {
                                 <span className="topic-tag">
                                   {topic.category}
                                 </span>
+                                <FollowUpStatus
+                                  completedAt={topic.completedAt}
+                                />
                                 <span>Proposed by {topic.lead}</span>
                               </span>
                             </span>
@@ -2057,6 +2061,9 @@ export default function Home() {
                                 <span className="topic-tag">
                                   {topic.category}
                                 </span>
+                                <FollowUpStatus
+                                  completedAt={topic.completedAt}
+                                />
                                 <span>Proposed by {topic.lead}</span>
                               </span>
                             </span>
@@ -2227,22 +2234,9 @@ export default function Home() {
                                   </span>
                                 </span>
                                 <span className="decision-followup">
-                                  <small
-                                    className={
-                                      topic.completedAt
-                                        ? 'completion-badge'
-                                        : undefined
-                                    }
-                                  >
-                                    {topic.completedAt ? (
-                                      <>
-                                        <CheckCircle2 aria-hidden="true" />{' '}
-                                        Completed
-                                      </>
-                                    ) : (
-                                      'Open follow-up'
-                                    )}
-                                  </small>
+                                  <FollowUpStatus
+                                    completedAt={topic.completedAt}
+                                  />
                                   <strong>
                                     {topic.followUpAction || 'Not added'}
                                   </strong>
@@ -3359,14 +3353,9 @@ export default function Home() {
                         <div className="saved-decision">
                           <div className="decision-status-heading">
                             <strong>Current decision</strong>
-                            <span
-                              className={`completion-badge${selectedTopic.completedAt ? '' : ' is-open'}`}
-                            >
-                              {selectedTopic.completedAt ? (
-                                <CheckCircle2 aria-hidden="true" />
-                              ) : null}
-                              {selectedTopic.completedAt ? 'Completed' : 'Open'}
-                            </span>
+                            <FollowUpStatus
+                              completedAt={selectedTopic.completedAt}
+                            />
                           </div>
                           <span>{selectedTopic.decision}</span>
                           <small>

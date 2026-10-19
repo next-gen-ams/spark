@@ -2238,14 +2238,16 @@ body.is-topic-pointer-dragging * {
   background: #dff2e9;
   font-size: 0.75rem;
   font-weight: 700;
+  white-space: nowrap;
+  flex-shrink: 0;
 }
 .completion-badge svg {
   width: 14px;
   height: 14px;
 }
-.completion-badge.is-open {
-  color: #265974;
-  background: #eaf7fd;
+.completion-badge.is-pending {
+  color: #79520d;
+  background: #fff3d6;
 }
 .completion-action {
   min-height: 40px;

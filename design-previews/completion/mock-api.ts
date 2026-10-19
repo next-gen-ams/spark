@@ -53,6 +53,27 @@ const examples: WorkspaceTopic[] = [
     source: 'Agenda',
   },
 ];
+examples.push(
+  {
+    ...examples[0],
+    id: 900003,
+    bucket: 'backlog',
+    title: 'Review the onboarding rollout',
+  },
+  {
+    ...examples[1],
+    id: 900004,
+    bucket: 'backlog',
+    title: 'Confirm leave coverage owners',
+  },
+  {
+    ...examples[0],
+    id: 900005,
+    bucket: 'agenda',
+    title: 'Share the weekly operations update',
+    meetingDate: '2026-10-19',
+  },
+);
 let topics = structuredClone(examples);
 let settings: WorkspaceSettings = {
   remindersOn: true,

@@ -10,6 +10,7 @@ The browser check in `design-previews/completion/check-preview.mjs` verified Mar
 
 ## Behavior
 
+- Follow-up status is also visible without opening the drawer: agenda and backlog metadata and the decision log show the same Pending (amber/clock) or Completed (green/check) badge. The drawer uses the same terminology. Pending includes undecided topics; it does not mean overdue. This is display-only and reads the persisted completion timestamp, not the legacy discussion status field.
 - Saved decisions with a follow-up owner show `Mark complete` in the Decision tab's bottom action bar, immediately left of Save decision. Reopen uses the same position. The summary card retains status/date information only. Phone layouts use two equal-width action columns.
 - The completed state, completion date and verified actor appear in the drawer. The decision log shows a Completed badge; the original decision and task stay visible.
 - `Reopen follow-up` returns the task to Open. Edits to decision, owner, next action or due date also reopen it; title/context edits retain completion.
@@ -56,3 +57,10 @@ Source is maintained on [Spark's `emt-tracker-source` branch](https://github.com
 - Cleanup candidate: `/Users/cocohu/Documents/Codex/2026-09-08/wo-x/work/emt-completion-db.OzJihV` (39 MB). This stopped disposable PostgreSQL cluster contains only synthetic integration-test data and can be regenerated from the committed SQL test. Kept pending owner-approved cleanup.
 - Keep `/Users/cocohu/Documents/Codex/2026-09-08/wo-x/work/emt-dependency-audit.json` as before-remediation security evidence.
 - Existing drag-motion previews were not changed or removed.
+
+## List-status follow-up verification, 19 October 2026
+
+- `check-list-status.mjs` passed against actual UI components with synthetic local adapters: both status states in backlog and Decision log, agenda Pending, mark-complete immediate list update, refresh persistence, reopening and phone overflow. Desktop/phone evidence is stored as `preview-list-status*.png`. No live user records were changed.
+- 12/12 regression tests passed, including real reminder candidate generation excluding completed agenda/due/overdue work. Exercised-module coverage: 97.33% lines / 90.32% branches (not whole-app coverage). TypeScript, changed-code lint, static production build and configured-login smoke check passed; dependency audit remained zero.
+- Retrieved the deployed `emt-reminders` v12 source read-only: ACTIVE, with `if (!isFollowUpOpen(topic)) continue;` before candidate generation, and the shared helper returns false when `completed_at` exists. No backend change or email send was needed. Already-sent/in-flight mail cannot be recalled; subsequent evaluations skip completed work. Reopening or materially changing the follow-up restores eligibility under saved preferences.
+- No authentication, authorization, input or deployment configuration changed. The reusable badge renders fixed labels through React and receives only the existing completion timestamp.
