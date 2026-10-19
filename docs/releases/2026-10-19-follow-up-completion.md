@@ -1,6 +1,6 @@
 # Follow-up completion
 
-Status: approved layout; backend deployed (workspace v13, reminders v12), frontend publication in progress.
+Status: published and verified on Spark on 19 October 2026 (frontend `6ba552c`, workspace v13, reminders v12).
 
 ## Interactive preview
 
@@ -37,21 +37,21 @@ The initial pre-push `pnpm audit --json` reported **3 critical, 19 high, 16 mode
 - Removed unused Vinext/RSC/image-server, Cloudflare/Wrangler and shadcn generator chains. This eliminates `braces` without needing an unpatched upstream release. The deployed product was already a static page backed by Supabase; Vite now produces its static assets directly.
 - Updated React/React DOM to 19.2.9, Vite to 8.3.4, Tailwind to 4.3.3 and lint/format tools. Explicit overrides pin esbuild 0.28.2, PostCSS 8.5.31 and source-map-js 1.2.2. The retained UI state CSS was copied with its MIT license so removing the generator preserves styling.
 - Only the three existing public Microsoft identifier/base-path constants are inlined; no environment object, application secret or service-role credential is bundled. Existing MSAL storage, callback path and backend membership checks remain in place.
-- `gitleaks git --redact`: 51 prior commits passed. A directory scan additionally flagged generated random framework keys in ignored, obsolete `dist/server/**` artifacts; these are not tracked or copied to Spark. The current frontend build did not produce those files.
+- `gitleaks git --redact`: 52 source commits passed before publication; the final documentation/check-only delta was scanned again before pushing. A directory scan additionally flagged generated random framework keys in ignored, obsolete `dist/server/**` artifacts; these are not tracked or copied to Spark. The current frontend build did not produce those files. The complete published `emt-tracker/` directory and outbound Spark commit also passed secret scans.
 - Production build, TypeScript and targeted changed-file lint passed. Both Edge Functions passed `deno check`. The full lint command continues to report inherited generated-UI accessibility/type issues and Node-versus-Deno resolution errors; it is not reported as a full pass.
 - Browser checks passed for the actual components with mock data (complete/loading/reload/reopen, desktop/phone) and the production static bundle (configured Microsoft sign-in, protected workspace, logo, refresh, phone overflow, script-free auth callback, no page/asset errors).
 
-## Deployment after the gate clears
+## Completed deployment
 
-1. Apply the additive completion migration.
-2. Deploy workspace and reminder functions with `_shared/emt-completion.ts` included.
-3. Build and publish the static frontend to Spark, retaining shared assets and old hashed chunks for existing sessions.
-4. Verify a synthetic completion/reopen journey, persistence after reload, authorization denial and dry-run reminder exclusion without sending test mail.
+1. Applied the additive completion migration and deployed workspace v13 and reminders v12 with the shared completion helper.
+2. Published static assets in Spark commit `6ba552ccae22bda57c5b45ea7a656e585a77687b`, retaining shared assets and old hashed chunks for existing sessions. GitHub Pages build/deployment `39183561149` completed successfully.
+3. Verified [the live dashboard](https://spark.kmt.global/emt-tracker/): HTML matches the published build; new CSS/JS, logo and silent callback load successfully. Automated checks passed for configured sign-in, protected workspace, refresh and phone layout, with no page or asset errors.
+4. Authenticated completion/loading/reload/reopen was tested in the actual UI with synthetic local adapters; production database behavior was tested in a rolled-back synthetic transaction. No real member's task was completed and no test email was sent. The reminder heartbeat remained active with no failed runs in the preceding 24 hours.
 
-Source is maintained on Spark's `emt-tracker-source` branch; static publication remains on `main` under `emt-tracker/`. The task-local checkout and GMS project index point to those authoritative remote locations.
+Source is maintained on [Spark's `emt-tracker-source` branch](https://github.com/next-gen-ams/spark/tree/emt-tracker-source); static publication remains on `main` under `emt-tracker/`. Source remediation commit: `0926750`. The task-local checkout and GMS project index point to those authoritative remote locations. The legacy ChatGPT team.site remote was not updated.
 
 ## Intermediate output review
 
 - Cleanup candidate: `/Users/cocohu/Documents/Codex/2026-09-08/wo-x/work/emt-completion-db.OzJihV` (39 MB). This stopped disposable PostgreSQL cluster contains only synthetic integration-test data and can be regenerated from the committed SQL test. Kept pending owner-approved cleanup.
-- Keep `/Users/cocohu/Documents/Codex/2026-09-08/wo-x/work/emt-dependency-audit.json` as security evidence until remediation is verified.
+- Keep `/Users/cocohu/Documents/Codex/2026-09-08/wo-x/work/emt-dependency-audit.json` as before-remediation security evidence.
 - Existing drag-motion previews were not changed or removed.

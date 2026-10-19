@@ -34,12 +34,14 @@ try {
     0,
     'Workspace must remain private before verification',
   );
-  assert.equal(
-    await page
-      .locator('img.gms-logo')
-      .evaluate((image) => image.complete && image.naturalWidth > 0),
-    true,
-  );
+  await page.waitForFunction(() => {
+    const image = document.querySelector('img.gms-logo');
+    return (
+      image instanceof HTMLImageElement &&
+      image.complete &&
+      image.naturalWidth > 0
+    );
+  });
   await page.reload();
   await page
     .getByRole('button', { name: 'Continue with Microsoft', exact: true })
