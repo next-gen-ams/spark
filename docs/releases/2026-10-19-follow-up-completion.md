@@ -1,6 +1,6 @@
 # Follow-up completion
 
-Status: published and verified on Spark on 19 October 2026 (frontend `6ba552c`, workspace v13, reminders v12).
+Status: published on Spark on 19 October 2026 (completion frontend `6ba552c`, list-status follow-up `7dd4f94`, workspace v13, reminders v12).
 
 ## Interactive preview
 
@@ -60,6 +60,7 @@ Source is maintained on [Spark's `emt-tracker-source` branch](https://github.com
 
 ## List-status follow-up verification, 19 October 2026
 
+- Published in Spark `7dd4f946e75dc8b53680b8d64d1286932f8e4c9e`; Pages deployment `39184187745` succeeded. Live HTML references the new status-bearing JS/CSS assets. Source implementation: `9e26292` on `emt-tracker-source`. Existing shared assets and prior hashed chunks were retained.
 - `check-list-status.mjs` passed against actual UI components with synthetic local adapters: both status states in backlog and Decision log, agenda Pending, mark-complete immediate list update, refresh persistence, reopening and phone overflow. Desktop/phone evidence is stored as `preview-list-status*.png`. No live user records were changed.
 - 12/12 regression tests passed, including real reminder candidate generation excluding completed agenda/due/overdue work. Exercised-module coverage: 97.33% lines / 90.32% branches (not whole-app coverage). TypeScript, changed-code lint, static production build and configured-login smoke check passed; dependency audit remained zero.
 - Retrieved the deployed `emt-reminders` v12 source read-only: ACTIVE, with `if (!isFollowUpOpen(topic)) continue;` before candidate generation, and the shared helper returns false when `completed_at` exists. No backend change or email send was needed. Already-sent/in-flight mail cannot be recalled; subsequent evaluations skip completed work. Reopening or materially changing the follow-up restores eligibility under saved preferences.
