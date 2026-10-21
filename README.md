@@ -5,6 +5,11 @@ Spark hosts independent GMS tools and client mini-sites at
 repository**. Some directories contain editable HTML/JavaScript; others contain
 compiled releases maintained in a separate source location.
 
+New contributors: read [CONTRIBUTING.md](CONTRIBUTING.md) for adding a project,
+checks and release steps. Coding agents must also follow [AGENTS.md](AGENTS.md).
+Use a short-lived branch and PR; `main` requires the GitHub Actions `check` job
+to pass on an up-to-date branch. Merging still triggers the existing Pages release.
+
 ## Directory map
 
 | Directory | Purpose | Maintenance |
@@ -37,7 +42,8 @@ spelling and casing, including `GMS-way-quiz.html`, to preserve existing links.
   gates are not confidential storage. Browser publishable keys require backend
   access controls; do not publish server credentials or private records.
 - Review the complete diff and run the relevant checks and security scan before
-  pushing. Merge and deployment are separate from preparing a branch.
+  pushing your branch. Use a PR for every release, including scheduled updates.
+  Merge, Pages deployment and live verification are separate delivery steps.
 - Preserve superseded assets until removal is approved and cached-client,
   rollback and release requirements have been considered.
 

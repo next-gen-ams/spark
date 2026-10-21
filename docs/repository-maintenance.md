@@ -185,3 +185,31 @@ configuration is changed; the only workflow edit adds a read-only synthetic test
 - The original CI packaging test exposed GNU tar's hard-link behaviour; its
   test invocation was corrected to use the two flags already present in Pages.
   The fix passed before merge; no production packaging workflow was changed.
+
+## Contributor handoff and protected delivery — 22 October 2026
+
+The delivery convention follows ECC's GitHub Flow and verification-loop guidance,
+adapted to Spark's independent static sites: scoped branch, PR, local/security
+checks, required CI, merge, Pages publication, then live verification. Existing
+compiled releases stay committed here; there is no new root build system.
+
+- Added root AGENTS.md, CONTRIBUTING.md and a PR template. They cover source vs
+  export boundaries, new-project naming/README/base paths, shared dependencies,
+  public-data suitability, scoped changes and release/recovery steps.
+- Enabled protection for `main`: PR required for everyone including admins,
+  required GitHub Actions `check` (app ID 15368), up-to-date branch, resolved
+  review threads, no force push or branch deletion. An additional approving
+  reviewer is not mandatory, preserving the existing sole-maintainer PR flow.
+  The deployment-only Pages checks are intentionally not pre-merge requirements.
+- Pages remains legacy publication of the `main` root to `spark.kmt.global`.
+  Root/app files, URLs, auth and ExcelJS aliases are outside this change.
+- The local RMIT weekly snapshot task was found paused. Its old prompt assumes
+  direct push to main; its project README now requires migration to a PR flow
+  before resumption. No scheduler status or credential access was changed.
+
+The protection API response was checked against this policy. Local verification
+passed 234 references, 40 tests and exact-outbound-diff Gitleaks with no findings.
+The available PR Dashboard package audit reported zero vulnerabilities; it does
+not cover vendored dependencies. Only six Markdown files change, so application
+build/type/static-security checks have no new executable code to assess. The
+first protected PR merge, Pages publication and live checks remain to be verified.
