@@ -229,3 +229,25 @@ first protected release was verified as follows:
   REST/GraphQL readback confirms main protection remains enforced after merge.
 - These are static entry/resource/redirect and synthetic library checks. No
   production login, data mutation or authenticated backend-flow audit was performed.
+
+## Weekly PR refresh reactivated — 22 October 2026
+
+Coco confirmed the weekly Meltwater refresh should operate normally. The
+existing task was already paused before this repository maintenance; its
+configuration was last updated on 2 October and no retained run history or
+conclusive pause reason was found. Main protection does not require disabling it.
+
+- Reactivated the existing local task, preserving its Monday 10:00
+  Australia/Melbourne schedule, project, model and notification preference.
+  The scheduler records the next nominal run for Monday 26 October; dispatch may
+  include normal scheduler jitter.
+- Replaced the stale project-folder checkout and direct-main-push instructions
+  with a current-remote checkout in the run's temporary work directory and scoped
+  branch → PR → required checks → normal merge → Pages/live verification.
+  Main protection, application files, credentials and data were not changed.
+- The task still archives changed snapshots, reviews six English organic titles,
+  uses runtime-only 1Password credentials and retains the existing PR/GEO scope.
+- Verified the saved task and scheduler both report active with a next run;
+  refresh-script syntax and all 22 PR Dashboard tests passed. Recovery did not
+  call the live Meltwater API or create a new data snapshot, so API credentials
+  and an actual data-refresh release are verified by the scheduled execution.
