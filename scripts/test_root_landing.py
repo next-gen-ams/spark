@@ -14,10 +14,14 @@ class RootLandingTest(unittest.TestCase):
                     self.assertNotIn(entry.name.lower(), html)
                     self.assertNotIn(entry.name.replace("-", " ").lower(), html)
 
-    def test_root_has_no_navigation_or_asset_links(self):
+    def test_root_references_only_own_brand_assets(self):
         parser = References()
         parser.feed((ROOT / "index.html").read_text(encoding="utf-8"))
-        self.assertEqual(parser.urls, [])
+        self.assertEqual(set(parser.urls), {
+            "/assets/brand/kmt-logo.png", "/assets/fonts/dm-sans-variable.ttf",
+        })
+        html = (ROOT / "index.html").read_text(encoding="utf-8").lower()
+        self.assertNotRegex(html, r"<(?:a|script|iframe|form)\b")
 
 
 if __name__ == "__main__":

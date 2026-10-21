@@ -19,7 +19,8 @@ compiled releases maintained in a separate source location.
 | `gms-way-training/` | GMS Way training | Standalone static page |
 | `gms-website-directions/` | Website direction presentation | Standalone static page |
 
-`index.html` is a neutral landing page with no project names or links. Users must
+`index.html` is a KMT-branded landing page with no project names or links.
+Its original KMT logo and locally hosted DM Sans font live in `assets/`. Users must
 open the complete link shared with them. Its `noindex, nofollow` directive
 discourages indexing of the root page; it does not enforce access control.
 The public GitHub repository still exposes its file tree.

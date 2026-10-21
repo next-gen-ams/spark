@@ -44,7 +44,7 @@ decision. The legacy root redirects remain useful compatibility entry points.
 
 ## Verification and limits
 
-- `python3 scripts/check_site.py`: 232 local references checked; zero missing.
+- `python3 scripts/check_site.py`: 234 local references checked; zero missing.
 - `python3 -m unittest discover -s scripts -p 'test_*.py'`: 11 tests passed,
   including root-page privacy, missing-asset failure, traversal and symlink
   containment checks.
@@ -63,3 +63,17 @@ decision. The legacy root redirects remain useful compatibility entry points.
   disabled persisted credentials, no deployment step or credential input.
 - No application data, database policy, authentication behavior or external
   automation was changed by this maintenance work.
+
+## KMT branding refinement — 22 October 2026
+
+The root page now uses the existing KMT logo, its purple (`#763BFF`) and near-black
+(`#131222`), a pale lavender canvas and the established “See Infinitely.” line.
+The shared-link instruction is unchanged. Logo and licensed DM Sans font copies
+are hosted under root `assets/`, so no app directory or external font service is
+referenced by the page. No project names or navigation are exposed. The deliberate
+light palette preserves the original dark KMT wordmark in either browser theme.
+
+Local visual checks at 1280 px, 390 px and 320 px passed. Body text contrast is
+6.43:1 on white; heading and tagline also pass AA. The Impeccable mechanical
+check reported no findings. The source logo and font match the existing binary
+assets; only the copied licence's line endings/whitespace are normalised.

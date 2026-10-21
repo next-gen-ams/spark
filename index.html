@@ -4,55 +4,84 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="robots" content="noindex, nofollow">
-  <title>Spark</title>
+  <meta name="theme-color" content="#F5F2FB">
+  <title>Spark — KMT</title>
   <style>
-    :root {
-      color-scheme: light dark;
-      --ground: #FAF9F7;
-      --surface: #FFFFFF;
-      --ink: #25282B;
-      --muted: #6C6F71;
-      --line: #E4E2DD;
-      --accent: #FF6632;
+    @font-face {
+      font-family: "DM Sans";
+      src: url("/assets/fonts/dm-sans-variable.ttf") format("truetype");
+      font-weight: 100 1000;
+      font-style: normal;
+      font-display: swap;
     }
-    @media (prefers-color-scheme: dark) {
-      :root {
-        --ground: #191B1D;
-        --surface: #232628;
-        --ink: #ECEFF1;
-        --muted: #A2A7AB;
-        --line: #34383B;
-      }
+    :root {
+      color-scheme: light;
+      --ground: #F5F2FB;
+      --surface: #FFFFFF;
+      --ink: #131222;
+      --muted: #625B74;
+      --line: #E6E0F0;
+      --accent: #763BFF;
     }
     * { box-sizing: border-box; }
+    ::selection { color: #FFFFFF; background: var(--accent); }
     body {
       margin: 0;
       min-height: 100vh;
+      min-height: 100svh;
       display: grid;
       place-items: center;
-      padding: 24px;
+      padding: clamp(20px, 5vw, 64px);
       background: var(--ground);
       color: var(--ink);
-      font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+      font-family: "DM Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+      -webkit-font-smoothing: antialiased;
       line-height: 1.5;
     }
     main {
-      width: min(100%, 440px);
-      padding: clamp(24px, 6vw, 40px);
+      width: min(100%, 560px);
+      padding: clamp(28px, 7vw, 56px);
       background: var(--surface);
       border: 1px solid var(--line);
       border-radius: 16px;
     }
-    .spark { color: var(--accent); font-size: 28px; }
-    h1 { margin: 16px 0 10px; font-size: 24px; letter-spacing: -.02em; }
-    p { margin: 0; color: var(--muted); }
+    .brand { display: block; width: 164px; height: auto; }
+    h1 {
+      max-width: 12ch;
+      margin: 56px 0 18px;
+      font-size: clamp(34px, 5vw, 46px);
+      font-weight: 600;
+      line-height: 1.12;
+      letter-spacing: -.03em;
+      text-wrap: balance;
+    }
+    .instruction {
+      max-width: 32ch;
+      margin: 0;
+      color: var(--muted);
+      font-size: 17px;
+      line-height: 1.6;
+    }
+    .tagline {
+      margin: 48px 0 0;
+      color: #6130D2;
+      font-size: 14px;
+      font-style: italic;
+      font-weight: 500;
+    }
+    @media (max-width: 400px) {
+      h1 { margin-top: 40px; }
+      .instruction { font-size: 16px; }
+      .tagline { margin-top: 36px; }
+    }
   </style>
 </head>
 <body>
   <main>
-    <span class="spark" aria-hidden="true">✦</span>
+    <img class="brand" src="/assets/brand/kmt-logo.png" width="640" height="117" alt="KMT">
     <h1>Open your shared link</h1>
-    <p>Please use the complete link provided to you.</p>
+    <p class="instruction">Please use the complete link provided to you.</p>
+    <p class="tagline">See Infinitely.</p>
   </main>
 </body>
 </html>
