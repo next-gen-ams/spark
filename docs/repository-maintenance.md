@@ -4,7 +4,7 @@ Reviewed `main` at `7dd4f946e75dc8b53680b8d64d1286932f8e4c9e`:
 270 tracked files across nine app directories. This review covers repository
 structure and static references; it is not a live application or backend audit.
 
-## Changes prepared
+## Changes included
 
 - Added a repository map and source/publication boundaries in the root README.
 - Added root ignore rules for local credentials, dependencies and Python caches.
@@ -85,3 +85,26 @@ business, followed by the established “Engineering what’s next.” and
 “See Infinitely.” lines. A separate, quieter “Have a shared link?” prompt explains
 how to continue to the visitor's workspace. No input form, project directory or
 navigation is added. Brand positioning now leads; the link instruction follows.
+
+## Published verification — 22 October 2026
+
+- [PR #1](https://github.com/next-gen-ams/spark/pull/1) merged as
+  `c49d0c74e0edd0277b11656f792e56d439d9a5f0`.
+- GitHub Pages deployment and main-branch Repository checks passed:
+  [Pages run](https://github.com/next-gen-ams/spark/actions/runs/39686673256),
+  [checks run](https://github.com/next-gen-ams/spark/actions/runs/39686672940).
+- The live root page shows KMT Spark, the marketing technology positioning,
+  the two established brand lines and the shared-link prompt. No project
+  directory is displayed.
+- All nine app directory URLs and five legacy HTML aliases returned HTTP 200.
+  Including their statically referenced local dependencies and the EMT silent
+  authentication callback, 109 live URLs were verified byte-for-byte against
+  the release files, with no missing or mismatched resources.
+- Browser navigation confirmed all nine app entry pages or their expected
+  sign-in gates. Each of the five legacy aliases reached its correct directory
+  route. No credentials were entered, app records changed or emails sent.
+- Limits: these are entry, redirect and static-resource checks, not authenticated
+  business-flow or backend-permission tests. External third-party links and
+  dynamically constructed resource URLs were outside this verification.
+- Legacy EMT assets and duplicated libraries remain retained pending approval;
+  publishing this release does not authorise their removal.
