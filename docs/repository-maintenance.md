@@ -9,22 +9,22 @@ structure and static references; it is not a live application or backend audit.
 - Added a repository map and source/publication boundaries in the root README.
 - Added root ignore rules for local credentials, dependencies and Python caches.
 - Added an offline local-reference checker, regression tests and a read-only CI
-  workflow. No directory migration or asset deletion is included.
+  workflow. That root-page release included no directory migration or asset deletion.
 - Replaced the root project directory with a neutral shared-link prompt. No app
   names, links or project metadata remain in the root HTML. Added `noindex,
   nofollow` to that page. Direct app URLs are unchanged. This reduces casual
   discovery; the public repository and static files remain accessible.
 
-## Cleanup candidates requiring approval
+## Original cleanup findings — status updated 22 October 2026
 
-Paths below are relative to the repository root. Keep them until the relevant
-owner approves removal; this review does not establish a retention policy.
+Paths below are relative to the repository root. Coco authorised conditional
+cleanup on 22 October 2026; the resulting scope and compatibility checks follow.
 
 | Exact path | Evidence and likely benefit | Required next step |
 | --- | --- | --- |
-| `emt-tracker/_next/` | Legacy Next-style static output; the current entry page loads Vite assets from `emt-tracker/assets/` instead. Roughly 18 MB of older files. | EMT maintainer: check source release history, cached-client references and rollback requirements before removing. |
-| `emt-tracker/assets/index-BnZBXd45.js` and `emt-tracker/assets/index-B6wFMor2.css` | Older entry assets; current HTML references `index-DP38htVr.js` and `index-IwQI6KxW.css`. | Confirm release retention and cached-client compatibility together with the `_next/` review. |
-| `uq-info-day/exceljs.min.js`, `uq-china-social-wip/exceljs.min.js`, `gms-tracking/vendor/exceljs.min.js`, `gms-tracking-v2/vendor/exceljs.min.js` | Four byte-identical 947,702-byte bundles. A shared copy could save 2,843,106 bytes. | Coordinate all four source projects before changing references. Separate copies currently preserve independent releases. |
+| `emt-tracker/_next/` | Legacy Next-style static output; the current entry page loads Vite assets from `emt-tracker/assets/` instead. Roughly 18 MB of older files. | Removed from the current tree after the checks below; recoverable from the archive tag. |
+| `emt-tracker/assets/index-BnZBXd45.js` and `emt-tracker/assets/index-B6wFMor2.css` | Older entry assets; current HTML references `index-DP38htVr.js` and `index-IwQI6KxW.css`. | Retained: this is the immediately previous Vite release, intentionally kept for existing sessions. |
+| `uq-info-day/exceljs.min.js`, `uq-china-social-wip/exceljs.min.js`, `gms-tracking/vendor/exceljs.min.js`, `gms-tracking-v2/vendor/exceljs.min.js` | Four byte-identical 947,702-byte bundles. A shared copy could save 2,843,106 bytes. | Consolidated into one verified bundle with four compatibility symlinks; source loaders and deployed URL contents stay unchanged. |
 
 V1/V2 tracking share some identical modules, but they are separate deployments.
 Do not merge their directories or turn one into a redirect without a migration
@@ -106,5 +106,61 @@ navigation is added. Brand positioning now leads; the link instruction follows.
 - Limits: these are entry, redirect and static-resource checks, not authenticated
   business-flow or backend-permission tests. External third-party links and
   dynamically constructed resource URLs were outside this verification.
-- Legacy EMT assets and duplicated libraries remain retained pending approval;
-  publishing this release does not authorise their removal.
+- At the root-page release, legacy EMT assets and duplicated libraries were
+  retained pending approval. The subsequent authorised cleanup is recorded below.
+
+## Authorised asset cleanup — 22 October 2026
+
+### Scope and recovery
+
+- Retired `emt-tracker/_next/`: 125 files, 18,483,972 bytes. The current app is the
+  React/Vite release published on 19 October, while the last change to these Next
+  artifacts was 29 September. The live HTML and retained Vite scripts/styles do
+  not reference this tree. No service-worker registration or dynamic JS import
+  was found in the current entry bundle. The live HTML cache lifetime is 600 s.
+- Retained `emt-tracker/assets/index-BnZBXd45.js` and `index-B6wFMor2.css`
+  (1,103,456 bytes together): the previous Vite release remains available for
+  existing sessions, as the source release record originally intended.
+- Full recovery tree: tag `archive/spark-pre-cleanup-2026-10-22`, pointing at
+  `8c7358f3c6c77db9a8b4aa93a0acc9b7342c03b6`. Git history is not rewritten.
+- Removed internal `_next/` resource URLs are retired; this is not a promise to
+  preserve pre-Vite cached browser tabs indefinitely. Current app entry URLs,
+  root aliases, Microsoft callback, current and preceding Vite bundles, fonts
+  and logos are preserved. No app data, account or backend setting is changed.
+
+### ExcelJS compatibility
+
+The four 947,702-byte ExcelJS bundles were identical, and matched the official
+npm ExcelJS 4.4.0 distribution with its tarball integrity verified. One original
+bundle now lives at `assets/vendor/exceljs-7e49da68588e250d.min.js`, with its MIT
+licence and checksum manifest. Relative symlinks retain all four old paths.
+No application HTML or lazy-loader source is changed, so separate app source
+projects continue to publish the same script URLs.
+
+The current Pages build log confirms `upload-pages-artifact` uses
+`tar --dereference --hard-dereference`. The deployed four paths therefore remain
+regular JavaScript responses with exactly the old bytes, including for cached
+HTML. This saves three physical checkout copies (2,843,106 bytes before small
+symlink metadata), not deployed transfer size or Git blob/history size. The
+artifact intentionally contains the compatibility copies.
+
+### Checks
+
+- 234 local references and 14 Python tests passed, including internal symlink
+  containment and a dereferenced tar archive with byte-identical old script paths.
+- Four synthetic XLSX write/read round trips passed using the existing browser
+  UMD bundle via each original path: text, numbers, formula/results, styles and
+  merged cells survive. No production export, credentials or app data are used.
+- Existing PR Dashboard tests: 22 passed. The read-only CI workflow now also runs
+  the four ExcelJS tests. Version pinning prevents silent shared-library upgrades.
+- As before, the PR Dashboard package audit does not inventory vendored bundle
+  dependencies. This is deduplication of the existing version, not a dependency
+  security upgrade.
+
+Pre-push review covered the exact outbound paths and compatibility-link targets.
+Gitleaks found no outbound secrets; targeted offline Semgrep checks found no
+shell execution, unbounded eval or unsafe extraction in the new test tools.
+The available PR Dashboard package audit reported zero vulnerabilities; the
+unchanged vendored bundle's transitive dependency tree is not covered by that
+lockfile audit. No authentication, authorisation, database or production workflow
+configuration is changed; the only workflow edit adds a read-only synthetic test.

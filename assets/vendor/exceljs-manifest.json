@@ -1,0 +1,12 @@
+{
+  "version": "4.4.0",
+  "file": "assets/vendor/exceljs-7e49da68588e250d.min.js",
+  "sha256": "7e49da68588e250dbb8bba190d2caa8ab3787cc0284bda1d8b2f805c4df742c9",
+  "license": "assets/vendor/ExcelJS-LICENSE.txt",
+  "aliases": [
+    "uq-info-day/exceljs.min.js",
+    "uq-china-social-wip/exceljs.min.js",
+    "gms-tracking/vendor/exceljs.min.js",
+    "gms-tracking-v2/vendor/exceljs.min.js"
+  ]
+}
