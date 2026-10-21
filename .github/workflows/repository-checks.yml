@@ -1,0 +1,24 @@
+name: Repository checks
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4, verified 2026-10-21
+        with:
+          persist-credentials: false
+      - name: Check local site references
+        run: python3 scripts/check_site.py
+      - name: Test reference checker
+        run: python3 -m unittest discover -s scripts -p 'test_*.py'
+      - name: Test PR Dashboard
+        run: npm --prefix pr-dashboard test
