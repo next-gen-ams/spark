@@ -1,0 +1,11 @@
+# Local credentials and machine-specific files must never reach this public site.
+.DS_Store
+.env
+.env.*
+node_modules/
+coverage/
+*.log
+__pycache__/
+*.py[cod]
+
+# Do not ignore assets/, _next/ or dist/ globally: some apps publish build output.
