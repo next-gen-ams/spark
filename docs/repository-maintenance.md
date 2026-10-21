@@ -212,4 +212,20 @@ passed 234 references, 40 tests and exact-outbound-diff Gitleaks with no finding
 The available PR Dashboard package audit reported zero vulnerabilities; it does
 not cover vendored dependencies. Only six Markdown files change, so application
 build/type/static-security checks have no new executable code to assess. The
-first protected PR merge, Pages publication and live checks remain to be verified.
+first protected release was verified as follows:
+
+- [PR #3](https://github.com/next-gen-ams/spark/pull/3) was blocked while its required
+  check ran, became mergeable after success and merged normally as
+  `58ae6ce54ecf60627fdcc66dc9978b5a3bf128e5`. No administrator bypass was used.
+- [PR checks](https://github.com/next-gen-ams/spark/actions/runs/39692303226),
+  [main checks](https://github.com/next-gen-ams/spark/actions/runs/39692359415) and
+  the unchanged [Pages release](https://github.com/next-gen-ams/spark/actions/runs/39692359378)
+  all succeeded. The Pages API confirmed that merged commit was built, with no error.
+- After deployment, 118 live URLs returned HTTP 200 and matched repository bytes:
+  root, all nine app entries, five legacy redirects, static dependencies, callback,
+  retained Vite assets and shared/compatibility ExcelJS paths. The four original
+  ExcelJS HTTP responses also passed synthetic XLSX write/read checks.
+- Pages mode, source branch/root and custom domain match the pre-change settings;
+  REST/GraphQL readback confirms main protection remains enforced after merge.
+- These are static entry/resource/redirect and synthetic library checks. No
+  production login, data mutation or authenticated backend-flow audit was performed.
