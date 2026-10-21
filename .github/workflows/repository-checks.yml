@@ -20,5 +20,7 @@ jobs:
         run: python3 scripts/check_site.py
       - name: Test reference checker
         run: python3 -m unittest discover -s scripts -p 'test_*.py'
+      - name: Test ExcelJS browser compatibility
+        run: node --test scripts/asset-compatibility.test.cjs
       - name: Test PR Dashboard
         run: npm --prefix pr-dashboard test

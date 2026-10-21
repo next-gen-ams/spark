@@ -13,8 +13,8 @@ compiled releases maintained in a separate source location.
 | `gms-tracking/` | Original paid performance dashboard | Retained V1 deployment; coordinate changes with the Tracking Dashboard source project |
 | `gms-tracking-v2/` | Current V2 paid performance dashboard | Published from the separate Tracking Dashboard source project |
 | `pr-dashboard/` | RMIT DSC China PR tracker | Editable static app, refresh scripts and tests; see its [README](pr-dashboard/README.md) |
-| `uq-info-day/` | UQ China Info Day planner | Standalone static page and local ExcelJS bundle |
-| `uq-china-social-wip/` | UQ social and boosting planner | Standalone static page and local ExcelJS bundle |
+| `uq-info-day/` | UQ China Info Day planner | Standalone static page and preserved ExcelJS URL |
+| `uq-china-social-wip/` | UQ social and boosting planner | Standalone static page and preserved ExcelJS URL |
 | `gms-way-quiz/` | GMS Way quiz | Standalone static page |
 | `gms-way-training/` | GMS Way training | Standalone static page |
 | `gms-website-directions/` | Website direction presentation | Standalone static page |
@@ -26,7 +26,7 @@ discourages indexing of the root page; it does not enforce access control.
 The public GitHub repository still exposes its file tree.
 Root-level legacy HTML files redirect to directory routes. Keep their exact
 spelling and casing, including `GMS-way-quiz.html`, to preserve existing links.
-`CNAME` configures the custom domain; `.nojekyll` preserves paths such as `_next/`.
+`CNAME` configures the custom domain; `.nojekyll` keeps publication as plain static files.
 
 ## Before publishing
 
@@ -48,6 +48,7 @@ From the repository root, using Python 3.9+ and Node.js 20+:
 ```sh
 python3 scripts/check_site.py
 python3 -m unittest discover -s scripts -p 'test_*.py'
+node --test scripts/asset-compatibility.test.cjs
 npm --prefix pr-dashboard test
 npm --prefix pr-dashboard audit --package-lock-only --ignore-scripts
 ```
@@ -65,3 +66,14 @@ For the PR Dashboard preview, use its documented localhost-only server.
 
 See [the 21 October 2026 maintenance review](docs/repository-maintenance.md) for
 verified cleanup candidates and remaining work.
+
+## Shared assets and retention
+
+The four existing ExcelJS URLs are compatibility symlinks to one verified bundle;
+Pages dereferences them into ordinary files. See [shared vendor guidance](assets/vendor/README.md)
+before changing deployment tooling or refreshing an app from its separate source.
+The offline XLSX tests use synthetic records only.
+
+The retired EMT Next output was removed after current-reference checks. The
+immediately previous Vite JS/CSS pair remains for existing sessions. The
+`archive/spark-pre-cleanup-2026-10-22` tag preserves the full pre-cleanup tree.
