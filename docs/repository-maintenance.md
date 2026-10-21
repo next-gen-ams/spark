@@ -10,8 +10,10 @@ structure and static references; it is not a live application or backend audit.
 - Added root ignore rules for local credentials, dependencies and Python caches.
 - Added an offline local-reference checker, regression tests and a read-only CI
   workflow. No directory migration or asset deletion is included.
-- Corrected the landing page's EMT description to weekly, matching the deployed
-  app's README.
+- Replaced the root project directory with a neutral shared-link prompt. No app
+  names, links or project metadata remain in the root HTML. Added `noindex,
+  nofollow` to that page. Direct app URLs are unchanged. This reduces casual
+  discovery; the public repository and static files remain accessible.
 
 ## Cleanup candidates requiring approval
 
@@ -42,9 +44,10 @@ decision. The legacy root redirects remain useful compatibility entry points.
 
 ## Verification and limits
 
-- `python3 scripts/check_site.py`: 238 local references checked; zero missing.
-- `python3 -m unittest discover -s scripts -p 'test_*.py'`: nine tests passed,
-  including missing-asset failure, traversal and symlink containment checks.
+- `python3 scripts/check_site.py`: 232 local references checked; zero missing.
+- `python3 -m unittest discover -s scripts -p 'test_*.py'`: 11 tests passed,
+  including root-page privacy, missing-asset failure, traversal and symlink
+  containment checks.
 - Existing PR Dashboard tests: 22 passed.
 - `npm --prefix pr-dashboard audit --package-lock-only --ignore-scripts`: zero
   reported vulnerabilities; no third-party npm
@@ -53,7 +56,7 @@ decision. The legacy root redirects remain useful compatibility entry points.
   `sb_publishable_` browser keys. No server credential was identified by this
   scan. This classification does not verify backend row-level permissions.
 - Exact staged diff reviewed; `gitleaks stdin --redact` on that diff identified
-  no secrets. Local Semgrep checks on the two new Python scripts identified no
+  no secrets. Local Semgrep checks on the three new Python scripts identified no
   shell execution, dynamic-code evaluation, unsafe deserialization or disabled
   TLS checks. These are targeted rules, not a comprehensive application audit.
 - Workflow review: read-only repository permission, pinned checkout action,

@@ -19,7 +19,10 @@ compiled releases maintained in a separate source location.
 | `gms-way-training/` | GMS Way training | Standalone static page |
 | `gms-website-directions/` | Website direction presentation | Standalone static page |
 
-`index.html` is the curated landing page; it does not list every deployment.
+`index.html` is a neutral landing page with no project names or links. Users must
+open the complete link shared with them. Its `noindex, nofollow` directive
+discourages indexing of the root page; it does not enforce access control.
+The public GitHub repository still exposes its file tree.
 Root-level legacy HTML files redirect to directory routes. Keep their exact
 spelling and casing, including `GMS-way-quiz.html`, to preserve existing links.
 `CNAME` configures the custom domain; `.nojekyll` preserves paths such as `_next/`.
