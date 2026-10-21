@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="robots" content="noindex, nofollow">
   <meta name="theme-color" content="#F5F2FB">
-  <title>Spark — KMT</title>
+  <title>KMT Spark</title>
   <style>
     @font-face {
       font-family: "DM Sans";
@@ -39,49 +39,74 @@
       line-height: 1.5;
     }
     main {
-      width: min(100%, 560px);
+      width: min(100%, 680px);
+      min-width: 0;
       padding: clamp(28px, 7vw, 56px);
       background: var(--surface);
       border: 1px solid var(--line);
       border-radius: 16px;
     }
-    .brand { display: block; width: 164px; height: auto; }
+    .brand-lockup { display: flex; align-items: center; gap: 20px; }
+    .brand { display: block; width: 144px; height: auto; }
+    .product-name {
+      padding-left: 20px;
+      border-left: 1px solid var(--line);
+      color: var(--muted);
+      font-size: 19px;
+      font-weight: 500;
+      line-height: 1.5;
+    }
     h1 {
-      max-width: 12ch;
-      margin: 56px 0 18px;
-      font-size: clamp(34px, 5vw, 46px);
+      max-width: 22ch;
+      margin: 56px 0 20px;
+      font-size: clamp(30px, 4.5vw, 44px);
       font-weight: 600;
       line-height: 1.12;
       letter-spacing: -.03em;
       text-wrap: balance;
     }
+    h1 span { display: block; }
+    .shared-link {
+      margin-top: 40px;
+      padding-top: 26px;
+      border-top: 1px solid var(--line);
+    }
+    h2 { margin: 0 0 6px; font-size: 17px; font-weight: 600; line-height: 1.4; }
     .instruction {
-      max-width: 32ch;
+      max-width: 45ch;
       margin: 0;
       color: var(--muted);
-      font-size: 17px;
+      font-size: 16px;
       line-height: 1.6;
     }
     .tagline {
-      margin: 48px 0 0;
+      margin: 0;
       color: #6130D2;
-      font-size: 14px;
+      font-size: 17px;
       font-style: italic;
       font-weight: 500;
     }
     @media (max-width: 400px) {
       h1 { margin-top: 40px; }
-      .instruction { font-size: 16px; }
-      .tagline { margin-top: 36px; }
+      .brand-lockup { gap: 14px; }
+      .brand { width: 120px; }
+      .product-name { padding-left: 14px; font-size: 17px; }
+      .shared-link { margin-top: 32px; padding-top: 22px; }
     }
   </style>
 </head>
 <body>
   <main>
-    <img class="brand" src="/assets/brand/kmt-logo.png" width="640" height="117" alt="KMT">
-    <h1>Open your shared link</h1>
-    <p class="instruction">Please use the complete link provided to you.</p>
+    <div class="brand-lockup">
+      <img class="brand" src="/assets/brand/kmt-logo.png" width="640" height="117" alt="KMT">
+      <span class="product-name">Spark</span>
+    </div>
+    <h1><span>Marketing technology.</span> <span>Engineering what’s next.</span></h1>
     <p class="tagline">See Infinitely.</p>
+    <section class="shared-link" aria-labelledby="shared-link-title">
+      <h2 id="shared-link-title">Have a shared link?</h2>
+      <p class="instruction">Open the link shared with you to continue to your workspace.</p>
+    </section>
   </main>
 </body>
 </html>

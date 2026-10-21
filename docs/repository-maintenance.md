@@ -68,7 +68,7 @@ decision. The legacy root redirects remain useful compatibility entry points.
 
 The root page now uses the existing KMT logo, its purple (`#763BFF`) and near-black
 (`#131222`), a pale lavender canvas and the established “See Infinitely.” line.
-The shared-link instruction is unchanged. Logo and licensed DM Sans font copies
+Logo and licensed DM Sans font copies
 are hosted under root `assets/`, so no app directory or external font service is
 referenced by the page. No project names or navigation are exposed. The deliberate
 light palette preserves the original dark KMT wordmark in either browser theme.
@@ -77,3 +77,11 @@ Local visual checks at 1280 px, 390 px and 320 px passed. Body text contrast is
 6.43:1 on white; heading and tagline also pass AA. The Impeccable mechanical
 check reported no findings. The source logo and font match the existing binary
 assets; only the copied licence's line endings/whitespace are normalised.
+
+## Welcome copy refinement — 22 October 2026
+
+The visible lockup now reads KMT / Spark. “Marketing technology.” introduces the
+business, followed by the established “Engineering what’s next.” and
+“See Infinitely.” lines. A separate, quieter “Have a shared link?” prompt explains
+how to continue to the visitor's workspace. No input form, project directory or
+navigation is added. Brand positioning now leads; the link instruction follows.
