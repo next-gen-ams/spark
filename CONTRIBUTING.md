@@ -18,7 +18,7 @@ git switch -c feature/project-slug origin/main
 # Make and verify the scoped changes, then inspect the complete diff.
 git diff --check
 git diff
-git add your-project/
+git add your-project/ README.md
 git diff --cached
 git commit -m "feat(project-slug): describe the delivered change"
 git push -u origin feature/project-slug
@@ -104,9 +104,12 @@ git diff --check
 ```
 
 Also run the owning project's build/tests, dependency audit and applicable static
-security checks. Review the exact files to be pushed and run a local secret scan,
-for example `git diff --cached | gitleaks stdin --redact`. Fix new actionable
-findings before publication; exposed credentials, unresolved high/critical
+security checks. Scan staged changes before committing, for example
+`git diff --cached | gitleaks stdin --redact`. Before pushing, fetch `origin` and
+scan every outbound commit with `gitleaks git --log-opts="origin/main..HEAD" --redact`;
+a staged-only scan after committing would be empty. Review the complete outbound
+diff with `git diff origin/main...HEAD` too. Fix new actionable findings before
+publication; exposed credentials, unresolved high/critical
 findings or an unavailable required scan stop the push. State scan coverage and
 pre-existing findings in the PR. Never send source to an unapproved scanner.
 
