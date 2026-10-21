@@ -27,7 +27,16 @@ Run the static preview:
 npm run preview
 ```
 
-Then open `http://127.0.0.1:4173`. The server binds to localhost by default and exposes no browser-triggered manual refresh action. A local Codex weekly Meltwater automation exists; it was paused when checked on 22 October 2026. Before resuming it, replace its old direct-push publication step with the branch/PR/checks flow in [CONTRIBUTING.md](../CONTRIBUTING.md). Do not bypass main protection for snapshot updates.
+Then open `http://127.0.0.1:4173`. The server binds to localhost by default and exposes no browser-triggered manual refresh action.
+
+The local Codex weekly Meltwater automation was reactivated on 22 October 2026,
+scheduled for Mondays at 10:00 Australia/Melbourne. Each run starts from the
+current remote main in its own temporary checkout, refreshes the snapshot and
+reviews the six visible English titles. Publication uses the branch/PR/checks
+flow in [CONTRIBUTING.md](../CONTRIBUTING.md), then normal protected merge and
+Pages/live verification. Credentials remain runtime-only through 1Password.
+The recovery verified the active schedule, script syntax and existing tests;
+live API authentication and publication are checked by the actual scheduled run.
 
 Run the local tests with:
 
