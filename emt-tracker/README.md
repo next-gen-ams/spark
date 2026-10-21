@@ -24,3 +24,13 @@ The compiled static site is committed in this directory so it can be served by t
 - Dependency audit on 19 October 2026: zero known vulnerabilities across all severities, down from 3 critical / 19 high / 16 moderate / 6 low. All dependency versions and security overrides are committed with the source lockfile.
 - Verification: 12 regression tests, isolated PostgreSQL integration tests, rolled-back production-schema completion checks, TypeScript, targeted lint, Deno checks and browser checks for the local production build. Inherited full-repository generated-UI lint issues are documented separately and are not reported as a full lint pass.
 - Backend release: `emt-workspace` v13 and `emt-reminders` v12. No existing user task was marked complete by the release checks.
+
+## Published-asset maintenance — 22 October 2026
+
+The obsolete `_next/` tree was removed after the Vite migration and current
+reference checks. Current Vite assets, the immediately previous Vite JS/CSS pair,
+fonts, logos and `auth-silent.html` remain available. The source application,
+authentication, stored records and reminders were not changed. The complete
+pre-cleanup tree is recoverable from `archive/spark-pre-cleanup-2026-10-22`.
+See the [Spark maintenance record](../docs/repository-maintenance.md) for the
+approved scope, compatibility limits and live verification.

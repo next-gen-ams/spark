@@ -164,3 +164,24 @@ The available PR Dashboard package audit reported zero vulnerabilities; the
 unchanged vendored bundle's transitive dependency tree is not covered by that
 lockfile audit. No authentication, authorisation, database or production workflow
 configuration is changed; the only workflow edit adds a read-only synthetic test.
+
+### Cleanup publication and live verification
+
+- [PR #2](https://github.com/next-gen-ams/spark/pull/2) merged as
+  `81f3e68f9fc167a016cd3967b5150f9d0fcbcd65`. Main CI passed all 40 tests,
+  including Linux Pages-style tar expansion with both dereference flags.
+- [Pages deployment](https://github.com/next-gen-ams/spark/actions/runs/39690279517)
+  and [main checks](https://github.com/next-gen-ams/spark/actions/runs/39690279095)
+  completed successfully.
+- 118 live URLs returned HTTP 200 and matched the release files byte-for-byte:
+  root, nine apps, five legacy aliases, static dependencies, Microsoft callback,
+  both preceding Vite assets, runtime logos and the shared/legacy ExcelJS URLs.
+- All four original ExcelJS HTTP responses passed checksum validation and
+  synthetic browser-UMD XLSX round trips after deployment. No production login,
+  export or data mutation was needed. Two sampled retired Next resource URLs
+  returned the expected 404.
+- The archive tag was checked on the remote and resolves to the complete
+  pre-cleanup commit `8c7358f3c6c77db9a8b4aa93a0acc9b7342c03b6`.
+- The original CI packaging test exposed GNU tar's hard-link behaviour; its
+  test invocation was corrected to use the two flags already present in Pages.
+  The fix passed before merge; no production packaging workflow was changed.
