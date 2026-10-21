@@ -3,6 +3,7 @@
 import hashlib
 import json
 import subprocess
+import sys
 import tarfile
 import tempfile
 import unittest
@@ -31,8 +32,9 @@ class AssetCompatibilityTest(unittest.TestCase):
         # Pages' upload action dereferences symlinks before deploying the archive.
         with tempfile.TemporaryDirectory() as temporary:
             archive = Path(temporary) / "pages.tar"
+            flags = ["--dereference", "--hard-dereference", "-cf"] if sys.platform.startswith("linux") else ["-hcf"]
             subprocess.run(
-                ["tar", "-hcf", str(archive), "-C", str(ROOT), "--", *MANIFEST["aliases"]],
+                ["tar", *flags, str(archive), "-C", str(ROOT), "--", *MANIFEST["aliases"]],
                 check=True, capture_output=True,
             )
             with tarfile.open(archive) as packed:
