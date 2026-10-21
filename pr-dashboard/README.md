@@ -27,7 +27,7 @@ Run the static preview:
 npm run preview
 ```
 
-Then open `http://127.0.0.1:4173`. The server binds to localhost by default and exposes no browser-triggered manual refresh action. A local Codex automation refreshes Meltwater every Monday.
+Then open `http://127.0.0.1:4173`. The server binds to localhost by default and exposes no browser-triggered manual refresh action. A local Codex weekly Meltwater automation exists; it was paused when checked on 22 October 2026. Before resuming it, replace its old direct-push publication step with the branch/PR/checks flow in [CONTRIBUTING.md](../CONTRIBUTING.md). Do not bypass main protection for snapshot updates.
 
 Run the local tests with:
 
