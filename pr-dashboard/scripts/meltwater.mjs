@@ -1,5 +1,14 @@
 const API_BASE = 'https://api.meltwater.com';
 
+const REVIEWED_TITLES = Object.freeze({
+  '澳洲游戏设计本科留学申请条件是什么': 'Entry Requirements for Undergraduate Game Design Study in Australia',
+  '2026全球能源前沿报告：光热发电配套大容量熔盐储热实现规模化部署': '2026 Global Energy Frontiers Report: Large-Scale Deployment of High-Capacity Molten Salt Thermal Storage for Solar Thermal Power',
+  '研究报告 | 全球能源领域前沿技术发展报告（2026）': 'Research Report | Frontier Technology Developments in Global Energy (2026)',
+  '澳洲游戏设计专业申请流程解析': 'The Application Process for Game Design Programs in Australia',
+  '澳洲服装设计本科留学申请要求': 'Entry Requirements for Undergraduate Fashion Design Study in Australia',
+  '澳洲奢侈品管理专业研究生留学入学条件': 'Entry Requirements for Postgraduate Luxury Management Study in Australia',
+});
+
 const TOPIC_LABELS = {
   colleges_and_universities: 'Colleges & universities',
   study_abroad: 'Study abroad',
@@ -262,6 +271,7 @@ function normalizeMention(document) {
 
 function translateTitle(title) {
   const normalized = title.replace(/[“”]/g, '"').replace(/\s+/g, ' ').trim();
+  if (Object.hasOwn(REVIEWED_TITLES, normalized)) return REVIEWED_TITLES[normalized];
   if (normalized.includes('上海性价比高的国际中本贯通学校：东鼎新加坡方向深度解析')) {
     return 'A Detailed Look at Shanghai Dongding\'s Singapore Pathway';
   }

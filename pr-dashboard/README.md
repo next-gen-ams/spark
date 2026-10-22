@@ -35,8 +35,11 @@ current remote main in its own temporary checkout, refreshes the snapshot and
 reviews the six visible English titles. Publication uses the branch/PR/checks
 flow in [CONTRIBUTING.md](../CONTRIBUTING.md), then normal protected merge and
 Pages/live verification. Credentials remain runtime-only through 1Password.
-The recovery verified the active schedule, script syntax and existing tests;
-live API authentication and publication are checked by the actual scheduled run.
+The recovery verified the active schedule, script syntax and existing tests.
+A manual refresh on 22 October then verified the live API, snapshot archive and
+six reviewed English titles; see the [maintenance record](../docs/repository-maintenance.md).
+Every release must still confirm the protected PR, Pages deployment and live
+snapshot; an active schedule alone does not prove that data has been refreshed.
 
 Run the local tests with:
 

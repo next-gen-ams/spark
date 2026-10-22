@@ -251,3 +251,29 @@ conclusive pause reason was found. Main protection does not require disabling it
   refresh-script syntax and all 22 PR Dashboard tests passed. Recovery did not
   call the live Meltwater API or create a new data snapshot, so API credentials
   and an actual data-refresh release are verified by the scheduled execution.
+
+## Manual weekly refresh — 22 October 2026
+
+- Ran the existing refresh command from a fresh remote checkout at
+  `a762a388089ca643cbeabe5748fdf5f57d268a71`. The existing 1Password credential
+  was injected only into the process environment, with no plaintext staging file.
+  All seven Meltwater requests returned HTTP 200, including custom reach analytics
+  and two additional peak-day queries. Logs contain endpoint/status metadata only.
+- Snapshot generated at `2026-10-21T23:59:44.239Z` (22 October in Melbourne),
+  replacing the 30 September snapshot. The rolling three-month window contains
+  268 mentions, with 100 recent mentions and three peak-day samples. These counts
+  describe the refreshed window, not a net increase over the old time window.
+- Archived the previous published snapshot byte-for-byte at
+  `pr-dashboard/data/history/meltwater-previous.json`. Reviewed six English titles
+  and added exact-title mappings for future refreshes; source titles, metrics,
+  dates and URLs remain unchanged by translation. Public snapshot fields are
+  unchanged. Next refresh remains 26 October at 10:00 Australia/Melbourne.
+- All 40 repository tests, 234 local references and refresh-script syntax checks
+  passed. Reviewed the scoped diff, snapshot field/URL suitability, title reuse,
+  aggregate consistency and unchanged auth/deployment boundaries. Local Gitleaks,
+  targeted offline JavaScript Semgrep rules and the available PR Dashboard package
+  audit form the pre-push gate; the package audit does not inventory other sites'
+  compiled/vendored dependencies. No new dependency or application gate is added.
+- Publish through a checked PR, then verify the deployed snapshot, archive,
+  reviewed titles, next-refresh time and relevant static resources. The PR release
+  record carries the final merge/deployment evidence; merge alone is insufficient.
