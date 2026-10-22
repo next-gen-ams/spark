@@ -274,6 +274,7 @@ conclusive pause reason was found. Main protection does not require disabling it
   targeted offline JavaScript Semgrep rules and the available PR Dashboard package
   audit form the pre-push gate; the package audit does not inventory other sites'
   compiled/vendored dependencies. No new dependency or application gate is added.
-- Publish through a checked PR, then verify the deployed snapshot, archive,
-  reviewed titles, next-refresh time and relevant static resources. The PR release
-  record carries the final merge/deployment evidence; merge alone is insufficient.
+- Publish through [PR #6](https://github.com/next-gen-ams/spark/pull/6), then verify
+  the deployed snapshot, archive, reviewed titles, next-refresh time and relevant
+  static resources. That PR's release record carries the final merge/deployment
+  evidence; merge alone is insufficient.
