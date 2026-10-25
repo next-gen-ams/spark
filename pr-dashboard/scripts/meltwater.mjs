@@ -1,6 +1,7 @@
 const API_BASE = 'https://api.meltwater.com';
 
 const REVIEWED_TITLES = Object.freeze({
+  '2026交互设计本科留学前十所院校有哪些': 'Which Are the Top 10 Schools for Undergraduate Interactive Design Study Abroad in 2026?',
   '澳洲游戏设计本科留学申请条件是什么': 'Entry Requirements for Undergraduate Game Design Study in Australia',
   '2026全球能源前沿报告：光热发电配套大容量熔盐储热实现规模化部署': '2026 Global Energy Frontiers Report: Large-Scale Deployment of High-Capacity Molten Salt Thermal Storage for Solar Thermal Power',
   '研究报告 | 全球能源领域前沿技术发展报告（2026）': 'Research Report | Frontier Technology Developments in Global Energy (2026)',
