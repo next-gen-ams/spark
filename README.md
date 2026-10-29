@@ -18,6 +18,7 @@ to pass on an up-to-date branch. Merging still triggers the existing Pages relea
 | `gms-tracking/` | Original paid performance dashboard | Retained V1 deployment; coordinate changes with the Tracking Dashboard source project |
 | `gms-tracking-v2/` | Current V2 paid performance dashboard | Published from the separate Tracking Dashboard source project |
 | `pr-dashboard/` | RMIT DSC China PR tracker | Editable static app, refresh scripts and tests; see its [README](pr-dashboard/README.md) |
+| `rmit-inton-performance/` | RMIT INTON paid performance (Meta and TikTok) | Compiled static export from a private source project; see its [README](rmit-inton-performance/README.md) |
 | `uq-info-day/` | UQ China Info Day planner | Standalone static page and preserved ExcelJS URL |
 | `uq-china-social-wip/` | UQ social and boosting planner | Standalone static page and preserved ExcelJS URL |
 | `gms-way-quiz/` | GMS Way quiz | Standalone static page |
