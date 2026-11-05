@@ -82,11 +82,10 @@
   .bar > i { display:block; height:100%; border-radius:3px; }
 
   .toolbar { display:flex; align-items:center; gap:8px; padding:12px 0; flex-wrap:wrap; }
-  .toolbar .grp { display:flex; align-items:center; gap:6px; }
+  .toolbar .grp, .toolbar .chips { display:flex; align-items:center; flex-wrap:wrap; gap:6px; }
   .toolbar .glabel { font-size:11px; color:var(--ink-3); font-weight:700; text-transform:uppercase; letter-spacing:.5px; margin-right:2px; }
   .chip { border:1px solid var(--line-2); background:var(--surface); color:var(--ink-2); padding:5px 11px; border-radius:20px; font-size:12px; font-weight:600; display:inline-flex; align-items:center; gap:6px; user-select:none; transition:all .12s; }
   .chip .dot { width:8px; height:8px; border-radius:50%; }
-  .chip.off { opacity:.38; background:transparent; }
   .chip.active { color:var(--ink); border-color:var(--chip-color,var(--ink-2)); background:color-mix(in srgb,var(--chip-color,var(--ink)) 8%,var(--surface)); box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--chip-color,var(--ink)) 16%,transparent); }
   .chip:hover { border-color:var(--ink-3); }
   .search { margin-left:auto; display:flex; align-items:center; gap:7px; background:var(--surface); border:1px solid var(--line-2); border-radius:9px; padding:6px 11px; min-width:200px; }
@@ -156,6 +155,8 @@
   .card.prop { border-style:dashed; border-left-style:solid; background:repeating-linear-gradient(135deg,var(--surface),var(--surface) 8px,var(--surface-2) 8px,var(--surface-2) 9px); }
   .card .t { min-width:0; overflow-wrap:anywhere; font-size:11.5px; font-weight:600; line-height:1.25; color:var(--ink); display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; }
   .card .meta { min-width:0; overflow:hidden; display:flex; align-items:center; gap:5px; margin-top:3px; }
+  .card .statuses { display:flex; flex-wrap:wrap; gap:2px 6px; margin-top:3px; }
+  .card .status { display:inline-flex; align-items:center; gap:3px; font-size:9px; font-weight:650; color:var(--ink-2); }
   .card .stt { width:7px; height:7px; border-radius:50%; flex:none; }
   .card .fmt { font-size:9.5px; color:var(--ink-3); font-weight:600; text-transform:uppercase; letter-spacing:.3px; }
   .card .slot { font-size:9px; font-weight:800; padding:1px 4px; border-radius:4px; letter-spacing:.2px; }
@@ -712,8 +713,9 @@
 
 <div id="calView">
   <div class="toolbar">
-    <div class="grp"><span class="glabel">Channel</span><span id="chChips"></span></div>
-    <div class="grp"><span class="glabel">Status</span><span id="stChips"></span></div>
+    <div class="grp"><span class="glabel">Channel</span><span class="chips" id="chChips"></span></div>
+    <div class="grp" role="group" aria-labelledby="deliveryLabel"><span class="glabel" id="deliveryLabel">GMS delivery</span><span class="chips" id="deliveryChips"></span></div>
+    <div class="grp" role="group" aria-labelledby="approvalLabel"><span class="glabel" id="approvalLabel">UQ approval</span><span class="chips" id="approvalChips"></span></div>
     <div class="search">🔍<input id="search" type="search" name="content-search" placeholder="Search content…" autocomplete="off" autocorrect="off" spellcheck="false" data-lpignore="true" data-1p-ignore data-form-type="other"></div>
   </div>
   <div class="stage" id="stage">
@@ -1016,7 +1018,17 @@ let budgetSeriesOn={budgeted:1,booked:1,actual:1};
 let paidYearY=null;
 // resizable boosting-log column widths (px), persist across re-renders — [Channel, Post, Window, Budget, Spend, CTR, Eng, CPE, Flwr, Cost/Flwr, Status, Note]
 let BCOLW=[78,180,186,58,78,62,90,66,84,78,148,150];
-let stOn={"Posted":1,"Scheduled":1,"Approved":1,"Pending":1,"Proposed":1};
+const statusFilter={del:"",appr:""};
+const DELIVERY_STATES=[
+  {key:"Posted",label:"Posted",color:"var(--st-posted)"},
+  {key:"Scheduled",label:"Scheduled",color:"var(--st-sched)"},
+  {key:"Draft",label:"Draft",color:"var(--st-draft)"},
+  {key:"Proposed",label:"Proposed",color:"var(--st-prop)"}
+];
+const APPROVAL_STATES=[
+  {key:"Approved",label:"Approved",color:"var(--st-appr)"},
+  {key:"Pending",label:"Awaiting UQ",color:"var(--st-wait)"}
+];
 let poolChannel="All", poolScope="active", poolQuery="";
 const PANEL_COLLAPSE_CONFIG={
   pool:{panel:"#poolPanel",content:"#poolContent",button:"#poolCollapse",label:"Content Pool ideas",key:"uq-content-pool-collapsed-v2"},
@@ -1051,21 +1063,14 @@ function poolToRow(p){
   return {id:p.id,note:p.note||"",fmt:POOL_META_PREFIX+encodeURIComponent(JSON.stringify(meta)),sug:p.sug||"GMS"};
 }
 
-function delStatus(d){
-  if(d.del==="Posted") return {k:"Posted",l:"Posted",c:"var(--st-posted)"};
-  if(d.del==="Scheduled") return {k:"Scheduled",l:"Scheduled",c:"var(--st-sched)"};
-  if(d.del==="Proposed") return {k:"Proposed",l:"Proposed",c:"var(--st-prop)"};
-  if(d.appr==="Approved") return {k:"Approved",l:"Approved",c:"var(--st-appr)"};
-  if(d.appr==="Pending") return {k:"Pending",l:"Awaiting UQ",c:"var(--st-wait)"};
-  return {k:"Draft",l:"Draft",c:"var(--st-draft)"};
-}
 const monthItems=()=>{const M=MONTHS[mi]; return SEED.filter(d=>{const dt=new Date(d.date+"T00:00"); return dt.getFullYear()===M.y&&dt.getMonth()===M.m;});};
 function inMonthISO(iso,M){ return !!iso && /^\d{4}-\d{2}/.test(iso) && +iso.slice(0,4)===M.y && (+iso.slice(5,7)-1)===M.m; }
 // Boosting belongs to the month the boost RUNS in (matches how the plan groups spend),
 // not the month the post was published — a Jan post boosted in Feb counts under Feb.
 function monthBoostItems(){ const M=MONTHS[mi];
   return SEED.filter(d=>d.boost).filter(d=> d.boostData ? inMonthISO(d.boostData.start,M) : inMonthISO(d.date,M) ); }
-function visible(d){ if(chFilter!=="All"&&d.ch!==chFilter)return false; if(!stOn[delStatus(d).k])return false;
+function visible(d){ if(chFilter!=="All"&&d.ch!==chFilter)return false;
+  if((statusFilter.del&&d.del!==statusFilter.del)||(statusFilter.appr&&d.appr!==statusFilter.appr))return false;
   if(q && !(d.note.toLowerCase().includes(q)))return false; return true; }
 
 function renderKPIs(){
@@ -1138,13 +1143,27 @@ function renderWeChat(){
   applyPanelCollapsed("wechat");
 }
 
+function renderStatusChips(selector,states,field){
+  const box=$(selector);
+  box.innerHTML=states.map(({key,label,color})=>`<button type="button" class="chip" data-st="${key}" style="--chip-color:${color}"><span class="dot" style="background:${color}"></span>${label}</button>`).join("");
+  const buttons=[...box.querySelectorAll("button")];
+  const update=()=>buttons.forEach(b=>{
+    const active=b.dataset.st===statusFilter[field];
+    b.classList.toggle("active",active);
+    b.setAttribute("aria-pressed",String(active));
+  });
+  buttons.forEach(b=>b.onclick=()=>{
+    statusFilter[field]=statusFilter[field]===b.dataset.st?"":b.dataset.st;
+    update(); renderGrid();
+  });
+  update();
+}
 function renderChips(){
   $("#chChips").innerHTML=`<button class="chip ${chFilter==='All'?'active':''}" data-ch="All" style="--chip-color:var(--ink-2)">All</button>`+
     Object.keys(CH).map(k=>`<button class="chip ${chFilter===k?'active':''}" data-ch="${k}" style="--chip-color:${CH[k].color}"><span class="dot" style="background:${CH[k].color}"></span>${CH[k].label}</button>`).join("");
-  const sts=[["Posted","var(--st-posted)"],["Scheduled","var(--st-sched)"],["Approved","var(--st-appr)"],["Pending","var(--st-wait)"],["Proposed","var(--st-prop)"]];
-  $("#stChips").innerHTML=sts.map(([k,c])=>`<button class="chip ${stOn[k]?'':'off'}" data-st="${k}"><span class="dot" style="background:${c}"></span>${k==="Pending"?"Awaiting":k}</button>`).join("");
   $$("#chChips .chip").forEach(b=>b.onclick=()=>{chFilter=b.dataset.ch;renderChips();renderGrid();});
-  $$("#stChips .chip").forEach(b=>b.onclick=()=>{stOn[b.dataset.st]^=1;renderChips();renderGrid();});
+  renderStatusChips("#deliveryChips",DELIVERY_STATES,"del");
+  renderStatusChips("#approvalChips",APPROVAL_STATES,"appr");
 }
 
 function renderGrid(){
@@ -1159,16 +1178,18 @@ function renderGrid(){
     const iso=`${M.y}-${String(M.m+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
     const showMo=(d===1||dow===1); // month eyebrow on 1st + every Monday
     const cards=(byDay[d]||[]).map(it=>{
-      const st=delStatus(it), w=WHO[it.by]||WHO.GMS;
-      return `<div class="card ${visible(it)?'':'hide'} ${it.del==='Proposed'?'prop':''}" draggable="true" data-id="${it.id}" style="--ch:${CH[it.ch].color}">
+      const w=WHO[it.by]||WHO.GMS;
+      const statuses=[DELIVERY_STATES.find(s=>s.key===it.del),APPROVAL_STATES.find(s=>s.key===it.appr)].filter(Boolean);
+      return `<div class="card ${visible(it)?'':'hide'} ${it.del==='Proposed'?'prop':''}" draggable="true" data-id="${escAttr(it.id)}" style="--ch:${CH[it.ch].color}">
         <div class="t">${esc(it.note)}</div>
-        <div class="meta"><span class="stt" style="background:${st.c}"></span>
+        ${statuses.length?`<div class="statuses">${statuses.map(s=>`<span class="status"><span class="stt" style="background:${s.color}"></span>${s.label}</span>`).join("")}</div>`:""}
+        <div class="meta">
         <span class="fmt">${FMT_ICON[it.fmt]||''}</span>
         ${groupMembers(it).length>1?`<span class="group-link" title="${groupMembers(it).length} linked platform cards">${groupMembers(it).length}×</span>`:''}
-        ${it.wslot?`<span class="slot ${it.wslot==='Headline'?'lead':'sub'}">${it.wslot}</span>`:''}
+        ${it.wslot?`<span class="slot ${it.wslot==='Headline'?'lead':'sub'}">${esc(it.wslot)}</span>`:''}
         ${it.url?'<span class="link">🔗</span>':''}
         ${it.boost?'<span class="boost">Boost</span>':''}
-        <span class="who" style="background:${w.c}" title="added by ${it.by}">${w.t}</span></div></div>`;
+        <span class="who" style="background:${w.c}" title="added by ${escAttr(it.by)}">${w.t}</span></div></div>`;
     }).join("");
     html+=`<div class="cell" data-iso="${iso}"><div class="dnum">
       <span>${showMo?`<span class="mo">${MO[M.m]}</span>`:''}${d}${KEYDATES[iso]?` <span class="key" data-iso="${iso}" title="Key date — click to remove">${esc(KEYDATES[iso])}</span>`:''}</span>
@@ -1188,7 +1209,7 @@ function renderGrid(){
 }
 function clearFilters(){
   q=""; if($("#search")) $("#search").value="";
-  chFilter="All"; Object.keys(stOn).forEach(k=>stOn[k]=1);
+  chFilter="All"; statusFilter.del=""; statusFilter.appr="";
   renderChips(); renderGrid(); toast("Filters cleared");
 }
 function wireGrid(){
@@ -1402,7 +1423,7 @@ function openAddPop(iso,btn){
   }
   function keyPanel(){
     pop.innerHTML=`<div class="ph"><button class="kback">‹</button> Key date · ${label}</div>
-      <div class="kd"><input id="kdInput" placeholder="e.g. Info Day · Shenzhen" maxlength="24" value="${esc(KEYDATES[iso]||"")}"><button id="kdAdd">Add</button></div>
+      <div class="kd"><input id="kdInput" placeholder="e.g. Info Day · Shenzhen" maxlength="24" value="${escAttr(KEYDATES[iso]||"")}"><button id="kdAdd">Add</button></div>
       ${KEYDATES[iso]?`<button class="kdel">Remove this key date</button>`:""}`;
     pop.querySelector(".kback").onclick=postPanel;
     const add=()=>{const v=pop.querySelector("#kdInput").value.trim(); if(v){KEYDATES[iso]=v;saveKeyDate(iso,v);} else {delete KEYDATES[iso];delKeyDate(iso);} closeAddPop();renderGrid();toast(v?"Key date added":"Key date removed");};
@@ -1418,6 +1439,37 @@ function openAddPop(iso,btn){
 function outsideAdd(e){ if(!e.target.closest("#addpop")&&!e.target.closest(".add")&&!e.target.closest(".paddbtn")) closeAddPop(); }
 function closeAddPop(){ const p=document.getElementById("addpop"); if(p)p.remove(); document.removeEventListener("mousedown",outsideAdd); }
 
+// Link fields use one "label | url" or bare URL per line in the existing text columns.
+function editLinks(listId,addId,value,onChange=()=>{}){
+  const box=$("#"+listId), add=$("#"+addId);
+  const links=(value||"").split("\n").filter(line=>line.trim()).map(line=>{
+    const i=line.lastIndexOf(" | ");
+    return i<0?{t:"",u:line.trim()}:{t:line.slice(0,i).trim(),u:line.slice(i+3).trim()};
+  });
+  const serialize=()=>links.map(({t,u})=>({t:t.trim(),u:u.trim()})).filter(v=>v.t||v.u)
+    .map(v=>v.t?`${v.t} | ${v.u}`:v.u).join("\n");
+  const draw=()=>{
+    if(!links.length)links.push({t:"",u:""});
+    box.innerHTML=links.map((v,i)=>`<div class="alrow"><input class="al-t" aria-label="Link ${i+1} label" placeholder="Link label (optional)" value="${escAttr(v.t)}"><input class="al-u" aria-label="Link ${i+1} URL" placeholder="https://…" value="${escAttr(v.u)}">${links.length>1?`<button type="button" class="alrm" aria-label="Remove link ${i+1}" title="Remove this link">✕</button>`:""}</div>`).join("");
+    [...box.children].forEach((row,i)=>{
+      row.querySelector(".al-t").oninput=e=>{links[i].t=e.target.value;onChange(serialize());};
+      row.querySelector(".al-u").oninput=e=>{links[i].u=e.target.value;onChange(serialize());};
+      const remove=row.querySelector(".alrm");
+      if(remove)remove.onclick=()=>{
+        links.splice(i,1);
+        draw(); onChange(serialize());
+        box.children[Math.min(i,links.length-1)].querySelector(".al-u").focus();
+      };
+    });
+  };
+  add.onclick=()=>{
+    links.push({t:"",u:""}); draw();
+    box.lastElementChild.querySelector(".al-t").focus();
+  };
+  draw();
+  return serialize;
+}
+
 // Content Pool cards use the same base planning fields as calendar content.
 // Publishing workflow fields stay hidden until the card is scheduled.
 let curPool=null;
@@ -1429,28 +1481,24 @@ function openPoolDrawer(item,isNew){
       <div><h2>${isNew?'New Content Pool idea':'Edit Content Pool idea'}</h2><div class="byline">Pre-planning details · automatically carries forward</div></div>
       <button class="dclose" id="dclose">✕</button></div>
     <div class="dbody">
-      <div class="field"><label>Subject line</label><input id="p_note" placeholder="The content idea…" value="${esc(p.note)}"></div>
+      <div class="field"><label>Subject line</label><input id="p_note" placeholder="The content idea…" value="${escAttr(p.note)}"></div>
       <div class="row2"><div class="field"><label>Channel</label><select id="p_ch"><option value="">Choose a channel…</option>${Object.keys(CH).map(k=>`<option value="${k}" ${k===p.ch?'selected':''}>${CH[k].label}</option>`).join("")}</select></div>
         <div class="field"><label>Format</label><select id="p_fmt">${["Image","Article","Video","Carousel"].map(k=>`<option ${k===p.fmt?'selected':''}>${k}</option>`).join("")}</select></div></div>
-      <div class="row2"><div class="field"><label>Label</label><select id="p_label">${LABELS.concat(p.label&&LABELS.indexOf(p.label)<0?[p.label]:[]).map(k=>`<option ${k===p.label?'selected':''}>${k}</option>`).join("")}</select></div>
+      <div class="row2"><div class="field"><label>Label</label><select id="p_label">${LABELS.concat(p.label&&LABELS.indexOf(p.label)<0?[p.label]:[]).map(k=>`<option ${k===p.label?'selected':''}>${esc(k)}</option>`).join("")}</select></div>
         <div class="field"><label>Added by</label><div class="seg" id="p_by">${["GMS","UQ"].map(v=>`<button data-v="${v}" class="${p.sug===v?'on':''}">${v}</button>`).join("")}</div></div></div>
       <div class="field"><label>Asset / resource links <span style="text-transform:none;color:var(--ink-3);font-weight:500">— add as many as needed</span></label><div id="poolAssetList"></div><button type="button" class="linkadd" id="poolAssetAdd">+ Add another link</button></div>
       <div class="field"><label>Note</label><textarea id="p_note2" placeholder="Working notes for the idea…">${esc(p.note2||"")}</textarea></div>
-      <div class="pool-hidden"><b>Available after scheduling</b>Launch date · Preview Doc Link · Lifecycle (Draft / Scheduled / Posted) · UQ Approval · Post-publish Link · Boost</div>
+      <div class="pool-hidden"><b>Available after scheduling</b>Launch date · Preview doc links · Lifecycle (Draft / Scheduled / Posted) · UQ Approval · Post-publish Link · Boost</div>
     </div>
     <div class="dfoot">${isNew?'':`<button class="btn ghost" id="p_archive">${p.archived?'Restore':'Archive'}</button>`}<button class="btn primary" id="p_save">${isNew?'Add to Content Pool':'Save'}</button></div>`;
   $("#scrim").classList.add("open");$("#drawer").classList.add("open");
   let by=p.sug||"GMS";
   $$("#p_by button").forEach(b=>b.onclick=()=>{by=b.dataset.v;$$("#p_by button").forEach(x=>x.classList.toggle("on",x===b));});
   $("#p_ch").onchange=()=>{const c=CH[$("#p_ch").value]||{label:"Choose channel",raw:"#8C877E"};$("#drawer .chtag").textContent=c.label;$("#drawer .chtag").style.background=c.raw;};
-  let links=(p.asset||"").split("\n").map(s=>s.trim()).filter(Boolean).map(line=>{const i=line.indexOf(" | ");return i<0?{t:"",u:line}:{t:line.slice(0,i),u:line.slice(i+3)};});
-  if(!links.length)links=[{t:"",u:""}];
-  const drawLinks=()=>{const box=$("#poolAssetList");box.innerHTML=links.map((v,i)=>`<div class="alrow"><input class="al-t" data-i="${i}" placeholder="What's this? e.g. Source article" value="${esc(v.t)}"><input class="al-u" data-i="${i}" placeholder="https://…" value="${esc(v.u)}">${links.length>1?`<button type="button" class="alrm" data-i="${i}" title="Remove this link">✕</button>`:""}</div>`).join("");
-    box.querySelectorAll(".al-t").forEach(x=>x.oninput=()=>links[+x.dataset.i].t=x.value);box.querySelectorAll(".al-u").forEach(x=>x.oninput=()=>links[+x.dataset.i].u=x.value);box.querySelectorAll(".alrm").forEach(b=>b.onclick=()=>{links.splice(+b.dataset.i,1);if(!links.length)links=[{t:"",u:""}];drawLinks();});};
-  drawLinks();$("#poolAssetAdd").onclick=()=>{links.push({t:"",u:""});drawLinks();const ins=$("#poolAssetList").querySelectorAll(".al-t");ins[ins.length-1].focus();};
+  const readAssets=editLinks("poolAssetList","poolAssetAdd",p.asset);
   $("#dclose").onclick=closeDrawer;
   if($("#p_archive"))$("#p_archive").onclick=()=>{p.archived=!p.archived;p.scheduled=false;savePool(p);closeDrawer();renderPool();toast(p.archived?"Idea archived":"Idea restored");};
-  $("#p_save").onclick=()=>{const ch=$("#p_ch").value;if(!CH[ch]){toast("Choose a channel");$("#p_ch").focus();return;}Object.assign(p,{note:$("#p_note").value.trim()||"Untitled",ch,fmt:$("#p_fmt").value,label:$("#p_label").value,sug:by,note2:$("#p_note2").value,asset:links.map(v=>({t:v.t.trim(),u:v.u.trim()})).filter(v=>v.t||v.u).map(v=>v.t?`${v.t} | ${v.u}`:v.u).join("\n")});if(isNew)POOL.unshift(p);savePool(p);poolChannel=ch;poolScope="active";closeDrawer();renderPool();toast(isNew?`Added to ${CH[ch].label} Content Pool`:"Content Pool idea saved");};
+  $("#p_save").onclick=()=>{const ch=$("#p_ch").value;if(!CH[ch]){toast("Choose a channel");$("#p_ch").focus();return;}Object.assign(p,{note:$("#p_note").value.trim()||"Untitled",ch,fmt:$("#p_fmt").value,label:$("#p_label").value,sug:by,note2:$("#p_note2").value,asset:readAssets()});if(isNew)POOL.unshift(p);savePool(p);poolChannel=ch;poolScope="active";closeDrawer();renderPool();toast(isNew?`Added to ${CH[ch].label} Content Pool`:"Content Pool idea saved");};
 }
 
 let cur=null;
@@ -1497,14 +1545,14 @@ function openDrawer(it,isNew,options={}){
       <button class="dclose" id="dclose">✕</button>
     </div>
     <div class="dbody">
-      <div class="field"><label>Subject line</label><input id="f_note" placeholder="The post title…" value="${esc(it.note)}"></div>
+      <div class="field"><label>Subject line</label><input id="f_note" placeholder="The post title…" value="${escAttr(it.note)}"></div>
       <div class="field"><div class="platform-field-head"><label>${isNew?'Publish on':'Platforms in this content group'}</label><span class="platform-selection-count" id="platformSelectionCount" aria-live="polite">${new Set(initialChannels).size} / 4 selected</span></div>
         ${platformPicker(initialChannels,lockedChannels)}
         <div class="platform-help">${isNew?'One linked card will be created for each selected platform.':'Existing platforms are protected. Select any missing platform to add a linked card.'}</div></div>
       <div class="field"><label>Launch date</label><input type="date" id="f_date" value="${it.date}"></div>
       <div class="row2">
         <div class="field"><label>Format</label><select id="f_fmt">${["Image","Article","Video","Carousel"].map(k=>`<option ${k===it.fmt?'selected':''}>${k}</option>`).join("")}</select></div>
-        <div class="field"><label>Label</label><select id="f_label">${LABELS.concat(it.label&&LABELS.indexOf(it.label)<0?[it.label]:[]).map(k=>`<option ${k===it.label?'selected':''}>${k}</option>`).join("")}</select></div>
+        <div class="field"><label>Label</label><select id="f_label">${LABELS.concat(it.label&&LABELS.indexOf(it.label)<0?[it.label]:[]).map(k=>`<option ${k===it.label?'selected':''}>${esc(k)}</option>`).join("")}</select></div>
       </div>
       ${isW?`<div class="wechatbox"><div class="bh">WeChat push slot <span style="color:var(--ink-3);font-weight:500">— 4 pushes / account / month</span></div>
         <div class="field"><label>Position</label>
@@ -1512,15 +1560,17 @@ function openDrawer(it,isNew,options={}){
         <div class="field" id="attachWrap" style="display:${(it.wslot&&it.wslot!=='Headline')?'block':'none'}"><label>Attach under Headline <span style="text-transform:none;color:var(--ink-3);font-weight:500">— rides that push, no new slot</span></label>
             <select id="f_merge"><option value="">— none yet —</option>${headlines.map(h=>`<option value="${h.date}" ${it.mergedInto===h.date?'selected':''}>${MO[+h.date.slice(5,7)-1]} ${+h.date.slice(-2)} · ${esc(h.note.slice(0,30))}</option>`).join("")}</select></div>
         </div>`:''}
-      <div class="field"><label>Asset / resource links</label>
+      <div class="field" role="group" aria-labelledby="assetLabel"><label id="assetLabel">Asset / resource links</label>
         <div id="assetList"></div>
         <button type="button" class="linkadd" id="assetAdd">+ Add another link</button></div>
-      <div class="field"><label>Preview doc link</label><input id="f_preview" placeholder="https://…" value="${esc(it.preview||"")}"></div>
+      <div class="field" role="group" aria-labelledby="previewLabel"><label id="previewLabel">Preview doc links</label>
+        <div id="previewList"></div>
+        <button type="button" class="linkadd" id="previewAdd">+ Add another link</button></div>
       <div class="field"><label>Lifecycle · GMS delivery</label>
         <div class="seg" id="seg_del">${["Proposed","Draft","Scheduled","Posted"].map(v=>`<button data-v="${v}" class="${it.del===v?'on':''}">${v}</button>`).join("")}</div></div>
       <div class="field"><label>UQ approval</label>
         <div class="seg" id="seg_appr">${["Pending","Approved"].map(v=>`<button data-v="${v}" class="${it.appr===v?'on':''}">${v==="Pending"?"Awaiting UQ":"Approved ✓"}</button>`).join("")}</div></div>
-      <div class="field"><label>Post-publish link</label><input id="f_url" placeholder="Paste live post URL after publishing…" value="${esc(it.url)}" ${isNew?'disabled':''}></div>
+      <div class="field"><label>Post-publish link</label><input id="f_url" placeholder="Paste live post URL after publishing…" value="${escAttr(it.url)}" ${isNew?'disabled':''}></div>
       <div class="field"><label>Added by</label>
         <div class="seg" id="seg_by">${["GMS","UQ"].map(v=>`<button data-v="${v}" class="${it.by===v?'on':''}">${v}</button>`).join("")}</div></div>
       <div class="field"><label>Note</label><textarea id="f_note2" placeholder="Any note for the team…">${esc(it.note2||"")}</textarea></div>
@@ -1536,9 +1586,9 @@ function openDrawer(it,isNew,options={}){
   const persist=(kind="content")=>{if(!isNew){if(kind==="boost")qSave("boost",cur);else qSave("content",cur);}};
   const upd=()=>{ cur.note=$("#f_note").value||"Untitled"; cur.date=$("#f_date").value;
     cur.fmt=$("#f_fmt").value; cur.label=$("#f_label").value;
-    cur.preview=$("#f_preview").value; cur.url=$("#f_url").value; cur.note2=$("#f_note2").value;
+    cur.url=$("#f_url").value; cur.note2=$("#f_note2").value;
     if(!isNew)renderAll(); persist(); };
-  ["f_note","f_date","f_fmt","f_label","f_preview","f_url","f_note2"].forEach(id=>$("#"+id)&&($("#"+id).oninput=upd));
+  ["f_note","f_date","f_fmt","f_label","f_url","f_note2"].forEach(id=>$("#"+id)&&($("#"+id).oninput=upd));
   $$('#platformPicker input[name="platform"]').forEach(input=>input.onchange=()=>{
     const selected=selectedPlatformNames();
     if(!selected.length){input.checked=true;toast("Choose at least one platform");return;}
@@ -1552,20 +1602,8 @@ function openDrawer(it,isNew,options={}){
     if(n!=null&&n<0)input.value="0";
     if(!isNew){renderKPIs(); if(view==="paid")renderPaid();} persist("boost");
   };
-  // Asset links — as many as needed; each line in the `asset` column is "label | url"
-  // (a line with no " | " is a bare url — keeps every pre-label row working untouched)
-  let aLinks=(it.asset||"").split("\n").map(s=>s.trim()).filter(Boolean).map(line=>{
-    const i=line.indexOf(" | "); return i<0?{t:"",u:line}:{t:line.slice(0,i),u:line.slice(i+3)}; });
-  if(!aLinks.length)aLinks=[{t:"",u:""}];
-  const syncAssets=()=>{ cur.asset=aLinks.map(v=>({t:v.t.trim(),u:v.u.trim()})).filter(v=>v.t||v.u)
-    .map(v=>v.t?`${v.t} | ${v.u}`:v.u).join("\n"); persist(); };
-  const drawAssets=()=>{ const box=$("#assetList"); if(!box) return;
-    box.innerHTML=aLinks.map((v,i)=>`<div class="alrow"><input class="al-t" data-i="${i}" placeholder="What's this? e.g. Source article" value="${esc(v.t)}"><input class="al-u" data-i="${i}" placeholder="https://…" value="${esc(v.u)}">${aLinks.length>1?`<button type="button" class="alrm" data-i="${i}" title="Remove this link">✕</button>`:""}</div>`).join("");
-    box.querySelectorAll(".al-t").forEach(inp=>inp.oninput=()=>{ aLinks[+inp.dataset.i].t=inp.value; syncAssets(); });
-    box.querySelectorAll(".al-u").forEach(inp=>inp.oninput=()=>{ aLinks[+inp.dataset.i].u=inp.value; syncAssets(); });
-    box.querySelectorAll(".alrm").forEach(b=>b.onclick=()=>{ aLinks.splice(+b.dataset.i,1); if(!aLinks.length)aLinks=[{t:"",u:""}]; syncAssets(); drawAssets(); }); };
-  drawAssets();
-  $("#assetAdd").onclick=()=>{ aLinks.push({t:"",u:""}); drawAssets(); const ins=$("#assetList").querySelectorAll(".al-t"); ins[ins.length-1].focus(); };
+  const readAssets=editLinks("assetList","assetAdd",it.asset,value=>{cur.asset=value;persist();});
+  const readPreviews=editLinks("previewList","previewAdd",it.preview,value=>{cur.preview=value;persist();});
   $$("#seg_by button").forEach(b=>b.onclick=()=>{cur.by=b.dataset.v;$$("#seg_by button").forEach(x=>x.classList.toggle("on",x===b));if(!isNew)renderAll();persist();});
   if($("#f_merge")) $("#f_merge").onchange=()=>{cur.mergedInto=$("#f_merge").value||"";if(!isNew)renderAll();persist();};
   $$("#seg_slot button").forEach(b=>b.onclick=()=>{cur.wslot=b.dataset.v;$$("#seg_slot button").forEach(x=>x.classList.toggle("on",x===b));
@@ -1582,7 +1620,7 @@ function openDrawer(it,isNew,options={}){
   if($("#ddel"))$("#ddel").onclick=async()=>{const d=cur;if(!await showPageConfirm(d,"delete"))return;softDeleteContent(d);};
   if($("#dduplicate"))$("#dduplicate").onclick=()=>duplicateContent(cur);
   $("#dsave").onclick=()=>{
-    upd(); syncAssets();
+    upd(); cur.asset=readAssets(); cur.preview=readPreviews();
     const selected=selectedPlatformNames();if(!selected.length){toast("Choose at least one platform");return;}
     if(isNew){
       const gid=cur.groupId||makeId("g_");
@@ -1861,11 +1899,11 @@ function renderPaid(){
     filt.map(d=>{const b=d.boostData; const eff=effStatus(b); const sc=STATUS_C[eff]||"var(--ink-3)"; const auto=(!b.status||b.status==="Auto");
       return `<tr data-id="${d.id}">
         <td><span class="chip" style="pointer-events:none;padding:2px 9px"><span class="dot" style="background:${CH[d.ch].color}"></span>${d.ch}</span></td>
-        <td data-tip="${esc(d.note)}"><span class="interlock">↳ ${esc(d.note)}</span></td>
+        <td data-tip="${escAttr(d.note)}"><span class="interlock">↳ ${esc(d.note)}</span></td>
         <td><div class="winedit"><input type="date" class="edate" data-f="start" value="${b.start||''}"><span>→</span><input type="date" class="edate" data-f="end" value="${b.end||''}"></div></td>
         <td class="tnum">$${b.budget}</td>
         <td><span class="ein">$<input class="ecell tnum" data-f="spend" value="${b.spend!=null?b.spend:''}" placeholder="—"></span></td>
-        <td><input class="ecell tnum" data-f="ctr" value="${esc(b.ctr||'')}" placeholder="—"></td>
+        <td><input class="ecell tnum" data-f="ctr" value="${escAttr(b.ctr||'')}" placeholder="—"></td>
         <td><input class="ecell tnum" data-f="eng" value="${b.eng!=null?b.eng:''}" placeholder="—"></td>
         <td class="tnum" data-tip="Cost per engagement = spend ÷ engagements" style="color:var(--ink-2);font-weight:600">${cpX(b.spend,b.eng)}</td>
         <td><input class="ecell tnum" data-f="flw" value="${b.flw!=null?b.flw:''}" placeholder="—"></td>
@@ -1903,9 +1941,9 @@ function renderFlight(items,M){
       const left=(sD-1)/days*100, width=Math.max(2,(eD-sD+1)/days*100), ext=off(b.end)>0;
       const total=Math.round((new Date(b.end+"T00:00")-new Date(b.start+"T00:00"))/86400000)+1;
       const tip=`${d.note}\n${fmtDay(b.start)} – ${fmtDay(b.end)} · ${total} days`;
-      bar=`<div class="fl-bar" style="left:${left}%; width:${width}%; background:${CH[d.ch].color}" data-tip="${esc(tip)}">${ext?'<span class="fl-ext">›</span>':''}</div>`;
+      bar=`<div class="fl-bar" style="left:${left}%; width:${width}%; background:${CH[d.ch].color}" data-tip="${escAttr(tip)}">${ext?'<span class="fl-ext">›</span>':''}</div>`;
     }
-    return `<div class="flane"><div class="fl-label" data-tip="${esc(d.note)}"><span class="dot" style="background:${CH[d.ch].color}"></span>${esc(d.note)}</div><div class="fl-track">${todayLine}${pub}${bar}</div></div>`;
+    return `<div class="flane"><div class="fl-label" data-tip="${escAttr(d.note)}"><span class="dot" style="background:${CH[d.ch].color}"></span>${esc(d.note)}</div><div class="fl-track">${todayLine}${pub}${bar}</div></div>`;
   }).join("");
   $("#flight").innerHTML=axis+(lanes||`<div class="fl-empty">No boosts running this month.</div>`)
     +`<div class="fl-legend"><span><i class="lg-pub"></i>Post published</span><span><i class="lg-bar"></i>Boost window · starts ~3 days after publish · edit the Window dates in the log to adjust</span></div>`;
@@ -2071,7 +2109,7 @@ async function buildWorkbook(from,to,want){
 
   if(want.cal){
     const cols=[{w:11},{w:14},{w:12},{w:12},{w:11},{w:10},{w:52,wrap:true},{w:11},{w:12},{w:13},{w:9},{w:30,wrap:true},{w:34,wrap:true},{w:30,wrap:true},{w:30,wrap:true}];
-    const heads=["Date","Channel","Account","WeChat slot","Content type","Format","Subject line","Added by","UQ approval","GMS status","Boosted","Preview doc","Post link","Asset links","Note"];
+    const heads=["Date","Channel","Account","WeChat slot","Content type","Format","Subject line","Added by","UQ approval","GMS status","Boosted","Preview doc links","Post link","Asset links","Note"];
     const rows=content.map(d=>[d.date,(CH[d.ch]||{}).label||d.ch,(CH[d.ch]||{}).acct||"—",d.wslot||"—",
       d.label||"—",d.fmt||"—",(d.note||"").replace(/\n/g," "),d.by||"",d.appr||"",d.del||"",
       d.boost?"Yes":"—",d.preview||"",d.url||"",d.asset||"",(d.note2||"").replace(/\n/g," ")]);
@@ -2176,7 +2214,7 @@ function openWipDrawer(w,isNew){
     <div class="dbody">
       <div class="field"><label>Task</label><textarea id="w_item">${esc(w.item)}</textarea></div>
       <div class="row2">
-        <div class="field"><label>Category</label><input id="w_cat" list="catlist" value="${esc(w.cat)}">
+        <div class="field"><label>Category</label><input id="w_cat" list="catlist" value="${escAttr(w.cat)}">
           <datalist id="catlist">${CATS.map(c=>`<option>${c}</option>`).join("")}</datalist></div>
         <div class="field"><label>Due date</label><input type="date" id="w_due" value="${w.due||""}"></div>
       </div>
@@ -2185,7 +2223,7 @@ function openWipDrawer(w,isNew){
       <div class="field"><label>Responsible</label>
         <div class="seg" id="seg_resp">${["GMS","UQ","GRG","UQ & GMS"].map(v=>`<button data-v="${v}" class="${w.by===v?'on':''}">${v}</button>`).join("")}</div></div>
       <div class="field"><label>Note / comments</label><textarea id="w_note" placeholder="Context, decisions, next step…">${esc(w.note||"")}</textarea></div>
-      <div class="field"><label>File link</label><input id="w_link" placeholder="https://…" value="${esc(w.link||"")}"></div>
+      <div class="field"><label>File link</label><input id="w_link" placeholder="https://…" value="${escAttr(w.link||"")}"></div>
     </div>
     <div class="dfoot"><button class="btn ghost" id="wdel">Delete</button><button class="btn primary" id="wsave">Save task</button></div>`;
   $("#scrim").classList.add("open"); $("#drawer").classList.add("open");
