@@ -36,9 +36,9 @@ spelling and casing, including `GMS-way-quiz.html`, to preserve existing links.
 
 The UQ social calendar filters GMS delivery and UQ approval independently. Select
 one status in either group or combine both groups. Select a highlighted status
-again to clear that group. Preview links use the existing Supabase text field
-with one optionally labelled link per line. Existing single URLs still open in
-the editor, and the Social calendar Excel sheet includes every preview link.
+again to clear that group. Preview links use the existing Supabase text field.
+Legacy single URLs still open in the editor. The Social calendar Excel sheet
+lists one optionally labelled link per line.
 
 ## Before publishing
 
