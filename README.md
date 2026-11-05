@@ -34,6 +34,12 @@ Root-level legacy HTML files redirect to directory routes. Keep their exact
 spelling and casing, including `GMS-way-quiz.html`, to preserve existing links.
 `CNAME` configures the custom domain; `.nojekyll` keeps publication as plain static files.
 
+The UQ social calendar filters GMS delivery and UQ approval independently. Select
+one status in either group or combine both groups. Select a highlighted status
+again to clear that group. Preview links use the existing Supabase text field.
+Legacy single URLs still open in the editor. The Social calendar Excel sheet
+lists one optionally labelled link per line.
+
 ## Before publishing
 
 - Keep existing directory URLs stable. Directory names are deployed routes.
