@@ -40,6 +40,11 @@ again to clear that group. Preview links use the existing Supabase text field.
 Legacy single URLs still open in the editor. The Social calendar Excel sheet
 lists one optionally labelled link per line.
 
+The calendar and Excel Summary count WeChat article positions across all
+delivery statuses. Headline, Sub article, 3rd and unassigned are distinct.
+The shared push planner and Summary count one push per date with at least one
+explicit, standalone headline.
+
 Post-publish links have a platform per row and export with platform labels.
 Apply the [additional publish links migration](uq-china-social-wip/migrations/20261110_uq_additional_publish_links.sql)
 before releasing the editor. The first URL for the card's own platform stays
