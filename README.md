@@ -40,6 +40,13 @@ again to clear that group. Preview links use the existing Supabase text field.
 Legacy single URLs still open in the editor. The Social calendar Excel sheet
 lists one optionally labelled link per line.
 
+Post-publish links have a platform per row and export with platform labels.
+Apply the [additional publish links migration](uq-china-social-wip/migrations/20261110_uq_additional_publish_links.sql)
+before releasing the editor. The first URL for the card's own platform stays
+in `content.url` for the organic sync. The other rows live in
+`content.additional_publish_links`. A rollback of the UI can leave this
+additive column in place to retain saved links.
+
 ## Before publishing
 
 - Keep existing directory URLs stable. Directory names are deployed routes.
