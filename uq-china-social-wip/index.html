@@ -616,7 +616,8 @@
   .platform-option.locked .platform-status::before { content:"Existing"; color:var(--ink-3); }
   .platform-help { margin-top:7px; color:var(--ink-3); font-size:10.5px; line-height:1.4; }
   .alrow { display:flex; gap:6px; align-items:center; margin-bottom:6px; }
-  .alrow input { min-width:0; }
+  .alrow input, .alrow select { min-width:0; }
+  .alrow select.al-t { flex-basis:clamp(102px, 32%, 145px); }
   .alrow .al-t { flex:0 0 128px; font-size:12px; }
   .alrow .al-u { flex:1; }
   .alrow .alrm { border:none; background:var(--surface-2); color:var(--ink-3); width:28px; height:28px; border-radius:7px; font-size:12px; cursor:pointer; flex:none; }
@@ -1187,7 +1188,7 @@ function renderGrid(){
         <span class="fmt">${FMT_ICON[it.fmt]||''}</span>
         ${groupMembers(it).length>1?`<span class="group-link" title="${groupMembers(it).length} linked platform cards">${groupMembers(it).length}×</span>`:''}
         ${it.wslot?`<span class="slot ${it.wslot==='Headline'?'lead':'sub'}">${esc(it.wslot)}</span>`:''}
-        ${it.url?'<span class="link">🔗</span>':''}
+        ${it.url||it.additionalPublishLinks?.length?'<span class="link">🔗</span>':''}
         ${it.boost?'<span class="boost">Boost</span>':''}
         <span class="who" style="background:${w.c}" title="added by ${escAttr(it.by)}">${w.t}</span></div></div>`;
     }).join("");
@@ -1295,7 +1296,10 @@ function dropPool(pid,iso){
   const wf=p.workflow||{};
   let it=wf.contentId?SEED.find(x=>x.id===wf.contentId):null;
   if(!it){it={id:wf.contentId||"c"+Date.now()};SEED.push(it);}
-  Object.assign(it,{ch:p.ch,date:iso,note:p.note,label:p.label||"Inform",fmt:p.fmt||"Image",appr:wf.appr||"Pending",del:wf.del||"Draft",boost:!!wf.boost,by:p.sug||"GMS",url:wf.url||"",note2:p.note2||"",copy:"",back:"",asset:p.asset||"",preview:wf.preview||"",wslot:wf.wslot||"",mergedInto:wf.mergedInto||""});
+  Object.assign(it,{ch:p.ch,date:iso,note:p.note,label:p.label||"Inform",fmt:p.fmt||"Image",appr:wf.appr||"Pending",del:wf.del||"Draft",boost:!!wf.boost,by:p.sug||"GMS",url:wf.url||"",additionalPublishLinks:wf.additionalPublishLinks||[],note2:p.note2||"",copy:"",back:"",asset:p.asset||"",preview:wf.preview||"",wslot:wf.wslot||"",mergedInto:wf.mergedInto||""});
+  if(wf.publishChannel&&wf.publishChannel!==it.ch){
+    setPublishedLinks(it,publishedLinkRows({...it,ch:wf.publishChannel}));
+  }
   if(wf.boostData)it.boostData=wf.boostData;
   p.scheduled=true;p.archived=false;p.workflow={...wf,contentId:it.id};
   saveContent(it);if(it.boostData)saveBoost(it);savePool(p);
@@ -1337,7 +1341,7 @@ async function returnContentToPool(cid){
   let p=POOL.find(x=>x.workflow&&x.workflow.contentId===d.id);
   if(!p){p={id:"p"+Date.now()};POOL.unshift(p);}
   Object.assign(p,{note:d.note,fmt:d.fmt||"Article",sug:d.by||"GMS",ch:d.ch,archived:false,scheduled:false,label:d.label||"Inform",asset:d.asset||"",note2:d.note2||"",
-    workflow:{contentId:d.id,preview:d.preview||"",appr:d.appr||"Pending",del:d.del||"Draft",url:d.url||"",boost:!!d.boost,boostData:d.boostData||null,wslot:d.wslot||"",mergedInto:d.mergedInto||""}});
+    workflow:{contentId:d.id,preview:d.preview||"",appr:d.appr||"Pending",del:d.del||"Draft",url:d.url||"",publishChannel:d.ch,additionalPublishLinks:d.additionalPublishLinks||[],boost:!!d.boost,boostData:d.boostData||null,wslot:d.wslot||"",mergedInto:d.mergedInto||""}});
   d.date="";d.boost=false;savePool(p);saveContent(d);renderPool();renderAll();toast(`Moved back to ${CH[d.ch].label} Content Pool`);
 }
 const DELETION_RETENTION_MS=30*24*60*60*1000;
@@ -1466,12 +1470,31 @@ function previewLinkValue(links){
   // Keep the stored list on one line so an older tab's single-line input preserves it.
   return PREVIEW_LINKS_PREFIX+encodeURIComponent(JSON.stringify(links));
 }
-function editLinks(listId,addId,links,onChange){
+function publishedLinkRows(d){
+  const links=d.url?[{t:d.ch,u:d.url}]:[];
+  const additional=Array.isArray(d.additionalPublishLinks)?d.additionalPublishLinks:[];
+  for(const link of additional){
+    if(link&&Object.hasOwn(CH,link.platform)&&typeof link.url==="string"&&link.url){
+      links.push({t:link.platform,u:link.url});
+    }
+  }
+  return links;
+}
+function setPublishedLinks(d,links){
+  // Keep the first URL for this card's channel available to the organic sync.
+  const primary=links.findIndex(link=>link.t===d.ch);
+  d.url=links[primary]?.u||"";
+  d.additionalPublishLinks=links.filter((_,i)=>i!==primary).map(({t,u})=>({platform:t,url:u}));
+}
+function editLinks(listId,addId,links,onChange,defaultChannel=""){
   const box=$("#"+listId), add=$("#"+addId);
-  const read=()=>links.map(({t,u})=>({t:t.trim(),u:u.trim()})).filter(v=>v.t||v.u);
+  const read=()=>links.map(({t,u})=>({t:t.trim(),u:u.trim()})).filter(v=>v.u||(!defaultChannel&&v.t));
+  const labelField=(v,i)=>defaultChannel
+    ? `<select class="al-t" aria-label="Link ${i+1} platform">${Object.entries(CH).map(([ch,{label,acct}])=>`<option value="${escAttr(ch)}" ${ch===v.t?"selected":""}>${acct?`${label} · ${acct}`:label}</option>`).join("")}</select>`
+    : `<input class="al-t" aria-label="Link ${i+1} label" placeholder="Link label (optional)" value="${escAttr(v.t)}">`;
   const draw=()=>{
-    if(!links.length)links.push({t:"",u:""});
-    box.innerHTML=links.map((v,i)=>`<div class="alrow"><input class="al-t" aria-label="Link ${i+1} label" placeholder="Link label (optional)" value="${escAttr(v.t)}"><input class="al-u" aria-label="Link ${i+1} URL" placeholder="https://…" value="${escAttr(v.u)}">${links.length>1?`<button type="button" class="alrm" aria-label="Remove link ${i+1}" title="Remove this link">✕</button>`:""}</div>`).join("");
+    if(!links.length)links.push({t:defaultChannel,u:""});
+    box.innerHTML=links.map((v,i)=>`<div class="alrow">${labelField(v,i)}<input class="al-u" aria-label="Link ${i+1} URL" placeholder="https://…" value="${escAttr(v.u)}">${links.length>1?`<button type="button" class="alrm" aria-label="Remove link ${i+1}" title="Remove this link">✕</button>`:""}</div>`).join("");
     [...box.children].forEach((row,i)=>{
       row.querySelector(".al-t").oninput=e=>{links[i].t=e.target.value;onChange?.(read());};
       row.querySelector(".al-u").oninput=e=>{links[i].u=e.target.value;onChange?.(read());};
@@ -1484,7 +1507,7 @@ function editLinks(listId,addId,links,onChange){
     });
   };
   add.onclick=()=>{
-    links.push({t:"",u:""}); draw();
+    links.push({t:defaultChannel,u:""}); draw();
     box.lastElementChild.querySelector(".al-t").focus();
   };
   draw();
@@ -1509,7 +1532,7 @@ function openPoolDrawer(item,isNew){
         <div class="field"><label>Added by</label><div class="seg" id="p_by">${["GMS","UQ"].map(v=>`<button data-v="${v}" class="${p.sug===v?'on':''}">${v}</button>`).join("")}</div></div></div>
       <div class="field"><label>Asset / resource links <span style="text-transform:none;color:var(--ink-3);font-weight:500">— add as many as needed</span></label><div id="poolAssetList"></div><button type="button" class="linkadd" id="poolAssetAdd">+ Add another link</button></div>
       <div class="field"><label>Note</label><textarea id="p_note2" placeholder="Working notes for the idea…">${esc(p.note2||"")}</textarea></div>
-      <div class="pool-hidden"><b>Available after scheduling</b>Launch date · Preview doc links · Lifecycle (Draft / Scheduled / Posted) · UQ Approval · Post-publish Link · Boost</div>
+      <div class="pool-hidden"><b>Available after scheduling</b>Launch date · Preview doc links · Lifecycle (Draft / Scheduled / Posted) · UQ Approval · Post-publish links · Boost</div>
     </div>
     <div class="dfoot">${isNew?'':`<button class="btn ghost" id="p_archive">${p.archived?'Restore':'Archive'}</button>`}<button class="btn primary" id="p_save">${isNew?'Add to Content Pool':'Save'}</button></div>`;
   $("#scrim").classList.add("open");$("#drawer").classList.add("open");
@@ -1533,7 +1556,7 @@ function ensureBoostData(d){
   return d.boostData;
 }
 function contentForChannel(base,ch,groupId,duplicatedFromId){
-  const d={...base,id:makeId("c_"),groupId:groupId,ch:ch,duplicatedFromId:duplicatedFromId||"",url:"",deletedAt:""};
+  const d={...base,id:makeId("c_"),groupId:groupId,ch:ch,duplicatedFromId:duplicatedFromId||"",url:"",additionalPublishLinks:[],deletedAt:""};
   delete d.boostData;
   if(ch==="WeChat"){d.wslot="Headline";d.mergedInto="";}
   else if(ch==="Alumni WeChat"){d.wslot="Sub article";d.mergedInto="";}
@@ -1546,7 +1569,7 @@ function contentForChannel(base,ch,groupId,duplicatedFromId){
 }
 function duplicateContent(it){
   const sourceChannels=groupMembers(it).map(x=>x.ch);
-  const copy={...it,id:makeId("c_"),groupId:makeId("g_"),duplicatedFromId:it.id,del:"Proposed",appr:"Pending",boost:false,url:"",deletedAt:""};
+  const copy={...it,id:makeId("c_"),groupId:makeId("g_"),duplicatedFromId:it.id,del:"Proposed",appr:"Pending",boost:false,url:"",additionalPublishLinks:[],deletedAt:""};
   delete copy.boostData;
   openDrawer(copy,true,{mode:"duplicate",selectedChannels:sourceChannels.length?sourceChannels:[it.ch]});
 }
@@ -1591,7 +1614,9 @@ function openDrawer(it,isNew,options={}){
         <div class="seg" id="seg_del">${["Proposed","Draft","Scheduled","Posted"].map(v=>`<button data-v="${v}" class="${it.del===v?'on':''}">${v}</button>`).join("")}</div></div>
       <div class="field"><label>UQ approval</label>
         <div class="seg" id="seg_appr">${["Pending","Approved"].map(v=>`<button data-v="${v}" class="${it.appr===v?'on':''}">${v==="Pending"?"Awaiting UQ":"Approved ✓"}</button>`).join("")}</div></div>
-      <div class="field"><label>Post-publish link</label><input id="f_url" placeholder="Paste live post URL after publishing…" value="${escAttr(it.url)}" ${isNew?'disabled':''}></div>
+      <div class="field" role="group" aria-labelledby="publishedLabel"><label id="publishedLabel">Post-publish links</label>
+        ${isNew?'<input placeholder="Available after creating the card" disabled>':`<div id="publishedList"></div>
+        <button type="button" class="linkadd" id="publishedAdd">+ Add another link</button>`}</div>
       <div class="field"><label>Added by</label>
         <div class="seg" id="seg_by">${["GMS","UQ"].map(v=>`<button data-v="${v}" class="${it.by===v?'on':''}">${v}</button>`).join("")}</div></div>
       <div class="field"><label>Note</label><textarea id="f_note2" placeholder="Any note for the team…">${esc(it.note2||"")}</textarea></div>
@@ -1607,9 +1632,9 @@ function openDrawer(it,isNew,options={}){
   const persist=(kind="content")=>{if(!isNew){if(kind==="boost")qSave("boost",cur);else qSave("content",cur);}};
   const upd=()=>{ cur.note=$("#f_note").value||"Untitled"; cur.date=$("#f_date").value;
     cur.fmt=$("#f_fmt").value; cur.label=$("#f_label").value;
-    cur.url=$("#f_url").value; cur.note2=$("#f_note2").value;
+    cur.note2=$("#f_note2").value;
     if(!isNew)renderAll(); persist(); };
-  ["f_note","f_date","f_fmt","f_label","f_url","f_note2"].forEach(id=>$("#"+id)&&($("#"+id).oninput=upd));
+  ["f_note","f_date","f_fmt","f_label","f_note2"].forEach(id=>$("#"+id)&&($("#"+id).oninput=upd));
   $$('#platformPicker input[name="platform"]').forEach(input=>input.onchange=()=>{
     const selected=selectedPlatformNames();
     if(!selected.length){input.checked=true;toast("Choose at least one platform");return;}
@@ -1625,6 +1650,22 @@ function openDrawer(it,isNew,options={}){
   };
   const readAssets=editLinks("assetList","assetAdd",assetLinkRows(it.asset),links=>{cur.asset=linkText(links);persist();});
   const readPreviews=editLinks("previewList","previewAdd",previewLinkRows(it.preview),links=>{cur.preview=previewLinkValue(links);persist();});
+  const legacyPublishedUrls=new Set(publishedLinkRows(it).map(link=>link.u));
+  const savePublished=(links,reportError=false)=>{
+    const invalid=$$("#publishedList .al-u").find(input=>{
+      const url=input.value.trim();
+      return url&&safePostUrl(url)==="#"&&!legacyPublishedUrls.has(url);
+    });
+    if(invalid){
+      if(reportError){toast("Enter a valid HTTP or HTTPS URL");invalid.focus();}
+      return false;
+    }
+    setPublishedLinks(it,links);
+    renderGrid();
+    persist();
+    return true;
+  };
+  const readPublished=isNew?null:editLinks("publishedList","publishedAdd",publishedLinkRows(it),savePublished,it.ch);
   $$("#seg_by button").forEach(b=>b.onclick=()=>{cur.by=b.dataset.v;$$("#seg_by button").forEach(x=>x.classList.toggle("on",x===b));if(!isNew)renderAll();persist();});
   if($("#f_merge")) $("#f_merge").onchange=()=>{cur.mergedInto=$("#f_merge").value||"";if(!isNew)renderAll();persist();};
   $$("#seg_slot button").forEach(b=>b.onclick=()=>{cur.wslot=b.dataset.v;$$("#seg_slot button").forEach(x=>x.classList.toggle("on",x===b));
@@ -1641,6 +1682,7 @@ function openDrawer(it,isNew,options={}){
   if($("#ddel"))$("#ddel").onclick=async()=>{const d=cur;if(!await showPageConfirm(d,"delete"))return;softDeleteContent(d);};
   if($("#dduplicate"))$("#dduplicate").onclick=()=>duplicateContent(cur);
   $("#dsave").onclick=()=>{
+    if(readPublished&&!savePublished(readPublished(),true))return;
     upd(); cur.asset=linkText(readAssets()); cur.preview=previewLinkValue(readPreviews());
     const selected=selectedPlatformNames();if(!selected.length){toast("Choose at least one platform");return;}
     if(isNew){
@@ -2130,10 +2172,10 @@ async function buildWorkbook(from,to,want){
 
   if(want.cal){
     const cols=[{w:11},{w:14},{w:12},{w:12},{w:11},{w:10},{w:52,wrap:true},{w:11},{w:12},{w:13},{w:9},{w:30,wrap:true},{w:34,wrap:true},{w:30,wrap:true},{w:30,wrap:true}];
-    const heads=["Date","Channel","Account","WeChat slot","Content type","Format","Subject line","Added by","UQ approval","GMS status","Boosted","Preview doc links","Post link","Asset links","Note"];
+    const heads=["Date","Channel","Account","WeChat slot","Content type","Format","Subject line","Added by","UQ approval","GMS status","Boosted","Preview doc links","Post-publish links","Asset links","Note"];
     const rows=content.map(d=>[d.date,(CH[d.ch]||{}).label||d.ch,(CH[d.ch]||{}).acct||"—",d.wslot||"—",
       d.label||"—",d.fmt||"—",(d.note||"").replace(/\n/g," "),d.by||"",d.appr||"",d.del||"",
-      d.boost?"Yes":"—",linkText(previewLinkRows(d.preview)),d.url||"",d.asset||"",(d.note2||"").replace(/\n/g," ")]);
+      d.boost?"Yes":"—",linkText(previewLinkRows(d.preview)),linkText(publishedLinkRows(d)),d.asset||"",(d.note2||"").replace(/\n/g," ")]);
     const ws=wb.addWorksheet("Social calendar");
     title(ws,"UQ China Social & Boosting — Social calendar",sub,heads.length);
     header(ws,5,heads); body(ws,5,rows,cols); signoff(ws,5+rows.length,heads.length);
@@ -2317,8 +2359,8 @@ function setConn(state){
   const m={connecting:["#DD8A1E","Connecting…"],synced:["#2E9E5B","Live · synced"],saving:["#DD8A1E","Saving…"],offline:["#9A9186","Offline · local only"]};
   const v=m[state]||m.offline; dot.style.background=v[0]; txt.textContent=v[1];
 }
-function rowToContent(r){ return {id:r.id,date:r.date||"",ch:r.ch||"RED",note:r.note||"",label:r.label||"",fmt:r.fmt||"",appr:r.appr||"",del:r.del||"",boost:!!r.boost,by:r.by||"GMS",url:r.url||"",note2:r.note2||"",wslot:r.wslot||"",mergedInto:r.mergedinto||"",asset:r.asset||"",preview:r.preview||"",deletedAt:r.deleted_at||"",groupId:r.content_group_id||r.id,duplicatedFromId:r.duplicated_from_id||""}; }
-function contentToRow(d){ return {id:d.id,date:d.date||null,ch:d.ch,note:d.note||"",label:d.label||"",fmt:d.fmt||"",appr:d.appr||"",del:d.del||"",boost:!!d.boost,by:d.by||"",url:d.url||"",note2:d.note2||"",wslot:d.wslot||"",mergedinto:d.mergedInto||"",asset:d.asset||"",preview:d.preview||"",deleted_at:d.deletedAt||null,content_group_id:d.groupId||d.id,duplicated_from_id:d.duplicatedFromId||null}; }
+function rowToContent(r){ return {id:r.id,date:r.date||"",ch:r.ch||"RED",note:r.note||"",label:r.label||"",fmt:r.fmt||"",appr:r.appr||"",del:r.del||"",boost:!!r.boost,by:r.by||"GMS",url:r.url||"",additionalPublishLinks:r.additional_publish_links||[],note2:r.note2||"",wslot:r.wslot||"",mergedInto:r.mergedinto||"",asset:r.asset||"",preview:r.preview||"",deletedAt:r.deleted_at||"",groupId:r.content_group_id||r.id,duplicatedFromId:r.duplicated_from_id||""}; }
+function contentToRow(d){ return {id:d.id,date:d.date||null,ch:d.ch,note:d.note||"",label:d.label||"",fmt:d.fmt||"",appr:d.appr||"",del:d.del||"",boost:!!d.boost,by:d.by||"",url:d.url||"",additional_publish_links:d.additionalPublishLinks||[],note2:d.note2||"",wslot:d.wslot||"",mergedinto:d.mergedInto||"",asset:d.asset||"",preview:d.preview||"",deleted_at:d.deletedAt||null,content_group_id:d.groupId||d.id,duplicated_from_id:d.duplicatedFromId||null}; }
 function rowToBoost(r){ return {start:r.win_start||"",end:r.win_end||"",budget:r.budget,spend:(r.spend==null?null:r.spend),ctr:r.ctr||"",status:r.status||"Auto",eng:(r.eng==null?null:r.eng),flw:(r.flw==null?null:r.flw),note:r.note||""}; }
 function boostToRow(id,b){ var n=function(v){return (v===""||v==null)?null:v;}; return {id:id,win_start:b.start||null,win_end:b.end||null,budget:n(b.budget),spend:n(b.spend),ctr:b.ctr||"",status:b.status||"Auto",eng:n(b.eng),flw:n(b.flw),note:b.note||""}; }
 function rowToOrganic(r){return {sourceKey:r.source_key,contentId:r.content_id||"",channel:r.channel||"Other",sourceChannel:r.source_channel||"",publishDate:r.publish_date||"",headlineChinese:r.headline_chinese||"",headlineEnglish:r.headline_english||"",postUrl:r.post_url||"",followersAfterViewing:r.followers_after_viewing,openRatePct:r.open_rate_pct,readThruPct:r.read_thru_pct,reads:r.reads,shares:r.shares,totalEngagement:r.total_engagement,engagementRatePct:r.engagement_rate_pct,sourcePresent:r.source_present!==false,syncedAt:r.synced_at||""};}
