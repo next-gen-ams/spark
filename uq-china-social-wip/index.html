@@ -76,6 +76,8 @@
   .kpi .split { display:flex; gap:12px; margin-top:6px; font-size:11.5px; color:var(--ink-2); font-weight:600; }
   .kpi .split span { display:inline-flex; align-items:center; gap:5px; }
   .kpi .split i { width:7px; height:7px; border-radius:50%; display:inline-block; }
+  .kpi .position-counts { flex-wrap:wrap; gap:4px 12px; }
+  .kpi .position-counts strong { color:var(--ink); font-size:20px; line-height:1; }
   .kpi.accent .val { color:var(--orange); }
   .kpi .rail { position:absolute; left:0; top:0; bottom:0; width:3px; }
   .bar { height:5px; border-radius:3px; background:var(--surface-2); margin-top:8px; overflow:hidden; }
@@ -1085,7 +1087,10 @@ function renderKPIs(){
   const bud=mBoost.length?mBoost.reduce((a,d)=>a+budgetOf(d),0):null;
   const spd=mBoost.length?mBoost.reduce((a,d)=>a+(parseFloat(d.boostData&&d.boostData.spend)||0),0):null;
   const pct=bud?Math.min(100,Math.round(spd/bud*100)):0;
-  const wcPush=pushCount();
+  const wc=wechatStats(items);
+  const wcNotes=["All statuses"];
+  if(wc.third)wcNotes.push(`${wc.third} third position`);
+  if(wc.unassigned)wcNotes.push(`${wc.unassigned} unassigned`);
   $("#kpis").innerHTML=`
     <div class="kpi"><div class="rail" style="background:var(--blue)"></div>
       <div class="cap">Content this month</div><div class="val tnum">${items.length}</div>
@@ -1094,12 +1099,10 @@ function renderKPIs(){
       <div class="cap">Awaiting UQ approval</div><div class="val tnum">${wait}</div>
       <div class="sub">${wait?"needs client action":"all clear ✓"}</div></div>
     <div class="kpi"><div class="rail" style="background:var(--ch-wechat)"></div>
-      <div class="cap">WeChat pushes used</div><div class="val tnum">${wcPush} / ${WECHAT_CAP}</div>
-      <div class="bar"><i style="width:${Math.min(100,wcPush/WECHAT_CAP*100)}%;background:${wcPush>WECHAT_CAP?'var(--crit)':(wcPush===WECHAT_CAP?'var(--warn)':'var(--ch-wechat)')}"></i></div>
-      <div class="sub"${wcPush>WECHAT_CAP?' style="color:var(--crit);font-weight:700"':''}>${
-        wcPush>WECHAT_CAP ? `${wcPush-WECHAT_CAP} over the ${WECHAT_CAP} / month cap`
-        : wcPush===WECHAT_CAP ? `at the cap — fold extras in as Sub articles`
-        : `${WECHAT_CAP-wcPush} of ${WECHAT_CAP} slots left`}</div></div>
+      <div class="cap">WeChat article positions</div>
+      <div class="split position-counts"><span><strong class="tnum">${wc.headline}</strong> Headline${wc.headline===1?"":"s"}</span>
+        <span><strong class="tnum">${wc.sub}</strong> Sub article${wc.sub===1?"":"s"}</span></div>
+      <div class="sub">${wcNotes.join(" · ")}</div></div>
     <div class="kpi"><div class="rail" style="background:var(--orange)"></div>
       <div class="cap">Paid spend</div>
       <div class="val tnum">${spd!==null?"$"+Math.round(spd).toLocaleString():"—"}</div>
@@ -1109,35 +1112,46 @@ function renderKPIs(){
       <div class="sub">organic feeding paid</div></div>`;
 }
 
-// WeChat pushes: one shared OA budget. Group all WeChat-family items by date (a push = a date).
+// The two WeChat channels share one OA. Only explicit headliners open a push.
 const isWeChat=ch=>ch==="WeChat"||ch==="Alumni WeChat";
-function pushes(){
-  const items=monthItems().filter(d=>isWeChat(d.ch) && !d.mergedInto && (d.wslot||"Headline")==="Headline");
-  const byDate={};
-  items.forEach(d=>{(byDate[d.date]=byDate[d.date]||[]).push(d);});
-  return byDate;
+const WECHAT_POSITIONS=["Headline","Sub article","3rd"];
+const isWeChatHeadline=d=>isWeChat(d.ch)&&d.wslot==="Headline"&&!d.mergedInto;
+const isWeChatSecondary=d=>isWeChat(d.ch)&&(d.wslot==="Sub article"||d.wslot==="3rd");
+function wechatStats(items){
+  const stats={headline:0,sub:0,third:0,unassigned:0,pushes:new Map()};
+  for(const d of items){
+    if(!isWeChat(d.ch))continue;
+    if(d.wslot==="Headline")stats.headline++;
+    else if(d.wslot==="Sub article")stats.sub++;
+    else if(d.wslot==="3rd")stats.third++;
+    else stats.unassigned++;
+    if(isWeChatHeadline(d)&&d.date){
+      if(!stats.pushes.has(d.date))stats.pushes.set(d.date,[]);
+      stats.pushes.get(d.date).push(d);
+    }
+  }
+  return stats;
 }
-function pushCount(){ return Object.keys(pushes()).length; }
 
 function renderWeChat(){
-  const cap=WECHAT_CAP; const p=pushes(); const dates=Object.keys(p).sort();
+  const cap=WECHAT_CAP, items=monthItems(), p=wechatStats(items).pushes;
+  const dates=[...p.keys()].sort();
   const n=dates.length, full=n>=cap, over=n>cap;
-  const headlineDates=new Set(monthItems().filter(d=>isWeChat(d.ch)&&(d.wslot||"Headline")==="Headline").map(d=>d.date));
-  const unattached=monthItems().filter(d=>isWeChat(d.ch)&&(d.wslot||"Headline")!=="Headline"&&(!d.mergedInto||!headlineDates.has(d.mergedInto)));
+  const headlineDates=new Set(SEED.filter(isWeChatHeadline).map(d=>d.date));
+  const unattached=items.filter(d=>isWeChatSecondary(d)&&(!d.mergedInto||!headlineDates.has(d.mergedInto)));
   // one pip per push, so an over-cap month visibly grows past its four slots
   let pips=""; for(let i=0;i<Math.max(cap,n);i++) pips+=`<div class="slotpip ${i>=cap?'over':(i<n?(full?'full':'on'):'')}"></div>`;
   const rows=dates.map(dt=>{
-    const arts=p[dt].slice().sort((a,b)=>(a.wslot==="Headline"?-1:1));
-    const merged=SEED.filter(x=>x.mergedInto===dt);
-    const all=[...arts,...merged].sort((a,b)=>(a.wslot==="Headline"?-1:1));
+    const merged=SEED.filter(d=>isWeChatSecondary(d)&&d.mergedInto===dt);
+    const all=[...p.get(dt),...merged];
     return `<div class="pushrow"><span class="pd">${MO[+dt.slice(5,7)-1]} ${+dt.slice(-2)}</span> · ${all.length} post${all.length>1?'s':''}
-      ${all.map(a=>`<span class="li"><span class="tag" style="color:${a.wslot==='Headline'?'var(--st-posted)':'var(--ink-2)'}">${a.wslot||'Headline'}</span> ${esc(a.note.slice(0,34))}${a.ch==='Alumni WeChat'?' <span style="color:var(--ch-alumni);font-weight:700">· Alumni</span>':''}</span>`).join("")}</div>`;
+      ${all.map(a=>`<span class="li"><span class="tag" style="color:${a.wslot==='Headline'?'var(--st-posted)':'var(--ink-2)'}">${a.wslot}</span> ${esc(a.note.slice(0,34))}${a.ch==='Alumni WeChat'?' <span style="color:var(--ch-alumni);font-weight:700">· Alumni</span>':''}</span>`).join("")}</div>`;
   }).join("");
   $("#wechatBody").innerHTML=`<div class="acct"><div class="ah"><span>Monthly WeChat pushes</span>
       <span class="q" style="color:${over?'var(--crit)':(full?'var(--warn)':'var(--ch-wechat)')}">${n} / ${cap}</span></div>
       <div style="font-size:10.5px;color:var(--ink-3);margin:-2px 0 6px">One OA · 4 pushes / month total (UQ Central + Alumni). Each push = 1 Headline + optional Sub article.</div>
       <div class="quota">${pips}</div>${rows||'<div style="font-size:11px;color:var(--ink-3);margin-top:6px">No pushes yet this month</div>'}</div>`
-    +(unattached.length?`<div class="merge-hint over">${unattached.length} Sub article${unattached.length===1?' is':'s are'} not attached to a Headline yet: ${unattached.map(x=>esc(x.note.slice(0,36))).join(' · ')}. Open the card and choose “Attach under Headline”.</div>`:'')
+    +(unattached.length?`<div class="merge-hint over">${unattached.length} secondary article${unattached.length===1?' is':'s are'} not attached to a Headline yet: ${unattached.map(x=>esc(x.note.slice(0,36))).join(' · ')}. Open the card and choose “Attach under Headline”.</div>`:'')
     +(over?`<div class="merge-hint over">Over the cap — ${n} pushes against ${cap}/month. Fold two of them into one push (Headline + Sub article), or move one to another month.</div>`
       :full?`<div class="merge-hint">At ${cap}/${cap} pushes for the month. To add another WeChat article, fold it into an existing push as a <b>Sub article</b> rather than opening a 5th.</div>`
       :`<div class="merge-hint">Tip: each push = 1 slot but can carry a <b>Headline + Sub article</b>.</div>`);
@@ -1187,7 +1201,7 @@ function renderGrid(){
         <div class="meta">
         <span class="fmt">${FMT_ICON[it.fmt]||''}</span>
         ${groupMembers(it).length>1?`<span class="group-link" title="${groupMembers(it).length} linked platform cards">${groupMembers(it).length}×</span>`:''}
-        ${it.wslot?`<span class="slot ${it.wslot==='Headline'?'lead':'sub'}">${esc(it.wslot)}</span>`:''}
+        ${isWeChat(it.ch)?`<span class="slot ${it.wslot==='Headline'?'lead':'sub'}">${WECHAT_POSITIONS.includes(it.wslot)?it.wslot:"Unassigned"}</span>`:''}
         ${it.url||it.additionalPublishLinks?.length?'<span class="link">🔗</span>':''}
         ${it.boost?'<span class="boost">Boost</span>':''}
         <span class="who" style="background:${w.c}" title="added by ${escAttr(it.by)}">${w.t}</span></div></div>`;
@@ -1558,18 +1572,24 @@ function ensureBoostData(d){
 function contentForChannel(base,ch,groupId,duplicatedFromId){
   const d={...base,id:makeId("c_"),groupId:groupId,ch:ch,duplicatedFromId:duplicatedFromId||"",url:"",additionalPublishLinks:[],deletedAt:""};
   delete d.boostData;
-  if(ch==="WeChat"){d.wslot="Headline";d.mergedInto="";}
-  else if(ch==="Alumni WeChat"){d.wslot="Sub article";d.mergedInto="";}
-  else {d.wslot="";d.mergedInto="";}
+  if(!isWeChat(ch)||ch!==base.ch){
+    d.wslot=ch==="WeChat"?"Headline":ch==="Alumni WeChat"?"Sub article":"";
+    d.mergedInto="";
+  }
   if(d.boost){
     const s=new Date(d.date+"T00:00"),e=new Date(d.date+"T00:00");s.setDate(s.getDate()+3);e.setDate(e.getDate()+17);
     d.boostData={budget:defaultBoostBudget(ch),spend:null,ctr:"",status:"Auto",start:isoLocal(s),end:isoLocal(e),eng:null,flw:null,note:""};
   }
   return d;
 }
+function attachNewAlumni(cards,group){
+  const headline=group.find(d=>d.ch==="WeChat"&&isWeChatHeadline(d));
+  const alumni=cards.find(d=>d.ch==="Alumni WeChat"&&isWeChatSecondary(d));
+  if(headline&&alumni&&!alumni.mergedInto)alumni.mergedInto=headline.date;
+}
 function duplicateContent(it){
   const sourceChannels=groupMembers(it).map(x=>x.ch);
-  const copy={...it,id:makeId("c_"),groupId:makeId("g_"),duplicatedFromId:it.id,del:"Proposed",appr:"Pending",boost:false,url:"",additionalPublishLinks:[],deletedAt:""};
+  const copy={...it,id:makeId("c_"),groupId:makeId("g_"),duplicatedFromId:it.id,del:"Proposed",appr:"Pending",boost:false,url:"",additionalPublishLinks:[],mergedInto:"",deletedAt:""};
   delete copy.boostData;
   openDrawer(copy,true,{mode:"duplicate",selectedChannels:sourceChannels.length?sourceChannels:[it.ch]});
 }
@@ -1579,7 +1599,7 @@ function openDrawer(it,isNew,options={}){
   const lockedChannels=existingGroup.map(x=>x.ch);
   const initialChannels=options.selectedChannels||(lockedChannels.length?lockedChannels:[it.ch]);
   const boostBudget=(it.boostData&&it.boostData.budget!=null)?it.boostData.budget:defaultBoostBudget(it.ch);
-  const headlines=SEED.filter(x=>isWeChat(x.ch)&&(x.wslot||"Headline")==="Headline"&&x.date.startsWith(it.date.slice(0,7))&&x.id!==it.id).sort((a,b)=>a.date.localeCompare(b.date));
+  const headlines=SEED.filter(x=>isWeChatHeadline(x)&&x.date.startsWith(it.date.slice(0,7))&&x.id!==it.id).sort((a,b)=>a.date.localeCompare(b.date));
   const perf=ORGANIC.find(x=>x.contentId===it.id&&x.sourcePresent!==false);
   $("#drawer").innerHTML=`
     <div class="dhead">
@@ -1600,8 +1620,8 @@ function openDrawer(it,isNew,options={}){
       </div>
       ${isW?`<div class="wechatbox"><div class="bh">WeChat push slot <span style="color:var(--ink-3);font-weight:500">— 4 pushes / account / month</span></div>
         <div class="field"><label>Position</label>
-            <div class="seg" id="seg_slot">${["Headline","Sub article","3rd"].map(v=>`<button data-v="${v}" class="${(it.wslot||'Headline')===v?'on':''}">${v}</button>`).join("")}</div></div>
-        <div class="field" id="attachWrap" style="display:${(it.wslot&&it.wslot!=='Headline')?'block':'none'}"><label>Attach under Headline <span style="text-transform:none;color:var(--ink-3);font-weight:500">— rides that push, no new slot</span></label>
+            <div class="seg" id="seg_slot">${["",...WECHAT_POSITIONS].map(v=>`<button data-v="${v}" class="${(WECHAT_POSITIONS.includes(it.wslot)?it.wslot:"")===v?'on':''}">${v||"Unassigned"}</button>`).join("")}</div></div>
+        <div class="field" id="attachWrap" style="display:${isWeChatSecondary(it)?'block':'none'}"><label>Attach under Headline <span style="text-transform:none;color:var(--ink-3);font-weight:500">— rides that push, no new slot</span></label>
             <select id="f_merge"><option value="">— none yet —</option>${headlines.map(h=>`<option value="${h.date}" ${it.mergedInto===h.date?'selected':''}>${MO[+h.date.slice(5,7)-1]} ${+h.date.slice(-2)} · ${esc(h.note.slice(0,30))}</option>`).join("")}</select></div>
         </div>`:''}
       <div class="field" role="group" aria-labelledby="assetLabel"><label id="assetLabel">Asset / resource links</label>
@@ -1669,7 +1689,10 @@ function openDrawer(it,isNew,options={}){
   $$("#seg_by button").forEach(b=>b.onclick=()=>{cur.by=b.dataset.v;$$("#seg_by button").forEach(x=>x.classList.toggle("on",x===b));if(!isNew)renderAll();persist();});
   if($("#f_merge")) $("#f_merge").onchange=()=>{cur.mergedInto=$("#f_merge").value||"";if(!isNew)renderAll();persist();};
   $$("#seg_slot button").forEach(b=>b.onclick=()=>{cur.wslot=b.dataset.v;$$("#seg_slot button").forEach(x=>x.classList.toggle("on",x===b));
-    const isHead=(b.dataset.v==="Headline"); if($("#attachWrap"))$("#attachWrap").style.display=isHead?"none":"block"; if(isHead)cur.mergedInto="";if(!isNew)renderAll();persist();});
+    const secondary=isWeChatSecondary(cur);
+    $("#attachWrap").style.display=secondary?"block":"none";
+    if(!secondary){cur.mergedInto="";$("#f_merge").value="";}
+    if(!isNew)renderAll();persist();});
   $$("#seg_del button").forEach(b=>b.onclick=()=>{cur.del=b.dataset.v;$$("#seg_del button").forEach(x=>x.classList.toggle("on",x===b));if(!isNew)renderAll();persist();});
   $$("#seg_appr button").forEach(b=>b.onclick=()=>{cur.appr=b.dataset.v;$$("#seg_appr button").forEach(x=>x.classList.toggle("on",x===b));if(!isNew)renderAll();persist();});
   $("#f_boost").onclick=()=>{cur.boost=!cur.boost;$("#f_boost").classList.toggle("on",cur.boost);
@@ -1688,16 +1711,14 @@ function openDrawer(it,isNew,options={}){
     if(isNew){
       const gid=cur.groupId||makeId("g_");
       const created=selected.map(ch=>contentForChannel(cur,ch,gid,cur.duplicatedFromId));
-      if(selected.includes("WeChat")&&selected.includes("Alumni WeChat")){
-        const alumni=created.find(x=>x.ch==="Alumni WeChat");if(alumni)alumni.mergedInto=cur.date;
-      }
+      attachNewAlumni(created,created);
       created.forEach(d=>{SEED.push(d);saveContent(d);if(d.boostData)saveBoost(d);});
       closeDrawer();rebuildMonths();renderAll();toast(`${created.length} linked card${created.length===1?'':'s'} created ✓`);return;
     }
     cur.groupId=groupIdOf(cur);saveContent(cur);if(cur.boost)saveBoost(cur);
     const have=new Set(groupMembers(cur).map(x=>x.ch));
     const added=selected.filter(ch=>!have.has(ch)).map(ch=>contentForChannel({...cur,del:"Proposed",appr:"Pending",boost:false},ch,cur.groupId,""));
-    if(added.some(x=>x.ch==="Alumni WeChat")&&(have.has("WeChat")||added.some(x=>x.ch==="WeChat"))){const alumni=added.find(x=>x.ch==="Alumni WeChat");if(alumni)alumni.mergedInto=cur.date;}
+    attachNewAlumni(added,[...groupMembers(cur),...added]);
     added.forEach(d=>{SEED.push(d);saveContent(d);});
     closeDrawer();rebuildMonths();renderAll();toast(added.length?`${added.length} platform card${added.length===1?'':'s'} added ✓`:"Saved to plan ✓");
   };
@@ -2140,8 +2161,10 @@ async function buildWorkbook(from,to,want){
 
   if(want.sum){
     const cols=[{w:14},{w:9,fmt:"0"},{w:9,fmt:"0"},{w:15,fmt:"0"},{w:9,fmt:"0"},
-                {w:13,fmt:'"$"#,##0.00'},{w:13,fmt:'"$"#,##0.00'},{w:13,fmt:'"$"#,##0.00'},{w:11,fmt:"0%"},{w:14,fmt:"#,##0"},{w:13,fmt:"#,##0"}];
-    const heads=["Month","Posts","Posted","WeChat pushes","Boosts","Media plan","Booked","Actual spend","% of plan","Engagements","Followers +"];
+                {w:13,fmt:'"$"#,##0.00'},{w:13,fmt:'"$"#,##0.00'},{w:13,fmt:'"$"#,##0.00'},{w:11,fmt:"0%"},{w:14,fmt:"#,##0"},{w:13,fmt:"#,##0"},
+                {w:16,fmt:"0"},{w:17,fmt:"0"},{w:15,fmt:"0"},{w:16,fmt:"0"}];
+    const heads=["Month","Posts","Posted","WeChat pushes","Boosts","Media plan","Booked","Actual spend","% of plan","Engagements","Followers +",
+                 "WeChat headlines","WeChat sub articles","WeChat 3rd position","WeChat unassigned"];
     // include months that only carry budget — planned but nothing scheduled yet
     const keys=[...new Set([...content.map(d=>d.date.slice(0,7)),
       ...boosts.map(d=>String(d.boostData.start||d.date).slice(0,7)),
@@ -2150,18 +2173,20 @@ async function buildWorkbook(from,to,want){
     const rows=keys.map(k=>{
       const c=content.filter(d=>d.date.slice(0,7)===k), b=boosts.filter(d=>String(d.boostData.start||d.date).slice(0,7)===k);
       const posted=c.filter(d=>d.del==="Posted").length;
-      const push=new Set(c.filter(d=>isWeChat(d.ch)&&!d.mergedInto).map(d=>d.date)).size;
+      const wc=wechatStats(c);
       const bud=b.reduce((a,d)=>a+budgetOf(d),0), spd=b.reduce((a,d)=>a+nInt(d.boostData.spend),0), pl=planOf(k);
-      return [MO[+k.slice(5,7)-1]+" "+k.slice(0,4), c.length||null, posted||null, push||null, b.length||null,
+      return [MO[+k.slice(5,7)-1]+" "+k.slice(0,4), c.length||null, posted||null, wc.pushes.size||null, b.length||null,
         BUDGETPLAN[k]?r2(pl):null, r2(bud)||null, r2(spd)||null, (pl&&spd)?spd/pl:null,
-        b.reduce((a,d)=>a+nInt(d.boostData.eng),0)||null, b.reduce((a,d)=>a+nInt(d.boostData.flw),0)||null];
+        b.reduce((a,d)=>a+nInt(d.boostData.eng),0)||null, b.reduce((a,d)=>a+nInt(d.boostData.flw),0)||null,
+        wc.headline,wc.sub,wc.third,wc.unassigned];
     });
     const tb=boosts.reduce((a,d)=>a+budgetOf(d),0), ts=boosts.reduce((a,d)=>a+nInt(d.boostData.spend),0);
     const tp=keys.reduce((a,k)=>a+planOf(k),0);
-    rows.push(["TOTAL", content.length, content.filter(d=>d.del==="Posted").length,
-      new Set(content.filter(d=>isWeChat(d.ch)&&!d.mergedInto).map(d=>d.date)).size, boosts.length,
+    const wc=wechatStats(content);
+    rows.push(["TOTAL", content.length, content.filter(d=>d.del==="Posted").length, wc.pushes.size, boosts.length,
       r2(tp)||null, r2(tb)||null, r2(ts)||null, (tp&&ts)?ts/tp:null,
-      boosts.reduce((a,d)=>a+nInt(d.boostData.eng),0)||null, boosts.reduce((a,d)=>a+nInt(d.boostData.flw),0)||null]);
+      boosts.reduce((a,d)=>a+nInt(d.boostData.eng),0)||null, boosts.reduce((a,d)=>a+nInt(d.boostData.flw),0)||null,
+      wc.headline,wc.sub,wc.third,wc.unassigned]);
     const ws=wb.addWorksheet("Summary",{properties:{tabColor:{argb:HEX.orange}}});
     title(ws,"UQ China Social & Boosting — Summary",sub,heads.length);
     header(ws,5,heads); body(ws,5,rows,cols);
