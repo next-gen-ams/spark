@@ -1,6 +1,10 @@
 const API_BASE = 'https://api.meltwater.com';
 
 const REVIEWED_TITLES = Object.freeze({
+  '澳洲传播专业作品集要求详解': 'Portfolio Requirements for Communications Programs in Australia',
+  '前夫：她性欲太强我承受不住，拒给儿女抚养费，如今叶蕴仪过咋样': '“Her Sex Drive Was Too Much for Me,” Said Her Ex-Husband, Who Refused to Pay Child Support. How Is Gloria Yip Doing Now?',
+  '80后老板接盘"吊顶第一股"，1元变卖子公司！': 'Business Owner Born in the 1980s Takes Over China’s First Listed Ceiling Company and Sells a Subsidiary for RMB 1!',
+  '80后老板接盘"吊顶第一股"，1元变卖子公司': 'Business Owner Born in the 1980s Takes Over China’s First Listed Ceiling Company and Sells a Subsidiary for RMB 1',
   '2026交互设计本科留学前十所院校有哪些': 'Which Are the Top 10 Schools for Undergraduate Interactive Design Study Abroad in 2026?',
   '澳洲游戏设计本科留学申请条件是什么': 'Entry Requirements for Undergraduate Game Design Study in Australia',
   '2026全球能源前沿报告：光热发电配套大容量熔盐储热实现规模化部署': '2026 Global Energy Frontiers Report: Large-Scale Deployment of High-Capacity Molten Salt Thermal Storage for Solar Thermal Power',

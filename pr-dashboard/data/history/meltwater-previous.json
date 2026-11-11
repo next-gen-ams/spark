@@ -3,42 +3,26 @@
     "searchId": 29175637,
     "searchName": "RMIT China DSC",
     "rangeLabel": "Past 3 months",
-    "start": "2026-07-21T23:59:44.239Z",
-    "end": "2026-10-21T23:59:44.239Z",
-    "generatedAt": "2026-10-21T23:59:44.239Z",
+    "start": "2026-07-25T23:09:02.764Z",
+    "end": "2026-10-25T23:09:02.764Z",
+    "generatedAt": "2026-10-25T23:09:02.764Z",
     "cached": true,
     "refreshMode": "weekly",
-    "nextRefreshAt": "2026-10-25T23:00:00.000Z"
+    "nextRefreshAt": "2026-11-01T23:00:00.000Z"
   },
   "summary": {
-    "totalMentions": 268,
+    "totalMentions": 263,
     "averagePerDay": 2,
     "positive": 3,
-    "positivePercent": 1.12,
-    "neutral": 265,
-    "neutralPercent": 98.88,
+    "positivePercent": 1.14,
+    "neutral": 260,
+    "neutralPercent": 98.86,
     "negative": 0,
     "negativePercent": 0,
-    "potentialReach": 2826135727,
-    "estimatedViews": 42433
+    "potentialReach": 2723671555,
+    "estimatedViews": 36841
   },
   "trend": [
-    {
-      "date": "2026-07-21",
-      "count": 0
-    },
-    {
-      "date": "2026-07-22",
-      "count": 2
-    },
-    {
-      "date": "2026-07-23",
-      "count": 0
-    },
-    {
-      "date": "2026-07-24",
-      "count": 5
-    },
     {
       "date": "2026-07-25",
       "count": 0
@@ -394,41 +378,79 @@
     {
       "date": "2026-10-21",
       "count": 0
+    },
+    {
+      "date": "2026-10-22",
+      "count": 1
+    },
+    {
+      "date": "2026-10-23",
+      "count": 1
+    },
+    {
+      "date": "2026-10-24",
+      "count": 0
+    },
+    {
+      "date": "2026-10-25",
+      "count": 0
     }
   ],
   "topics": [
     {
       "name": "Colleges & universities",
-      "count": 142,
-      "percentage": 52.99
+      "count": 141,
+      "percentage": 53.61
     },
     {
       "name": "Study abroad",
       "count": 62,
-      "percentage": 23.13
+      "percentage": 23.57
     },
     {
       "name": "AI & machine learning",
       "count": 35,
-      "percentage": 13.06
+      "percentage": 13.31
     },
     {
       "name": "Design",
       "count": 25,
-      "percentage": 9.33
+      "percentage": 9.51
     },
     {
       "name": "Fashion design",
       "count": 23,
-      "percentage": 8.58
+      "percentage": 8.75
     },
     {
       "name": "Arts & galleries",
       "count": 18,
-      "percentage": 6.72
+      "percentage": 6.84
     }
   ],
   "mentions": [
+    {
+      "id": "pTI0UjX5VBWMoWcvScVGWDH-SPg",
+      "title": "2026交互设计本科留学前十所院校有哪些",
+      "titleEn": "Which Are the Top 10 Schools for Undergraduate Interactive Design Study Abroad in 2026?",
+      "source": "中国教育在线",
+      "sourceType": "news",
+      "url": "https://www.eol.cn/liuxue/yslx/2026102295415.html",
+      "publishedDate": "2026-10-22T01:54:15.000Z",
+      "sentiment": "neutral",
+      "language": "zh-Hans",
+      "matchedKeywords": [
+        "交互设计",
+        "艺术留学",
+        "艺术与设计",
+        "视觉传达",
+        "皇家墨尔本理工大学",
+        "RMIT"
+      ],
+      "hitSentence": "MAU）交互相关方向依托视觉传达优势，注重本土化用户研究；澳洲的皇家墨尔本理工大学（Royal Melbourne Institute of Technology，RMIT）实践项目资源丰富，适合侧重职业导向的学生。 申请适配要点 不同院校对作品集的侧重点不同，英美院校看重 ...",
+      "reach": 329294,
+      "estimatedViews": 666
+    },
     {
       "id": "EZDzseLPP0FIzMqhkwQ9bc6kIHY",
       "title": "澳洲游戏设计本科留学申请条件是什么",
@@ -585,7 +607,7 @@
     {
       "id": "u6vznUgYxIoNfkiZK-i_Q43u7UU",
       "title": "研究报告 | 全球能源领域前沿技术发展报告（2026）",
-      "titleEn": "",
+      "titleEn": "Research Report | Frontier Technology Developments in Global Energy (2026)",
       "source": "中国电力新闻网",
       "sourceType": "news",
       "url": "https://www.cpnn.com.cn/news/zngc/202610/t20261009_1918868.html",
@@ -2343,25 +2365,6 @@
       "hitSentence": "... 、自立、自强的坚韧生命力量。 立足市场需求、当代审美与技艺传承，品牌以“产品设计+设计师孵化”模式，助力本土设计成长，赋能乡村振兴。同时联动非遗银饰匠人，将手工锻造的金属银扣作为点睛元素，以行走的凉山彝族美学让非遗走出博物馆，实现传统文化在当代语境下的活态传承与时尚表达。 ...",
       "reach": 17579631,
       "estimatedViews": 22
-    },
-    {
-      "id": "vojwuW461arvoacYukEcHaBekq8",
-      "title": "2026出国留学项目院校选择指南：政策、专业、费用与申请条件汇总",
-      "titleEn": "",
-      "source": "NetEase News / 网易新闻",
-      "sourceType": "news",
-      "url": "https://www.163.com/dy/article/L5IIAHBQ0536N0RG.html",
-      "publishedDate": "2026-08-29T23:34:30.000Z",
-      "sentiment": "neutral",
-      "language": "zh-Hans",
-      "matchedKeywords": [
-        "皇家墨尔本理工大学",
-        "室内设计",
-        "可持续设计"
-      ],
-      "hitSentence": "... 英国方向覆盖商科与艺术类两大核心赛道：商科涵盖会计金融、国际商务、市场营销、酒店管理等；艺术类涵盖动画、纯艺、插画、平面设计、游戏艺术、室内设计、电影制作、可持续设计等，其中创意艺术大学、伯恩茅斯艺术大学为英国顶尖艺术院校，专业常年位居全英前列。 费用方面，国内阶段普通类专业每 ...",
-      "reach": 31300959,
-      "estimatedViews": 144
     }
   ],
   "peaks": [

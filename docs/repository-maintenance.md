@@ -278,3 +278,12 @@ conclusive pause reason was found. Main protection does not require disabling it
   the deployed snapshot, archive, reviewed titles, next-refresh time and relevant
   static resources. That PR's release record carries the final merge/deployment
   evidence; merge alone is insufficient.
+
+## Manual weekly refresh — 11 November 2026
+
+- Refreshed Saved Search `29175637` at 16:33 AEDT. All six Meltwater API
+  requests succeeded. The rolling window from 11 August to 11 November
+  contains 260 mentions, with 100 recent results and three peak-day samples.
+- Reviewed the six visible English titles and archived the 26 October snapshot
+  byte-for-byte. The next scheduled refresh is 16 November at 10:00
+  Australia/Melbourne. The pull request records the release verification.
