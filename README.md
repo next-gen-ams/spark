@@ -52,6 +52,19 @@ in `content.url` for the organic sync. The other rows live in
 `content.additional_publish_links`. A rollback of the UI can leave this
 additive column in place to retain saved links.
 
+The Boosting log supports one row per paid flight, with a spend month, delivery
+dates, post type and an optional link to an existing calendar post. Use **Add
+boost** for a repeat flight, a creator post or a planned allocation. Plans
+appear in the month and Excel export as planned amounts. Booked and actual spend
+use the same reporting month across the dashboard and export. Enter the confirmed
+monthly amounts on separate rows when a flight's spend is split across months.
+Existing calendar boosts keep their original flight-start month.
+
+Apply the [boosting flights migration](uq-china-social-wip/migrations/20261111055627_uq_boost_flights.sql)
+before publishing. Flight data uses the same team authorisation as the legacy
+boosting table. Keep the additive table and its data in place if rolling back the
+frontend. Older dashboard builds continue to show their calendar-linked boosts.
+
 ## Before publishing
 
 - Keep existing directory URLs stable. Directory names are deployed routes.
