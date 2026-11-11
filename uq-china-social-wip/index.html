@@ -506,7 +506,16 @@
   .signout:hover { border-color:var(--line-2); color:var(--ink); }
   /* log header + editable cells */
   .loghead { display:flex; align-items:center; justify-content:space-between; padding:16px 18px 12px; gap:12px; }
-  .logfilter { display:flex; align-items:center; gap:8px; }
+  .logfilter { display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
+  .flight-meta { display:block; margin-top:4px; color:var(--ink-3); font-size:11px; }
+  button.flight-meta { border:0; background:none; padding:0; color:var(--blue); text-decoration:underline; }
+  #flightEditor { color:var(--ink); max-height:90vh; overflow:auto; padding:0; }
+  #flightEditor::backdrop { background:rgba(28,24,18,.48); }
+  #flightEditor .page-dialog-body { display:grid; gap:10px; }
+  #flightEditor .field { margin:0; display:block; }
+  #flightEditor .field[hidden] { display:none; }
+  #flightEditor .field input, #flightEditor .field select { display:block; width:100%; margin-top:4px; }
+  @media(max-width:520px) { .loghead { flex-wrap:wrap; } #flightEditor { width:calc(100% - 28px); } }
   .logfilter label { font-weight:700; text-transform:uppercase; letter-spacing:.4px; font-size:10.5px; color:var(--ink-3); }
   .logfilter select { border:1px solid var(--line-2); border-radius:8px; padding:6px 9px; font-size:12.5px; font-family:inherit; background:var(--surface); color:var(--ink); font-weight:600; }
   table.boost td .ecell, table.boost td .ecell-sel { border:1px solid transparent; background:transparent; border-radius:6px; padding:4px 6px; font-size:12px; font-family:inherit; color:var(--ink); width:100%; outline:none; }
@@ -762,7 +771,7 @@
       <div class="annual-kpis" id="paidAnnualKpis"></div>
       <div class="chartcard annual-channel">
         <div class="section-copy"><h3>Channel performance · full year</h3>
-          <div class="csub" style="margin:0">Boosted posts and paid performance by channel.</div></div>
+          <div class="csub" style="margin:0">Boosting flights and paid performance by channel.</div></div>
         <div style="overflow-x:auto"><table class="ytable" id="paidChannels"></table></div>
       </div>
     </div>
@@ -787,19 +796,50 @@
     </div>
     <div class="chartcard">
       <h3>Boosting flight · <span id="flightMonth">Mar 2026</span></h3>
-      <div class="csub">When each boosted post is running this month.</div>
+      <div class="csub">Flight dates for this reporting month.</div>
       <div class="flight" id="flight"></div>
     </div>
   </div>
   <div class="chartcard" style="margin-top:16px; padding:0; overflow:hidden;">
     <div class="loghead">
       <div style="display:flex; align-items:center;"><h3 style="margin:0">Boosting log</h3><span id="boostBadges"></span></div>
-      <div class="logfilter"><label>Status</label>
-        <select id="statusFilter"><option value="all">All status</option><option>Proposed</option><option>Scheduled</option><option>Live</option><option>Boosted</option><option>Finished</option><option>Paused</option></select></div>
+      <div class="logfilter"><label for="statusFilter">Status</label>
+        <select id="statusFilter"><option value="all">All status</option><option>Planned</option><option>Proposed</option><option>Scheduled</option><option>Live</option><option>Boosted</option><option>Finished</option><option>Paused</option></select>
+        <button class="btn primary" type="button" id="addFlight">Add boost</button></div>
     </div>
     <div style="overflow-x:auto"><table class="boost" id="boostTable"></table></div>
   </div>
 </div>
+<dialog class="page-dialog" id="flightEditor" aria-labelledby="flightEditorTitle">
+  <form id="flightForm">
+    <div class="page-dialog-body">
+      <h2 id="flightEditorTitle">Add boost</h2>
+      <div class="row2">
+        <label class="field">Spend month<input name="month" type="month" required min="2000-01" max="2099-12"></label>
+        <label class="field">Content type<select name="kind"><option>UQ post</option><option>Reboost</option><option>Creator post</option></select></label>
+      </div>
+      <label class="field" id="flightContentField">Link calendar post (optional)<select name="content"></select></label>
+      <label class="field">Post or campaign title<input name="title" maxlength="500" required></label>
+      <label class="field">Post URL<input name="url" type="url" maxlength="2048"></label>
+      <div class="row2">
+        <label class="field">Channel<select name="channel"></select></label>
+        <label class="field">Original publish date<input name="published" type="date"></label>
+      </div>
+      <div class="row2">
+        <label class="field">Flight start<input name="start" type="date"></label>
+        <label class="field">Flight end<input name="end" type="date"></label>
+      </div>
+      <div class="row2">
+        <label class="field">Budget (AUD)<input name="budget" type="number" min="0" step="0.01" required></label>
+        <label class="field">Status<select name="status"></select></label>
+      </div>
+    </div>
+    <div class="page-dialog-actions">
+      <button class="btn ghost" type="button" id="cancelFlight">Cancel</button>
+      <button class="btn primary" type="submit">Save boost</button>
+    </div>
+  </form>
+</dialog>
 
 <div class="organic" id="organicView">
   <div class="organic-head">
@@ -985,8 +1025,9 @@ function hasPlan(y,m){ return !!BUDGETPLAN[y+"-"+String(m+1).padStart(2,"0")]; }
 function planYear(y){ let t=0; for(let m=0;m<12;m++) t+=planMonth(y,m); return t; }
 // content labels — unknown values coming from the plan are kept, so new labels never get lost
 const LABELS=["Inform","Educate","Entertain","UGC","KOL"];
-const STATUSES=["Proposed","Scheduled","Live","Boosted","Finished","Paused"];
-const STATUS_C={Proposed:"var(--st-prop)",Scheduled:"var(--st-sched)",Live:"var(--orange)",Boosted:"var(--st-sched)",Finished:"var(--st-posted)",Paused:"var(--ink-3)"};
+const BOOST_FLIGHTS=[];
+const STATUSES=["Planned","Proposed","Scheduled","Live","Boosted","Finished","Paused"];
+const STATUS_C={Planned:"var(--st-prop)",Proposed:"var(--st-prop)",Scheduled:"var(--st-sched)",Live:"var(--orange)",Boosted:"var(--st-sched)",Finished:"var(--st-posted)",Paused:"var(--ink-3)"};
 // Real today — drives "Auto" boost status and which approvals are overdue
 const TODAY=isoLocal(new Date());
 function deriveStatus(b){ if(!b.start||!b.end) return "Proposed"; if(TODAY<b.start) return "Scheduled"; if(TODAY>b.end) return "Finished"; return "Live"; }
@@ -1001,6 +1042,7 @@ function rebuildMonths(){
   // Any month present in the data shows up automatically — add Aug/Sep/2027… to the DB and it just appears.
   var prev=(_monthsReady && MONTHS[mi]) ? {y:MONTHS[mi].y,m:MONTHS[mi].m} : null;
   var set={}; SEED.forEach(function(d){ if(/^\d{4}-\d{2}-\d{2}$/.test(d.date)) set[d.date.slice(0,7)]=1; });
+  BOOST_FLIGHTS.forEach(d=>{set[d.spendMonth]=1;});
   var keys=Object.keys(set).sort(); if(!keys.length) return;
   MONTHS=keys.map(function(k){ return mkMonth(+k.slice(0,4), +k.slice(5,7)-1); });
   // keep the month you're viewing even if it has no content yet (e.g. you stepped ahead to plan it)
@@ -1020,7 +1062,7 @@ const ORGANIC_CHARTS={};
 let budgetSeriesOn={budgeted:1,booked:1,actual:1};
 let paidYearY=null;
 // resizable boosting-log column widths (px), persist across re-renders — [Channel, Post, Window, Budget, Spend, CTR, Eng, CPE, Flwr, Cost/Flwr, Status, Note]
-let BCOLW=[78,180,186,58,78,62,90,66,84,78,148,150];
+let BCOLW=[94,232,186,88,100,62,90,66,84,78,148,150];
 const statusFilter={del:"",appr:""};
 const DELIVERY_STATES=[
   {key:"Posted",label:"Posted",color:"var(--st-posted)"},
@@ -1068,10 +1110,19 @@ function poolToRow(p){
 
 const monthItems=()=>{const M=MONTHS[mi]; return SEED.filter(d=>{const dt=new Date(d.date+"T00:00"); return dt.getFullYear()===M.y&&dt.getMonth()===M.m;});};
 function inMonthISO(iso,M){ return !!iso && /^\d{4}-\d{2}/.test(iso) && +iso.slice(0,4)===M.y && (+iso.slice(5,7)-1)===M.m; }
-// Boosting belongs to the month the boost RUNS in (matches how the plan groups spend),
-// not the month the post was published — a Jan post boosted in Feb counts under Feb.
-function monthBoostItems(){ const M=MONTHS[mi];
-  return SEED.filter(d=>d.boost).filter(d=> d.boostData ? inMonthISO(d.boostData.start,M) : inMonthISO(d.date,M) ); }
+// Legacy boosts follow their original flight-start month. Separate flights record
+// an explicit spend month, including when delivery and reporting dates differ.
+function boostMonth(d){ return d.spendMonth||String(d.boostData?.start||d.date).slice(0,7); }
+function paidBoosts(){ return [...SEED.filter(d=>d.boost),...BOOST_FLIGHTS]; }
+function monthBoostItems(){ return paidBoosts().filter(d=>inMonthISO(boostMonth(d),MONTHS[mi])); }
+function bookedBoost(d){ return d.spendMonth&&["Planned","Proposed"].includes(effStatus(d.boostData))?0:budgetOf(d); }
+function plannedBoost(d){ return d.spendMonth&&["Planned","Proposed"].includes(effStatus(d.boostData))?budgetOf(d):0; }
+function boostSpend(items){
+  const known=items.filter(d=>d.boostData?.spend!=null&&d.boostData.spend!=="");
+  return known.length?known.reduce((a,d)=>a+nInt(d.boostData.spend),0):null;
+}
+const audAmount=new Intl.NumberFormat("en-AU",{style:"currency",currency:"AUD"});
+const aud=v=>v==null?"—":audAmount.format(v);
 function visible(d){ if(chFilter!=="All"&&d.ch!==chFilter)return false;
   if((statusFilter.del&&d.del!==statusFilter.del)||(statusFilter.appr&&d.appr!==statusFilter.appr))return false;
   if(q && !(d.note.toLowerCase().includes(q)))return false; return true; }
@@ -1081,12 +1132,11 @@ function renderKPIs(){
   const wait=items.filter(d=>d.appr==="Pending").length;
   const prop=items.filter(d=>d.del==="Proposed").length;
   const boosted=items.filter(d=>d.boost).length;
-  const M=MONTHS[mi];
-  // Paid spend derives from the month's boosted posts (same source as Channel split) — one number, no drift
+  // Use the same spend month and bookings as the paid report.
   const mBoost=monthBoostItems();
-  const bud=mBoost.length?mBoost.reduce((a,d)=>a+budgetOf(d),0):null;
-  const spd=mBoost.length?mBoost.reduce((a,d)=>a+(parseFloat(d.boostData&&d.boostData.spend)||0),0):null;
-  const pct=bud?Math.min(100,Math.round(spd/bud*100)):0;
+  const bud=mBoost.reduce((a,d)=>a+bookedBoost(d),0);
+  const spd=boostSpend(mBoost);
+  const pct=bud&&spd!=null?Math.round(spd/bud*100):0;
   const wc=wechatStats(items);
   const wcNotes=["All statuses"];
   if(wc.third)wcNotes.push(`${wc.third} third position`);
@@ -1105,8 +1155,8 @@ function renderKPIs(){
       <div class="sub">${wcNotes.join(" · ")}</div></div>
     <div class="kpi"><div class="rail" style="background:var(--orange)"></div>
       <div class="cap">Paid spend</div>
-      <div class="val tnum">${spd!==null?"$"+Math.round(spd).toLocaleString():"—"}</div>
-      ${bud?`<div class="bar"><i style="width:${pct}%;background:${pct>100?'var(--crit)':'var(--orange)'}"></i></div><div class="sub">of $${bud.toLocaleString()} · ${pct}%</div>`:`<div class="sub">no paid this month</div>`}</div>
+      <div class="val tnum">${aud(spd)}</div>
+      ${bud&&spd!=null?`<div class="bar"><i style="width:${Math.min(100,pct)}%;background:${pct>100?'var(--crit)':'var(--orange)'}"></i></div><div class="sub">of ${aud(bud)} booked · ${pct}%</div>`:`<div class="sub">${spd!=null?"No booked amount":mBoost.length?"Actual spend pending":"No boosts this month"}</div>`}</div>
     <div class="kpi"><div class="rail" style="background:var(--ch-red)"></div>
       <div class="cap">Boosted posts</div><div class="val tnum">${boosted}</div>
       <div class="sub">organic feeding paid</div></div>`;
@@ -1884,13 +1934,13 @@ async function syncOrganicPerformance(){
   finally{btn.disabled=false;btn.textContent="Sync now";}
 }
 
-function renderPaid(){
+function renderPaid(renderLog=true){
   // Annual summary first: the two decision KPIs, channel performance, then monthly budget progression.
   const years=yearsInData();
   if(paidYearY===null) paidYearY=years.includes(String(MONTHS[mi].y))?MONTHS[mi].y:+(years[years.length-1]||new Date().getFullYear());
   const yr=paidYearY, annualBoosts=yearBoosts(yr);
   $("#paidYLabel").textContent=yr;
-  const annualBooked=annualBoosts.reduce((a,d)=>a+budgetOf(d),0);
+  const annualBooked=annualBoosts.reduce((a,d)=>a+bookedBoost(d),0);
   const annualActual=annualBoosts.reduce((a,d)=>a+nInt(d.boostData.spend),0);
   const annualEng=annualBoosts.reduce((a,d)=>a+nInt(d.boostData.eng),0);
   const annualFollowers=annualBoosts.reduce((a,d)=>a+nInt(d.boostData.flw),0);
@@ -1902,7 +1952,7 @@ function renderPaid(){
     .map(ch=>`<span data-tip="${ch} · ${money(spendByChannel[ch]||0)} spent · ${cpX(spendByChannel[ch],followerByChannel[ch])} per follower"><i style="background:${(CH[ch]||{}).color||"var(--ink-3)"}"></i>${(CH[ch]||{}).label||ch} ${followerByChannel[ch].toLocaleString()}</span>`).join("");
   $("#paidAnnualKpis").innerHTML=`
     <div class="kpi accent"><div class="rail" style="background:var(--orange)"></div>
-      <div class="cap">Paid boosting spend</div><div class="val tnum">${money(annualActual)}</div>
+      <div class="cap">Paid boosting spend</div><div class="val tnum">${aud(boostSpend(annualBoosts))}</div>
       <div class="bar"><i style="width:${Math.min(100,annualPct)}%;background:${annualPct>100?"var(--crit)":"var(--orange)"}"></i></div>
       <div class="sub">of ${money(annualPlan)} ${yr} media plan · ${annualPct}% · ${money(annualBooked)} booked</div></div>
     <div class="kpi"><div class="rail" style="background:var(--ch-red)"></div>
@@ -1913,7 +1963,7 @@ function renderPaid(){
   const byAnnualChannel={};
   annualBoosts.forEach(d=>{const r=byAnnualChannel[d.ch]=byAnnualChannel[d.ch]||{boosts:0,spend:0,eng:0,flw:0};r.boosts++;r.spend+=nInt(d.boostData.spend);r.eng+=nInt(d.boostData.eng);r.flw+=nInt(d.boostData.flw);});
   const annualChannels=Object.keys(byAnnualChannel).sort((a,b)=>byAnnualChannel[b].boosts-byAnnualChannel[a].boosts);
-  $("#paidChannels").innerHTML=`<thead><tr><th>Channel</th><th class="n">Boosted</th><th class="n">Spend</th><th class="n">Engagements</th><th class="n">CPE</th><th class="n">Followers +</th></tr></thead><tbody>${
+  $("#paidChannels").innerHTML=`<thead><tr><th>Channel</th><th class="n">Flights</th><th class="n">Spend</th><th class="n">Engagements</th><th class="n">CPE</th><th class="n">Followers +</th></tr></thead><tbody>${
     annualChannels.map(ch=>{const r=byAnnualChannel[ch],channel=CH[ch]||CH.RED;return `<tr>
       <td><span class="chip" style="pointer-events:none;padding:2px 9px"><span class="dot" style="background:${channel.color}"></span>${channel.label}</span></td>
       <td class="n tnum">${r.boosts}</td><td class="n tnum">${money(r.spend)}</td><td class="n tnum">${r.eng?r.eng.toLocaleString():"—"}</td><td class="n tnum">${cpX(r.spend,r.eng)}</td><td class="n tnum">${r.flw?r.flw.toLocaleString():"—"}</td></tr>`;}).join("")
@@ -1921,7 +1971,7 @@ function renderPaid(){
   }</tbody><tfoot><tr><td>All channels</td><td class="n tnum">${annualBoosts.length}</td><td class="n tnum">${money(annualActual)}</td><td class="n tnum">${annualEng.toLocaleString()}</td><td class="n tnum">${cpX(annualActual,annualEng)}</td><td class="n tnum">${annualFollowers.toLocaleString()}</td></tr></tfoot>`;
 
   const bookedByM=new Array(12).fill(0), spendByM=new Array(12).fill(0);
-  annualBoosts.forEach(d=>{const m=bMonth(d);if(m>=0&&m<12){bookedByM[m]+=budgetOf(d);spendByM[m]+=nInt(d.boostData.spend);}});
+  annualBoosts.forEach(d=>{const m=bMonth(d);if(m>=0&&m<12){bookedByM[m]+=bookedBoost(d);spendByM[m]+=nInt(d.boostData.spend);}});
   const planByM=MO.map((_,m)=>planMonth(yr,m));
   const shown=[];
   if(budgetSeriesOn.budgeted)shown.push(...planByM);
@@ -1933,15 +1983,15 @@ function renderPaid(){
   $("#budgetTotals").innerHTML=[
     ["budgeted","Total Budgeted",annualBudgeted,"var(--surface)","1px solid var(--line-2)"],
     ["booked","Total Booked",annualBooked,"var(--blue)","none"],
-    ["actual","Total Actual",annualActual,"var(--orange)","none"]
-  ].map(([k,label,value,color,border])=>`<div class="annual-total" data-total="${k}"><dt><i style="background:${color};border:${border}"></i>${label}</dt><dd class="tnum">$${Math.round(value).toLocaleString()}</dd></div>`).join("");
+    ["actual","Total Actual",boostSpend(annualBoosts),"var(--orange)","none"]
+  ].map(([k,label,value,color,border])=>`<div class="annual-total" data-total="${k}"><dt><i style="background:${color};border:${border}"></i>${label}</dt><dd class="tnum">${aud(value)}</dd></div>`).join("");
   $("#chart").innerHTML=MO.map((m,i)=>{const b=planByM[i],k=bookedByM[i],s=spendByM[i],planned=hasPlan(yr,i);
     const actualOver=(s>k)||(planned&&s>b);
     const actualWhy=[s>k?"booked":"",planned&&s>b?"plan":""].filter(Boolean).join(" and ");
     return `<div class="colgrp"><div class="cols">
       ${budgetSeriesOn.budgeted&&planned?`<div class="col budget" data-series="budgeted" style="height:${barH(b)}px" data-tip="${m} ${yr} · Budgeted  $${b.toLocaleString()} · original media plan"></div>`:""}
       ${budgetSeriesOn.booked&&k?`<div class="col booked" data-series="booked" style="height:${barH(k)}px" data-tip="${m} ${yr} · Booked  $${k.toLocaleString()}${planned&&k>b?'  (over plan)':''}"></div>`:""}
-      ${budgetSeriesOn.actual&&s?`<div class="col spend" data-series="actual" style="height:${barH(s)}px" data-tip="${m} ${yr} · Actual  $${Math.round(s).toLocaleString()}${actualOver?'  (over '+actualWhy+')':''}"></div>`:""}</div><span class="xlab">${m}</span></div>`;}).join("");
+      ${budgetSeriesOn.actual&&s?`<div class="col spend" data-series="actual" style="height:${barH(s)}px" data-tip="${m} ${yr} · Actual  ${aud(s)}${actualOver?'  (over '+actualWhy+')':''}"></div>`:""}</div><span class="xlab">${m}</span></div>`;}).join("");
   const filters=[
     ["budgeted","Budgeted","var(--surface-2)","1px solid var(--line-2)"],
     ["booked","Booked","var(--blue)","none"],
@@ -1950,43 +2000,49 @@ function renderPaid(){
   $$("#budgetLegend button").forEach(btn=>btn.onclick=()=>{const k=btn.dataset.series;
     if(budgetSeriesOn[k]&&Object.values(budgetSeriesOn).filter(Boolean).length===1){toast("Keep at least one chart series visible");return;}
     budgetSeriesOn[k]=budgetSeriesOn[k]?0:1;renderPaid();});
-  // Channel split — booked amount + LIVE actual spend, derived from this month's boosted posts
   const M=MONTHS[mi];
-  $("#paidMonthSub").textContent=`Boosting activity for ${M.key}.`;
-  const chColor={RED:"var(--ch-red)",WeChat:"var(--ch-wechat)",Weibo:"var(--ch-weibo)","Alumni WeChat":"var(--ch-alumni)"};
-  const byCh={}, spentCh={};
-  monthBoostItems().forEach(d=>{const bd=d.boostData||{}; const bud=budgetOf(d);
-    byCh[d.ch]=(byCh[d.ch]||0)+bud; spentCh[d.ch]=(spentCh[d.ch]||0)+(parseFloat(bd.spend)||0);});
-  const sp=Object.keys(byCh).map(n=>[n,byCh[n],spentCh[n]||0,chColor[n]||"var(--ink-3)"]).sort((a,b)=>b[1]-a[1]);
-  $("#splitSub").textContent=`${M.key} · booked vs. actual spend (live)`;
-  const totB=sp.reduce((a,x)=>a+x[1],0), totS=sp.reduce((a,x)=>a+x[2],0);
-  $("#splitBody").innerHTML=(sp.length?sp.map(([n,bud,spent,c])=>{const pct=bud?Math.round(spent/bud*100):0;
-    return `<div style="margin-bottom:14px" data-tip="${n} · Spent $${Math.round(spent).toLocaleString()} of $${bud.toLocaleString()} booked (${pct}%)">
-    <div style="display:flex;justify-content:space-between;font-size:12.5px;font-weight:600;margin-bottom:5px">
-    <span class="chip" style="pointer-events:none;padding:2px 9px"><span class="dot" style="background:${c}"></span>${n}</span>
-    <span class="tnum"><b>$${Math.round(spent).toLocaleString()}</b> <span style="color:var(--ink-3);font-weight:500">/ $${bud.toLocaleString()}</span></span></div>
-    <div class="bar" style="height:9px"><i style="width:${Math.min(100,pct)}%;background:${pct>100?'var(--crit)':c}"></i></div></div>`;}).join("")
-    +`<div style="margin-top:18px;padding-top:14px;border-top:1px solid var(--line);display:flex;justify-content:space-between;font-weight:800"><span>Total spent / booked</span><span class="tnum"><span style="color:var(--orange)">$${Math.round(totS).toLocaleString()}</span> <span style="color:var(--ink-3);font-weight:600">/ $${totB.toLocaleString()}</span></span></div>`
-    :`<div style="font-size:12px;color:var(--ink-3);padding:10px 0">No boosted posts this month yet — toggle Boost on a post in the calendar and it appears here.</div>`);
-  // ---- Boosting: THIS MONTH only, derived from boosted posts, editable ----
-  const monthBoosts=monthBoostItems().sort((a,b)=>(a.boostData?.start||a.date).localeCompare(b.boostData?.start||b.date));
+  $("#paidMonthSub").textContent=`Boosting activity attributed to ${M.key}.`;
+  const monthBoosts=monthBoostItems().sort((a,b)=>(a.boostData?.start||"").localeCompare(b.boostData?.start||""));
   monthBoosts.forEach(d=>{ if(!d.boostData){ ensureBoostData(d); saveBoost(d); } });
+  const channels=[...new Set(monthBoosts.map(d=>d.ch))];
+  $("#splitSub").textContent=`${M.key} · actual spend / booked (AUD)`;
+  const splitRow=(label,items,color)=>{
+    const booked=items.reduce((a,d)=>a+bookedBoost(d),0);
+    const planned=items.reduce((a,d)=>a+plannedBoost(d),0);
+    const actual=boostSpend(items);
+    const pct=booked&&actual!=null?Math.round(actual/booked*100):0;
+    return `<div style="margin-bottom:14px">
+      <div style="display:flex;justify-content:space-between;gap:8px;font-size:12.5px;font-weight:600;margin-bottom:5px">
+        <span>${label}</span><span class="tnum"><b>${aud(actual)}</b> / ${aud(booked)}</span>
+      </div>
+      ${booked?`<div class="bar" style="height:9px"><i style="width:${Math.min(100,pct)}%;background:${pct>100?'var(--crit)':color}"></i></div>`:""}
+      ${planned?`<div class="flight-meta">${aud(planned)} planned</div>`:""}
+    </div>`;
+  };
+  $("#splitBody").innerHTML=channels.length?channels.map(ch=>splitRow(esc(CH[ch]?.label||ch),monthBoosts.filter(d=>d.ch===ch),CH[ch]?.color||"var(--orange)")).join("")
+    +splitRow("Total",monthBoosts,"var(--orange)"):`<div class="flight-meta">No boosts assigned to this month.</div>`;
+  if(!renderLog)return;
   const filt=monthBoosts.filter(d=> boostFilter==="all" || effStatus(d.boostData)===boostFilter);
   $("#flightMonth").textContent=M.key;
   const liveN=monthBoosts.filter(d=>effStatus(d.boostData)==="Live").length;
   $("#boostBadges").innerHTML=`<span class="sbadge blue">${monthBoosts.length} boosts</span>${liveN?`<span class="sbadge orange">${liveN} live</span>`:''}`;
   renderFlight(filt,M);
-  const HEADS=["Channel","Organic post boosted (linked)","Window","Budget","Spend","CTR","Engagements","CPE","Followers +","Cost / Flwr","Status","Note"];
+  const HEADS=["Channel","Post or campaign","Flight dates","Budget","Actual spend","CTR","Engagements","CPE","Followers +","Cost / Flwr","Status","Note"];
   const colgroup=`<colgroup>${BCOLW.map(w=>`<col style="width:${w}px">`).join("")}</colgroup>`;
   $("#boostTable").style.width=BCOLW.reduce((a,b)=>a+b,0)+"px";
   $("#boostTable").innerHTML=colgroup+`<thead><tr>${HEADS.map((h,i)=>`<th>${h}<span class="colr" data-i="${i}"></span></th>`).join("")}</tr></thead><tbody>${
     filt.map(d=>{const b=d.boostData; const eff=effStatus(b); const sc=STATUS_C[eff]||"var(--ink-3)"; const auto=(!b.status||b.status==="Auto");
-      return `<tr data-id="${d.id}">
-        <td><span class="chip" style="pointer-events:none;padding:2px 9px"><span class="dot" style="background:${CH[d.ch].color}"></span>${d.ch}</span></td>
-        <td data-tip="${escAttr(d.note)}"><span class="interlock">↳ ${esc(d.note)}</span></td>
-        <td><div class="winedit"><input type="date" class="edate" data-f="start" value="${b.start||''}"><span>→</span><input type="date" class="edate" data-f="end" value="${b.end||''}"></div></td>
-        <td class="tnum">$${b.budget}</td>
-        <td><span class="ein">$<input class="ecell tnum" data-f="spend" value="${b.spend!=null?b.spend:''}" placeholder="—"></span></td>
+      const link=safePostUrl(d.url);
+      const title=link==="#"?esc(d.note):`<a href="${escAttr(link)}" target="_blank" rel="noopener noreferrer">${esc(d.note)}</a>`;
+      return `<tr data-id="${escAttr(d.id)}" data-flight="${Boolean(d.spendMonth)}">
+        <td><span class="chip" style="pointer-events:none;padding:2px 9px"><span class="dot" style="background:${CH[d.ch]?.color||'var(--orange)'}"></span>${esc(d.ch)}</span></td>
+        <td data-tip="${escAttr(d.note)}">${title}
+          <span class="flight-meta">${esc(d.kind||"UQ post")}${d.date?" · Published "+esc(organicDate(d.date)):""}</span>
+          ${d.spendMonth?'<button type="button" class="flight-meta edit-flight">Edit boost</button>':''}</td>
+        <td>${d.spendMonth?(b.start||b.end?`${esc(organicDate(b.start))} – ${esc(organicDate(b.end))}`:"Dates pending"):
+          `<div class="winedit"><input type="date" class="edate" data-f="start" value="${escAttr(b.start||'')}"><span>→</span><input type="date" class="edate" data-f="end" value="${escAttr(b.end||'')}"></div>`}</td>
+        <td class="tnum">${aud(budgetOf(d))}</td>
+        <td><span class="ein">$<input class="ecell tnum" data-f="spend" inputmode="decimal" aria-label="Actual spend" value="${b.spend!=null?escAttr(Number(b.spend).toFixed(2)):''}" placeholder="—"></span></td>
         <td><input class="ecell tnum" data-f="ctr" value="${escAttr(b.ctr||'')}" placeholder="—"></td>
         <td><input class="ecell tnum" data-f="eng" value="${b.eng!=null?b.eng:''}" placeholder="—"></td>
         <td class="tnum" data-tip="Cost per engagement = spend ÷ engagements" style="color:var(--ink-2);font-weight:600">${cpX(b.spend,b.eng)}</td>
@@ -2016,10 +2072,10 @@ function renderFlight(items,M){
   const todayIn=off(TODAY)===0, todayLeft=todayIn?(dayOf(TODAY)-0.5)/days*100:0;
   const axis=`<div class="fl-axis">${ticks.map(t=>`<span style="left:${(t-0.5)/days*100}%">${t}</span>`).join("")}${todayIn?`<span class="fl-today-lbl" style="left:${todayLeft}%">▾ today</span>`:''}</div>`;
   const todayLine=todayIn?`<div class="fl-today" style="left:${todayLeft}%" data-tip="Today · ${fmtDay(TODAY)}"></div>`:'';
-  const lanes=items.map(d=>{const b=d.boostData;
+  const lanes=items.filter(d=>d.boostData.start&&d.boostData.end).map(d=>{const b=d.boostData;
     let bar="", pub="";
     if(off(d.date)===0){const pd=dayOf(d.date); pub=`<div class="fl-pub" style="left:${(pd-0.5)/days*100}%" data-tip="Post published ${fmtDay(d.date)}"></div>`;}
-    if(b.start&&b.end&&/^\d{4}-\d{2}-\d{2}$/.test(b.start)&&/^\d{4}-\d{2}-\d{2}$/.test(b.end)){
+    if(/^\d{4}-\d{2}-\d{2}$/.test(b.start)&&/^\d{4}-\d{2}-\d{2}$/.test(b.end)&&off(b.start)<=0&&off(b.end)>=0){
       const sD=off(b.start)<0?1:off(b.start)>0?days+1:dayOf(b.start);
       let eD=off(b.end)<0?0:off(b.end)>0?days:dayOf(b.end); if(eD<sD)eD=sD;
       const left=(sD-1)/days*100, width=Math.max(2,(eD-sD+1)/days*100), ext=off(b.end)>0;
@@ -2030,17 +2086,106 @@ function renderFlight(items,M){
     return `<div class="flane"><div class="fl-label" data-tip="${escAttr(d.note)}"><span class="dot" style="background:${CH[d.ch].color}"></span>${esc(d.note)}</div><div class="fl-track">${todayLine}${pub}${bar}</div></div>`;
   }).join("");
   $("#flight").innerHTML=axis+(lanes||`<div class="fl-empty">No boosts running this month.</div>`)
-    +`<div class="fl-legend"><span><i class="lg-pub"></i>Post published</span><span><i class="lg-bar"></i>Boost window · starts ~3 days after publish · edit the Window dates in the log to adjust</span></div>`;
+    +`<div class="fl-legend"><span><i class="lg-pub"></i>Post published</span><span><i class="lg-bar"></i>Boosting flight window</span></div>`;
 }
 function wireBoostEdits(){
-  $$("#boostTable .ecell").forEach(inp=>inp.oninput=()=>{const tr=inp.closest("tr"); const d=SEED.find(x=>x.id===tr.dataset.id); if(!d||!d.boostData)return;
-    const f=inp.dataset.f, b=d.boostData;
-    b[f]= (f==="spend"||f==="eng"||f==="flw") ? (inp.value.trim()===""?null:(parseFloat(inp.value)||inp.value)) : inp.value;
-    if(f==="spend"||f==="eng"||f==="flw"){ const tds=tr.children; tds[7].textContent=cpX(b.spend,b.eng); tds[9].textContent=cpX(b.spend,b.flw); } qSave("boost",d); });
-  $$("#boostTable .ecell-sel").forEach(sel=>sel.onchange=()=>{const d=SEED.find(x=>x.id===sel.closest("tr").dataset.id); if(d&&d.boostData)d.boostData.status=sel.value; saveBoost(d); renderPaid(); });
-  $$("#boostTable .edate").forEach(inp=>inp.onchange=()=>{const d=SEED.find(x=>x.id===inp.closest("tr").dataset.id); if(d&&d.boostData)d.boostData[inp.dataset.f]=inp.value; saveBoost(d); renderPaid(); });
+  const getBoost=element=>{
+    const tr=element.closest("tr");
+    return (tr.dataset.flight==="true"?BOOST_FLIGHTS:SEED).find(d=>d.id===tr.dataset.id);
+  };
+  $$("#boostTable .edit-flight").forEach(btn=>btn.onclick=()=>openFlightEditor(getBoost(btn)));
+  $$("#boostTable .ecell").forEach(inp=>inp.oninput=()=>{
+    const d=getBoost(inp), f=inp.dataset.f, b=d.boostData, raw=inp.value.trim();
+    if(["spend","eng","flw"].includes(f)){
+      const value=raw?Number(raw):null;
+      if(value!=null&&(!Number.isFinite(value)||value<0))return;
+      b[f]=value;
+      const tds=inp.closest("tr").children;
+      tds[7].textContent=cpX(b.spend,b.eng); tds[9].textContent=cpX(b.spend,b.flw);
+    }else b[f]=inp.value;
+    qSave("boost",d);
+  });
+  $$("#boostTable .ecell[data-f='spend'],#boostTable .ecell[data-f='eng'],#boostTable .ecell[data-f='flw']").forEach(inp=>inp.onchange=()=>{
+    const d=getBoost(inp), raw=inp.value.trim();
+    if(raw&&(!Number.isFinite(Number(raw))||Number(raw)<0)){
+      inp.value=d.boostData[inp.dataset.f]??"";
+      toast("Enter a non-negative number");
+    }
+    renderKPIs();
+    renderPaid(false);
+  });
+  $$("#boostTable .ecell-sel").forEach(sel=>sel.onchange=()=>{const d=getBoost(sel);d.boostData.status=sel.value;saveBoost(d);renderPaid();});
+  $$("#boostTable .edate").forEach(inp=>inp.onchange=()=>{const d=getBoost(inp);d.boostData[inp.dataset.f]=inp.value;saveBoost(d);renderPaid();});
   $$("#boostTable .enote").forEach(t=>{const grow=()=>{t.style.height="auto"; t.style.height=Math.max(30,t.scrollHeight)+"px";}; grow(); t.addEventListener("input",grow); t.addEventListener("focus",grow); });
 }
+
+const flightEditor=$("#flightEditor"), flightForm=$("#flightForm"), flightFields=flightForm.elements;
+let editingFlight=null;
+function openFlightEditor(d=null){
+  editingFlight=d;
+  flightForm.reset();
+  const b=d?.boostData||{};
+  const m=MONTHS[mi];
+  $("#flightEditorTitle").textContent=d?"Edit boost":"Add boost";
+  flightFields.month.value=d?.spendMonth||`${m.y}-${String(m.m+1).padStart(2,"0")}`;
+  flightFields.kind.value=d?.kind||"UQ post";
+  flightFields.channel.replaceChildren(...Object.keys(CH).map(ch=>new Option(CH[ch].label,ch)));
+  flightFields.channel.value=d?.ch||"RED";
+  flightFields.content.replaceChildren(new Option("No calendar post",""),...SEED.filter(post=>post.del==="Posted"||post.url||post.boost)
+    .sort((a,b)=>b.date.localeCompare(a.date)).map(post=>new Option(`${post.date} · ${post.ch} · ${post.note.slice(0,95)}`,post.id)));
+  flightFields.content.value=d?.contentId||"";
+  flightFields.title.value=d?.note||"";
+  flightFields.url.value=d?.url||"";
+  flightFields.published.value=d?.date||"";
+  flightFields.start.value=b.start||"";
+  flightFields.end.value=b.end||"";
+  flightFields.budget.value=b.budget==null?"":Number(b.budget).toFixed(2);
+  flightFields.status.replaceChildren(new Option("Auto (follow dates)","Auto"),...STATUSES.map(status=>new Option(status,status)));
+  flightFields.status.value=b.status||"Planned";
+  updateFlightContentField();
+  flightEditor.showModal();
+}
+function updateFlightContentField(){
+  const isCreator=flightFields.kind.value==="Creator post";
+  $("#flightContentField").hidden=isCreator;
+  flightFields.content.disabled=isCreator;
+  if(isCreator)flightFields.content.value="";
+}
+flightFields.kind.onchange=updateFlightContentField;
+flightFields.content.onchange=()=>{
+  const post=SEED.find(d=>d.id===flightFields.content.value);
+  if(!post)return;
+  flightFields.title.value=post.note.split("\n")[0].slice(0,500);
+  const link=safePostUrl(post.url);
+  flightFields.url.value=link==="#"?"":link;
+  flightFields.channel.value=post.ch;
+  flightFields.published.value=post.date;
+};
+$("#addFlight").onclick=()=>openFlightEditor();
+$("#cancelFlight").onclick=()=>flightEditor.close();
+flightEditor.onclose=()=>{
+  if(_pendingReload){_pendingReload=false; scheduleReload();}
+};
+flightForm.onsubmit=e=>{
+  e.preventDefault();
+  const f=flightFields, title=f.title.value.trim(), url=f.url.value.trim();
+  if(!title){toast("Enter a post or campaign title");f.title.focus();return;}
+  if(url&&safePostUrl(url)==="#"){toast("Use an HTTP or HTTPS post URL");f.url.focus();return;}
+  if(f.start.value&&f.end.value&&f.start.value>f.end.value){toast("Flight end must follow the start");f.end.focus();return;}
+  const d=editingFlight||{id:makeId("boost_"),boostData:{}};
+  const priorBudget=d.boostData.budget, enteredBudget=Number(f.budget.value);
+  const budget=priorBudget!=null&&enteredBudget===Number(Number(priorBudget).toFixed(2))?priorBudget:enteredBudget;
+  Object.assign(d,{spendMonth:f.month.value,kind:f.kind.value,contentId:f.content.value,ch:f.channel.value,
+    note:title,url,date:f.published.value});
+  Object.assign(d.boostData,{start:f.start.value,end:f.end.value,
+    budget,status:f.status.value});
+  if(!editingFlight)BOOST_FLIGHTS.push(d);
+  saveBoost(d);
+  flightEditor.close();
+  rebuildMonths();
+  mi=MONTHS.findIndex(m=>inMonthISO(d.spendMonth,m));
+  setMonth();
+};
 
 /* ===================== Excel export =====================
    Branded multi-sheet .xlsx: Summary + Social calendar + Paid boosting, over a month
@@ -2109,8 +2254,8 @@ async function buildWorkbook(from,to,want){
   const ExcelJS=await loadExcelJS();
   const inRange=k=>k>=from&&k<=to;
   const content=SEED.filter(d=>d.date&&inRange(d.date.slice(0,7))).sort((a,b)=>a.date.localeCompare(b.date));
-  const boosts=SEED.filter(d=>d.boost&&d.boostData).filter(d=>inRange(String(d.boostData.start||d.date).slice(0,7)))
-    .sort((a,b)=>String(a.boostData.start||a.date).localeCompare(String(b.boostData.start||b.date)));
+  const boosts=paidBoosts().filter(d=>d.boostData&&inRange(boostMonth(d)))
+    .sort((a,b)=>boostMonth(a).localeCompare(boostMonth(b))||(a.boostData.start||"").localeCompare(b.boostData.start||""));
   const wb=new ExcelJS.Workbook();
   wb.creator="GMS · UQ China Social WIP"; wb.created=new Date();
 
@@ -2162,31 +2307,31 @@ async function buildWorkbook(from,to,want){
   if(want.sum){
     const cols=[{w:14},{w:9,fmt:"0"},{w:9,fmt:"0"},{w:15,fmt:"0"},{w:9,fmt:"0"},
                 {w:13,fmt:'"$"#,##0.00'},{w:13,fmt:'"$"#,##0.00'},{w:13,fmt:'"$"#,##0.00'},{w:11,fmt:"0%"},{w:14,fmt:"#,##0"},{w:13,fmt:"#,##0"},
-                {w:16,fmt:"0"},{w:17,fmt:"0"},{w:15,fmt:"0"},{w:16,fmt:"0"}];
+                {w:16,fmt:"0"},{w:17,fmt:"0"},{w:15,fmt:"0"},{w:16,fmt:"0"},{w:15,fmt:'"$"#,##0.00'}];
     const heads=["Month","Posts","Posted","WeChat pushes","Boosts","Media plan","Booked","Actual spend","% of plan","Engagements","Followers +",
-                 "WeChat headlines","WeChat sub articles","WeChat 3rd position","WeChat unassigned"];
+                 "WeChat headlines","WeChat sub articles","WeChat 3rd position","WeChat unassigned","Planned allocation"];
     // include months that only carry budget — planned but nothing scheduled yet
     const keys=[...new Set([...content.map(d=>d.date.slice(0,7)),
-      ...boosts.map(d=>String(d.boostData.start||d.date).slice(0,7)),
+      ...boosts.map(boostMonth),
       ...Object.keys(BUDGETPLAN).filter(k=>k>=from&&k<=to)])].sort();
     const planOf=k=>{ const b=BUDGETPLAN[k]; return b?Object.keys(b).reduce((a,x)=>a+(+b[x]||0),0):0; };
     const rows=keys.map(k=>{
-      const c=content.filter(d=>d.date.slice(0,7)===k), b=boosts.filter(d=>String(d.boostData.start||d.date).slice(0,7)===k);
+      const c=content.filter(d=>d.date.slice(0,7)===k), b=boosts.filter(d=>boostMonth(d)===k);
       const posted=c.filter(d=>d.del==="Posted").length;
       const wc=wechatStats(c);
-      const bud=b.reduce((a,d)=>a+budgetOf(d),0), spd=b.reduce((a,d)=>a+nInt(d.boostData.spend),0), pl=planOf(k);
+      const bud=b.reduce((a,d)=>a+bookedBoost(d),0), spd=boostSpend(b), pl=planOf(k);
       return [MO[+k.slice(5,7)-1]+" "+k.slice(0,4), c.length||null, posted||null, wc.pushes.size||null, b.length||null,
-        BUDGETPLAN[k]?r2(pl):null, r2(bud)||null, r2(spd)||null, (pl&&spd)?spd/pl:null,
+        BUDGETPLAN[k]?r2(pl):null, r2(bud)||null, r2(spd), (pl&&spd!=null)?spd/pl:null,
         b.reduce((a,d)=>a+nInt(d.boostData.eng),0)||null, b.reduce((a,d)=>a+nInt(d.boostData.flw),0)||null,
-        wc.headline,wc.sub,wc.third,wc.unassigned];
+        wc.headline,wc.sub,wc.third,wc.unassigned,r2(b.reduce((a,d)=>a+plannedBoost(d),0))||null];
     });
-    const tb=boosts.reduce((a,d)=>a+budgetOf(d),0), ts=boosts.reduce((a,d)=>a+nInt(d.boostData.spend),0);
+    const tb=boosts.reduce((a,d)=>a+bookedBoost(d),0), ts=boostSpend(boosts);
     const tp=keys.reduce((a,k)=>a+planOf(k),0);
     const wc=wechatStats(content);
     rows.push(["TOTAL", content.length, content.filter(d=>d.del==="Posted").length, wc.pushes.size, boosts.length,
-      r2(tp)||null, r2(tb)||null, r2(ts)||null, (tp&&ts)?ts/tp:null,
+      r2(tp)||null, r2(tb)||null, r2(ts), (tp&&ts!=null)?ts/tp:null,
       boosts.reduce((a,d)=>a+nInt(d.boostData.eng),0)||null, boosts.reduce((a,d)=>a+nInt(d.boostData.flw),0)||null,
-      wc.headline,wc.sub,wc.third,wc.unassigned]);
+      wc.headline,wc.sub,wc.third,wc.unassigned,r2(boosts.reduce((a,d)=>a+plannedBoost(d),0))||null]);
     const ws=wb.addWorksheet("Summary",{properties:{tabColor:{argb:HEX.orange}}});
     title(ws,"UQ China Social & Boosting — Summary",sub,heads.length);
     header(ws,5,heads); body(ws,5,rows,cols);
@@ -2208,15 +2353,15 @@ async function buildWorkbook(from,to,want){
 
   if(want.paid){
     const cols=[{w:11},{w:14},{w:46,wrap:true},{w:11},{w:11},{w:7,fmt:"0"},{w:12,fmt:'"$"#,##0.00'},{w:12,fmt:'"$"#,##0.00'},
-                {w:9,fmt:"0%"},{w:9},{w:13,fmt:"#,##0"},{w:10,fmt:'"$"#,##0.00'},{w:12,fmt:"#,##0"},{w:12,fmt:'"$"#,##0.00'},{w:11},{w:34,wrap:true}];
-    const heads=["Boost month","Channel","Organic post boosted (linked)","Window start","Window end","Days",
-      "Budget","Spend","% used","CTR","Engagements","CPE","Followers +","Cost / follower","Status","Performance note"];
+                {w:9,fmt:"0%"},{w:9},{w:13,fmt:"#,##0"},{w:10,fmt:'"$"#,##0.00'},{w:12,fmt:"#,##0"},{w:12,fmt:'"$"#,##0.00'},{w:11},{w:34,wrap:true},{w:15},{w:17},{w:44,wrap:true},{w:16,fmt:"#,##0"}];
+    const heads=["Spend month","Channel","Post or campaign","Window start","Window end","Days",
+      "Budget","Spend","% used","CTR","Engagements","CPE","Followers +","Cost / follower","Status","Performance note","Content type","Original publish date","Post URL","WeChat reads"];
     const rows=boosts.map(d=>{ const b=d.boostData, bud=budgetOf(d), sp=$$$(b.spend), en=$$$(b.eng), fl=$$$(b.flw);
       const days=(b.start&&b.end)?Math.round((new Date(b.end+"T00:00")-new Date(b.start+"T00:00"))/864e5)+1:null;
-      return [MO[+String(b.start||d.date).slice(5,7)-1]+" "+String(b.start||d.date).slice(0,4),
+      return [monthLabel(boostMonth(d)),
         (CH[d.ch]||{}).label||d.ch,(d.note||"").replace(/\n/g," "),b.start||"",b.end||"",days,
-        r2(bud),r2(sp),(bud&&sp!=null)?sp/bud:null,b.ctr||"",en,(sp&&en)?r2(sp/en):null,fl,(sp&&fl)?r2(sp/fl):null,
-        effStatus(b),(b.note||"").replace(/\n/g," ")];
+        bud,sp,(bud&&sp!=null)?sp/bud:null,b.ctr||"",en,(sp&&en)?r2(sp/en):null,fl,(sp&&fl)?r2(sp/fl):null,
+        effStatus(b),(b.note||"").replace(/\n/g," "),d.kind||"UQ post",d.date||"",safePostUrl(d.url)==="#"?"":safePostUrl(d.url),b.reads??null];
     });
     const ws=wb.addWorksheet("Paid boosting");
     title(ws,"UQ China Social & Boosting — Paid boosting",sub,heads.length);
@@ -2237,11 +2382,11 @@ function yearsInData(){
     if(/^\d{4}-/.test(d.date)) years[d.date.slice(0,4)]=1;
     if(d.boostData&&/^\d{4}-/.test(d.boostData.start||"")) years[d.boostData.start.slice(0,4)]=1;
   });
+  BOOST_FLIGHTS.forEach(d=>{years[d.spendMonth.slice(0,4)]=1;});
   return Object.keys(years).sort();
 }
-function yearBoosts(y){ return SEED.filter(d=>d.boost && d.boostData)
-  .filter(d=> +String(d.boostData.start||d.date).slice(0,4)===y ); }
-function bMonth(d){ return +String(d.boostData.start||d.date).slice(5,7)-1; }
+function yearBoosts(y){ return paidBoosts().filter(d=>d.boostData&&+boostMonth(d).slice(0,4)===y); }
+function bMonth(d){ return +boostMonth(d).slice(5,7)-1; }
 function budgetOf(d){ const b=d.boostData||{}; return (b.budget!=null&&b.budget!=="")?parseFloat(b.budget):defaultBoostBudget(d.ch); }
 const nInt=v=>parseFloat(v)||0;
 const money=v=>"$"+Math.round(v).toLocaleString();
@@ -2388,20 +2533,31 @@ function rowToContent(r){ return {id:r.id,date:r.date||"",ch:r.ch||"RED",note:r.
 function contentToRow(d){ return {id:d.id,date:d.date||null,ch:d.ch,note:d.note||"",label:d.label||"",fmt:d.fmt||"",appr:d.appr||"",del:d.del||"",boost:!!d.boost,by:d.by||"",url:d.url||"",additional_publish_links:d.additionalPublishLinks||[],note2:d.note2||"",wslot:d.wslot||"",mergedinto:d.mergedInto||"",asset:d.asset||"",preview:d.preview||"",deleted_at:d.deletedAt||null,content_group_id:d.groupId||d.id,duplicated_from_id:d.duplicatedFromId||null}; }
 function rowToBoost(r){ return {start:r.win_start||"",end:r.win_end||"",budget:r.budget,spend:(r.spend==null?null:r.spend),ctr:r.ctr||"",status:r.status||"Auto",eng:(r.eng==null?null:r.eng),flw:(r.flw==null?null:r.flw),note:r.note||""}; }
 function boostToRow(id,b){ var n=function(v){return (v===""||v==null)?null:v;}; return {id:id,win_start:b.start||null,win_end:b.end||null,budget:n(b.budget),spend:n(b.spend),ctr:b.ctr||"",status:b.status||"Auto",eng:n(b.eng),flw:n(b.flw),note:b.note||""}; }
+function rowToFlight(r){
+  return {id:r.id,contentId:r.content_id||"",spendMonth:r.spend_month,kind:r.kind,ch:r.channel,
+    date:r.publish_date||"",note:r.title,url:r.post_url||"",boostData:{...rowToBoost(r),reads:r.reads}};
+}
+function flightToRow(d){
+  return {...boostToRow(d.id,d.boostData),content_id:d.contentId||null,spend_month:d.spendMonth,kind:d.kind,
+    channel:d.ch,title:d.note,post_url:d.url,publish_date:d.date||null,reads:d.boostData.reads??null};
+}
 function rowToOrganic(r){return {sourceKey:r.source_key,contentId:r.content_id||"",channel:r.channel||"Other",sourceChannel:r.source_channel||"",publishDate:r.publish_date||"",headlineChinese:r.headline_chinese||"",headlineEnglish:r.headline_english||"",postUrl:r.post_url||"",followersAfterViewing:r.followers_after_viewing,openRatePct:r.open_rate_pct,readThruPct:r.read_thru_pct,reads:r.reads,shares:r.shares,totalEngagement:r.total_engagement,engagementRatePct:r.engagement_rate_pct,sourcePresent:r.source_present!==false,syncedAt:r.synced_at||""};}
 function rowToFollower(r){return {channel:r.channel||"Other",month:r.month||"",accumulatedFollowers:r.accumulated_followers,sourcePresent:r.source_present!==false,syncedAt:r.synced_at||""};}
 
 async function loadAll(){
-  const [c,bo,po,wi,kd,bg,op,fo,sr]=await Promise.all([
+  const [c,bo,po,wi,kd,bg,op,fo,sr,flights]=await Promise.all([
     SB.from("content").select("*"), SB.from("boosting").select("*"), SB.from("pool").select("*"),
     SB.from("wip").select("*"), SB.from("keydates").select("*"), SB.from("budget").select("*"),
     SB.from("organic_performance").select("*"),SB.from("channel_followers_monthly").select("*"),
-    SB.from("performance_sync_runs").select("*").order("started_at",{ascending:false}).limit(20)]);
+    SB.from("performance_sync_runs").select("*").order("started_at",{ascending:false}).limit(20),
+    SB.from("boost_flights").select("*")]);
   if(c.error) throw c.error;
+  if(bo.error)throw bo.error;if(flights.error)throw flights.error;
   if(op.error)throw op.error;if(fo.error)throw fo.error;if(sr.error)throw sr.error;
   var bmap={}; (bo.data||[]).forEach(function(r){ bmap[r.id]=rowToBoost(r); });
   SEED.length=0; DELETED.length=0;
   (c.data||[]).map(rowToContent).forEach(function(d){ if(bmap[d.id]) d.boostData=bmap[d.id]; (d.deletedAt?DELETED:SEED).push(d); });
+  BOOST_FLIGHTS.splice(0,BOOST_FLIGHTS.length,...(flights.data||[]).map(rowToFlight));
   POOL.length=0; (po.data||[]).forEach(function(r){ POOL.push(poolFromRow(r)); });
   WIP.length=0; (wi.data||[]).forEach(function(r){ WIP.push({id:r.id,stage:r.stage||"todo",item:r.item||"",cat:r.cat||"",by:r.by||"",due:r.due||"",note:r.note||"",link:r.link||""}); });
   for(var k in KEYDATES) delete KEYDATES[k]; (kd.data||[]).forEach(function(r){ KEYDATES[r.iso]=r.label; });
@@ -2435,7 +2591,11 @@ async function flush(){
   else if(ONLINE) setConn("synced");
 }
 function saveContent(d){ up("content",contentToRow(d)); }
-function saveBoost(d){ if(d && d.boostData) up("boosting",boostToRow(d.id,d.boostData)); }
+function saveBoost(d){
+  if(!d?.boostData)return;
+  if(d.spendMonth)up("boost_flights",flightToRow(d));
+  else up("boosting",boostToRow(d.id,d.boostData));
+}
 async function purgeExpiredDeleted(){
   if(!SB||!ONLINE)return;
   const cutoff=new Date(Date.now()-DELETION_RETENTION_MS).toISOString();
@@ -2456,12 +2616,12 @@ function delKeyDate(iso){ delRow("keydates","iso",iso); }
 var _dq={}; function qSave(kind,d){ var key=kind+":"+(d.id||""); clearTimeout(_dq[key]); _dq[key]=setTimeout(function(){ if(kind==="content")saveContent(d); else if(kind==="boost")saveBoost(d); else if(kind==="wip")saveWip(d); },600); }
 
 var _reloadT=null, _pendingReload=false, reconnectTimer=null, realtimeUp=false;
-function editingNow(){ return document.getElementById("scrim").classList.contains("open") || (document.activeElement && /^(INPUT|TEXTAREA|SELECT)$/.test(document.activeElement.tagName)); }
+function editingNow(){ return flightEditor.open || document.getElementById("scrim").classList.contains("open") || (document.activeElement && /^(INPUT|TEXTAREA|SELECT)$/.test(document.activeElement.tagName)); }
 async function reloadRender(){ try{ await loadAll(); renderChips(); renderPool(); renderAll(); if(ONLINE)setConn("synced"); }catch(e){ console.warn("reload failed",e); goOffline(); } }
 function scheduleReload(){ if(editingNow()){ _pendingReload=true; return; } clearTimeout(_reloadT); _reloadT=setTimeout(reloadRender,800); }
 function subscribeRealtime(){
   if(realtimeUp) return;
-  ["content","boosting","pool","wip","keydates","budget","organic_performance","channel_followers_monthly","performance_sync_runs"].forEach(function(t){
+  ["content","boosting","boost_flights","pool","wip","keydates","budget","organic_performance","channel_followers_monthly","performance_sync_runs"].forEach(function(t){
     SB.channel("rt-"+t).on("postgres_changes",{event:"*",schema:"public",table:t},scheduleReload).subscribe(); });
   realtimeUp=true;
 }
