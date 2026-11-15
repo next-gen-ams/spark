@@ -1,6 +1,9 @@
 const API_BASE = 'https://api.meltwater.com';
 
 const REVIEWED_TITLES = Object.freeze({
+  '澳洲奢侈品管理专业硕士留学入学条件': 'Entry Requirements for Master’s Study in Luxury Management in Australia',
+  '【澳洲·项目】天际立标，锋芒首绽 | Aurum开盘领衔墨尔本CBD北翼价值跃升': '【Australia · Project】A New Landmark Rises | Aurum Launch Leads Growth in Melbourne CBD’s Northern Quarter',
+  '江南大学代表团出访澳新 务实推进交流合作': 'Jiangnan University Delegation Visits Australia and New Zealand to Advance Exchange and Cooperation',
   '澳洲传播专业作品集要求详解': 'Portfolio Requirements for Communications Programs in Australia',
   '前夫：她性欲太强我承受不住，拒给儿女抚养费，如今叶蕴仪过咋样': '“Her Sex Drive Was Too Much for Me,” Said Her Ex-Husband, Who Refused to Pay Child Support. How Is Gloria Yip Doing Now?',
   '80后老板接盘"吊顶第一股"，1元变卖子公司！': 'Business Owner Born in the 1980s Takes Over China’s First Listed Ceiling Company and Sells a Subsidiary for RMB 1!',
