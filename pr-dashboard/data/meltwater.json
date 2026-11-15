@@ -3,42 +3,26 @@
     "searchId": 29175637,
     "searchName": "RMIT China DSC",
     "rangeLabel": "Past 3 months",
-    "start": "2026-08-11T05:33:21.800Z",
-    "end": "2026-11-11T05:33:21.800Z",
-    "generatedAt": "2026-11-11T05:33:21.800Z",
+    "start": "2026-08-15T23:00:14.638Z",
+    "end": "2026-11-15T23:00:14.638Z",
+    "generatedAt": "2026-11-15T23:00:14.638Z",
     "cached": true,
     "refreshMode": "weekly",
-    "nextRefreshAt": "2026-11-15T23:00:00.000Z"
+    "nextRefreshAt": "2026-11-22T23:00:00.000Z"
   },
   "summary": {
-    "totalMentions": 260,
+    "totalMentions": 261,
     "averagePerDay": 2,
     "positive": 3,
     "positivePercent": 1.15,
-    "neutral": 257,
+    "neutral": 258,
     "neutralPercent": 98.85,
     "negative": 0,
     "negativePercent": 0,
-    "potentialReach": 2724338765,
-    "estimatedViews": 36888
+    "potentialReach": 2707165624,
+    "estimatedViews": 37615
   },
   "trend": [
-    {
-      "date": "2026-08-11",
-      "count": 2
-    },
-    {
-      "date": "2026-08-12",
-      "count": 0
-    },
-    {
-      "date": "2026-08-13",
-      "count": 0
-    },
-    {
-      "date": "2026-08-14",
-      "count": 1
-    },
     {
       "date": "2026-08-15",
       "count": 2
@@ -393,42 +377,117 @@
     },
     {
       "date": "2026-11-11",
+      "count": 1
+    },
+    {
+      "date": "2026-11-12",
+      "count": 2
+    },
+    {
+      "date": "2026-11-13",
       "count": 0
+    },
+    {
+      "date": "2026-11-14",
+      "count": 0
+    },
+    {
+      "date": "2026-11-15",
+      "count": 1
     }
   ],
   "topics": [
     {
       "name": "Colleges & universities",
-      "count": 128,
-      "percentage": 49.23
+      "count": 129,
+      "percentage": 49.43
     },
     {
       "name": "Study abroad",
       "count": 60,
-      "percentage": 23.08
+      "percentage": 22.99
     },
     {
       "name": "AI & machine learning",
-      "count": 34,
-      "percentage": 13.08
+      "count": 33,
+      "percentage": 12.64
     },
     {
       "name": "Design",
       "count": 27,
-      "percentage": 10.38
+      "percentage": 10.34
     },
     {
       "name": "Fashion design",
-      "count": 26,
-      "percentage": 10
+      "count": 25,
+      "percentage": 9.58
     },
     {
       "name": "Admissions",
       "count": 7,
-      "percentage": 2.69
+      "percentage": 2.68
     }
   ],
   "mentions": [
+    {
+      "id": "vdFk6jGKWeisn1OucNYWXz30E7Y",
+      "title": "澳洲奢侈品管理专业硕士留学入学条件",
+      "titleEn": "Entry Requirements for Master’s Study in Luxury Management in Australia",
+      "source": "中国教育在线",
+      "sourceType": "news",
+      "url": "https://www.eol.cn/liuxue/yslx/202611151456061350774.html",
+      "publishedDate": "2026-11-15T06:56:07.000Z",
+      "sentiment": "neutral",
+      "language": "zh-Hans",
+      "matchedKeywords": [
+        "RMIT",
+        "艺术留学",
+        "视觉传达"
+      ],
+      "hitSentence": "... 考，院校录取要求、申请时间、学费、语言分数等细则，以对应海外院校官网最新公示、教育部留学服务中心及合作校方官方通知为准。 想赴澳大利亚艺术留学的学子，常关注 澳洲奢侈品管理专业硕士留学入学条件 。该专业属跨学科艺术商科融合方向，阿德莱德、墨尔本、悉尼等城市多所院校开设，适配有 ...",
+      "reach": 384096,
+      "estimatedViews": 666
+    },
+    {
+      "id": "bmsH4QDJuzw7BLRH8wZJ_8sHfyo",
+      "title": "【澳洲·项目】天际立标，锋芒首绽 | Aurum开盘领衔墨尔本CBD北翼价值跃升",
+      "titleEn": "【Australia · Project】A New Landmark Rises | Aurum Launch Leads Growth in Melbourne CBD’s Northern Quarter",
+      "source": "中国财经新闻网",
+      "sourceType": "news",
+      "url": "http://www.prcfe.com/finance/2026/1112/460942.html",
+      "publishedDate": "2026-11-12T07:29:30.000Z",
+      "sentiment": "neutral",
+      "language": "zh-Hans",
+      "matchedKeywords": [
+        "室内设计",
+        "城市更新",
+        "RMIT"
+      ],
+      "hitSentence": "... 宅供应受到市场热切关注。 *项目效果图（来源：开发商） 核心区位，紧握城市更新红利 Aurum坐落于墨尔本CBD北翼核心地段，距离维多利亚女王市场仅约250米。维多利亚女王市场目前正推进约17亿澳元的升级改造计划，涵盖约4.4亩新增绿地公园及全新市场区域。该改造工 ...",
+      "reach": 417,
+      "estimatedViews": 68
+    },
+    {
+      "id": "IHhT4_b5zYivDaoppBukmPiHLtg",
+      "title": "江南大学代表团出访澳新 务实推进交流合作",
+      "titleEn": "Jiangnan University Delegation Visits Australia and New Zealand to Advance Exchange and Cooperation",
+      "source": "江南大学新闻网",
+      "sourceType": "news",
+      "url": "https://news.jiangnan.edu.cn/info/1097/111305.htm",
+      "publishedDate": "2026-11-11T03:47:04.000Z",
+      "sentiment": "neutral",
+      "language": "zh-Hans",
+      "matchedKeywords": [
+        "皇家墨尔本理工大学",
+        "创意学科",
+        "可持续设计",
+        "设计人才培养",
+        "可持续发展"
+      ],
+      "hitSentence": "... 记李旸率团访问澳大利亚、新西兰，先后到访蒙纳士大学、皇家墨尔本理工大学、梅西大学三所海外知名高校，围绕高层次国际化人才培养、交叉学科建设、联合科研创新和中外合作办学提质增效四大核心方向，开展多场校际会谈与院系精准对接，达成一系列实质性合作意向。商学院院长浦徐进、食品学院副院长常 ...",
+      "reach": 1092,
+      "estimatedViews": 10
+    },
     {
       "id": "1ijkwFTH6dSeM3Y4RtNQ7IwzYVo",
       "title": "澳洲传播专业作品集要求详解",
@@ -2313,60 +2372,6 @@
       "hitSentence": "... 在升学成果层面，北京交通大学国际本科项目对接全球50余所教育部认可的海外高校，本科阶段录取率稳定，可顺畅衔接QS前200院校包括皇家墨尔本理工大学、英国约克大学等，办学至今本科毕业率达99%，85%以上的学生本科毕业后成功申请至QS前100院校攻读硕士，多名往届学生先后拿到 ...",
       "reach": 17156201,
       "estimatedViews": 22
-    },
-    {
-      "id": "bGkjcBoVDTXgHADHqkMmPlQ-pzA",
-      "title": "上海国际大学生广告节“扬州站”启幕：一场活动撬动创意生产、国际传播、产业落地、人才孵化四大动能",
-      "titleEn": "",
-      "source": "今日头条",
-      "sourceType": "news",
-      "url": "https://www.toutiao.com/article/7683436733920379411/",
-      "publishedDate": "2026-09-09T07:41:00.000Z",
-      "sentiment": "neutral",
-      "language": "zh-Hans",
-      "matchedKeywords": [
-        "城市设计",
-        "皇家墨尔本理工大学"
-      ],
-      "hitSentence": "... 上海国际大学生广告节组委会、上海大学、同济大学、上海纽约大学、上海市城市设计与城市科学重点实验室，扬州市各委办局，以及来自上海、南京、扬州等长三角地区的政府代表、相关行业机构负责人、国际合作嘉宾和媒体代表等共同参加活动。 创意生产：以城市命题激活全球创意产能 扬州市文化广电 ...",
-      "reach": 8562549,
-      "estimatedViews": 46
-    },
-    {
-      "id": "zpI8FUEHF0iVvYh4YqpTLNmzrlY",
-      "title": "出国留学项目院校推荐：2026五大高性价比国际教育路径深度盘点",
-      "titleEn": "",
-      "source": "NetEase News / 网易新闻",
-      "sourceType": "news",
-      "url": "https://www.163.com/dy/article/L6A31CSH0536U52A.html",
-      "publishedDate": "2026-09-08T02:48:36.000Z",
-      "sentiment": "neutral",
-      "language": "zh-Hans",
-      "matchedKeywords": [
-        "室内设计",
-        "皇家墨尔本理工大学"
-      ],
-      "hitSentence": "... 合作院校：项目对接多所世界知名高校，文凭由海外名校直发，包括2026年QS排名第76位的英国伯明翰大学、排名第125位的澳大利亚皇家墨尔本理工大学以及排名第184位的澳大利亚沃隆港大学。 特色专业：涵盖会计与金融、商业信息系统、计算机科学（下设大数据与网络安全细分领域）等 ...",
-      "reach": 28311861,
-      "estimatedViews": 144
-    },
-    {
-      "id": "rHyMXnfzj-Vn-AgUd8_j6C1ESrE",
-      "title": "“旋转的木马——黄祎勤”9月12日将在上海开幕",
-      "titleEn": "",
-      "source": "中华网",
-      "sourceType": "news",
-      "url": "https://sd.china.com/qlsh/20000951/20260907/26013498.html",
-      "publishedDate": "2026-09-07T02:52:41.000Z",
-      "sentiment": "neutral",
-      "language": "zh-Hans",
-      "matchedKeywords": [
-        "墨尔本皇家理工大学",
-        "艺术与设计"
-      ],
-      "hitSentence": "... 简介 黄祎勤 ，1977年生，职业艺术家，现居上海，墨尔本皇家理工大学艺术管理硕士。 个展 2026.09旋转的木马叁柒贰叁美术馆 2025.09元花上海艺博画廊 2024.03生命是一万次春和景明北京构得画廊 2022.12yi-静觀上海白厢画廊 群展 ...",
-      "reach": 3151245,
-      "estimatedViews": 71
     }
   ],
   "peaks": [
