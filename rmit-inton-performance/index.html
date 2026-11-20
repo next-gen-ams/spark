@@ -152,6 +152,7 @@ button, input, select { font: inherit; }
 .mono { font-family: var(--font-mono); font-size: 0.86em; }
 .sub { color: var(--ink-2); font-size: 0.9rem; }
 .note { color: var(--muted); font-size: 0.8rem; }
+.lnote { margin: 4px 2px 0; color: var(--muted); font-size: 0.72rem; }
 .eyebrow { font-size: 0.72rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); font-weight: 650; }
 :focus-visible { outline: 2px solid var(--focus); outline-offset: 3px; }
 
@@ -692,7 +693,7 @@ svg.trend .hit:hover + .hl, svg.trend .hl { fill: transparent; }
 <div id="tip" hidden></div>
 
 <!-- DATA:START --><script id="data" type="application/json">{
-"built":"2026-11-19",
+"built":"2026-11-20",
 "raw_totals":{
  "2026-08": {
   "rows": 95,
@@ -1520,6 +1521,8 @@ if (LATEST && !opts.role) {
 // Leads / CPL columns: always on Meta; on TikTok only when the build turns them on.
 const LEADS = !TT || !!(D.config && D.config.tiktok_show_leads);
 const noLeads = (cols) => (LEADS ? cols : cols.filter((c) => c !== M.leads && c !== M.cpl));
+// Meta tab only: one small line under every table that shows Leads or CPL.
+const LEADS_NOTE = TT ? "" : `<p class="lnote">Leads = Meta's combined leads (instant form + website/pixel). Meta only.</p>`;
 const group = (r) => r.objective === "Lead Generation" ? "Lead Generation" : (r.targeting || "Unclassified");
 
 let initMonth = LATEST || "all";
@@ -1603,7 +1606,8 @@ function table(id, cols, items, opts = {}) {
   const body = sorted.length ? sorted.map((it) => `<tr>${cols.map((c, ci) => `<td class="${c.l ? "l" : ""} ${c.cls || ""}${fz(ci).cls}"${fz(ci).style}>${c.f ? c.f(it) : esc(val(c, it))}</td>`).join("")}</tr>`).join("")
     : `<tr><td class="l" colspan="${cols.length}"><span class="empty">No delivery for this month and market selection.</span></td></tr>`;
   const foot = opts.foot ? `<tfoot><tr>${cols.map((c, i) => `<td class="${c.l ? "l" : ""}${fz(i).cls}"${fz(i).style}>${i === 0 ? opts.foot.label : c.l ? "" : c.f ? c.f(opts.foot.t) : ""}</td>`).join("")}</tr></tfoot>` : "";
-  return `<div class="tscroll" data-table="${P}${id}"><table class="dt" style="min-width:${opts.minW || 760}px"><thead><tr>${head}</tr></thead><tbody>${body}</tbody>${foot}</table></div>`;
+  const ln = cols.some((c) => c === M.leads || c === M.cpl) ? LEADS_NOTE : "";
+  return `<div class="tscroll" data-table="${P}${id}"><table class="dt" style="min-width:${opts.minW || 760}px"><thead><tr>${head}</tr></thead><tbody>${body}</tbody>${foot}</table></div>${ln}`;
 }
 ROOT.addEventListener("click", (e) => {
   const b = e.target.closest("th button[data-t]");
@@ -1779,7 +1783,8 @@ function renderMoM(T) {
   const VOL = new Set(["s", "i", "c", "tL", "gL"]);
   const reach = (c, p) => !p ? DASH : `<span class="delta"><i aria-hidden="true"></i>${pct(c / p, 0)} of ${shortMonth(pm)}</span>`;
   $("mom").innerHTML = `<div class="tscroll"><table class="dt" style="min-width:520px"><thead><tr><th class="l fz fz0 fz-last" style="left:0" scope="col">Metric</th><th scope="col">${monthLabel(state.month)}</th><th scope="col">${monthLabel(pm)}</th><th scope="col">${isMTD ? "Progress / change" : "Change"}</th></tr></thead><tbody>` +
-    MOM_METRICS.map(([l, k, f, better]) => `<tr><td class="l fz fz0 fz-last" style="left:0">${l}</td><td>${f(T[k])}</td><td>${f(P[k])}</td><td>${isMTD && VOL.has(k) ? reach(T[k], P[k]) : deltaCell(T[k], P[k], better)}</td></tr>`).join("") + `</tbody></table></div>`;
+    MOM_METRICS.map(([l, k, f, better]) => `<tr><td class="l fz fz0 fz-last" style="left:0">${l}</td><td>${f(T[k])}</td><td>${f(P[k])}</td><td>${isMTD && VOL.has(k) ? reach(T[k], P[k]) : deltaCell(T[k], P[k], better)}</td></tr>`).join("") + `</tbody></table></div>`
+    + (MOM_METRICS.some(([, k]) => k === "gL" || k === "cpl") ? LEADS_NOTE : "");
 }
 
 function renderMarkets(rows, T) {
@@ -1898,7 +1903,8 @@ function renderCreatives(rows) {
   }).join("");
   const T = agg(live), nCr = groups.reduce((n, g) => n + g.items.length, 0);
   const foot = `<tfoot><tr>${cols.map((c, i) => `<td class="${c.l ? "l" : ""}${fz(i).cls}"${fz(i).style}>${i === 0 ? `${nCr} creative rows · ${groups.length} campaign${groups.length === 1 ? "" : "s"}` : c.l ? "" : c.f ? c.f(T) : ""}</td>`).join("")}</tr></tfoot>`;
-  $("crTable").innerHTML = `<div class="tscroll" data-table="${P}creatives"><table class="dt" style="min-width:1320px"><thead><tr>${head}</tr></thead><tbody>${body}</tbody>${foot}</table></div>`;
+  $("crTable").innerHTML = `<div class="tscroll" data-table="${P}creatives"><table class="dt" style="min-width:1320px"><thead><tr>${head}</tr></thead><tbody>${body}</tbody>${foot}</table></div>`
+    + (cols.some((c) => c === M.leads || c === M.cpl) ? LEADS_NOTE : "");
 }
 ROOT.addEventListener("click", (e) => {
   const b = e.target.closest("button.gtoggle"); if (!b) return;
