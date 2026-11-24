@@ -1,6 +1,11 @@
 const API_BASE = 'https://api.meltwater.com';
 
 const REVIEWED_TITLES = Object.freeze({
+  '冯清 刘淑华：“亚洲世纪”背景下澳大利亚-东盟高等教育合作路径研究': 'Feng Qing and Liu Shuhua: Pathways for Australia–ASEAN Higher Education Cooperation in the Asian Century',
+  '任和，在零下40度“追云”': 'Ren He Chases Clouds at Minus 40 Degrees',
+  '沈农 ×匈牙利塞格德农村发展硕士项目是什么？博泰教育从哪些维度筛选这类中外合作项目？': 'What Is the Shenyang Agricultural University–University of Szeged Master’s in Rural Development? How Does Botai Education Assess Joint Programmes?',
+  '香港室内设计博士留学如何申请': 'How to Apply for a PhD in Interior Design in Hong Kong',
+  '澳洲影视传媒专业博士留学本科申请条件': 'Undergraduate Entry Requirements for Film, Television and Media PhD Study in Australia',
   '澳洲奢侈品管理专业硕士留学入学条件': 'Entry Requirements for Master’s Study in Luxury Management in Australia',
   '【澳洲·项目】天际立标，锋芒首绽 | Aurum开盘领衔墨尔本CBD北翼价值跃升': '【Australia · Project】A New Landmark Rises | Aurum Launch Leads Growth in Melbourne CBD’s Northern Quarter',
   '江南大学代表团出访澳新 务实推进交流合作': 'Jiangnan University Delegation Visits Australia and New Zealand to Advance Exchange and Cooperation',

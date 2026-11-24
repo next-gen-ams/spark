@@ -287,3 +287,12 @@ conclusive pause reason was found. Main protection does not require disabling it
 - Reviewed the six visible English titles and archived the 26 October snapshot
   byte-for-byte. The next scheduled refresh is 16 November at 10:00
   Australia/Melbourne. The pull request records the release verification.
+
+## Manual weekly refresh — 24 November 2026
+
+- Refreshed Meltwater Saved Search `29175637` at 14:51 AEDT. The rolling
+  24 August–24 November window contains 242 mentions, with 100 recent
+  results and three peak-day samples.
+- Archived the 16 November snapshot byte-for-byte and reviewed the six
+  visible English titles. The next scheduled refresh is 30 November at
+  10:00 Australia/Melbourne. The release pull request records the checks.
