@@ -11,7 +11,7 @@
     <meta name="referrer" content="strict-origin-when-cross-origin" />
     <meta name="robots" content="noindex, nofollow, noarchive" />
     <title>RMIT DSC China PR Tracker</title>
-    <link rel="stylesheet" href="./styles.css?v=21" />
+    <link rel="stylesheet" href="./styles.css?v=22" />
   </head>
   <body>
     <div class="access-gate" id="accessGate">
@@ -141,7 +141,7 @@
             </div>
             <span>MELTWATER API</span>
             <strong>Weekly automatic refresh</strong>
-            <p>Mentions, trends and pickup candidates refresh every Monday. Manual refresh is disabled.</p>
+            <p>Mentions and trends refresh every Monday.</p>
             <div class="auto-refresh-note">
               <svg viewBox="0 0 24 24"><path d="M20 6v5h-5M4 18v-5h5"/><path d="M18.5 9a7 7 0 0 0-12-2M5.5 15a7 7 0 0 0 12 2"/></svg>
               <span><small>Next automatic update</small><strong id="sidebarRefreshValue">Calculating…</strong></span>
@@ -159,7 +159,7 @@
             <div>
               <span class="eyebrow">ROLLING 3-MONTH VIEW · MELTWATER</span>
               <h1>RMIT DSC PR Performance</h1>
-              <p>A single view of confirmed coverage, earned pickup opportunities and this month’s conversation signals.</p>
+              <p>See where the Beijing Open Day story ran, who picked it up, and where AI cited it.</p>
             </div>
             <div class="header-controls">
               <span class="reporting-tag" aria-label="Reporting period: Past 3 months">
@@ -176,7 +176,7 @@
             </div>
           </section>
 
-          <section class="summary-grid" aria-label="Monthly summary">
+          <section class="summary-grid" aria-label="PR performance summary">
             <article class="summary-card summary-card-featured">
               <div class="summary-top">
                 <span class="summary-icon"><svg viewBox="0 0 24 24"><path d="M4 5h16v14H4zM8 9h8M8 13h5"/></svg></span>
@@ -204,6 +204,19 @@
               <span class="metric-label">Potential reach</span>
               <p id="reachDescription">Loading Meltwater's source-reach estimate.</p>
             </article>
+          </section>
+
+          <section class="panel citation-panel" id="campaign-citation" aria-labelledby="campaignCitationTitle">
+            <div class="citation-copy">
+              <span class="panel-kicker">AI CITATION EVIDENCE</span>
+              <h2 id="campaignCitationTitle">Baidu ERNIE cited the Huanqiu Open Day story</h2>
+              <p>On <time datetime="2026-09-29">29 September 2026</time>, KMT GEO recorded the citation in an answer about which Australian universities offer practical experience and industry connections for creative undergraduates.</p>
+              <a class="link-button" href="https://lx.huanqiu.com/article/4TIpnA4rPqv" target="_blank" rel="noopener noreferrer">Open the cited article ↗</a>
+            </div>
+            <a class="citation-capture" href="./assets/geo-citation-huanqiu-2026-09-29.png" target="_blank" rel="noopener noreferrer">
+              <img src="./assets/geo-citation-huanqiu-2026-09-29.png" width="1040" height="1098" alt="KMT GEO evidence showing the Huanqiu Open Day article cited by Baidu ERNIE in the 29 September check">
+              <span>View full GEO screenshot ↗</span>
+            </a>
           </section>
 
           <section class="content-grid" id="monitor">
@@ -307,13 +320,11 @@
           <section class="panel pickup-panel" id="pickups">
             <div class="pickup-heading">
               <div>
-                <span class="panel-kicker">POTENTIAL & RELATED PICKUPS</span>
+                <span class="panel-kicker">DSC BEIJING OPEN DAY</span>
                 <h2>Organic coverage</h2>
               </div>
             </div>
-            <div class="pickup-grid" id="mentionsGrid" aria-live="polite">
-              <article class="pickup-record pickup-record-empty"><span class="connection-orb">M</span><div><span class="record-label">MELTWATER LIVE DATA</span><strong>Loading recent mentions…</strong><small>Past three months</small></div></article>
-            </div>
+            <div class="pickup-grid" id="campaignPickups"></div>
           </section>
           </div>
 
@@ -368,6 +379,6 @@
     </dialog>
 
     <div class="toast" id="toast" role="status" aria-live="polite"></div>
-    <script type="module" src="./dashboard.js?v=21"></script>
+    <script type="module" src="./dashboard.js?v=22"></script>
   </body>
 </html>
