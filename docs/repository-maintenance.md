@@ -296,3 +296,13 @@ conclusive pause reason was found. Main protection does not require disabling it
 - Archived the 16 November snapshot byte-for-byte and reviewed the six
   visible English titles. The next scheduled refresh is 30 November at
   10:00 Australia/Melbourne. The release pull request records the checks.
+
+## Beijing Open Day pickup and citation evidence — 24 November 2026
+
+- Organic coverage shows the four additional outlets found in Meltwater for
+  the September Beijing Open Day story. The client-facing list uses a single
+  working article link per outlet.
+- PR Performance includes an on-page screenshot from the first 29 September
+  GEO check. Baidu ERNIE cited the Huanqiu article in a response about
+  Australian creative degrees, practical experience and industry connections.
+  The cited Huanqiu page and the confirmed placement share the same article ID.

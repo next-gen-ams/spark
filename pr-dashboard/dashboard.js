@@ -125,7 +125,25 @@ const publishedMedia = [
   },
 ];
 
+// Reviewed Meltwater pickups for the Beijing Open Day release, one per outlet.
+const campaignPickups = [
+  { outlet: 'Toutiao · 今日头条', mark: '头', colour: 'red',
+    titleCn: '从“建造”到“创造”：城市与产业变化带来艺术设计教育新命题',
+    date: '2026-09-21', credit: 'Republished from Huanqiu',
+    url: 'https://www.toutiao.com/article/7688029637980537383/' },
+  { outlet: 'NetEase News · 网易新闻', mark: '网', colour: 'blue',
+    titleCn: COMMON_TITLE_CN, date: '2026-09-21',
+    url: 'https://www.163.com/dy/article/L7C0EJBJ05506BEH.html' },
+  { outlet: 'Sohu News · 搜狐新闻', mark: '搜', colour: 'violet',
+    titleCn: COMMON_TITLE_CN, date: '2026-09-21',
+    url: 'https://www.sohu.com/a/1078991782_120244154' },
+  { outlet: 'China Information · 资讯中国', mark: '资', colour: 'red',
+    titleCn: COMMON_TITLE_CN, date: '2026-09-21',
+    url: 'http://cn.geceo.com/hangye/147928.html' },
+];
+
 renderPublishedMedia();
+renderCampaignPickups();
 
 function showDashboard() {
   accessGate.classList.add('is-hidden');
@@ -430,7 +448,7 @@ async function fetchDashboardData() {
 }
 
 function renderMeltwaterData(data) {
-  const { meta, summary, trend, topics, mentions, peaks = [] } = data;
+  const { meta, summary, trend, topics, peaks = [] } = data;
   document.querySelector('#totalMentionsMetric').textContent = formatNumber(summary.totalMentions);
   document.querySelector('#totalMentionsMetric').classList.remove('metric-pending');
   document.querySelector('#totalMentionsDescription').textContent = `${formatNumber(summary.averagePerDay)} mentions per day on average.`;
@@ -447,7 +465,6 @@ function renderMeltwaterData(data) {
   renderTrend(trend, peaks);
   renderSentiment(summary);
   renderTopics(topics);
-  renderMentions(mentions);
 }
 
 function renderTrend(trend, peaks = []) {
@@ -599,45 +616,45 @@ function renderTopics(topics) {
   });
 }
 
-function renderMentions(mentions) {
-  const container = document.querySelector('#mentionsGrid');
-  container.replaceChildren();
-  if (!mentions.length) {
-    const empty = document.createElement('article');
-    empty.className = 'pickup-record pickup-record-empty';
-    empty.textContent = 'No recent Meltwater mentions were returned.';
-    container.append(empty);
-    return;
-  }
-
-  mentions.slice(0, 6).forEach((mention, index) => {
+function renderCampaignPickups() {
+  const container = document.querySelector('#campaignPickups');
+  campaignPickups.forEach((pickup) => {
     const article = document.createElement('article');
-    article.className = 'pickup-record mention-record';
+    article.className = 'pickup-record';
 
     const logo = document.createElement('span');
-    logo.className = `media-logo ${['media-logo-red', 'media-logo-blue', 'media-logo-violet'][index % 3]}`;
-    logo.textContent = sourceMark(mention.source);
+    logo.className = `media-logo media-logo-${pickup.colour}`;
+    logo.textContent = pickup.mark;
+    logo.setAttribute('aria-hidden', 'true');
 
     const copy = document.createElement('div');
-    const label = document.createElement('span');
-    label.className = `record-label sentiment-${mention.sentiment}`;
-    label.textContent = `${mention.sentiment.toUpperCase()} · ${formatShortDate(mention.publishedDate)}`;
+    const outlet = document.createElement('span');
+    outlet.className = 'pickup-outlet';
+    outlet.textContent = pickup.outlet;
+    const date = document.createElement('time');
+    date.dateTime = pickup.date;
+    date.textContent = formatLongDate(pickup.date);
     const title = document.createElement('strong');
-    title.textContent = mention.titleEn || mention.title;
-    title.title = title.textContent;
+    title.textContent = COMMON_TITLE_EN;
     const titleCn = document.createElement('span');
-    titleCn.className = 'mention-title-cn';
-    titleCn.textContent = mention.title;
-    const source = document.createElement('small');
-    source.textContent = `${mention.source} · Potential reach ${formatCompact(mention.reach)}`;
-    copy.append(label, title, titleCn, source);
+    titleCn.className = 'pickup-title-cn';
+    titleCn.lang = 'zh-CN';
+    titleCn.textContent = pickup.titleCn;
+    copy.append(outlet, date, title, titleCn);
+
+    if (pickup.credit) {
+      const credit = document.createElement('small');
+      credit.textContent = pickup.credit;
+      copy.append(credit);
+    }
 
     const link = document.createElement('a');
     link.className = 'link-button';
-    link.href = mention.url;
+    link.href = pickup.url;
     link.target = '_blank';
     link.rel = 'noopener noreferrer';
-    link.textContent = 'Review ↗';
+    link.textContent = 'Read article ↗';
+    link.setAttribute('aria-label', `Read the article on ${pickup.outlet}`);
     article.append(logo, copy, link);
     container.append(article);
   });
@@ -653,10 +670,6 @@ function renderMeltwaterError() {
 
 function formatNumber(value) {
   return new Intl.NumberFormat('en-AU').format(Number(value) || 0);
-}
-
-function sourceMark(source) {
-  return String(source || '').match(/[A-Za-z]/)?.[0]?.toUpperCase() || 'M';
 }
 
 function formatCompact(value) {

@@ -75,9 +75,22 @@ test('coverage sections use concise client-facing headings without helper copy',
   const html = await readFile(new URL('./index.html', import.meta.url), 'utf8');
 
   assert.match(html, /<span class="panel-kicker">PUBLISHED MEDIA<\/span>\s*<h2>Confirmed coverage<\/h2>/);
-  assert.match(html, /<span class="panel-kicker">POTENTIAL & RELATED PICKUPS<\/span>\s*<h2>Organic coverage<\/h2>/);
+  assert.match(html, /<span class="panel-kicker">DSC BEIJING OPEN DAY<\/span>\s*<h2>Organic coverage<\/h2>/);
   assert.doesNotMatch(html, /Additional organic coverage|<h2>Published media<\/h2>/);
   assert.doesNotMatch(html, /Confirmed placements, bilingual article titles|Recent Meltwater mentions for review/);
+});
+
+test('PR performance shows the verified Open Day citation and expandable screenshot inline', async () => {
+  const html = await readFile(new URL('./index.html', import.meta.url), 'utf8');
+  const panel = html.match(/<section[^>]*id="campaign-citation"[\s\S]*?<\/section>/)?.[0];
+
+  assert.ok(panel);
+  assert.match(panel, /Baidu ERNIE cited the Huanqiu Open Day story/);
+  assert.match(panel, /datetime="2026-09-29"/);
+  assert.match(panel, /https:\/\/lx\.huanqiu\.com\/article\/4TIpnA4rPqv/);
+  assert.match(panel, /href="\.\/assets\/geo-citation-huanqiu-2026-09-29\.png"/);
+  assert.match(panel, /<img[^>]*alt="[^"]*Baidu ERNIE/);
+  assert.ok(html.indexOf(panel) < html.indexOf('id="monitor"'));
 });
 
 test('PR performance does not render a separate AI insights surface', async () => {
