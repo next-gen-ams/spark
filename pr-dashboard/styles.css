@@ -338,6 +338,8 @@ svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width:
 
 .coverage-panel { scroll-margin-top: 104px; margin-bottom: 14px; overflow: hidden; }
 .coverage-header { align-items: flex-end; padding-bottom: 18px; }
+.coverage-reach strong { color: var(--ink); font-size: .8rem; font-variant-numeric: tabular-nums; }
+.coverage-reach-column { text-align: right; white-space: nowrap; font-variant-numeric: tabular-nums; }
 .table-actions { display: flex; align-items: center; gap: 8px; }
 .search-control { height: 42px; display: flex; align-items: center; gap: 7px; padding: 0 11px; border: 1px solid #dededa; border-radius: 10px; background: white; }
 .search-control svg { width: 16px; height: 16px; color: #85888c; }
@@ -400,6 +402,7 @@ a.article-link:hover strong { color: var(--rmit-red); text-decoration: underline
 .pickup-outlet { color: #34363a; font-size: .82rem; font-weight: 850; }
 .pickup-record strong { font-size: .77rem; line-height: 1.4; }
 .pickup-record small, .pickup-record time, .pickup-title-cn { color: #64686d; font-size: .67rem; line-height: 1.4; }
+.pickup-record .pickup-reach { color: var(--ink); font-weight: 750; }
 .pickup-record .link-button { grid-column: 2; justify-self: start; padding-left: 0; }
 .pickup-illustration { position: relative; width: 112px; height: 112px; display: grid; place-items: center; border-radius: 50%; background: rgba(234,245,248,.7); }
 .pickup-illustration > svg { z-index: 2; width: 28px; height: 28px; color: var(--blue); }

@@ -58,7 +58,7 @@ const publishedMedia = [
     introCn: '立足北京、辐射全国的综合性主流媒体，以调查、评论与城市议题见长。',
     introEn: 'A leading Beijing-based mainstream outlet known for investigations and urban coverage.',
     titleCn: COMMON_TITLE_CN, titleEn: COMMON_TITLE_EN, date: '2026-09-22',
-    url: 'https://bjnews.com.cn/detail/1790051755129485.html',
+    reach: 660844, url: 'https://bjnews.com.cn/detail/1790051755129485.html',
     accessNote: 'May require a China-based IP address',
     capture: './assets/coverage-beijing-news.jpg',
     captureAlt: 'Captured mobile page for The Beijing News article, supplied by the China team.',
@@ -105,7 +105,7 @@ const publishedMedia = [
     introCn: '北京日报报业集团旗下综合性晚报，强调首都民生与城市文化。',
     introEn: 'A major Beijing evening paper covering city life, culture and public affairs.',
     titleCn: COMMON_TITLE_CN, titleEn: COMMON_TITLE_EN, date: '2026-09-21',
-    url: 'https://www.takefoto.cn/news/2026/09/21/11967638.shtml',
+    reach: 14250, url: 'https://www.takefoto.cn/news/2026/09/21/11967638.shtml',
   },
   {
     wave: 'wave-1', outletCn: '文汇报', outletEn: 'Wenhui Daily', mark: '文', colour: 'violet',
@@ -113,7 +113,7 @@ const publishedMedia = [
     introCn: '上海主流综合性日报，在人文、文化、教育与知识界议题中具有影响力。',
     introEn: 'A leading Shanghai daily with influence in culture, education and intellectual affairs.',
     titleCn: COMMON_TITLE_CN, titleEn: COMMON_TITLE_EN, date: '2026-09-21',
-    url: 'https://www.jfdaily.com/staticsg/res/html/web/newsDetail.html?id=1181031',
+    reach: 254896, url: 'https://www.jfdaily.com/staticsg/res/html/web/newsDetail.html?id=1181031',
   },
   {
     wave: 'wave-1', outletCn: '南方网', outletEn: 'Southcn.com', mark: '南', colour: 'red',
@@ -125,25 +125,32 @@ const publishedMedia = [
   },
 ];
 
-// Reviewed Meltwater pickups for the Beijing Open Day release, dated in China local time.
+// Reviewed Beijing Open Day pickups and Meltwater Explore reach, dated in China local time.
 const campaignPickups = [
   { outlet: 'Toutiao · 今日头条', mark: '头', colour: 'red',
     titleCn: '从“建造”到“创造”：城市与产业变化带来艺术设计教育新命题',
     date: '2026-09-22', credit: 'Republished from Huanqiu',
-    url: 'https://www.toutiao.com/article/7688029637980537383/' },
+    reach: 8562549, url: 'https://www.toutiao.com/article/7688029637980537383/' },
   { outlet: 'NetEase News · 网易新闻', mark: '网', colour: 'blue',
     titleCn: COMMON_TITLE_CN, date: '2026-09-21',
-    url: 'https://www.163.com/dy/article/L7C0EJBJ05506BEH.html' },
+    reach: 28311861, url: 'https://www.163.com/dy/article/L7C0EJBJ05506BEH.html' },
   { outlet: 'Sohu News · 搜狐新闻', mark: '搜', colour: 'violet',
     titleCn: COMMON_TITLE_CN, date: '2026-09-21',
-    url: 'https://www.sohu.com/a/1078991782_120244154' },
+    reach: 17156201, url: 'https://www.sohu.com/a/1078991782_120244154' },
   { outlet: 'China Information · 资讯中国', mark: '资', colour: 'red',
     titleCn: COMMON_TITLE_CN, date: '2026-09-21',
-    url: 'http://cn.geceo.com/hangye/147928.html' },
+    reach: 0, url: 'http://cn.geceo.com/hangye/147928.html' },
+  { outlet: 'Tencent News · 腾讯新闻', mark: '腾', colour: 'blue',
+    titleCn: COMMON_TITLE_CN, date: '2026-09-21',
+    reach: 4045397, url: 'https://news.qq.com/rain/a/20260921A071QP00' },
+  { outlet: 'ZAKER', mark: 'Z', colour: 'violet',
+    titleCn: COMMON_TITLE_CN, date: '2026-09-21',
+    reach: 618026, url: 'https://app.myzaker.com/news/article.php?pk=6ab0d3338e9f0952b33fb37f' },
 ];
 
 renderPublishedMedia();
 renderCampaignPickups();
+renderCampaignReach();
 
 function showDashboard() {
   accessGate.classList.add('is-hidden');
@@ -352,10 +359,14 @@ function renderPublishedMedia() {
     wave.textContent = 'Wave 1 · Beijing Open Day';
     dateCell.append(date, wave);
 
+    const reachCell = document.createElement('td');
+    reachCell.className = 'coverage-reach-column';
+    reachCell.textContent = Number.isFinite(item.reach) ? formatNumber(item.reach) : '—';
+
     const statusCell = document.createElement('td');
     statusCell.innerHTML = '<span class="published-status"><i></i>Published</span>';
 
-    row.append(mediaCell, landscapeCell, articleCell, dateCell, statusCell);
+    row.append(mediaCell, landscapeCell, articleCell, dateCell, reachCell, statusCell);
     body.append(row);
   });
 
@@ -451,10 +462,8 @@ function renderMeltwaterData(data) {
   const { meta, summary, trend, topics, peaks = [] } = data;
   document.querySelector('#totalMentionsMetric').textContent = formatNumber(summary.totalMentions);
   document.querySelector('#totalMentionsMetric').classList.remove('metric-pending');
-  document.querySelector('#totalMentionsDescription').textContent = `${formatNumber(summary.averagePerDay)} mentions per day on average.`;
+  document.querySelector('#totalMentionsDescription').textContent = `Past 3 months · ${formatNumber(summary.averagePerDay)} mentions per day on average.`;
   document.querySelector('#meltwaterMetricStatus').textContent = 'MELTWATER API';
-  document.querySelector('#reachMetric').textContent = formatCompact(summary.potentialReach);
-  document.querySelector('#reachDescription').textContent = `${formatCompact(summary.estimatedViews)} estimated views · source audiences may overlap.`;
 
   const generatedAt = new Date(meta.generatedAt);
   sidebarLastRefreshValue.textContent = formatDateTime(generatedAt);
@@ -616,6 +625,20 @@ function renderTopics(topics) {
   });
 }
 
+function renderCampaignReach() {
+  const groups = [
+    ['reach', [...publishedMedia, ...campaignPickups]],
+    ['confirmedReach', publishedMedia],
+    ['organicReach', campaignPickups],
+  ];
+  for (const [id, articles] of groups) {
+    const measured = articles.map((article) => article.reach).filter(Number.isFinite);
+    const total = measured.reduce((sum, reach) => sum + reach, 0);
+    document.getElementById(`${id}Metric`).textContent = measured.length ? formatNumber(total) : '—';
+    document.getElementById(`${id}Description`).textContent = `Based on ${measured.length} of ${articles.length} articles with data.`;
+  }
+}
+
 function renderCampaignPickups() {
   const container = document.querySelector('#campaignPickups');
   campaignPickups.forEach((pickup) => {
@@ -641,6 +664,12 @@ function renderCampaignPickups() {
     titleCn.lang = 'zh-CN';
     titleCn.textContent = pickup.titleCn;
     copy.append(outlet, date, title, titleCn);
+    if (Number.isFinite(pickup.reach)) {
+      const reach = document.createElement('small');
+      reach.className = 'pickup-reach';
+      reach.textContent = `${formatNumber(pickup.reach)} potential reach`;
+      copy.append(reach);
+    }
 
     if (pickup.credit) {
       const credit = document.createElement('small');

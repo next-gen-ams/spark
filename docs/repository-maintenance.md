@@ -306,3 +306,15 @@ conclusive pause reason was found. Main protection does not require disabling it
   GEO check. Baidu ERNIE cited the Huanqiu article in a response about
   Australian creative degrees, practical experience and industry connections.
   The cited Huanqiu page and the confirmed placement share the same article ID.
+
+## Beijing Open Day campaign reach — 24 November 2026
+
+- Added Tencent News and ZAKER using the same reviewed Meltwater Explore
+  article records as the English workbook. The six organic outlets total
+  58,694,034 potential reach. China Information reports zero.
+- PR Performance shows 929,990 across 3 of 10 confirmed articles and
+  59,624,024 across 9 of 16 articles for the campaign. Wenhui Daily uses the
+  Shanghai Observer edition credited to Wenhui. The dashboard shows each
+  calculation's article coverage beside its total.
+- The rolling Meltwater monitoring snapshot feeds mentions, peaks, topics
+  and sentiment. The campaign reach figures are kept with their articles.
