@@ -125,11 +125,11 @@ const publishedMedia = [
   },
 ];
 
-// Reviewed Meltwater pickups for the Beijing Open Day release, one per outlet.
+// Reviewed Meltwater pickups for the Beijing Open Day release, dated in China local time.
 const campaignPickups = [
   { outlet: 'Toutiao · 今日头条', mark: '头', colour: 'red',
     titleCn: '从“建造”到“创造”：城市与产业变化带来艺术设计教育新命题',
-    date: '2026-09-21', credit: 'Republished from Huanqiu',
+    date: '2026-09-22', credit: 'Republished from Huanqiu',
     url: 'https://www.toutiao.com/article/7688029637980537383/' },
   { outlet: 'NetEase News · 网易新闻', mark: '网', colour: 'blue',
     titleCn: COMMON_TITLE_CN, date: '2026-09-21',

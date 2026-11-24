@@ -13,6 +13,8 @@ test('organic coverage shows the four reviewed Beijing Open Day sources', async 
     'https://www.sohu.com/a/1078991782_120244154',
     'http://cn.geceo.com/hangye/147928.html',
   ]);
+  const dates = [...(records ?? '').matchAll(/date: '([^']+)'/g)].map((match) => match[1]);
+  assert.deepEqual(dates, ['2026-09-22', '2026-09-21', '2026-09-21', '2026-09-21']);
   assert.match(javascript, /renderPublishedMedia\(\);\s*renderCampaignPickups\(\);/);
   assert.doesNotMatch(javascript, /renderMentions\(|mentionsGrid/);
 });
