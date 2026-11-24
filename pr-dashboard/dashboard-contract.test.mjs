@@ -65,19 +65,23 @@ test('summary cards use production data-source labels', async () => {
   assert.match(html, /UPDATED · 29 SEP/);
   assert.doesNotMatch(html, /TEMP DATA|Temporary tracker records/i);
   assert.match(javascript, /meltwaterMetricStatus'\)\.textContent = 'MELTWATER API'/);
-  assert.equal((html.match(/MELTWATER API/g) || []).length, 2);
-  assert.match(html, /<span class="pending-label">MELTWATER API<\/span>[\s\S]*?id="reachMetric"/);
+  assert.equal((html.match(/MELTWATER API/g) || []).length, 1);
+  assert.match(html, /<span class="pending-label">MELTWATER EXPLORE<\/span>[\s\S]*?id="reachMetric"/);
+  assert.match(html, /Open Day potential reach/);
+  assert.doesNotMatch(javascript, /summary\.potentialReach/);
   assert.doesNotMatch(html, /MELTWATER AI/);
   assert.doesNotMatch(javascript, /WEEKLY CACHE|WEEKLY SNAPSHOT/);
 });
 
-test('coverage sections use concise client-facing headings without helper copy', async () => {
+test('coverage sections label their campaign reach directly under the headings', async () => {
   const html = await readFile(new URL('./index.html', import.meta.url), 'utf8');
 
   assert.match(html, /<span class="panel-kicker">PUBLISHED MEDIA<\/span>\s*<h2>Confirmed coverage<\/h2>/);
   assert.match(html, /<span class="panel-kicker">DSC BEIJING OPEN DAY<\/span>\s*<h2>Organic coverage<\/h2>/);
   assert.doesNotMatch(html, /Additional organic coverage|<h2>Published media<\/h2>/);
-  assert.doesNotMatch(html, /Confirmed placements, bilingual article titles|Recent Meltwater mentions for review/);
+  assert.match(html, /<h2>Confirmed coverage<\/h2>\s*<p class="coverage-reach">.*?id="confirmedReachMetric".*?id="confirmedReachDescription"/);
+  assert.match(html, /<h2>Organic coverage<\/h2>\s*<p class="coverage-reach">.*?id="organicReachMetric".*?id="organicReachDescription"/);
+  assert.doesNotMatch(html, /Missing reach|Reach values/i);
 });
 
 test('PR performance shows the verified Open Day citation and expandable screenshot inline', async () => {

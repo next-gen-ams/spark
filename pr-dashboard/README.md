@@ -8,8 +8,8 @@ Interactive dashboard prototype inspired by the clean operational structure of t
 - Rolling past-three-month Meltwater overview.
 - Published-media table with campaign-wave filtering, bilingual linked titles, outlet profiles and editorial media-landscape tiers.
 - China-IP access notes and China-team page captures for The Beijing News and Beijing Youth Online when the original article cannot be opened from Australia.
-- Weekly Meltwater snapshots covering total mentions, potential reach, daily trend, peak-day article popovers, sentiment mix and core topics from Saved Search `RMIT China DSC` (`29175637`).
-- Organic coverage lists additional Beijing Open Day pickups reviewed against Meltwater, with one record per outlet.
+- Weekly Meltwater snapshots covering total mentions, daily trend, peak-day article popovers, sentiment mix and core topics from Saved Search `RMIT China DSC` (`29175637`).
+- Organic coverage lists six additional Beijing Open Day pickups reviewed in Meltwater, with one record per outlet. Campaign potential reach uses reviewed article figures and shows the number of articles included in each subtotal.
 - The PR view includes a captured GEO citation from the 29 September 2026 check, where Baidu ERNIE cited the Huanqiu Open Day article.
 - China market selector with locked future-market options, official RMIT branding and the standard KMT copyright banner.
 - A focused PR Performance page plus one external GEO Visibility navigation item linked to the verified, automatically updated RMIT GEO report.
@@ -53,7 +53,7 @@ npm test
 
 - Move authentication to a server-side service with a short-lived `HttpOnly`, `Secure`, `SameSite=Strict` session cookie if the dashboard later contains confidential information.
 - Keep `MELTWATER_API_KEY` only in the existing 1Password item used by the local weekly automation. Never expose it through browser JavaScript or commit it to Git.
-- Maintain the reviewed Open Day pickups with the existing coverage records in `dashboard.js`. Keep public article links and one record per outlet. Weekly monitoring data feeds the trend and metrics independently.
+- Maintain the reviewed Open Day pickups and their article reach in `dashboard.js` using the same Meltwater evidence as the GMS workbook. Keep public article links and one record per outlet. Weekly monitoring data feeds the mention count, trend and sentiment.
 - The Spark site is served from the `pr-dashboard` directory inside `next-gen-ams/spark`.
 - Replace sample media with a verified source of truth before publishing.
 - Keep GEO Visibility pointed at the verified KMT GEO shared report; no local GEO cache or GEO refresh automation is required.
